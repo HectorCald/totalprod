@@ -80,39 +80,31 @@
 }
 
 .btn.close {
-    background: none;
-    color: var(--tercer-color);
+    width: 50px;
+    height: 50px;
     position: absolute;
-    left: 15px;
-    top: 10px;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
+    left: 10px;
+    background:none;
     display: flex;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 0;
+    justify-content: center;
+    align-items: center;
     transform: rotate(180deg);
 
     i {
-        margin: 0;
-        font-size: var(--text-xl) !important;
+        font-size: var(--text-2xl) !important;
+        color: white;
     }
 }
 
 .btn.filtros {
-    background: none;
-    color: var(--tercer-color);
+    width: 50px;
+    height: 50px;
     position: absolute;
-    right: 15px;
-    top: 10px;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
+    right: 10px;
+    background:none;
     display: flex;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 0;
+    justify-content: center;
+    align-items: center;
 
     i {
         margin: 0;
@@ -426,7 +418,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
-    padding-top: 65px;
+    padding-top: 55px;
     padding-bottom: 80px;
 }
 
@@ -445,10 +437,9 @@
     align-items: center;
     position: absolute;
     top: 0;
-    left: 0;
     width: 100%;
-    height: 60px;
-    padding: 10px;
+    min-height: 50px;
+    height: 50px;
     background-color: var(--sep-color);
 
     i {
@@ -599,9 +590,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    max-height: 60px !important;
-    min-height: 60px !important;
-    height: 60px !important;
+    max-height: 50px !important;
+    min-height: 50px !important;
+    height: 50px !important;
     width: 100%;
     border-radius: 10px;
     padding: 0px 5px !important;
@@ -724,6 +715,7 @@
 
     }
 }
+
 .timer-text {
     color: #666;
     font-size: 14px;
@@ -1173,7 +1165,8 @@
     opacity: 0;
     transform: translateY(-20px);
 }
-.scroll-top{
+
+.scroll-top {
     position: fixed;
     bottom: 90px;
     right: 20px;
@@ -1189,7 +1182,7 @@
     -webkit-backdrop-filter: blur(8px);
     z-index: 6;
 
-    i{
+    i {
         font-size: 20px;
         color: white !important;
     }
@@ -1348,16 +1341,18 @@
     font-size: 12px;
     z-index: 4;
 }
-.formato-pedido{
-    background-color: var(--primary-color); 
-    padding: 20px; 
-    border-radius: 10px; 
+
+.formato-pedido {
+    background-color: var(--primary-color);
+    padding: 20px;
+    border-radius: 10px;
     margin-bottom: 20px;
     color: var(--text);
     display: flex;
     flex-direction: column;
     align-items: flex-start !important;
 }
+
 .relleno .carrito-items {
     height: 100%;
     overflow-y: auto;
@@ -1509,7 +1504,7 @@
             }
         }
 
-        .item-info-acopio{
+        .item-info-acopio {
             display: flex;
             flex-direction: column;
         }
