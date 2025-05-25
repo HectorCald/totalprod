@@ -198,7 +198,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 5px;
     transform: translateX(120%);
     transition: all 0.3s ease-out;
     position: relative;
@@ -206,6 +206,24 @@
     color: var(--text);
     border-left: 4px solid transparent;
     opacity: 0;
+
+    i.bx-x-circle{
+        color: var(--error) !important;
+        font-size: 20px;
+    }
+    i.bx-check{
+        color: var(--success) !important;
+        font-size: 20px;
+    }
+    i.bx-error{
+        color: #ff9800 !important;
+        font-size: 20px;
+    }
+    i.bx-info-circle{
+        color: #2196F3 !important;
+        font-size: 20px;
+    }
+    
 }
 
 .notification.show {
@@ -263,6 +281,11 @@
     font-size: var(--text-detalle);
     opacity: 0.7;
     transition: opacity 0.2s;
+
+    i{
+        font-size: 20px !important;
+        color: gray !important;
+    }
 }
 
 .notification .close-btn:hover {

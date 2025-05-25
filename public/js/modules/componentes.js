@@ -261,7 +261,7 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
     notification.className = `notification ${type}`;
     
     notification.innerHTML = `
-        <i class='bx bx-${type === 'success' ? 'check' : type === 'error' ? 'x' : type === 'warning' ? 'error' : 'info-circle'}'></i>
+        <i class='bx bx-${type === 'success' ? 'check' : type === 'error' ? 'x-circle' : type === 'warning' ? 'error' : 'info-circle'}'></i>
         <span>${message}</span>
         <button class="close-btn"><i class='bx bx-x'></i></button>
     `;
