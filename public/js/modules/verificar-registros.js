@@ -174,7 +174,7 @@ function eventosVerificacion() {
     const btnExcel = document.getElementById('exportar-excel');
     const registrosAExportar = registrosProduccion;
 
-    const botonesNombre = document.querySelectorAll('.filtros-opciones.nombre .btn-filtro');
+    const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
 
 
@@ -313,6 +313,7 @@ function eventosVerificacion() {
             }
         }, 100);
     }
+
     botonesNombre.forEach(boton => {
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
@@ -322,6 +323,7 @@ function eventosVerificacion() {
             aplicarFiltros();
         });
     });
+
     botonesEstado.forEach(boton => {
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
@@ -445,13 +447,13 @@ function eventosVerificacion() {
 
         btnEditar.addEventListener('click', () => editar(registro));
         btnEliminar.addEventListener('click', () => eliminar(registro));
-        if(btnAnular){
+        if (btnAnular) {
             btnAnular.addEventListener('click', () => anular(registro));
         }
-        if(btnVerificar){
+        if (btnVerificar) {
             btnVerificar.addEventListener('click', () => verificar(registro));
         }
-        
+
 
         function eliminar(registro) {
 
