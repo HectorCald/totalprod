@@ -785,7 +785,7 @@ function eventosAlmacenGeneral() {
                 <p class="normal"><i class='bx bx-chevron-right'></i>Precios</p>
                     ${preciosFormateados}
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Almacén Index</p>
+                <p class="normal"><i class='bx bx-chevron-right'></i>Almacén acopio</p>
                     <div class="entrada">
                         <i class='bx bx-package'></i>
                         <div class="input">
@@ -1110,11 +1110,11 @@ function eventosAlmacenGeneral() {
             <p class="normal"><i class='bx bx-chevron-right'></i>Precios</p>
                 ${preciosFormateados}
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Almacen Index</p>
+            <p class="normal"><i class='bx bx-chevron-right'></i>Almacen acopio</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
-                    <p class="detalle">Selecciona Almacén Index</p>
+                    <p class="detalle">Selecciona Almacén acopio</p>
                     <select class="alm-acopio-producto" required>
                         <option value=""></option>
                         ${productosAcopio.map(producto => `
