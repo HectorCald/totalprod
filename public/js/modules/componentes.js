@@ -248,102 +248,60 @@ export function ocultarCarga() {
 }
 
 
-export function crearNotificacion() {
-    const container = document.createElement('div');
-    container.className = 'notification-container';
-    document.body.appendChild(container);
-    return container;
-}
-export function mostrarNotificacion({ message, type = 'info', duration = 3000 }) {
-    const container = document.querySelector('.notification-container') || crearNotificacion();
-
-    const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle',
-        warning: 'fas fa-exclamation-triangle',
-        info: 'fas fa-info-circle'
-    };
+export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
+    let container = document.querySelector('.notification-container');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+    }
 
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
+    
     notification.innerHTML = `
-        <i class="${icons[type]}"></i>
+        <i class='bx bx-${type === 'success' ? 'check' : type === 'error' ? 'x' : type === 'warning' ? 'error' : 'info-circle'}'></i>
         <span>${message}</span>
+        <button class="close-btn"><i class='bx bx-x'></i></button>
     `;
 
-    let startX = 0;
-    let currentX = 0;
-    let isDragging = false;
-    let timeoutId;
-
-    function startDragging(e) {
-        isDragging = true;
-        startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
-        notification.classList.add('dragging');
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-    }
-
-    function drag(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        currentX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
-        const diffX = currentX - startX;
-
-        if (diffX > 0) {
-            // Mantener la posición vertical mientras se arrastra horizontalmente
-            notification.style.transform = `translateY(10px) translateX(${diffX}px)`;
-        }
-    }
-
-    function endDragging() {
-        if (!isDragging) return;
-        isDragging = false;
-        notification.classList.remove('dragging');
-
-        const diffX = currentX - startX;
-        if (diffX > 200) {
-            notification.classList.add('slide-right');
-            setTimeout(() => notification.remove(), 300);
-        } else {
-            // Restaurar la posición original manteniendo el translateY
-            notification.style.transform = 'translateY(20px)';
-            notification.style.transition = 'transform 0.3s ease-out';
-            setTimeout(() => {
-                notification.style.transition = '';
-                timeoutId = setTimeout(closeNotification, duration);
-            }, 300);
-        }
-    }
-
-    function closeNotification() {
-        if (notification.parentElement && !isDragging) {
-            notification.classList.add('hide');
-            notification.classList.remove('show');
-            notification.addEventListener('transitionend', () => {
-                notification.remove();
-                if (container.children.length === 0) {
-                    container.remove();
-                }
-            }, { once: true });
-        }
-    }
-
-    notification.addEventListener('mousedown', startDragging);
-    notification.addEventListener('touchstart', startDragging, { passive: true });
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('touchmove', drag, { passive: false });
-    document.addEventListener('mouseup', endDragging);
-    document.addEventListener('touchend', endDragging);
-
     container.appendChild(notification);
-    notification.offsetHeight;
+
+    // Mostrar la notificación con un pequeño retraso para la animación
     requestAnimationFrame(() => {
         notification.classList.add('show');
     });
 
-    timeoutId = setTimeout(closeNotification, duration);
+    // Manejador del botón de cierre
+    const closeBtn = notification.querySelector('.close-btn');
+    closeBtn.addEventListener('click', () => {
+        closeNotification(notification);
+    });
+
+    // Auto-cerrar después del tiempo especificado
+    if (duration) {
+        setTimeout(() => {
+            closeNotification(notification);
+        }, duration);
+    }
+
+    return notification;
+}
+
+export function mostrarNotificacion(options) {
+    return crearNotificacion(options);
+}
+
+function closeNotification(notification) {
+    notification.classList.add('hide');
+    setTimeout(() => {
+        notification.remove();
+        const container = document.querySelector('.notification-container');
+        if (container && container.children.length === 0) {
+            container.remove();
+        }
+    }, 300);
 }
 
 
