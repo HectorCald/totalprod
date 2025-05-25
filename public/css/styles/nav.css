@@ -51,7 +51,6 @@
     
     .info{
         display: flex;
-        flex-direction: column;
         height: 100%;
         width: 100%;
         justify-content: center;
@@ -66,6 +65,13 @@
         color: white;
         margin: 0;
         line-height: 1;
+    }
+    img{
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        background-color:#4dffdb5f;
+        margin-right: 5px;
     }
 }
 @media screen and (min-width: 768px) {

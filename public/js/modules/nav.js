@@ -169,8 +169,8 @@ function mostrarNav() {
                 <button class="refresh"><i class='bx bx-refresh'></i></button>
                 <button class="menu"><i class='bx bx-menu'></i></button>
                 <div class="info">
-                    <h1 class="titulo">Damabrava</h1>
-                    <p class="rol" style="display:none">@${usuarioInfo}</p>
+                    <img src="./icons/icon.png" alt="Logo">
+                    <h1 class="titulo">TotalProd</h1>
                 </div>
             </div>
     `;
