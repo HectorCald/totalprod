@@ -184,7 +184,7 @@
     right: 15px;
     z-index: 5;
     width: 100%;
-    max-width: 450px;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
     gap: 10px;
