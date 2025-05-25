@@ -426,7 +426,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
-    padding-top: 60px;
+    padding-top: 65px;
     padding-bottom: 80px;
 }
 
