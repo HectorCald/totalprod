@@ -755,9 +755,9 @@ function eventosAlmacenGeneral() {
                     </div>
                 </div>
                     <div class="entrada">
-                        <i class='bx bx-image'></i>
                         <div class="input">
                             <label class="custom-file-upload" for="imagenInput">
+                                <i class='bx bx-image'></i>
                                 Subir imagen
                             </label>
                             <input style="display:none"id="imagenInput" class="imagen-producto" type="file" accept="image/*">
