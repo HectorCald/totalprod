@@ -193,28 +193,39 @@
 
 .notification {
     background-color: var(--fondo3);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 15px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     gap: 12px;
     transform: translateX(120%);
-    transition: transform 0.3s ease-out;
+    transition: all 0.3s ease-out;
     position: relative;
     font-size: var(--text-detalle);
     color: var(--text);
     border-left: 4px solid transparent;
+    opacity: 0;
+}
+
+.notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification.hide {
+    transform: translateX(120%);
+    opacity: 0;
 }
 
 .notification::before {
     content: '';
     position: absolute;
-    left: -4px;
+    left: -5px;
     top: 0;
     height: 100%;
-    width: 4px;
-    border-radius: 4px 0 0 4px;
+    width: 8px;
+    border-radius: 10px 0 0 10px;
 }
 
 .notification.success::before {
@@ -231,15 +242,6 @@
 
 .notification.info::before {
     background-color: #2196F3;
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.notification.hide {
-    transform: translateX(120%);
-    opacity: 0;
 }
 
 .notification i {

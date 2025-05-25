@@ -268,7 +268,10 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
 
     container.appendChild(notification);
 
-    // Mostrar la notificación con un pequeño retraso para la animación
+    // Forzar un reflow para asegurar que la animación funcione
+    notification.offsetHeight;
+
+    // Mostrar la notificación
     requestAnimationFrame(() => {
         notification.classList.add('show');
     });
@@ -289,19 +292,22 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
     return notification;
 }
 
-export function mostrarNotificacion(options) {
-    return crearNotificacion(options);
-}
-
 function closeNotification(notification) {
+    notification.classList.remove('show');
     notification.classList.add('hide');
-    setTimeout(() => {
+    
+    // Esperar a que termine la animación antes de remover
+    notification.addEventListener('transitionend', () => {
         notification.remove();
         const container = document.querySelector('.notification-container');
         if (container && container.children.length === 0) {
             container.remove();
         }
-    }, 300);
+    }, { once: true });
+}
+
+export function mostrarNotificacion(options) {
+    return crearNotificacion(options);
 }
 
 
