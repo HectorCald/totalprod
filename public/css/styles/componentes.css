@@ -180,7 +180,7 @@
 
 .notification-container {
     position: fixed;
-    top: 50px;
+    top: 60px;
     right: 15px;
     z-index: 5;
     width: 100%;
