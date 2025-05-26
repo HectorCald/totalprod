@@ -1,91 +1,109 @@
-const CACHE_NAME = 'totalprod-v1';
+const CACHE_NAME = 'totalprod-v2'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/',
     '/css/login.css',
-    // Puedes agregar más recursos estáticos aquí
+    '/js/login.js',
+    '/js/dashboard.js',
+    '/css/dashboard.css',
+    '/js/modules/home.js',
+    '/css/styles/home.css',
+    '/js/modules/nav.js',
+    '/css/styles/nav.css',
+    '/js/modules/perfil.js',
+    '/css/styles/perfil.css'
 ];
 
-// Crear el Map para la cola de sincronización
 const syncQueue = new Map();
 
-// Instalación y precarga de recursos
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(ASSETS_TO_CACHE))
-            .then(() => self.skipWaiting())
+            .then(cache => {
+                return Promise.all(
+                    ASSETS_TO_CACHE.map(url => {
+                        return fetch(url)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`Failed to cache: ${url}`);
+                                }
+                                return cache.put(url, response);
+                            })
+                            .catch(error => {
+                                console.error('Error caching:', error);
+                            });
+                    })
+                );
+            })
+            .then(() => {
+                console.log('Caché completado correctamente');
+                return self.skipWaiting();
+            })
     );
 });
 
-// Activación y limpieza de caches antiguos
 self.addEventListener('activate', event => {
-    // Tomar el control inmediatamente
     event.waitUntil(
         Promise.all([
-            self.clients.claim(),
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
-                             .map(cacheName => caches.delete(cacheName))
-                );
-            })
+            caches.keys()
+                .then(cacheNames => {
+                    return Promise.all(
+                        cacheNames
+                            .filter(cacheName => cacheName !== CACHE_NAME)
+                            .map(cacheName => {
+                                console.log('Eliminando caché antiguo:', cacheName);
+                                return caches.delete(cacheName);
+                            })
+                    );
+                }),
+            self.clients.claim()
         ])
     );
 });
 
-// Estrategia de cache simplificada: Network First con fallback a cache
 self.addEventListener('fetch', event => {
-    // No interceptar solicitudes a otros dominios o no GET
-    if (!event.request.url.startsWith(self.location.origin) || 
-        event.request.method !== 'GET') {
+    const url = new URL(event.request.url);
+    
+    if (!event.request.url.startsWith(self.location.origin)) {
         return;
     }
-    
+
+    const isAssetToCache = ASSETS_TO_CACHE.some(asset => 
+        url.pathname.endsWith(asset) || (asset === '/' && url.pathname === '/')
+    );
+
     event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                // Si la respuesta es válida, la guardamos en cache
-                if (response && response.status === 200) {
-                    const responseToCache = response.clone();
-                    caches.open(CACHE_NAME)
-                        .then(cache => {
-                            cache.put(event.request, responseToCache);
-                        });
+        caches.match(event.request)
+            .then(cachedResponse => {
+                if (cachedResponse && isAssetToCache) {
+                    return cachedResponse;
                 }
-                return response;
-            })
-            .catch(() => {
-                // Si falla la red, intentamos recuperar de cache
-                return caches.match(event.request)
-                    .then(cachedResponse => {
+
+                return fetch(event.request)
+                    .then(response => {
+                        if (!response || response.status !== 200) {
+                            return response;
+                        }
+
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            })
+                            .catch(error => {
+                                console.error('Error caching response:', error);
+                            });
+
+                        return response;
+                    })
+                    .catch(() => {
                         if (cachedResponse) {
                             return cachedResponse;
                         }
-                        
-                        // Si no hay caché y era una solicitud POST/PUT/DELETE, la guardamos para sincronizar
-                        if (event.request.method === 'POST' || 
-                            event.request.method === 'PUT' || 
-                            event.request.method === 'DELETE') {
-                            
-                            // Esta parte no se ejecutará por el filtro de arriba, pero lo dejamos por si cambias la lógica
-                            syncQueue.set(event.request.url, event.request.clone());
-                            
-                            // Registrar tarea de sincronización
-                            if ('sync' in self.registration) {
-                                self.registration.sync.register('sync-data')
-                                    .catch(err => console.error('Error al registrar sync:', err));
-                            }
-                        }
-                        
-                        // Para solicitudes que no están en caché
-                        return new Response('', {
-                            status: 504,
-                            statusText: 'Sin conexión a Internet'
-                        });
                     });
             })
     );
 });
+
 
 // Manejar sincronización en segundo plano
 self.addEventListener('sync', event => {
