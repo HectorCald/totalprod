@@ -630,6 +630,6 @@ function eventosRegistrosAcopio() {
     }
 
 
-    btnExcel.addEventListener('click', () => exportarArchivos('almacen', registrosAExportar));
+    btnExcel.addEventListener('click', () => exportarArchivos('acopio', registrosAExportar));
     aplicarFiltros();
 }

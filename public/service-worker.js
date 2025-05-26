@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v7'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v8'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -10,8 +10,8 @@ const ASSETS_TO_CACHE = [
     '/css/styles/nav.css',
     '/js/modules/perfil.js',
     '/css/styles/perfil.css',
-    '/css/styles/flotante',
-    '/js/modules/flotante',
+    '/css/styles/flotante.css',
+    '/js/modules/flotante.js',
     '/js/modules/componentes.js',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',

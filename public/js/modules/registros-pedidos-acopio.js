@@ -1168,6 +1168,6 @@ function eventosPedidos() {
         if (!anuncioSecond) return;
         mostrarMensajeCompras();
     };
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+    btnExcel.addEventListener('click', () => exportarArchivos('pedidos-acopio', registrosAExportar));
     aplicarFiltros();
 }

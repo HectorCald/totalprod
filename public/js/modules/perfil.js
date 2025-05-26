@@ -76,8 +76,9 @@ async function obtenerUsuario() {
 }
 
 
-export async function crearPerfil() {
+export async function crearPerfil(usuario) {
     const view = document.querySelector('.perfil-view');
+    usuarioInfo=usuario;
     mostrarPerfil(view);
 }
 function mostrarPerfil(view) {

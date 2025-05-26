@@ -9,10 +9,80 @@ const estadoAnuncios = {
 };
 function obtenerEstadoRealDOM() {
     return {
-        normal: document.querySelector('.anuncio')?.style.display === 'flex',
-        second: document.querySelector('.anuncio-second')?.style.display === 'flex',
-        tercer: document.querySelector('.anuncio-tercer')?.style.display === 'flex'
+        normal: document.querySelector('.anuncio')?.classList.contains('mostrar') || false,
+        second: document.querySelector('.anuncio-second')?.classList.contains('mostrar') || false,
+        tercer: document.querySelector('.anuncio-tercer')?.classList.contains('mostrar') || false
     };
+}
+
+function ocultarAnuncioFisico() {
+    const anuncio = document.querySelector('.anuncio');
+    const btni = document.querySelector('.btn-flotante-salidas');
+    const btns = document.querySelector('.btn-flotante-ingresos');
+    const btnp = document.querySelector('.btn-flotante-pedidos');
+
+    if (btni) btni.style.display = 'none';
+    if (btns) btns.style.display = 'none';
+    if (btnp) btnp.style.display = 'none';
+
+    if (anuncio) {
+        anuncio.classList.remove('mostrar');
+    }
+}
+function ocultarAnuncioSecondFisico() {
+    const anuncio = document.querySelector('.anuncio-second');
+
+    if (anuncio) {
+        anuncio.classList.remove('mostrar');
+    }
+}
+function ocultarAnuncioTercerFisico() {
+    const anuncio = document.querySelector('.anuncio-tercer');
+
+    if (anuncio) {
+        anuncio.classList.remove('mostrar');
+    }
+}
+
+export async function mostrarAnuncio() {
+    const anuncio = document.querySelector('.anuncio');
+
+    if (anuncio) {
+        anuncio.classList.add('mostrar');
+        actualizarEstadoInterno();
+
+        if (estadoAnuncios.nivelActual === 1 && (history.state?.nivel || 0) < 1) {
+            history.pushState({ nivel: 1, tipo: 'anuncio' }, '');
+        }
+    }
+}
+
+export async function mostrarAnuncioSecond() {
+    const anuncio = document.querySelector('.anuncio-second');
+
+    if (anuncio) {
+        anuncio.classList.add('mostrar');
+        actualizarEstadoInterno();
+
+        if (estadoAnuncios.nivelActual === 2 && (history.state?.nivel || 0) < 2) {
+            history.pushState({ nivel: 2, tipo: 'anuncioSecond' }, '');
+        }
+    }
+    configuracionesEntrada();
+}
+
+export async function mostrarAnuncioTercer() {
+    const anuncio = document.querySelector('.anuncio-tercer');
+
+    if (anuncio) {
+        anuncio.classList.add('mostrar');
+        actualizarEstadoInterno();
+
+        if (estadoAnuncios.nivelActual === 3 && (history.state?.nivel || 0) < 3) {
+            history.pushState({ nivel: 3, tipo: 'anuncioTercer' }, '');
+        }
+    }
+    configuracionesEntrada();
 }
 function calcularNivelReal(estadoDOM) {
     if (estadoDOM.tercer) return 3;
@@ -37,49 +107,9 @@ function cerrarAnunciosPorNivel(nivelObjetivo) {
     // Actualizar estado interno
     actualizarEstadoInterno();
 }
-function ocultarAnuncioFisico() {
-    const anuncio = document.querySelector('.anuncio');
-    const contenido = document.querySelector('.anuncio .contenido');
-    const btni = document.querySelector('.btn-flotante-salidas');
-    const btns = document.querySelector('.btn-flotante-ingresos');
-    const btnp = document.querySelector('.btn-flotante-pedidos');
 
-    if (btni) btni.style.display = 'none';
-    if (btns) btns.style.display = 'none';
-    if (btnp) btnp.style.display = 'none';
 
-    if (anuncio && anuncio.style.display !== 'none') {
-        anuncio.style.display = 'none';
-        if (contenido) {
-            contenido.style.paddingBottom = '80px';
-            contenido.innerHTML = '';
-        }
-    }
-}
-function ocultarAnuncioSecondFisico() {
-    const anuncio = document.querySelector('.anuncio-second');
-    const contenido = document.querySelector('.anuncio-second .contenido');
 
-    if (anuncio && anuncio.style.display !== 'none') {
-        anuncio.style.display = 'none';
-        if (contenido) {
-            contenido.style.paddingBottom = '80px';
-            contenido.innerHTML = '';
-        }
-    }
-}
-function ocultarAnuncioTercerFisico() {
-    const anuncio = document.querySelector('.anuncio-tercer');
-    const contenido = document.querySelector('.anuncio-tercer .contenido');
-
-    if (anuncio && anuncio.style.display !== 'none') {
-        anuncio.style.display = 'none';
-        if (contenido) {
-            contenido.style.paddingBottom = '80px';
-            contenido.innerHTML = '';
-        }
-    }
-}
 function actualizarEstadoInterno() {
     const estadoDOM = obtenerEstadoRealDOM();
 
@@ -138,47 +168,10 @@ window.addEventListener('popstate', (event) => {
         cerrarAnunciosPorNivel(nivelDestino);
     }
 });
-export async function mostrarAnuncio() {
-    const anuncio = document.querySelector('.anuncio');
 
-    if (anuncio && anuncio.style.display !== 'flex') {
-        anuncio.style.display = 'flex';
-        actualizarEstadoInterno();
 
-        // Solo agregar al historial si realmente cambiamos de nivel
-        if (estadoAnuncios.nivelActual === 1 && (history.state?.nivel || 0) < 1) {
-            history.pushState({ nivel: 1, tipo: 'anuncio' }, '');
-        }
-    }
-}
-export async function mostrarAnuncioSecond() {
-    const anuncio = document.querySelector('.anuncio-second');
 
-    if (anuncio && anuncio.style.display !== 'flex') {
-        anuncio.style.display = 'flex';
-        actualizarEstadoInterno();
 
-        // Solo agregar al historial si realmente cambiamos de nivel
-        if (estadoAnuncios.nivelActual === 2 && (history.state?.nivel || 0) < 2) {
-            history.pushState({ nivel: 2, tipo: 'anuncioSecond' }, '');
-        }
-    }
-    configuracionesEntrada();
-}
-export async function mostrarAnuncioTercer() {
-    const anuncio = document.querySelector('.anuncio-tercer');
-
-    if (anuncio && anuncio.style.display !== 'flex') {
-        anuncio.style.display = 'flex';
-        actualizarEstadoInterno();
-
-        // Solo agregar al historial si realmente cambiamos de nivel
-        if (estadoAnuncios.nivelActual === 3 && (history.state?.nivel || 0) < 3) {
-            history.pushState({ nivel: 3, tipo: 'anuncioTercer' }, '');
-        }
-    }
-    configuracionesEntrada();
-}
 export async function ocultarAnuncio() {
     cerrarAnunciosPorNivel(0);
     sincronizarHistorial(0, true);
@@ -291,7 +284,6 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
 
     return notification;
 }
-
 function closeNotification(notification) {
     notification.classList.remove('show');
     notification.classList.add('hide');
@@ -305,7 +297,6 @@ function closeNotification(notification) {
         }
     }, { once: true });
 }
-
 export function mostrarNotificacion(options) {
     return crearNotificacion(options);
 }
@@ -446,6 +437,8 @@ export async function registrarHistorial(origen, suceso, detalle) {
         ocultarCarga();
     }
 }
+
+
 
 export function exportarArchivos(rExp, registrosAExportar) {
     const registrosVisibles = Array.from(document.querySelectorAll('.registro-item'))
@@ -625,6 +618,36 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     duration: 3000
                 });
                 return;
+            } else if (rExp === 'pedidos-acopio') {
+                return {
+                    'ID': registro.id,
+                    'Fecha': registro.fecha,
+                    'Producto': registro.producto,
+                    'Cantidad Pedida': registro.cantidadPedida,
+                    'Observaciones del pedido': registro.observacionesPedido || 'Sin observaciones',
+                    'Estado del pedido': registro.estado || 'Sin estado',
+                    'Cantidad entregada(KG)': registro.cantidadEntregadaKg || 'No se entregó',
+                    'Proovedor': registro.proovedor || 'No se compro',
+                    'Precio': registro.precio || 'No se compro',
+                    'Observaciones de compra': registro.observacionesCompras || 'No se compro',
+                    'Cantidad entregada': registro.cantidadEntregadaUnd || 'No se compro',
+                    'Transportes/Otros': registro.transporteOtros || 'No se compro',
+                    'Estado de compra': registro.estadoCompra || 'No se compro',
+                    'Fecha de ingreso': registro.fechaIngreso || 'No ingreso',
+                    'Cantidad de ingreso': registro.cantidadIngresada || 'No ingreso',
+                    'Observaciones de ingreso': registro.observacionesIngresado || 'No ingreso',
+                };
+            } else if (rExp === 'acopio') {
+                return {
+                    'ID': registro.id,
+                    'Fecha': registro.fecha,
+                    'Producto': registro.producto,
+                    'Tipo': registro.tipo,
+                    'Peso': registro.peso,
+                    'Operador': registro.operario,
+                    'Caracteristicas': registro.caracteristicas,
+                    'Observaciones': registro.observaciones,
+                };
             }
         });
 

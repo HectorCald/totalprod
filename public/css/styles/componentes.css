@@ -383,7 +383,7 @@
 
 
 
-.anuncio {
+.anuncio, .anuncio-second, .anuncio-tercer {
     position: fixed;
     top: 0;
     left: 0;
@@ -393,42 +393,32 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 3;
-    display: none;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    display: flex;
     justify-content: center;
     align-items: center;
     padding: 0;
+    pointer-events: none;
+}
+
+.anuncio.mostrar, .anuncio-second.mostrar, .anuncio-tercer.mostrar {
+    transform: translateX(0);
+    pointer-events: auto;
 }
 
 .anuncio-second {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     z-index: 4;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
 }
 
 .anuncio-tercer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     z-index: 5;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
+}
+
+@media screen and (min-width: 768px) {
+    .anuncio, .anuncio-second, .anuncio-tercer {
+        background-color: rgba(0, 0, 0, 0.352);
+    }
 }
 
 
