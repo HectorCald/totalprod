@@ -11,6 +11,8 @@ const ASSETS_TO_CACHE = [
     '/css/styles/nav.css',
     '/js/modules/perfil.js',
     '/css/styles/perfil.css',
+    '/css/flotante.css',
+    '/js/flotante.js',
     '/js/modules/componentes.js',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
