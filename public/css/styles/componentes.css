@@ -22,7 +22,7 @@
 }
 
 .normal {
-    font-size: 14px !important;
+    font-size: var(--text-subtitulo) !important;
     color: var(--text);
     margin-top: 10px;
     padding-left: 7px;
