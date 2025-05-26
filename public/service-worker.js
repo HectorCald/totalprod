@@ -1,6 +1,7 @@
-const CACHE_NAME = 'totalprod-v3'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v2'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
-    '/',
+    '/css/login.css',
+    '/js/login.js',
     '/js/dashboard.js',
     '/css/dashboard.css',
     '/js/modules/home.js',
