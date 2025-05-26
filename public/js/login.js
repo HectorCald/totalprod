@@ -883,6 +883,12 @@ function setTheme(theme) {
     }
 }
 document.addEventListener('DOMContentLoaded', async () => {
+    // Precarga el dashboard
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.prefetch('/dashboard');
+        });
+    }
     await verificarTemaInicial();
     inicializarApp();
 });
