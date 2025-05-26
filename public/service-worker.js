@@ -1,6 +1,5 @@
-const CACHE_NAME = 'totalprod-v6'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v7'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
-    '/dashboard',
     '/css/login.css',
     '/js/login.js',
     '/js/dashboard.js',
@@ -11,12 +10,11 @@ const ASSETS_TO_CACHE = [
     '/css/styles/nav.css',
     '/js/modules/perfil.js',
     '/css/styles/perfil.css',
-    '/css/flotante.css',
-    '/js/flotante.js',
+    '/css/styles/flotante',
+    '/js/modules/flotante',
     '/js/modules/componentes.js',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
-    
 ];
 
 const syncQueue = new Map();
