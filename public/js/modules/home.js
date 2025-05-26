@@ -201,7 +201,7 @@ function obtenerFunciones() {
                 clase: 'opcion-btn',
                 vista: 'cuentasProduccion-view',
                 icono: 'fa-history',
-                texto: 'Registros',
+                texto: 'Mis registros',
                 detalle: 'Ver mis registros.',
                 onclick: 'onclick="mostrarMisRegistros()"'
             },
@@ -219,7 +219,7 @@ function obtenerFunciones() {
                 clase: 'opcion-btn',
                 vista: 'almAcopio-view',
                 icono: 'fa-shopping-cart',
-                texto: 'Pedido',
+                texto: 'Nuevo Pedido',
                 detalle: 'Hacer nuevo pedido',
                 onclick: 'onclick="mostrarHacerPedido()"'
             },
@@ -245,7 +245,7 @@ function obtenerFunciones() {
                 clase: 'opcion-btn',
                 vista: 'verificarRegistros-view',
                 icono: 'fa-check-double',
-                texto: 'Verificar',
+                texto: 'Registros Producción',
                 detalle: 'Verifica registros.',
                 onclick: 'onclick="mostrarVerificacion()"'
             },
@@ -806,7 +806,7 @@ function crearGraficoAcopio() {
         return fecha.toLocaleDateString('es-ES');
     }).reverse();
 
-        // Process data for each day with debug logging
+    // Process data for each day with debug logging
     const datos = ultimos7Dias.map(fecha => {
         const movimientosDia = movimientosAcopio.filter(mov => {
             // Extract only the date part from the movement's fecha_hora

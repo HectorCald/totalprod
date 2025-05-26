@@ -14,7 +14,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'cuentasProduccion-view',
             icono: 'fa-history',
-            texto: 'Registros',
+            texto: 'Mis registros',
             detalle: 'Ver mis registros de producción',
             onclick: 'onclick="mostrarMisRegistros(); ocultarAnuncioSecond()"'
         },
@@ -27,6 +27,30 @@ const atajosPorRol = {
             texto: 'Almacen acopio',
             detalle: 'Gestiona tu almacen de acopio',
             onclick: 'onclick="mostrarAlmacenAcopio();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos de tu almacen.',
+            onclick: 'onclick="mostrarIngresosAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas de tu almacen.',
+            onclick: 'onclick="mostrarSalidasAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almAcopio-view',
+            icono: 'fa-shopping-cart',
+            texto: 'Nuevo Pedido',
+            detalle: 'Hacer nuevo pedido',
+            onclick: 'onclick="mostrarHacerPedido()"'
         },
         {
             clase: 'opcion-btn',
@@ -61,6 +85,22 @@ const atajosPorRol = {
             texto: 'Almacen general',
             detalle: 'Gestiona tu almacen.',
             onclick: 'onclick="mostrarAlmacenGeneral()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos de tu almacen.',
+            onclick: 'onclick="mostrarIngresos()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas de tu almacen.',
+            onclick: 'onclick="mostrarSalidas()"'
         },
         {
             clase: 'opcion-btn',
@@ -101,6 +141,14 @@ const atajosPorRol = {
             texto: 'Registros conteo',
             detalle: 'Aqui puedes ver todos los registros',
             onclick: 'onclick="registrosConteoAlmacen()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-check-double',
+            texto: 'Registros producción',
+            detalle: 'Verifica registros.',
+            onclick: 'onclick="mostrarVerificacion()"'
         },
     ],
     'Administración': [
@@ -248,7 +296,8 @@ function mostrarMenu() {
         const grupos = {
             'Producción': atajosPorRol['Producción'],
             'Acopio': atajosPorRol['Acopio'],
-            'Almacen': atajosPorRol['Almacen']
+            'Almacen': atajosPorRol['Almacen'],
+            'Administración': atajosPorRol['Administración']
         };
 
         // Generar HTML para cada grupo
