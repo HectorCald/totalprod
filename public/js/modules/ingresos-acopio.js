@@ -430,7 +430,7 @@ function eventosPedidos(producto, pedido) {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-        <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de ingreso</p>
+        <p class="normal">Detalles de ingreso</p>
             <div class="entrada">
                 <i class='bx bx-leaf'></i>
                 <div class="input">
@@ -458,7 +458,7 @@ function eventosPedidos(producto, pedido) {
                     </div>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i> Carcateristicas organolépticas</p>
+            <p class="normal">Carcateristicas organolépticas</p>
             <div class="campo-horizontal">
                 <div class="entrada">
                     <i class='bx bx-palette'></i>
@@ -507,7 +507,7 @@ function eventosPedidos(producto, pedido) {
                     </div>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i> Nombre del ingreso</p>
+            <p class="normal">Nombre del ingreso</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
@@ -516,7 +516,7 @@ function eventosPedidos(producto, pedido) {
                 </div>
             </div>
             
-            <p class="normal"><i class='bx bx-chevron-right'></i> Razon/motivo/observaciones</p>
+            <p class="normal">Razon/motivo/observaciones</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">

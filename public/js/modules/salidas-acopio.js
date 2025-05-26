@@ -401,7 +401,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de salida</p>
+            <p class="normal">Detalles de salida</p>
             <div class="entrada">
                 <i class='bx bx-leaf'></i>
                 <div class="input">
@@ -429,7 +429,7 @@ function eventosPedidos() {
                     <input type="number" class="peso-kg" step="0.01" min="0">
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i> Nombre del ingreso</p>
+            <p class="normal">Nombre del ingreso</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
@@ -438,7 +438,7 @@ function eventosPedidos() {
                 </div>
             </div>
             
-            <p class="normal"><i class='bx bx-chevron-right'></i> Razon/motivo/observaciones</p>
+            <p class="normal">Razon/motivo/observaciones</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">

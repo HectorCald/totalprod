@@ -391,7 +391,7 @@ function eventosVerificacion() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del producto</p>
+            <p class="normal">Información del producto</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -406,14 +406,14 @@ function eventosVerificacion() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
                 <span class="nombre"><strong><i class='bx bx-user'></i> Operador: </strong>${registro.nombre}</span>
                 <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de producción</p>
+            <p class="normal">Detalles de producción</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-cog'></i> Selección/Cernido: </strong>${registro.proceso}</span>
                 <span class="valor"><strong><i class='bx bx-bowl-hot'></i> Microondas: </strong>${registro.microondas}</span>
@@ -421,7 +421,7 @@ function eventosVerificacion() {
                 <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha de vencimiento: </strong>${registro.fecha_vencimiento}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de verificación</p>
+            <p class="normal">Detalles de verificación</p>
             <div class="campo-vertical">
                 <span><strong><i class='bx bx-transfer'></i> Verificado:</strong> ${registro.fecha_verificacion ? `${registro.c_real} Und.` : 'Pendiente'}</span>
                 ${registro.fecha_verificacion ? `<span><strong><i class='bx bx-calendar-check'></i> Fecha verificación:</strong> ${registro.fecha_verificacion}</span>` : ''}
@@ -464,7 +464,7 @@ function eventosVerificacion() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i> Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -478,7 +478,7 @@ function eventosVerificacion() {
                     `<i class='bx bx-package'></i>`}
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -561,7 +561,7 @@ function eventosVerificacion() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno editar-produccion">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información basica</p>
+                <p class="normal">Información basica</p>
                     <div class="entrada">
                         <i class='bx bx-cube'></i>
                         <div class="input">
@@ -587,7 +587,7 @@ function eventosVerificacion() {
                         </div>
                     </div>
                     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información del proceso</p>
+                <p class="normal">Información del proceso</p>
                     <div class="campo-horizontal">
                         <div class="entrada">
                             <i class='bx bx-cog'></i>
@@ -609,7 +609,7 @@ function eventosVerificacion() {
                             </div>
                         </div>
                     </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información del acabado</p>
+                <p class="normal">Información del acabado</p>
                     <div class="entrada">
                         <i class='bx bx-check-shield'></i>
                         <div class="input">
@@ -624,7 +624,7 @@ function eventosVerificacion() {
                             <input class="vencimiento" type="month" value="${registro.fecha_vencimiento}" placeholder=" " required>
                         </div>
                     </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información de verificación</p>
+                <p class="normal">Información de verificación</p>
                     <div class="entrada">
                         <i class='bx bx-hash'></i>
                         <div class="input">
@@ -639,7 +639,7 @@ function eventosVerificacion() {
                             <input class="observaciones" type="text" value="${registro.observaciones}" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la edición</p>
+                <p class="normal">Motivo de la edición</p>
                     <div class="entrada">
                         <i class='bx bx-comment-detail'></i>
                         <div class="input">
@@ -783,7 +783,7 @@ function eventosVerificacion() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-               <p class="normal"><i class='bx bx-chevron-right'></i> Información básica</p>
+               <p class="normal">Información básica</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -797,7 +797,7 @@ function eventosVerificacion() {
                     `<i class='bx bx-package'></i>`}
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Verificación</p>
+                <p class="normal">Verificación</p>
                 <div class="entrada">
                     <i class='bx bx-hash'></i>
                     <div class="input">
@@ -903,7 +903,7 @@ function eventosVerificacion() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del registro</p>
+            <p class="normal">Información del registro</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -918,7 +918,7 @@ function eventosVerificacion() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la anulación</p>
+            <p class="normal">Motivo de la anulación</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
