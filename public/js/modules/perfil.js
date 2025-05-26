@@ -151,7 +151,7 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
                 </div>
                 <input type="file" id="input-foto" accept="image/*" style="display: none;">
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información</p>
+            <p class="normal">Información personal</p>
             <div class="entrada">
                 <i class='bx bx-user'></i>
                 <div class="input">
@@ -410,7 +410,7 @@ function mostrarConfiguraciones() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-        <p class="normal"><i class='bx bx-chevron-right'></i> Tema</p>
+        <p class="normal">Tema de la aplicación</p>
             <div class="tema-selector">
                 <button class="btn-tema ${currentTheme === 'light' ? 'active' : ''} dia" data-theme="light">
                     <i class='bx bx-sun'></i> Claro

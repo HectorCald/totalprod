@@ -249,7 +249,7 @@ function mostrarPaso1() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Ingresa tu información personal</p>
+            <p class="normal">Ingresa tu información personal</p>
             <div class="entrada">
                 <i class='bx bx-user'></i>
                 <div class="input">
@@ -331,7 +331,7 @@ function mostrarPaso2() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Configura tu aplicación</p>
+            <p class="normal">Configura tu aplicación</p>
             <div class="entrada">
                 <i class='bx bx-category'></i>
                 <div class="input">
@@ -454,7 +454,7 @@ function mostrarPaso3() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Configura tus credenciales</p>
+            <p class="normal">Configura tus credenciales</p>
             <div class="entrada">
                 <i class='bx bx-envelope'></i>
                 <div class="input">
@@ -663,7 +663,7 @@ function crearFormularioContraseña() {
             <button class="btn close" onclick="ocultarAnuncio();"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p>Ingresa tu correo electrónico para recibir un código de verificación</p>
+            <p class="normal">Ingresa tu correo electrónico</p>
             <div class="entrada">
                 <i class='bx bx-envelope'></i>
                 <div class="input">
