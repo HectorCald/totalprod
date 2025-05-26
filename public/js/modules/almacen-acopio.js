@@ -302,13 +302,13 @@ function eventosAlmacenAcopio() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
                     <span class="nombre"><strong><i class='bx bx-cube'></i> Producto: </strong>${producto.producto}</span>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Peso Bruto</p>
+                <p class="normal">Peso Bruto</p>
                 <div class="campo-vertical">
                     ${lotesFormateadosBruto}
                     <span class="valor total">
@@ -316,7 +316,7 @@ function eventosAlmacenAcopio() {
                     </span>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Peso Prima</p>
+                <p class="normal">Peso Prima</p>
                 <div class="campo-vertical">
                     ${lotesPrimaFormateados}
                     <span class="valor total">
@@ -324,7 +324,7 @@ function eventosAlmacenAcopio() {
                     </span>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+                <p class="normal"><Etiquetas</p>
                 <div class="campo-vertical">
                     ${etiquetasFormateadas}
                 </div>
@@ -387,12 +387,12 @@ function eventosAlmacenAcopio() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno verificar-registro">
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                    <p class="normal">Información básica</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
                         <span class="nombre"><strong><i class='bx bx-cube'></i> Producto: </strong>${producto.producto}</span>
                     </div>
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                    <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -536,7 +536,7 @@ function eventosAlmacenAcopio() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno editar-producto">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="entrada">
                     <i class='bx bx-cube'></i>
                     <div class="input">
@@ -545,13 +545,13 @@ function eventosAlmacenAcopio() {
                     </div>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Peso Bruto</p>
+                <p class="normal">Peso Bruto</p>
                 ${lotesBrutoHTML}
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Peso Prima</p>
+                <p class="normal">Peso Prima</p>
                 ${lotesPrimaHTML}
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+                <p class="normal">Etiquetas</p>
                 <div class="etiquetas-container">
                     <div class="etiquetas-actuales">
                         ${etiquetasHTML}
@@ -570,7 +570,7 @@ function eventosAlmacenAcopio() {
                     </div>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la edición</p>
+                <p class="normal">Motivo de la edición</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -710,7 +710,7 @@ function eventosAlmacenAcopio() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno nuevo-producto">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="entrada">
                 <i class='bx bx-cube'></i>
                 <div class="input">
@@ -719,7 +719,7 @@ function eventosAlmacenAcopio() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Peso Bruto</p>
+            <p class="normal">Peso Bruto</p>
             <div class="campo-horizontal">
                 <div class="entrada">
                     <i class='bx bx-package'></i>
@@ -737,7 +737,7 @@ function eventosAlmacenAcopio() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Peso Prima</p>
+            <p class="normal">Peso Prima</p>
            
            <div class="campo-horizontal">
                 <div class="entrada">
@@ -756,7 +756,7 @@ function eventosAlmacenAcopio() {
                 </div>
            </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+            <p class="normal">Etiquetas</p>
             <div class="etiquetas-container">
                 <div class="etiquetas-actuales">
                 </div>
@@ -901,14 +901,14 @@ function eventosAlmacenAcopio() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno editar-produccion">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas existentes</p>
+            <p class="normal">Etiquetas existentes</p>
             <div class="etiquetas-container">
                 <div class="etiquetas-actuales">
                     ${etiquetasHTML}
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Agregar nueva etiqueta</p>
+            <p class="normal">Agregar nueva etiqueta</p>
             <div class="entrada">
                 <i class='bx bx-purchase-tag'></i>
                 <div class="input">

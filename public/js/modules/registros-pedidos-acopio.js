@@ -412,7 +412,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del pedido</p>
+            <p class="normal">Información del pedido</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -422,7 +422,7 @@ function eventosPedidos() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles del producto</p>
+            <p class="normal">Detalles del producto</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-cube'></i> Producto: </strong>${registro.producto}</span>
                 <span class="nombre"><strong><i class='bx bx-barcode'></i> ID Producto: </strong>${registro.idProducto}</span>
@@ -430,7 +430,7 @@ function eventosPedidos() {
             </div>
 
             ${registro.estado !== 'Pendiente' ? `
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información de recepción</p>
+            <p class="normal">Información de recepción</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (KG): </strong>${registro.cantidadEntregadaKg || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
@@ -442,7 +442,7 @@ function eventosPedidos() {
             ` : ''}
 
             ${registro.estado === 'Ingresado' ? `
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información de ingreso</p>
+            <p class="normal">Información de ingreso</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha ingreso: </strong>${registro.fechaIngreso || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad ingresada(KG): </strong>${registro.cantidadIngresada || 'No registrado'}</span>
@@ -501,7 +501,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -510,7 +510,7 @@ function eventosPedidos() {
                     <span class="estado ${registro.estado.toLowerCase()}"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${registro.estado}</span>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+            <p class="normal">Motivo de la eliminación</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
@@ -591,7 +591,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno editar-pedido">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
@@ -628,7 +628,7 @@ function eventosPedidos() {
                     </select>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información de compra</p>
+            <p class="normal">Información de compra</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
@@ -678,7 +678,7 @@ function eventosPedidos() {
                     <input class="estado-compra" type="text" value="${registro.estadoCompra}">
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información de ingreso</p>
+            <p class="normal">Información de ingreso</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
@@ -693,7 +693,7 @@ function eventosPedidos() {
                     <input class="obs-ingre" type="text" value="${registro.observacionesIngresado}">
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Ingresa el motivo de la edición</p>
+            <p class="normal">Ingresa el motivo de la edición</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
@@ -827,7 +827,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del pedido</p>
+            <p class="normal">Información del pedido</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -836,7 +836,7 @@ function eventosPedidos() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de entrega</p>
+            <p class="normal">Detalles de entrega</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
@@ -1020,7 +1020,7 @@ function eventosPedidos() {
             </button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del pedido</p>
+            <p class="normal">Información del pedido</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -1029,7 +1029,7 @@ function eventosPedidos() {
                     <span class="estado ${registro.estado.toLowerCase()}"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${registro.estado}</span>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+            <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">

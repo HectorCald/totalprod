@@ -22,11 +22,11 @@
 }
 
 .normal {
-    font-size: var(--text-subtitulo) !important;
-    background: var(--text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    font-size: 14px !important;
+    color: var(--text);
+    margin-top: 10px;
+    padding-left: 7px;
+    border-left: 4px solid var(--cuarto-color);
     font-weight: 600;
 }
 
@@ -373,12 +373,6 @@
         height: 100%;
     }
 }
-
-
-
-
-
-
 
 
 

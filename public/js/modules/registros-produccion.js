@@ -282,7 +282,7 @@ function eventosMisRegistros() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del producto</p>
+            <p class="normal">Información del producto</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -297,14 +297,14 @@ function eventosMisRegistros() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
                 <span class="nombre"><strong><i class='bx bx-user'></i> Operador: </strong>${registro.nombre}</span>
                 <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de producción</p>
+            <p class="normal">Detalles de producción</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-receipt'></i> Lote: </strong>${registro.lote} Und.</span>
                 <span class="valor"><strong><i class='bx bx-cog'></i> Selección/Cernido: </strong>${registro.proceso}</span>
@@ -313,7 +313,7 @@ function eventosMisRegistros() {
                 <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha de vencimiento: </strong>${registro.fecha_vencimiento}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Detalles de verificación</p>
+            <p class="normal">Detalles de verificación</p>
             <div class="campo-vertical">
                 <span><strong><i class='bx bx-transfer'></i> Verificado:</strong> ${registro.fecha_verificacion ? `${registro.c_real} Und.` : 'Pendiente'}</span>
                 ${registro.fecha_verificacion ? `<span><strong><i class='bx bx-calendar-check'></i> Fecha verificación:</strong> ${registro.fecha_verificacion}</span>` : ''}

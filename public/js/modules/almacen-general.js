@@ -514,7 +514,7 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-        <p class="normal"><i class='bx bx-chevron-right'></i>Información general</p>
+        <p class="normal">Información general</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -529,7 +529,7 @@ function eventosAlmacenGeneral() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Detalles adicionales</p>
+            <p class="normal">Detalles adicionales</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-hash'></i> Cantidad por grupo: </strong>${producto.cantidadxgrupo}</span>
                 <span class="valor"><strong><i class='bx bx-list-ul'></i> Lista: </strong>${producto.lista}</span>
@@ -537,12 +537,12 @@ function eventosAlmacenGeneral() {
                 <span class="valor"><strong><i class='bx bx-package'></i> Unidades sueltas: </strong>${producto.uSueltas}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Precios</p>
+            <p class="normal">Precios</p>
             <div class="campo-vertical">
                 ${preciosFormateados}
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+            <p class="normal">Etiquetas</p>
             <div class="campo-vertical">
                 ${etiquetasFormateados}
             </div>
@@ -570,7 +570,7 @@ function eventosAlmacenGeneral() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información general</p>
+                <p class="normal">Información general</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -584,7 +584,7 @@ function eventosAlmacenGeneral() {
                     `<i class='bx bx-package'></i>`}
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -698,7 +698,7 @@ function eventosAlmacenGeneral() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno editar-producto">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información basica</p>
+                <p class="normal">Información basica</p>
                     <div class="entrada">
                         <i class='bx bx-cube'></i>
                         <div class="input">
@@ -763,7 +763,7 @@ function eventosAlmacenGeneral() {
                             <input style="display:none"id="imagenInput" class="imagen-producto" type="file" accept="image/*">
                         </div>
                     </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+                <p class="normal">Etiquetas</p>
                 <div class="etiquetas-container">
                     <div class="etiquetas-actuales">
                         ${etiquetasHTML}
@@ -782,10 +782,10 @@ function eventosAlmacenGeneral() {
                     </div>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Precios</p>
+                <p class="normal">Precios</p>
                     ${preciosFormateados}
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Almacén acopio</p>
+                <p class="normal">Almacén acopio</p>
                     <div class="entrada">
                         <i class='bx bx-package'></i>
                         <div class="input">
@@ -801,7 +801,7 @@ function eventosAlmacenGeneral() {
                         </div>
                     </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la edición</p>
+                <p class="normal">Motivo de la edición</p>
                     <div class="entrada">
                         <i class='bx bx-comment-detail'></i>
                         <div class="input">
@@ -1037,7 +1037,7 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno nuevo-producto">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información basica</p>
+            <p class="normal">Información basica</p>
                 <div class="entrada">
                     <i class='bx bx-cube'></i>
                     <div class="input">
@@ -1053,7 +1053,7 @@ function eventosAlmacenGeneral() {
                     </div>
                 </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Detalles del producto</p>
+            <p class="normal">Detalles del producto</p>
             <div class="campo-horizontal">
                 <div class="entrada">
                     <i class='bx bx-package'></i>
@@ -1088,7 +1088,7 @@ function eventosAlmacenGeneral() {
             </div>
                 
                 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas</p>
+            <p class="normal">Etiquetas</p>
             <div class="etiquetas-container">
                 <div class="etiquetas-actuales">
                 </div>
@@ -1107,10 +1107,10 @@ function eventosAlmacenGeneral() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Precios</p>
+            <p class="normal">Precios</p>
                 ${preciosFormateados}
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Almacen acopio</p>
+            <p class="normal">Almacen acopio</p>
             <div class="entrada">
                 <i class='bx bx-package'></i>
                 <div class="input">
@@ -1269,14 +1269,14 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno editar-produccion">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Etiquetas existentes</p>
+            <p class="normal">Etiquetas existentes</p>
             <div class="etiquetas-container">
                 <div class="etiquetas-actuales">
                     ${etiquetasHTML}
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Agregar nueva etiqueta</p>
+            <p class="normal">Agregar nueva etiqueta</p>
             <div class="entrada">
                 <i class='bx bx-purchase-tag'></i>
                 <div class="input">
@@ -1386,14 +1386,14 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Precios actuales</p>
+            <p class="normal">Precios actuales</p>
             <div class="precios-container">
                 <div class="precios-actuales">
                 ${preciosActuales}
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Agregar nuevo precio</p>
+            <p class="normal">Agregar nuevo precio</p>
             <div class="entrada">
                 <i class='bx bx-dollar'></i>
                 <div class="input">

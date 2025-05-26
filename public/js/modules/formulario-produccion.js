@@ -40,7 +40,7 @@ export async function mostrarFormularioProduccion() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-        <p class="normal"><i class='bx bx-chevron-right'></i>Información del producto</p>
+        <p class="normal">Producto</p>
             <div class="entrada">
                 <i class="ri-box-3-line"></i>
                 <div class="input">
@@ -65,7 +65,7 @@ export async function mostrarFormularioProduccion() {
                     </div>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información de procesos</p>
+            <p class="normal">Procesos</p>
             <div class="entrada">
                 <i class='bx bx-git-compare'></i>
                 <div class="input">
@@ -98,7 +98,7 @@ export async function mostrarFormularioProduccion() {
                     </div>
                 </div>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información del acabado</p>
+            <p class="normal">Acabado</p>
             <div class="entrada">
                 <i class='bx bxs-cube-alt'></i>
                 <div class="input">

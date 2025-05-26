@@ -208,7 +208,7 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncio');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información del cliente</p>
+                <p class="normal">Información del cliente</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${cliente.id}</span>
                     <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${cliente.nombre}</span>
@@ -243,7 +243,7 @@ function eventosClientes() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
-                    <p class="normal"><i class='bx bx-chevron-right'></i> Información del cliente</p>
+                    <p class="normal">Información del cliente</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${cliente.id}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${cliente.nombre}</span>
@@ -251,7 +251,7 @@ function eventosClientes() {
                         <span class="nombre"><strong><i class='bx bx-map'></i> Dirección: </strong>${cliente.direccion || 'No registrada'}</span>
                         <span class="nombre"><strong><i class='bx bx-map-pin'></i> Zona: </strong>${cliente.zona || 'No registrada'}</span>
                     </div>
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                    <p class="normal">Motivo de la eliminación</p>
                     <div class="entrada">
                         <i class='bx bx-comment-detail'></i>
                         <div class="input">
@@ -320,7 +320,7 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i> Información del cliente</p>
+                <p class="normal">Información del cliente</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -349,7 +349,7 @@ function eventosClientes() {
                         <input class="editar-zona" type="text" value="${cliente.zona || ''}">
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la edición</p>
+                <p class="normal">Motivo de la edición</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">

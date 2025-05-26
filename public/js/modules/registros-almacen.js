@@ -435,7 +435,7 @@ function eventosRegistrosAlmacen() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -448,14 +448,14 @@ function eventosRegistrosAlmacen() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Detalles del movimiento</p>
+            <p class="normal">Detalles del movimiento</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${registro.nombre_movimiento}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Cliente/Proveedor: </strong>${registro.cliente_proovedor.split('(')[0].trim()}</span>
                 <span class="valor"><strong><i class='bx bx-user-circle'></i> Responsable: </strong>${registro.operario}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Productos y cantidades</p>
+            <p class="normal">Productos y cantidades</p>
             <div class="campo-vertical">
                 ${registro.productos.split(';').map((producto, index) => {
             const cantidad = registro.cantidades.split(';')[index] || 'N/A';
@@ -464,7 +464,7 @@ function eventosRegistrosAlmacen() {
                     `;
         }).join('')}
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Detalles financieros</p>
+            <p class="normal">Detalles financieros</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Subtotal: </strong>Bs. ${registro.subtotal}</span>
                 <span class="valor"><strong><i class='bx bx-tag'></i> Descuento: </strong>Bs. ${registro.descuento}</span>
@@ -472,7 +472,7 @@ function eventosRegistrosAlmacen() {
                 <span class="valor total"><strong><i class='bx bx-money'></i> Total: </strong>Bs. ${registro.total}</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Observaciones</p>
+            <p class="normal">Observaciones</p>
             <div class="campo-vertical">
                  <span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong>${registro.observaciones || 'Ninguna'}</span>
             </div>
@@ -503,7 +503,7 @@ function eventosRegistrosAlmacen() {
                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -515,7 +515,7 @@ function eventosRegistrosAlmacen() {
                         <i class='bx bx-package'></i>
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -597,7 +597,7 @@ function eventosRegistrosAlmacen() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -609,7 +609,7 @@ function eventosRegistrosAlmacen() {
                         <i class='bx bx-package'></i>
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la anulación</p>
+                <p class="normal">Motivo de la anulación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">

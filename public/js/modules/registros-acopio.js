@@ -392,7 +392,7 @@ function eventosRegistrosAcopio() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+                <p class="normal">Información básica</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -405,14 +405,14 @@ function eventosRegistrosAcopio() {
                     </div>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Detalles del producto</p>
+                <p class="normal">Detalles del producto</p>
                 <div class="campo-vertical">
                     <span class="valor"><strong><i class='bx bx-barcode'></i> ID Producto: </strong>${registro.idProducto}</span>
                     <span class="valor"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto}</span>
                     <span class="valor"><strong><i class='bx bx-weight'></i> Peso: </strong>${registro.peso} Kg.</span>
                 </div>
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Detalles del movimiento</p>
+                <p class="normal">Detalles del movimiento</p>
                 <div class="campo-vertical">
                     <span class="valor"><strong><i class='bx bx-user'></i> Operario: </strong>${registro.operario}</span>
                     <span class="valor"><strong><i class='bx bx-notepad'></i> Nombre del movimiento: </strong>${registro.nombreMovimiento}</span>
@@ -420,7 +420,7 @@ function eventosRegistrosAcopio() {
     
                 ${caracteristicasHTML}
     
-                <p class="normal"><i class='bx bx-chevron-right'></i>Observaciones</p>
+                <p class="normal">Observaciones</p>
                 <div class="campo-vertical">
                     <span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong>${registro.observaciones || 'Ninguna'}</span>
                 </div>
@@ -451,7 +451,7 @@ function eventosRegistrosAcopio() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i>¿Estás seguro de eliminar este registro?</p>
+                <p class="normal">Información del registro</p>
                 <div class="campo-horizontal">
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -465,7 +465,7 @@ function eventosRegistrosAcopio() {
                     <span class="valor"><strong><i class='bx bx-weight'></i> Peso: </strong>${registro.peso} Kg.</span>
                 </div>
 
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la eliminación</p>
+                <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
@@ -545,7 +545,7 @@ function eventosRegistrosAcopio() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i> Información del registro</p>
+            <p class="normal">Información del registro</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -559,7 +559,7 @@ function eventosRegistrosAcopio() {
                 <span class="valor"><strong><i class='bx bx-weight'></i> Peso: </strong>${registro.peso} Kg.</span>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i> Motivo de la anulación</p>
+            <p class="normal">Motivo de la anulación</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">

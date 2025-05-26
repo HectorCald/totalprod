@@ -269,14 +269,14 @@ function eventosRegistrosConteo() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información básica</p>
+            <p class="normal">Información básica</p>
             <div class="campo-vertical">
                 <span><strong><i class='bx bx-hash'></i> ID:</strong> ${registro.id}</span>
                 <span><strong><i class='bx bx-label'></i> Nombre:</strong> ${registro.nombre || 'Sin nombre'}</span>
                 <span><strong><i class='bx bx-calendar'></i> Fecha:</strong> ${registro.fecha}</span>
                 <span><strong><i class='bx bx-comment-detail'></i> Observaciones:</strong> ${registro.observaciones || 'Sin observaciones'}</span>
             </div>
-            <p class="normal"><i class='bx bx-chevron-right'></i>Productos contados</p>
+            <p class="normal">Productos contados</p>
             ${productos.map((producto, index) => {
             const diferencia = parseInt(diferencias[index]);
             const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
@@ -319,14 +319,14 @@ function eventosRegistrosConteo() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Información del conteo a eliminar</p>
+                    <p class="normal">Información del conteo a eliminar</p>
                     <div class="campo-vertical">
                         <span><strong><i class='bx bx-hash'></i> ID:</strong> ${registro.id}</span>
                         <span><strong><i class='bx bx-label'></i> Nombre:</strong> ${registro.nombre || 'Sin nombre'}</span>
                         <span><strong><i class='bx bx-calendar'></i> Fecha:</strong> ${registro.fecha}</span>
                         <span><strong><i class='bx bx-comment-detail'></i> Observaciones:</strong> ${registro.observaciones || 'Sin observaciones'}</span>
                     </div>
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Ingresa el motivo de la eliminación</p>
+                    <p class="normal">Ingresa el motivo de la eliminación</p>
                     <div class="entrada">
                         <i class='bx bx-message-square-detail'></i>
                         <div class="input">
@@ -398,7 +398,7 @@ function eventosRegistrosConteo() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Información basica</p>
+                    <p class="normal">Información basica</p>
                     <div class="campo-vertical">
                         <span><strong><i class='bx bx-hash'></i> ID:</strong> ${registro.id}</span>
                         <span><strong><i class='bx bx-calendar'></i> Fecha:</strong> ${registro.fecha}</span>
@@ -417,7 +417,7 @@ function eventosRegistrosConteo() {
                             <input class="observaciones" type="text" value="${registro.observaciones || ''}" required>
                         </div>
                     </div>
-                    <p class="normal"><i class='bx bx-chevron-right'></i>Igresa el motivo de la edición</p>
+                    <p class="normal">Igresa el motivo de la edición</p>
                     <div class="entrada">
                         <i class='bx bx-message-square-detail'></i>
                         <div class="input">
@@ -507,7 +507,7 @@ function eventosRegistrosConteo() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Información del conteo</p>
+            <p class="normal">Información del conteo</p>
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -517,7 +517,7 @@ function eventosRegistrosConteo() {
                 </div>
             </div>
 
-            <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la sobreescritura</p>
+            <p class="normal">Motivo de la sobreescritura</p>
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">

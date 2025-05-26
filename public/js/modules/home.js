@@ -269,27 +269,27 @@ function obtenerFunciones() {
         'Administración': [
             {
                 clase: 'opcion-btn',
-                vista: 'regAcopio-view',
-                icono: 'fa-search',
-                texto: 'Registros Acopio',
-                detalle: 'Aqui puedes gestionar todos los registros de Acopio. (Eliminar, Editar, Movimientos)',
-                onclick: 'onclick="cargarRegistrosAcopio()"'
+                vista: 'verificarRegistros-view',
+                icono: 'fa-check-double',
+                texto: 'Verificar',
+                detalle: 'Verifica registros.',
+                onclick: 'onclick="mostrarVerificacion()"'
+            },
+            {
+                clase: 'opcion-btn',
+                vista: 'almacen-view',
+                icono: 'fa-arrow-down',
+                texto: 'Ingresos',
+                detalle: 'Ingresos de tu almacen.',
+                onclick: 'onclick="mostrarIngresos()"'
             },
             {
                 clase: 'opcion-btn',
                 vista: 'regAlmacen-view',
-                icono: 'fa-search',
-                texto: 'Registros Almacen',
-                detalle: 'Aqui puedes gestionar todos los registros de Almacen. (Eliminar, Editar, Movimientos)',
-                onclick: 'onclick="cargarRegistrosAlmacenGral()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'verificarRegistros-view',
-                icono: 'fa-search',
-                texto: 'Registros Producción',
-                detalle: 'Aqui puedes gestionar todos los registros de producción. (Eliminar, Editar, Pagar, Calcular pagos)',
-                onclick: 'onclick="cargarRegistros()"'
+                icono: 'fa-arrow-up',
+                texto: 'Salidas',
+                detalle: 'Salidas de tu almacen.',
+                onclick: 'onclick="mostrarSalidas()"'
             }
         ]
     };
