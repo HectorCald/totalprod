@@ -13,10 +13,21 @@ let registrosProduccion = [];
 let registrosMovimientos = [];
 let movimientosAcopio = [];
 
-async function obtenerUsuario() {
+async function obtenerUsuario(forzarRecarga = false) {
     try {
         mostrarCarga();
-        // Primero intentamos obtener del servidor
+        
+        // Primero intentar recuperar del localStorage si no se fuerza la recarga
+        if (!forzarRecarga) {
+            const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+            if (usuarioGuardado) {
+                usuarioInfo = JSON.parse(usuarioGuardado);
+                ocultarCarga();
+                return true;
+            }
+        }
+
+        // Si no hay datos en localStorage o se fuerza la recarga, hacer la petición
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
 
@@ -50,24 +61,16 @@ async function obtenerUsuario() {
                 }
             }
 
-            // Guardar en localStorage después de obtener del servidor
             localStorage.setItem('damabrava_usuario', JSON.stringify(usuarioInfo));
             return true;
-        } else {
-            // Si falla el servidor, intentar recuperar del localStorage
-            const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-            if (usuarioGuardado) {
-                usuarioInfo = JSON.parse(usuarioGuardado);
-                return true;
-            }
-
-            mostrarNotificacion({
-                message: 'Error al obtener datos del usuario',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
         }
+        
+        mostrarNotificacion({
+            message: 'Error al obtener datos del usuario',
+            type: 'error',
+            duration: 3500
+        });
+        return false;
     } catch (error) {
         console.error('Error al obtener datos del usuario:', error);
         mostrarNotificacion({
@@ -76,6 +79,8 @@ async function obtenerUsuario() {
             duration: 3500
         });
         return false;
+    } finally {
+        ocultarCarga();
     }
 }
 async function obtenerMisRegistros() {
@@ -306,19 +311,19 @@ function obtenerFunciones() {
 }
 
 
-export async function crearHome() {
-
+export async function crearHome(forzarRecarga = false) {
     const view = document.querySelector('.home-view');
-    view.style.opacity = '0';  // Start with opacity 0
+    view.style.opacity = '0';
 
-    await obtenerUsuario();
+    await obtenerUsuario(forzarRecarga);
     crearNav(usuarioInfo.rol);
     crearPerfil();
+    
     const promesas = [
         usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,
         usuarioInfo.rol === 'Almacen' ? obtenerMovimientosAlmacen() : null,
         usuarioInfo.rol === 'Acopio' ? obtenerMovimientosAcopio() : null
-    ].filter(Boolean); // Filtramos los null
+    ].filter(Boolean);
 
     Promise.all(promesas).then(() => {
         mostrarHome(view);
@@ -326,7 +331,17 @@ export async function crearHome() {
             view.style.opacity = '1';
         });
     });
+}
 
+// Nueva función para actualizar datos del usuario
+async function actualizarDatosUsuario() {
+    mostrarCarga();
+    await crearHome(true); // Forzar recarga de datos
+    mostrarNotificacion({
+        message: 'Datos actualizados correctamente',
+        type: 'success',
+        duration: 2000
+    });
 }
 export function mostrarHome(view) {
     const funcionesUsuario = obtenerFunciones();
