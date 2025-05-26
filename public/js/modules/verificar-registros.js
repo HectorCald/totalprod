@@ -629,7 +629,7 @@ function eventosVerificacion() {
                         <i class='bx bx-hash'></i>
                         <div class="input">
                             <p class="detalle">Cantidad real</p>
-                            <input class="cantidad_real" type="number" value="${registro.c_real}" autocomplete="off" placeholder=" " required>
+                            <input class="cantidad_real" type="number" value="${registro.c_real}" autocomplete="off" placeholder=" " readonly>
                         </div>
                     </div>
                     <div class="entrada">
