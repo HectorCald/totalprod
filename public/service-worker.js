@@ -16,6 +16,7 @@ const ASSETS_TO_CACHE = [
     '/js/modules/componentes.js',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
+    
 ];
 
 const syncQueue = new Map();
