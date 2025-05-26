@@ -79,6 +79,11 @@ window.crearPerfil = crearPerfil
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.prefetch('/dashboard');
+        });
+    }
     flotante();
     await crearHome();
     crearNotificaciones();
