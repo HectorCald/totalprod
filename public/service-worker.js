@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v2'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v4'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -9,7 +9,10 @@ const ASSETS_TO_CACHE = [
     '/js/modules/nav.js',
     '/css/styles/nav.css',
     '/js/modules/perfil.js',
-    '/css/styles/perfil.css'
+    '/css/styles/perfil.css',
+    '/js/modules/componentes.js',
+    '/css/styles/componentes.css',
+    '/css/styles/estilos-base.css',
 ];
 
 const syncQueue = new Map();
