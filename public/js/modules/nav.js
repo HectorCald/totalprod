@@ -24,7 +24,8 @@ const atajosPorRol = {
             icono: 'fa-solid fa-book',
             texto: 'Reglas precios',
             detalle: 'Todas las reglas para precios',
-            onclick: 'onclick="mostrarReglas();"'
+            onclick: 'onclick="mostrarReglas();"',
+            soloAdmin: true
         },
         {
             clase: 'opcion-btn',
@@ -32,7 +33,8 @@ const atajosPorRol = {
             icono: 'fa-history',
             texto: 'Registros producción',
             detalle: 'Verifica registros.',
-            onclick: 'onclick="mostrarVerificacion()"'
+            onclick: 'onclick="mostrarVerificacion()"',
+            soloAdmin: true
         },
     ],
     'Acopio': [
@@ -88,6 +90,14 @@ const atajosPorRol = {
     'Almacen': [
         {
             clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-check-double',
+            texto: 'Verificar',
+            detalle: 'Verifica registros.',
+            onclick: 'onclick="mostrarVerificacion()"'
+        },
+        {
+            clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-dolly',
             texto: 'Almacen general',
@@ -133,15 +143,7 @@ const atajosPorRol = {
             texto: 'Registros conteo',
             detalle: 'Aqui puedes ver todos los registros',
             onclick: 'onclick="registrosConteoAlmacen()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'verificarRegistros-view',
-            icono: 'fa-check-double',
-            texto: 'Verificar',
-            detalle: 'Verifica registros.',
-            onclick: 'onclick="mostrarVerificacion()"'
-        },
+        }
     ],
     'Administración': [
         {
@@ -192,7 +194,10 @@ function obtenerOpcionesMenu() {
 
     const atajosRol = atajosPorRol[rol];
     if (atajosRol) {
-        atajosUsuario = [...atajosRol];
+        // Filtrar opciones que no sean exclusivas de admin o que sean para el rol actual
+        atajosUsuario = atajosRol.filter(opcion => {
+            return !opcion.soloAdmin || rol === 'Administración';
+        });
     }
     return atajosUsuario.slice(0, 10);
 }
@@ -232,8 +237,8 @@ function mostrarMenu() {
         const grupos = {
             'Administración': atajosPorRol['Administración'],
             'Producción': atajosPorRol['Producción'],
-            'Acopio': atajosPorRol['Acopio'],
             'Almacen': atajosPorRol['Almacen'],
+            'Acopio': atajosPorRol['Acopio'],
         };
 
         // Generar HTML para cada grupo

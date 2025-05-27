@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v1'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v2'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -44,7 +44,6 @@ self.addEventListener('install', event => {
             })
     );
 });
-
 self.addEventListener('activate', event => {
     event.waitUntil(
         Promise.all([
@@ -63,7 +62,6 @@ self.addEventListener('activate', event => {
         ])
     );
 });
-
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     
@@ -107,9 +105,6 @@ self.addEventListener('fetch', event => {
             })
     );
 });
-
-
-// Manejar sincronización en segundo plano
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {
         event.waitUntil(
@@ -130,8 +125,6 @@ self.addEventListener('sync', event => {
         );
     }
 });
-
-// Notificar al cliente cuando la app está lista para usar offline
 self.addEventListener('message', event => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
