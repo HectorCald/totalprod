@@ -190,7 +190,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${regla.id}</span>
                     <span class="nombre"><strong>${regla.producto}</span>
-                    <span class="etiquetas">${regla.etiq > 1 ? 'Etiquetado: x' + regla.etiq : regla.sell > 1 ? 'Sellado: x' + regla.sell : regla.envs > 1 ? 'Envasado: x' + regla.envs : regla.cern != 1 ? 'Cernido Especial' + regla.cern : ''} ${regla.grMax && regla.grMin ? 'Gramaje (Min: ' + regla.grMin + '-Maxn: ' + regla.grMax + ')' : ''} </span>
+                    <span class="etiquetas">${regla.etiq > 1 ? 'Etiquetado: x' + regla.etiq : regla.sell > 1 ? 'Sellado: x' + regla.sell : regla.envs > 1 ? 'Envasado: x' + regla.envs : regla.cern != 1 ? 'Cernido Especial' + regla.cern : ''} ${regla.grMax && regla.grMin ? 'Gramaje (Min: ' + regla.grMin + '-Max: ' + regla.grMax + ')' : ''} </span>
                 </div>
             </div>
         </div>
