@@ -382,6 +382,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
+    contenido.style.paddingBottom='80px';
 }
 export async function mostrarMisRegistros() {
     mostrarAnuncio();

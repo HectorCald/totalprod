@@ -1,92 +1,7 @@
 let registrosProduccion = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let productosGlobal = [];
-let reglasProduccion = [];
-let reglasBase = [];
-let preciosBase = {
-    etiquetado: 0.016,
-    envasado: 0.048,
-    sellado: 0.006,
-    cernido: 0.08
-};
-async function obtenerReglasBase() {
-    try {
-        const response = await fetch('/obtener-reglas-base');
-        const data = await response.json();
 
-        if (data.success) {
-            reglasBase = data.reglasBase
-                .sort((a, b) => {
-                    const idA = parseInt(a.id.split('-')[1]);
-                    const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA;
-                });
-
-            // Actualizar preciosBase con valores del servidor si es necesario
-            data.reglasBase.forEach(regla => {
-                if (regla.nombre === 'Etiquetado') preciosBase.etiquetado = parseFloat(regla.precio);
-                if (regla.nombre === 'Envasado') preciosBase.envasado = parseFloat(regla.precio);
-                if (regla.nombre === 'Sellado') preciosBase.sellado = parseFloat(regla.precio);
-                if (regla.nombre === 'Cernido') preciosBase.cernido = parseFloat(regla.precio);
-            });
-
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener reglas base',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
-        }
-    } catch (error) {
-        console.error('Error al obtener reglas base:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener reglas base',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    }
-}
-async function obtenerReglas() {
-    try {
-        mostrarCarga();
-        await obtenerReglasBase();
-        const response = await fetch('/obtener-reglas');
-        const data = await response.json();
-
-        if (data.success) {
-            // Filtrar registros por el email del usuario actual y ordenar de más reciente a más antiguo
-            reglasProduccion = data.reglas
-                .sort((a, b) => {
-                    const idA = parseInt(a.id.split('-')[1]);
-                    const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA; // Orden descendente por número de ID
-                });
-
-            return true;
-
-        } else {
-            mostrarNotificacion({
-                message: 'Error la reglas',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
-        }
-    } catch (error) {
-        console.error('Error las reglas', error);
-        mostrarNotificacion({
-            message: 'Error las reglas',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    } finally {
-        ocultarCarga();
-    }
-}
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
     if (usuarioGuardado) {
@@ -160,7 +75,7 @@ function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
     const initialHTML = `  
         <div class="encabezado">
-            <h1 class="titulo">Registros producción</h1>
+            <h1 class="titulo">Pagos</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
@@ -172,17 +87,10 @@ function renderInitialHTML() {
                 </div>
                 <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
             </div>
-            <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
-                ${Array(5).fill().map(() => `
-                    <div class="skeleton skeleton-etiqueta"></div>
-                `).join('')}
-            </div>
             <div class="filtros-opciones estado">
                 <button class="btn-filtro activado">Todos</button>
+                <button class="btn-filtro">Pagados</button>
                 <button class="btn-filtro">Pendientes</button>
-                <button class="btn-filtro">Verificados</button>
-                <button class="btn-filtro">Observados</button>
             </div>
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
@@ -205,12 +113,13 @@ function renderInitialHTML() {
         </div>
         <div class="anuncio-botones">
             <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            <button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom='80px';
 }
-export async function mostrarVerificacion() {
+export async function mostrarPagos() {
     mostrarAnuncio();
     renderInitialHTML();
     setTimeout(() => {
@@ -223,22 +132,11 @@ export async function mostrarVerificacion() {
     ]);
 
     updateHTMLWithData();
-    eventosVerificacion();
+    eventosPagos();
 
 }
 function updateHTMLWithData() {
-    // Update etiquetas filter
-    const nombresUnicos = [...new Set(registrosProduccion.map(registro => registro.nombre))];
-    const etiquetasFilter = document.querySelector('.etiquetas-filter');
-    const etiquetasHTML = nombresUnicos.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta}</button>
-    `).join('');
-    etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
 
-    // Update productos
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = registrosProduccion.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
@@ -256,9 +154,10 @@ function updateHTMLWithData() {
 }
 
 
-function eventosVerificacion() {
+function eventosPagos() {
     const btnExcel = document.getElementById('exportar-excel');
     const registrosAExportar = registrosProduccion;
+    const btnNuevoPago = document.getElementById('nuevo-pago');
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
@@ -458,8 +357,7 @@ function eventosVerificacion() {
             window.info(registroId);
         });
     });
-    window.info = async function (registroId) {
-        await obtenerReglas();
+    window.info = function (registroId) {
         const registro = registrosProduccion.find(r => r.id === registroId);
         if (!registro) return;
 
@@ -516,21 +414,6 @@ function eventosVerificacion() {
                 ${registro.fecha_verificacion ? `<span><strong><i class='bx bx-box'></i> Sueltos:</strong> ${unidadesSueltas} und.</span>` : ''}
                 ${registro.observaciones ? `<span><strong><i class='bx bx-comment-detail'></i>Observaciones: </strong> ${registro.observaciones}</span>` : ''}
             </div>
-            <p class="normal">Detalles de pago</p>
-            <div class="campo-vertical">
-                ${registro.fecha_verificacion ? `
-                    ${(() => {
-                    const calculado = calcularTotal(registro);
-                    return `
-                            <span><strong><i class='bx bx-dollar'></i> Envasado:</strong> Bs.${calculado.envasado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Etiquetado:</strong> Bs.${calculado.etiquetado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Sellado:</strong> Bs.${calculado.sellado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Cernido:</strong> Bs.${calculado.cernido.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Total:</strong> Bs.${calculado.total.toFixed(2)}</span>
-                        `;
-                })()}
-                ` : ''}
-            </div>
         </div>
         <div class="anuncio-botones">
             <button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i></button>
@@ -538,65 +421,6 @@ function eventosVerificacion() {
             ${registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i></button>` : `<button class="btn-verificar btn green" data-id="${registro.id}"><i class="bx bx-check-circle"></i></button>`}
         </div>
         `;
-
-        function calcularTotal(registro) {
-            // Declarar todas las variables necesarias
-            const normalizedNombre = normalizarTexto(registro.producto);
-            const cantidad = parseFloat(registro.c_real) || 0;
-            const gramaje = parseFloat(registro.gramos) || 0;
-            const seleccion = registro.proceso || 'Ninguno';
-
-            let multiplicadores = {
-                etiquetado: '1',
-                sellado: '1',
-                envasado: '1',
-                cernido: reglasBase?.cern || '1', // Usar el valor directo de la regla
-            };
-
-            // Encontrar todas las reglas que aplican para este producto
-            const reglasAplicables = reglasProduccion?.filter(r => {
-                const nombreRegla = normalizarTexto(r.producto);
-                const nombreCoincide = normalizedNombre.includes(nombreRegla);
-                const gramajeCumple = r.grMin && r.grMax ?
-                    (gramaje >= parseFloat(r.gramajeMin) && gramaje <= parseFloat(r.gramajeMax)) :
-                    true;
-                return nombreCoincide && gramajeCumple;
-            }) || [];
-
-            // Revisar cada regla y aplicar el multiplicador correspondiente si es diferente de 1
-            reglasAplicables.forEach(regla => {
-                // Usar los valores directamente sin parseFloat
-                if (regla.etiq !== '1') multiplicadores.etiquetado = regla.etiq;
-                if (regla.sell !== '1') multiplicadores.sellado = regla.sell;
-                if (regla.envs !== '1') multiplicadores.envasado = regla.envs;
-                if (regla.cern !== '1') multiplicadores.cernido = regla.cern;
-            });
-
-
-            // Calcular resultados usando preciosBase
-            let resultado = cantidad * preciosBase.envasado * parseFloat(multiplicadores.envasado);
-            let resultadoEtiquetado = cantidad * preciosBase.etiquetado * parseFloat(multiplicadores.etiquetado);
-            let resultadoSellado = cantidad * preciosBase.sellado * parseFloat(multiplicadores.sellado);
-
-            if (normalizedNombre.includes('bote')) {
-                resultadoSellado = cantidad * 0.025;
-            }
-
-            let resultadoSernido = 0;
-            if (seleccion === 'Cernido') {
-                const kilos = (cantidad * gramaje) / 1000;
-                // Usar el valor exacto sin parseFloat
-                resultadoSernido = (kilos * multiplicadores.cernido) * 5;
-            }
-
-            return {
-                total: resultado + resultadoEtiquetado + resultadoSellado + resultadoSernido,
-                envasado: resultado,
-                etiquetado: resultadoEtiquetado,
-                sellado: resultadoSellado,
-                cernido: resultadoSernido
-            };
-        }
 
         contenido.innerHTML = registrationHTML;
         mostrarAnuncioSecond();
@@ -1151,6 +975,10 @@ function eventosVerificacion() {
                 }
             }
         }
+
+    }
+    btnNuevoPago.addEventListener('click', nuevoPago);
+    function nuevoPago(){
 
     }
     btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));

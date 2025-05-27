@@ -120,6 +120,7 @@ export async function mostrarFormularioProduccion() {
     `;
 
     contenido.innerHTML = registrationHTML;
+    contenido.style.paddingBottom='80px';
     await obtenerProductos();
     evetosFormularioProduccion();
     configuracionesEntrada();

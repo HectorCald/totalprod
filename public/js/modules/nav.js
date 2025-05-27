@@ -8,7 +8,7 @@ const atajosPorRol = {
             icono: 'fa-clipboard-list',
             texto: 'Formulario',
             detalle: 'Registra una nueva producción',
-            onclick: 'onclick="mostrarFormularioProduccion(); ocultarAnuncioSecond();"'
+            onclick: 'onclick="mostrarFormularioProduccion();"'
         },
         {
             clase: 'opcion-btn',
@@ -16,7 +16,23 @@ const atajosPorRol = {
             icono: 'fa-history',
             texto: 'Mis registros',
             detalle: 'Ver mis registros de producción',
-            onclick: 'onclick="mostrarMisRegistros(); ocultarAnuncioSecond()"'
+            onclick: 'onclick="mostrarMisRegistros();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'cuentasProduccion-view',
+            icono: 'fa-solid fa-book',
+            texto: 'Reglas precios',
+            detalle: 'Todas las reglas para precios',
+            onclick: 'onclick="mostrarReglas();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-history',
+            texto: 'Registros producción',
+            detalle: 'Verifica registros.',
+            onclick: 'onclick="mostrarVerificacion()"'
         },
     ],
     'Acopio': [
@@ -121,8 +137,8 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'verificarRegistros-view',
-            icono: 'fa-history',
-            texto: 'Registros producción',
+            icono: 'fa-check-double',
+            texto: 'Verificar',
             detalle: 'Verifica registros.',
             onclick: 'onclick="mostrarVerificacion()"'
         },
@@ -158,7 +174,7 @@ const atajosPorRol = {
             icono: 'fa-credit-card',
             texto: 'Pagos',
             detalle: 'Realiza y registra pagos.',
-            onclick: 'onclick="mostrarClientes()"'
+            onclick: 'onclick="mostrarPagos()"'
         },
         {
             clase: 'opcion-btn',
@@ -214,10 +230,10 @@ function mostrarMenu() {
     if (usuarioInfo === 'Administración') {
         // Agrupar por roles
         const grupos = {
+            'Administración': atajosPorRol['Administración'],
             'Producción': atajosPorRol['Producción'],
             'Acopio': atajosPorRol['Acopio'],
             'Almacen': atajosPorRol['Almacen'],
-            'Administración': atajosPorRol['Administración']
         };
 
         // Generar HTML para cada grupo

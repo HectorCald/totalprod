@@ -21,6 +21,8 @@ import { mostrarPedidos } from './modules/registros-pedidos-acopio.js';
 import { mostrarIngresosAcopio} from './modules/ingresos-acopio.js';
 import { mostrarSalidasAcopio } from './modules/salidas-acopio.js';
 import { mostrarRegistrosAcopio } from './modules/registros-acopio.js';
+import { mostrarPagos } from './modules/pagos.js';
+import { mostrarReglas } from './modules/reglas.js';
 
 
 window.crearHome = crearHome
@@ -54,6 +56,7 @@ window.exportarArchivos = exportarArchivos
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarVerificacion = mostrarVerificacion
 window.mostrarMisRegistros = mostrarMisRegistros
+window.mostrarReglas = mostrarReglas
 
 
 window.mostrarAlmacenGeneral = mostrarAlmacenGeneral
@@ -72,6 +75,9 @@ window.mostrarPedidos = mostrarPedidos
 window.mostrarIngresosAcopio = mostrarIngresosAcopio
 window.mostrarSalidasAcopio = mostrarSalidasAcopio
 window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
+
+
+window.mostrarPagos = mostrarPagos
 
 window.crearPerfil = crearPerfil
 

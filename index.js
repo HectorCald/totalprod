@@ -3711,6 +3711,255 @@ app.put('/actualizar-producto-acopio-salida/:id', requireAuth, async (req, res) 
 });
 
 
+app.get('/obtener-reglas', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Reglas!A2:H'
+        });
+
+        const rows = response.data.values || [];
+
+        const reglas = rows.map(row => ({
+            id: row[0],
+            producto: row[1],
+            etiq: row[2],
+            sell: row[3],
+            envs: row[4],
+            cern: row[5],
+            grMin: row[6],
+            grMax: row[7],
+        }));
+
+        res.json({ success: true, reglas });
+    } catch (error) {
+        console.error('Error las reglas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error las reglas'
+        });
+    }
+});
+app.get('/obtener-reglas-base', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Precios base!A2:C'
+        });
+
+        const rows = response.data.values || [];
+
+        const reglasBase = rows.map(row => ({
+            id: row[0],
+            nombre: row[1],
+            precio: row[2],
+        }));
+
+        res.json({ success: true, reglasBase });
+    } catch (error) {
+        console.error('Error las reglas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error las reglas'
+        });
+    }
+});
+app.post('/agregar-regla', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { producto, base, multiplicador, gramajeMin, gramajeMax } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener el último ID para generar el nuevo
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Reglas!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ? 
+            parseInt(rows[rows.length - 1][0].split('-')[1]) : 0;
+        const nuevoId = `REG-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Formatear los valores según el tipo de base
+        const valores = {
+            producto,
+            etiq: base === 'etiquetado' ? multiplicador || '1' : '1',
+            sell: base === 'sellado' ? multiplicador || '1' : '1',
+            envs: base === 'envasado' ? multiplicador || '1' : '1',
+            cern: base === 'cernido' ? multiplicador || '1' : '1',
+            grMin: gramajeMin || '',
+            grMax: gramajeMax || ''
+        };
+
+        // Insertar la nueva regla
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Reglas!A2:H',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    nuevoId,
+                    valores.producto,
+                    valores.etiq,
+                    valores.sell,
+                    valores.envs,
+                    valores.cern,
+                    valores.grMin,
+                    valores.grMax
+                ]]
+            }
+        });
+
+        res.json({ 
+            success: true, 
+            id: nuevoId,
+            message: 'Regla agregada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al agregar regla:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error al agregar la regla' 
+        });
+    }
+});
+app.delete('/eliminar-regla/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener información de la hoja
+        const spreadsheet = await sheets.spreadsheets.get({
+            spreadsheetId
+        });
+
+        const movimientosSheet = spreadsheet.data.sheets.find(
+            sheet => sheet.properties.title === 'Reglas'
+        );
+
+        if (!movimientosSheet) {
+            return res.status(404).json({
+                success: false,
+                error: 'Hoja de reglas no encontrada'
+            });
+        }
+
+        // Obtener movimientos actuales
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Reglas!A2:H'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Regla no encontrada'
+            });
+        }
+
+        // Eliminar la fila
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: movimientosSheet.properties.sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex + 1, // +1 por el encabezado
+                            endIndex: rowIndex + 2
+                        }
+                    }
+                }]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Regla eliminada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar regla:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al eliminar el regla'
+        });
+    }
+});
+app.put('/actualizar-precios-base', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { etiquetado, envasado, sellado, cernido } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener todos los precios base
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Precios base!A2:C'
+        });
+
+        const rows = response.data.values || [];
+        
+        // Preparar las actualizaciones
+        const updates = [];
+        
+        rows.forEach((row, index) => {
+            const tipo = row[1];
+            let newValue;
+            
+            if (tipo === 'Etiquetado') newValue = etiquetado;
+            else if (tipo === 'Envasado') newValue = envasado;
+            else if (tipo === 'Sellado') newValue = sellado;
+            else if (tipo === 'Cernido') newValue = cernido;
+            else return;
+
+            updates.push({
+                range: `Precios base!C${index + 2}`,
+                values: [[newValue]]
+            });
+        });
+
+        // Ejecutar todas las actualizaciones
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId,
+            resource: {
+                data: updates,
+                valueInputOption: 'USER_ENTERED'
+            }
+        });
+
+        res.json({ 
+            success: true,
+            message: 'Precios base actualizados correctamente',
+            preciosActualizados: { etiquetado, envasado, sellado, cernido }
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar precios base:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error al actualizar los precios base',
+            detalles: error.message
+        });
+    }
+});
+
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
