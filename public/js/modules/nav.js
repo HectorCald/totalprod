@@ -62,14 +62,6 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
-            vista: 'regAcopio-view',
-            icono: 'fa-truck',
-            texto: 'Proovedores acopio',
-            detalle: 'Gestiona tus proovedores.',
-            onclick: 'onclick="mostrarProovedoresAcopio()"'
-        },
-        {
-            clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
             texto: 'Registros acopio',
@@ -112,22 +104,6 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-user-circle',
-            texto: 'Clientes',
-            detalle: 'Gestiona tus clientes',
-            onclick: 'onclick="mostrarClientes()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-truck',
-            texto: 'Proovedores',
-            detalle: 'Gestiona tus proovedores',
-            onclick: 'onclick="mostrarProovedores()"'
-        },
-        {
-            clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
             texto: 'Registros almacen',
@@ -145,77 +121,13 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'verificarRegistros-view',
-            icono: 'fa-check-double',
+            icono: 'fa-history',
             texto: 'Registros producción',
             detalle: 'Verifica registros.',
             onclick: 'onclick="mostrarVerificacion()"'
         },
     ],
     'Administración': [
-        {
-            clase: 'opcion-btn',
-            vista: 'formProduccion-view',
-            icono: 'fa-clipboard-list',
-            texto: 'Formulario',
-            detalle: 'Registra una nueva producción',
-            onclick: 'onclick="mostrarFormularioProduccion(); ocultarAnuncioSecond();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'cuentasProduccion-view',
-            icono: 'fa-history',
-            texto: 'Registros',
-            detalle: 'Ver mis registros de producción',
-            onclick: 'onclick="mostrarMisRegistros(); ocultarAnuncioSecond()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almAcopio-view',
-            icono: 'fa-dolly',
-            texto: 'Almacen acopio',
-            detalle: 'Gestiona tu almacen de acopio',
-            onclick: 'onclick="mostrarAlmacenAcopio();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAcopio-view',
-            icono: 'fa-history',
-            texto: 'Pedidos acopio',
-            detalle: 'Gestionar todos los pedidos',
-            onclick: 'onclick="mostrarPedidos();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAcopio-view',
-            icono: 'fa-truck',
-            texto: 'Proovedores acopio',
-            detalle: 'Gestiona tus proovedores.',
-            onclick: 'onclick="mostrarProovedoresAcopio()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-history',
-            texto: 'Registros acopio',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="mostrarRegistrosAcopio();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-dolly',
-            texto: 'Almacen general',
-            detalle: 'Gestiona tu almacen.',
-            onclick: 'onclick="mostrarAlmacenGeneral()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-clipboard-list',
-            texto: 'Conteo fisico',
-            detalle: 'Realiza conteos fisicos.',
-            onclick: 'onclick="mostrarConteo()"'
-        },
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
@@ -234,19 +146,27 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-history',
-            texto: 'Registros almacen',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="mostrarMovimientosAlmacen()"'
+            vista: 'almacen-view',
+            icono: 'fa-users',
+            texto: 'Personal',
+            detalle: 'Gestiona tus empleados',
+            onclick: 'onclick="mostrarProovedores()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-history',
-            texto: 'Registros conteo',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="registrosConteoAlmacen()"'
+            icono: 'fa-credit-card',
+            texto: 'Pagos',
+            detalle: 'Realiza y registra pagos.',
+            onclick: 'onclick="mostrarClientes()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-file-invoice',
+            texto: 'Reportes',
+            detalle: 'Genera reportes.',
+            onclick: 'onclick="mostrarProovedores()"'
         },
     ]
 };

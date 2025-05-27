@@ -57,7 +57,7 @@
                 }
 
                 .nombre {
-                    font-size: var(--text-subtitulo);
+                    font-size: var(--text-detalle);
                     font-weight: 500;
                     color: var(--text);
                 }
@@ -136,6 +136,7 @@
                 .tipo {
                     font-size: var(--text-detalle);
                     color: var(--text);
+                    text-align: center;
                 }
             }
         }

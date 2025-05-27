@@ -245,7 +245,7 @@ function obtenerFunciones() {
                 clase: 'opcion-btn',
                 vista: 'verificarRegistros-view',
                 icono: 'fa-check-double',
-                texto: 'Registros Producción',
+                texto: 'Verificar',
                 detalle: 'Verifica registros.',
                 onclick: 'onclick="mostrarVerificacion()"'
             },
@@ -307,17 +307,22 @@ function obtenerFunciones() {
 
 
 export async function crearHome() {
-
     const view = document.querySelector('.home-view');
     view.style.opacity = '0';  // Start with opacity 0
 
     await obtenerUsuario();
     crearNav(usuarioInfo.rol);
     crearPerfil(usuarioInfo);
+    
     const promesas = [
         usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,
         usuarioInfo.rol === 'Almacen' ? obtenerMovimientosAlmacen() : null,
-        usuarioInfo.rol === 'Acopio' ? obtenerMovimientosAcopio() : null
+        usuarioInfo.rol === 'Acopio' ? obtenerMovimientosAcopio() : null,
+        usuarioInfo.rol === 'Administración' ? Promise.all([
+            obtenerMisRegistros(),
+            obtenerMovimientosAlmacen(),
+            obtenerMovimientosAcopio()
+        ]) : null
     ].filter(Boolean); // Filtramos los null
 
     Promise.all(promesas).then(() => {
@@ -326,7 +331,6 @@ export async function crearHome() {
             view.style.opacity = '1';
         });
     });
-
 }
 export function mostrarHome(view) {
     const funcionesUsuario = obtenerFunciones();
@@ -354,6 +358,10 @@ export function mostrarHome(view) {
         case 'Acopio':
             registrosFiltrados = movimientosAcopio;
             tipoRegistro = 'almacén';
+            break;
+        case 'Administración':
+            registrosFiltrados = [];
+            tipoRegistro = 'todos';
             break;
     }
 
@@ -390,7 +398,14 @@ export function mostrarHome(view) {
             entradas: entradas,
             salidas: salidas
         };
+    }else if (usuarioInfo.rol === 'Administración') {
+        destacados = {
+            totalProduccion: registrosProduccion.length,
+            totalAlmacen: registrosMovimientos.length,
+            totalAcopio: movimientosAcopio.length
+        };
     }
+
 
     const home = `
         <h1 class="titulo"><i class='bx bx-home'></i> Inicio</h1>
@@ -415,6 +430,19 @@ export function mostrarHome(view) {
                     <div class="destacado">
                         <p class="cantidad yellow">${destacados.noVerificados}</p>
                         <p class="tipo">No verificados</p>
+                    </div>
+                ` : usuarioInfo.rol === 'Administración' ? `
+                    <div class="destacado">
+                        <p class="cantidad blue">${destacados.totalProduccion}</p>
+                        <p class="tipo">Registros Producción</p>
+                    </div>
+                    <div class="destacado">
+                        <p class="cantidad green">${destacados.totalAlmacen}</p>
+                        <p class="tipo">Registros Almacén</p>
+                    </div>
+                    <div class="destacado">
+                        <p class="cantidad yellow">${destacados.totalAcopio}</p>
+                        <p class="tipo">Registros Acopio</p>
                     </div>
                 ` : `
                     <div class="destacado">
@@ -444,9 +472,10 @@ export function mostrarHome(view) {
         crearGraficoVelas();
     } else if (usuarioInfo.rol === 'Almacen') {
         crearGraficoAlmacen();
-    }
-    else if (usuarioInfo.rol === 'Acopio') {
+    } else if (usuarioInfo.rol === 'Acopio') {
         crearGraficoAcopio();
+    } else if (usuarioInfo.rol === 'Administración') {
+        crearGraficoAlmacen();
     }
     ocultarCarga();
 }
