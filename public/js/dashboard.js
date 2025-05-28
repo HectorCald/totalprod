@@ -23,6 +23,8 @@ import { mostrarSalidasAcopio } from './modules/salidas-acopio.js';
 import { mostrarRegistrosAcopio } from './modules/registros-acopio.js';
 import { mostrarPagos } from './modules/pagos.js';
 import { mostrarReglas } from './modules/reglas.js';
+import { mostrarPersonal } from './modules/personal.js';
+
 
 
 window.crearHome = crearHome
@@ -78,8 +80,11 @@ window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
 
 
 window.mostrarPagos = mostrarPagos
+window.mostrarPersonal = mostrarPersonal
 
 window.crearPerfil = crearPerfil
+
+
 
 
 document.addEventListener('DOMContentLoaded', async () => {

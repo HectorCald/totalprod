@@ -11,7 +11,6 @@ let preciosBase = {
 };
 async function obtenerReglasBase() {
     try {
-        mostrarCarga();
         const response = await fetch('/obtener-reglas-base');
         const data = await response.json();
 
@@ -48,9 +47,7 @@ async function obtenerReglasBase() {
             duration: 3500
         });
         return false;
-    } finally {
-        ocultarCarga();
-    }
+    } 
 }
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -166,8 +163,8 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarReglas() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

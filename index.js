@@ -4069,9 +4069,56 @@ app.get('/obtener-pagos', requireAuth, async (req, res) => {
         });
     }
 });
+app.put('/anular-pago/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { motivo } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener todos los pagos
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:N'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Pago no encontrado'
+            });
+        }
+
+        // Actualizar el estado a "Anulado"
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Pagos!N${rowIndex + 2}`,
+            valueInputOption: 'RAW',
+            resource: {
+                values: [['Anulado']]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Pago anulado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al anular pago:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al anular el pago'
+        });
+    }
+});
 
 
-
+/* ==================== RUTAS DE PAGOS PARCIALES ==================== */
 app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
@@ -4244,18 +4291,58 @@ app.post('/registrar-pago-parcial', requireAuth, async (req, res) => {
         });
     }
 });
-app.put('/anular-pago/:id', requireAuth, async (req, res) => {
+
+/* ==================== RUTAS DE PERSONAL ==================== */
+app.get('/obtener-personal', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!A2:J' // Actualizado para incluir columna J
+        });
+
+        const rows = response.data.values || [];
+        const personal = rows.map(row => ({
+            id: row[0] || '',                     // ID
+            nombre: row[1] || '',                 // NOMBRE - APELLIDO
+            telefono: row[2] || '',               // TELEFONO
+            estado: row[3] || '',                 // ESTADO
+            rol: row[4] || '',                    // ROL
+            foto: row[5] || './icons/default-user.png', // FOTO
+            plugins: row[6] || '',                // PLUGINS
+            email: row[7] || '',                  // EMAIL
+            // No enviamos la contraseña por seguridad
+            permisos: row[9] || '',               // PERMISOS
+        }));
+
+        res.json({
+            success: true,
+            personal
+        });
+
+    } catch (error) {
+        console.error('Error al obtener personal:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener el personal'
+        });
+    }
+});
+
+app.put('/actualizar-usuario-admin/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
-        const { motivo } = req.body;
-
+        const { estado, rol, plugins, permisos } = req.body; // Agregado permisos
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Obtener todos los pagos
+        // Obtener usuarios actuales
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Pagos!A2:N'
+            range: 'Usuarios!A2:J' // Actualizado para incluir columna J
         });
 
         const rows = response.data.values || [];
@@ -4264,33 +4351,49 @@ app.put('/anular-pago/:id', requireAuth, async (req, res) => {
         if (rowIndex === -1) {
             return res.status(404).json({
                 success: false,
-                error: 'Pago no encontrado'
+                error: 'Usuario no encontrado'
             });
         }
 
-        // Actualizar el estado a "Anulado"
+        const usuario = rows[rowIndex];
+        const actualizado = [
+            usuario[0], // ID
+            usuario[1], // NOMBRE
+            usuario[2], // TELEFONO
+            estado,     // ESTADO
+            rol,       // ROL  
+            usuario[5], // FOTO
+            plugins,    // PLUGINS
+            usuario[7], // EMAIL
+            usuario[8], // PASSWORD
+            permisos   // PERMISOS
+        ];
+
+        // Actualizar usuario
         await sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: `Pagos!N${rowIndex + 2}`,
+            range: `Usuarios!A${rowIndex + 2}:J${rowIndex + 2}`,
             valueInputOption: 'RAW',
             resource: {
-                values: [['Anulado']]
+                values: [actualizado]
             }
         });
 
         res.json({
             success: true,
-            message: 'Pago anulado correctamente'
+            message: 'Usuario actualizado correctamente'
         });
 
     } catch (error) {
-        console.error('Error al anular pago:', error);
+        console.error('Error al actualizar usuario:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al anular el pago'
+            error: 'Error al actualizar el usuario'
         });
     }
 });
+
+
 
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */

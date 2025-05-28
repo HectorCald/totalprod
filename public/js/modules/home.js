@@ -7,7 +7,8 @@ let usuarioInfo = {
     foto: '',
     rol: '',
     estado: '',
-    plugins: ''
+    plugins: '',
+    permisos: ''
 };
 let registrosProduccion = [];
 let registrosMovimientos = [];
@@ -30,7 +31,8 @@ async function obtenerUsuario() {
                 email: data.usuario.email,
                 rol: data.usuario.rol,
                 estado: data.usuario.estado,
-                plugins: data.usuario.plugins
+                plugins: data.usuario.plugins,
+                permisos: data.usuario.permisos,
             };
 
             // Procesar la foto

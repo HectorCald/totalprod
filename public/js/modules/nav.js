@@ -168,7 +168,7 @@ const atajosPorRol = {
             icono: 'fa-users',
             texto: 'Personal',
             detalle: 'Gestiona tus empleados',
-            onclick: 'onclick="mostrarProovedores()"'
+            onclick: 'onclick="mostrarPersonal()"'
         },
         {
             clase: 'opcion-btn',

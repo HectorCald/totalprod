@@ -6,7 +6,7 @@ let mensajeCompras = localStorage.getItem('damabrava_mensaje_compras') || 'Se co
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 async function obtenerProovedoresAcopio() {
     try {
-        const response = await fetch('/obtener-proovedores-acopio');
+        const response = await fetch('/obtener-proovedores');
         const data = await response.json();
 
         if (data.success) {
@@ -107,7 +107,6 @@ async function obtenerAlmacenAcopio() {
 }
 
 
-
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -202,7 +201,6 @@ function updateHTMLWithData() {
     `).join('');
     productosContainer.innerHTML = productosHTML;
 }
-
 
 
 function eventosPedidos() {
