@@ -1119,6 +1119,20 @@
         font-weight: 900 !important;
         font-size: 10px !important;
     }
+    .pagado {
+        color: var(--success);
+        background: none;
+        border-radius: 10px;
+        font-weight: 900 !important;
+        font-size: 10px !important;
+    }
+    .anulado {
+        color: orange;
+        background: none;
+        border-radius: 10px;
+        font-weight: 900 !important;
+        font-size: 10px !important;
+    }
 
 
     .registro-acciones {
@@ -1853,4 +1867,38 @@
 
 .sugerencias .skeleton-line:nth-child(3) {
     width: 30%;
+}
+
+
+
+
+
+.tabla-responsive {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  min-height: fit-content;
+}
+
+.tabla-responsive table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+  min-height: fit-content !important;
+  color: var(--text);
+  table-layout: auto; /* Ajusta las columnas al contenido */
+}
+
+.tabla-responsive th,
+.tabla-responsive td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--cero-color);
+  white-space: nowrap; /* Evita que el texto se divida y baje */
+}
+
+.tabla-responsive thead {
+  background-color: var(--primary-color);
+  font-weight: bold;
 }

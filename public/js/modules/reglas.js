@@ -4,10 +4,10 @@ let productosGlobal = [];
 let reglasProduccion = [];
 let reglasBase = [];
 let preciosBase = {
-    etiquetado: 0.016,
-    envasado: 0.048,
-    sellado: 0.006,
-    cernido: 0.08
+    etiquetado: 0,
+    envasado: 0,
+    sellado: 0,
+    cernido: 0
 };
 async function obtenerReglasBase() {
     try {
@@ -87,6 +87,7 @@ async function obtenerProductos() {
 }
 async function obtenerReglas() {
     try {
+        await obtenerReglasBase();
         const response = await fetch('/obtener-reglas');
         const data = await response.json();
 
@@ -190,7 +191,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${regla.id}</span>
                     <span class="nombre"><strong>${regla.producto}</span>
-                    <span class="etiquetas">${regla.etiq > 1 ? 'Etiquetado: x' + regla.etiq : regla.sell > 1 ? 'Sellado: x' + regla.sell : regla.envs > 1 ? 'Envasado: x' + regla.envs : regla.cern != 1 ? 'Cernido Especial' + regla.cern : ''} ${regla.grMax && regla.grMin ? 'Gramaje (Min: ' + regla.grMin + '-Max: ' + regla.grMax + ')' : ''} </span>
+                    <span class="etiquetas">${regla.etiq !=1 ? 'Etiquetado: x'+regla.etiq : ''}${regla.sell !=1 ? ' - Sellado: x'+regla.sell : ''}${regla.envs !=1 ? ' - Envasado: x'+regla.envs : ''}${regla.cern != preciosBase.cernido? ' - Cernido: '+regla.cern : ''}</span>
                 </div>
             </div>
         </div>
@@ -330,10 +331,10 @@ function eventosReglas() {
             </div>
             <p class="normal">Reglas</p>
             <div class="campo-vertical">
-                ${registro.etiq > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de etiquetado: </strong>x${registro.etiq}</span>` : ''}
-                ${registro.envs > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de envasado: </strong>x${registro.envs}</span>` : ''}
-                ${registro.sell > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de sellado: </strong>x${registro.sell}</span>` : ''}
-                ${registro.cern != 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de cernido: </strong>${registro.cern}</span>` : ''}
+                <span class="valor"><strong><i class='bx bx-package'></i> Etiquetado: </strong>x${registro.etiq}</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Envasado: </strong>x${registro.envs}</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Sellado: </strong>x${registro.sell}</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Cernido: </strong>${registro.cern}</span>
                 ${registro.grMax ? `<span class="valor"><strong><i class='bx bx-package'></i> Gramaje maximo: </strong>${registro.grMax} gr</span>` : ''}
                 ${registro.grMin ? `<span class="valor"><strong><i class='bx bx-package'></i> Gramaje minimo: </strong>${registro.grMin} gr</span>` : ''}
             </div>
@@ -367,10 +368,10 @@ function eventosReglas() {
                 </div>
                 <p class="normal">Reglas</p>
                 <div class="campo-vertical">
-                    ${registro.etiq > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de etiquetado: </strong>x${registro.etiq}</span>` : ''}
-                    ${registro.envs > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de envasado: </strong>x${registro.envs}</span>` : ''}
-                    ${registro.sell > 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de sellado: </strong>x${registro.sell}</span>` : ''}
-                    ${registro.cern != 1 ? `<span class="valor"><strong><i class='bx bx-package'></i> Regla de cernido: </strong>x${registro.cern}</span>` : ''}
+                    <span class="valor"><strong><i class='bx bx-package'></i> Etiquetado: </strong>x${registro.etiq}</span>
+                    <span class="valor"><strong><i class='bx bx-package'></i> Envasado: </strong>x${registro.envs}</span>
+                    <span class="valor"><strong><i class='bx bx-package'></i> Sellado: </strong>x${registro.sell}</span>
+                    <span class="valor"><strong><i class='bx bx-package'></i> Cernido: </strong>${registro.cern}</span>
                     ${registro.grMax ? `<span class="valor"><strong><i class='bx bx-package'></i> Gramaje maximo: </strong>${registro.grMax} gr</span>` : ''}
                     ${registro.grMin ? `<span class="valor"><strong><i class='bx bx-package'></i> Gramaje minimo: </strong>${registro.grMin} gr</span>` : ''}
                 </div>
@@ -455,42 +456,109 @@ function eventosReglas() {
 
     function crearNuevaRegla() {
         const contenido = document.querySelector('.anuncio-second .contenido');
-        const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Nueva regla</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno nueva-regla">
-            <p class="normal">Información basica</p>
-                <div class="entrada">
-                    <i class='bx bx-cube'></i>
-                    <div class="input">
-                        <p class="detalle">Producto</p>
-                        <input class="producto" type="text"  autocomplete="off" placeholder=" " required>
-                    </div>
+        // Primero mostrar la selección del tipo de regla
+        const seleccionHTML = `
+            <div class="encabezado">
+                <h1 class="titulo">Nueva regla</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+            </div>
+            <div class="relleno nueva-regla">
+                <p class="normal">Seleccione el tipo de regla</p>
+                <div class="botones-seleccion campo-vertical" style="margin:0; padding:0; background:none;">
+                    <button class="btn especial btn-por-producto">
+                        <i class='bx bx-package'></i> Por Producto
+                    </button>
+                    <button class="btn especial btn-por-gramaje">
+                        <i class='bx bx-line-chart'></i> Por Gramaje
+                    </button>
                 </div>
-                <div class="sugerencias" id="productos-list"></div>
-                <div class="entrada">
-                    <i class='bx bx-purchase-tag'></i>
-                    <div class="input">
-                        <p class="detalle">Selecciona precio base</p>
-                        <select class="select-precio-base" required>
-                            <option value="" disabled selected></option>
-                            <option value="envasado">Envasado</option>
-                            <option value="sellado">Sellado</option>
-                            <option value="etiquetado">Etiquetado</option>
-                            <option value="cernido">Cernido</option>
-                        </select>
-                    </div>
+            </div>
+        `;
+
+        contenido.innerHTML = seleccionHTML;
+        mostrarAnuncioSecond();
+
+        // Agregar eventos a los botones
+        contenido.querySelector('.btn-por-producto').addEventListener('click', mostrarFormularioProducto);
+        contenido.querySelector('.btn-por-gramaje').addEventListener('click', mostrarFormularioGramaje);
+
+        function mostrarFormularioProducto() {
+            // Mantener el formulario existente para productos
+            const formularioHTML = `
+                <div class="encabezado">
+                    <h1 class="titulo">Nueva regla por producto</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-            <p class="normal">Detalles de la regla</p>
-                <div class="entrada multiplicador-container">
-                    <i class='bx bx-purchase-tag'></i>
+                <div class="relleno nueva-regla">
+                    <p class="normal">Información básica</p>
+                    <div class="entrada">
+                        <i class='bx bx-cube'></i>
+                        <div class="input">
+                            <p class="detalle">Producto</p>
+                            <input class="producto" type="text" autocomplete="off" placeholder=" " required>
+                        </div>
+                    </div>
+                    <div class="sugerencias" id="productos-list"></div>
+                    ${mostrarCamposComunes()}
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-volver btn yellow"><i class='bx bx-arrow-back'></i> Volver</button>
+                    <button class="btn-crear-regla btn orange"><i class="bx bx-plus"></i> Crear regla</button>
+                </div>
+            `;
+
+            contenido.innerHTML = formularioHTML;
+            configurarAutocompletado();
+            configurarEventos('producto');
+            configuracionesEntrada();
+        }
+
+        function mostrarFormularioGramaje() {
+            const formularioHTML = `
+                <div class="encabezado">
+                    <h1 class="titulo">Nueva regla por gramaje</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno nueva-regla">
+                    <p class="normal">Información básica</p>
+                    <div class="campo-horizontal">
+                        <div class="entrada">
+                            <i class="ri-scales-line"></i>
+                            <div class="input">
+                                <p class="detalle">Gr. Mínimo</p>
+                                <input class="gr-minimo" type="number" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class="ri-scales-line"></i>
+                            <div class="input">
+                                <p class="detalle">Gr. Máximo</p>
+                                <input class="gr-maximo" type="number" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                    </div>
+                    ${mostrarCamposComunes()}
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-volver btn yellow"><i class='bx bx-arrow-back'></i> Volver</button>
+                    <button class="btn-crear-regla btn orange"><i class="bx bx-plus"></i> Crear regla</button>
+                </div>
+            `;
+
+            contenido.innerHTML = formularioHTML;
+            configurarEventos('gramaje');
+            configuracionesEntrada();
+        }
+
+        function mostrarCamposComunes() {
+            return `
+                <p class="normal">Reglas de multiplicación</p>
+                <div class="entrada">
+                    <i class='bx bx-tag'></i>
                     <div class="input">
-                        <p class="detalle">Selecciona un multiplicador</p>
-                        <select class="select-multiplciador" required>
-                            <option value="" selected></option>
-                            <option value="1">x1</option>
+                        <p class="detalle">Etiquetado (x1 por defecto)</p>
+                        <select class="multiplicador-etiquetado">
+                            <option value="1" selected>x1</option>
                             <option value="2">x2</option>
                             <option value="3">x3</option>
                             <option value="4">x4</option>
@@ -498,141 +566,144 @@ function eventosReglas() {
                         </select>
                     </div>
                 </div>
-                <div class="entrada cernido-container">
+    
+                <div class="entrada">
+                    <i class='bx bx-package'></i>
+                    <div class="input">
+                        <p class="detalle">Envasado (x1 por defecto)</p>
+                        <select class="multiplicador-envasado">
+                            <option value="1" selected>x1</option>
+                            <option value="2">x2</option>
+                            <option value="3">x3</option>
+                            <option value="4">x4</option>
+                            <option value="5">x5</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="entrada">
+                    <i class='bx bx-purchase-tag'></i>
+                    <div class="input">
+                        <p class="detalle">Sellado (x1 por defecto)</p>
+                        <select class="multiplicador-sellado">
+                            <option value="1" selected>x1</option>
+                            <option value="2">x2</option>
+                            <option value="3">x3</option>
+                            <option value="4">x4</option>
+                            <option value="5">x5</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="entrada">
                     <i class="ri-filter-line"></i>
                     <div class="input">
-                        <p class="detalle">Cernido especial</p>
-                        <input class="cernido" type="number"  autocomplete="off" placeholder=" " required>
+                        <p class="detalle">Cernido especial (1 por defecto)</p>
+                        <input 
+                            class="precio-cernido" 
+                            type="number" 
+                            value="${preciosBase.cernido}" 
+                            step="0.001" 
+                            min="0.001" 
+                            placeholder=" "
+                            lang="en"
+                            inputmode="decimal"
+                            pattern="[0-9]*[.,]?[0-9]*">
                     </div>
                 </div>
-            <p class="normal">Rango de gramaje (Opcional)</p>
-                <div class="campo-horizontal">
-                    <div class="entrada">
-                        <i class="ri-scales-line"></i>
-                        <div class="input">
-                            <p class="detalle">Gr. Minimo</p>
-                            <input class="gr-minimo" type="number"  autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class="ri-scales-line"></i>
-                        <div class="input">
-                            <p class="detalle">Gr. Maximo</p>
-                            <input class="gr-maximo" type="number"  autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                </div>
-        </div>
-        <div class="anuncio-botones">
-            <button class="btn-crear-regla btn orange"><i class="bx bx-plus"></i> Crear regla</button>
-        </div>
-        `;
+            `;
+        }
 
-        contenido.innerHTML = registrationHTML;
-        mostrarAnuncioSecond();
+        function configurarAutocompletado() {
+            const sugerenciasList = document.querySelector('#productos-list');
+            const productoInput = document.querySelector('.entrada .producto');
 
-        const sugerenciasList = document.querySelector('#productos-list');
-        const productoInput = document.querySelector('.entrada .producto');
-        const selectPrecioBase = contenido.querySelector('.select-precio-base');
-        const multiplicadorContainer = contenido.querySelector('.multiplicador-container');
-        const cernidoContainer = contenido.querySelector('.cernido-container');
+            productoInput.addEventListener('input', (e) => {
+                const valor = normalizarTexto(e.target.value);
+                sugerenciasList.innerHTML = '';
 
-        productoInput.addEventListener('input', (e) => {
-            const valor = normalizarTexto(e.target.value);
+                if (valor) {
+                    const sugerencias = productosGlobal.filter(p =>
+                        normalizarTexto(p.producto).includes(valor)
+                    ).slice(0, 5);
 
-            sugerenciasList.innerHTML = '';
-
-            if (valor) {
-                const sugerencias = productosGlobal.filter(p =>
-                    normalizarTexto(p.producto).includes(valor)
-                ).slice(0, 5);
-
-                if (sugerencias.length) {
-                    sugerenciasList.style.display = 'flex';
-                    sugerencias.forEach(p => {
-                        const div = document.createElement('div');
-                        div.classList.add('item');
-                        div.textContent = p.producto + ' ' + p.gramos + 'gr.';
-                        div.onclick = () => {
-                            productoInput.value = p.producto;
-                            sugerenciasList.style.display = 'none';
-                            const event = new Event('focus');
-                        };
-                        sugerenciasList.appendChild(div);
-                    });
+                    if (sugerencias.length) {
+                        sugerenciasList.style.display = 'flex';
+                        sugerencias.forEach(p => {
+                            const div = document.createElement('div');
+                            div.classList.add('item');
+                            div.textContent = p.producto + ' ' + p.gramos + 'gr.';
+                            div.onclick = () => {
+                                productoInput.value = p.producto;
+                                sugerenciasList.style.display = 'none';
+                            };
+                            sugerenciasList.appendChild(div);
+                        });
+                    }
+                } else {
+                    sugerenciasList.style.display = 'none';
                 }
-            } else {
-                sugerenciasList.style.display = 'none';
-            }
-        });
+            });
+        }
 
-        selectPrecioBase.addEventListener('change', function () {
-            if (this.value === 'cernido') {
-                multiplicadorContainer.style.display = 'none';
-                cernidoContainer.style.display = 'flex';
-            } else {
-                multiplicadorContainer.style.display = 'flex';
-                cernidoContainer.style.display = 'none';
-            }
-        });
+        function configurarEventos(tipo) {
+            
+            const btnVolver = contenido.querySelector('.btn-volver');
+            const btnCrear = contenido.querySelector('.btn-crear-regla');
 
-        const btnCrear = contenido.querySelector('.btn-crear-regla');
-        btnCrear.addEventListener('click', confirmarCreacion);
+            btnVolver.addEventListener('click', () => {
+                contenido.innerHTML = seleccionHTML;
+                contenido.querySelector('.btn-por-producto').addEventListener('click', mostrarFormularioProducto);
+                contenido.querySelector('.btn-por-gramaje').addEventListener('click', mostrarFormularioGramaje);
+            });
 
-        async function confirmarCreacion() {
+            btnCrear.addEventListener('click', () => confirmarCreacion(tipo));
+        }
+
+        async function confirmarCreacion(tipo) {
             try {
                 mostrarCarga();
-                const productoSeleccionado = document.querySelector('.nueva-regla .producto').value.trim();
-                const base = document.querySelector('.select-precio-base').value;
-                const multiplicador = base === 'cernido' ? '1' : document.querySelector('.select-multiplciador').value.trim();
-                const gramajeMin = document.querySelector('.gr-minimo').value;
-                const gramajeMax = document.querySelector('.gr-maximo').value;
+                let producto = '';
+                let gramajeMin = null;
+                let gramajeMax = null;
 
-                let precioCernido = document.querySelector('.cernido').value;
-                if (base === 'cernido' && precioCernido) {
-                    precioCernido = precioCernido.replace(',', '.');
-                    if (isNaN(parseFloat(precioCernido))) {
-                        throw new Error('Por favor ingrese un precio válido para cernido');
+                if (tipo === 'producto') {
+                    producto = document.querySelector('.producto').value.trim();
+                    if (!producto) {
+                        throw new Error('Por favor ingrese un nombre de producto');
                     }
+                } else {
+                    gramajeMin = document.querySelector('.gr-minimo').value;
+                    gramajeMax = document.querySelector('.gr-maximo').value;
+                    if (!gramajeMin || !gramajeMax) {
+                        throw new Error('Por favor ingrese ambos rangos de gramaje');
+                    }
+                    if (parseInt(gramajeMin) > parseInt(gramajeMax)) {
+                        throw new Error('El gramaje mínimo debe ser menor o igual que el máximo');
+                    }
+                    producto = `Regla ${gramajeMin}gr-${gramajeMax}gr`;
                 }
 
-                // Validaciones
-                if (!base) {
-                    throw new Error('Por favor seleccione un tipo');
-                }
+                const etiquetado = document.querySelector('.multiplicador-etiquetado').value;
+                const envasado = document.querySelector('.multiplicador-envasado').value;
+                const sellado = document.querySelector('.multiplicador-sellado').value;
+                const cernido = document.querySelector('.precio-cernido').value.replace(',', '.');
 
-                if (base === 'cernido' && !precioCernido) {
-                    throw new Error('Por favor ingrese el precio base para cernido');
-                }
-
-                if (base !== 'cernido' && !multiplicador) {
-                    throw new Error('Por favor seleccione un multiplicador');
-                }
-
-                if ((gramajeMin && !gramajeMax) || (!gramajeMin && gramajeMax)) {
-                    throw new Error('Si especifica un rango de gramaje, debe completar ambos valores');
-                }
-
-                if (gramajeMin && gramajeMax && parseInt(gramajeMin) > parseInt(gramajeMax)) {
-                    throw new Error('El gramaje mínimo debe ser menor o igual que el máximo');
-                }
-
-                const producto = productoSeleccionado || busquedaProducto;
-                if (!producto) {
-                    throw new Error('Por favor ingrese un nombre de producto o seleccione uno de la lista');
-                }
-
-                const response = await fetch('/agregar-regla', {
+                const response = await fetch('/agregar-reglas-multiples', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         producto,
-                        base,
-                        multiplicador: base === 'cernido' ? precioCernido : multiplicador,
-                        gramajeMin: gramajeMin || null,
-                        gramajeMax: gramajeMax || null
+                        reglas: {
+                            etiquetado: Number(etiquetado),
+                            envasado: Number(envasado),
+                            sellado: Number(sellado),
+                            cernido: Number(cernido)
+                        },
+                        gramajeMin: gramajeMin ? parseInt(gramajeMin) : null,
+                        gramajeMax: gramajeMax ? parseInt(gramajeMax) : null
                     })
                 });
 
@@ -648,33 +719,24 @@ function eventosReglas() {
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
                     ocultarAnuncioSecond();
                     await mostrarReglas();
                 } else {
-                    mostrarNotificacion({
-                        message: 'Error al guardar la regla',
-                        type: 'error',
-                        duration: 3000
-                    });
-                    ocultarCarga();
                     throw new Error(result.error || 'Error al guardar la regla');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: 'Error al guardar la regla',
+                    message: error.message || 'Error al guardar la regla',
                     type: 'error',
                     duration: 3000
                 });
-                ocultarCarga();
             } finally {
                 ocultarCarga();
             }
         }
     }
     async function verPreciosBase() {
-        await obtenerReglasBase();
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
@@ -759,7 +821,7 @@ function eventosReglas() {
                         etiquetado: etiquetado,
                         envasado: envasado,
                         sellado: sellado,
-                        cernido:cernido
+                        cernido: cernido
                     })
                 });
 

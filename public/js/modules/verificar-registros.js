@@ -51,7 +51,6 @@ async function obtenerReglasBase() {
 }
 async function obtenerReglas() {
     try {
-        mostrarCarga();
         await obtenerReglasBase();
         const response = await fetch('/obtener-reglas');
         const data = await response.json();
@@ -83,8 +82,6 @@ async function obtenerReglas() {
             duration: 3500
         });
         return false;
-    } finally {
-        ocultarCarga();
     }
 }
 function recuperarUsuarioLocal() {
@@ -205,6 +202,7 @@ function renderInitialHTML() {
         </div>
         <div class="anuncio-botones">
             <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            <button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -217,9 +215,10 @@ export async function mostrarVerificacion() {
         configuracionesEntrada();
     }, 100);
 
-    const [registrosProduccion, productos] = await Promise.all([
+    const [registrosProduccion, productos, reglas] = await Promise.all([
         obtenerRegistrosProduccion(),
-        obtenerProductos()
+        obtenerProductos(),
+        obtenerReglas()
     ]);
 
     updateHTMLWithData();
@@ -459,7 +458,6 @@ function eventosVerificacion() {
         });
     });
     window.info = async function (registroId) {
-        await obtenerReglas();
         const registro = registrosProduccion.find(r => r.id === registroId);
         if (!registro) return;
 
@@ -550,28 +548,51 @@ function eventosVerificacion() {
                 etiquetado: '1',
                 sellado: '1',
                 envasado: '1',
-                cernido: reglasBase?.cern || '1', // Usar el valor directo de la regla
+                cernido: '1'
             };
 
-            // Encontrar todas las reglas que aplican para este producto
-            const reglasAplicables = reglasProduccion?.filter(r => {
-                const nombreRegla = normalizarTexto(r.producto);
-                const nombreCoincide = normalizedNombre.includes(nombreRegla);
-                const gramajeCumple = r.grMin && r.grMax ?
-                    (gramaje >= parseFloat(r.gramajeMin) && gramaje <= parseFloat(r.gramajeMax)) :
-                    true;
-                return nombreCoincide && gramajeCumple;
+            // Primero buscar reglas por gramaje
+            const reglasGramaje = reglasProduccion?.filter(r => {
+                if (r.producto.startsWith('Regla ') && r.producto.includes('gr-')) {
+                    const [minStr, maxStr] = r.producto
+                        .replace('Regla ', '')
+                        .replace('gr', '')
+                        .split('-');
+
+                    const minGr = parseInt(minStr);
+                    const maxGr = parseInt(maxStr);
+                    return gramaje >= minGr && gramaje <= maxGr;
+                }
+                return false;
             }) || [];
 
-            // Revisar cada regla y aplicar el multiplicador correspondiente si es diferente de 1
-            reglasAplicables.forEach(regla => {
-                // Usar los valores directamente sin parseFloat
-                if (regla.etiq !== '1') multiplicadores.etiquetado = regla.etiq;
-                if (regla.sell !== '1') multiplicadores.sellado = regla.sell;
-                if (regla.envs !== '1') multiplicadores.envasado = regla.envs;
-                if (regla.cern !== '1') multiplicadores.cernido = regla.cern;
-            });
+            // Si encontramos reglas por gramaje, usamos la primera
+            if (reglasGramaje.length > 0) {
+                const reglaGramaje = reglasGramaje[0];
+                multiplicadores = {
+                    etiquetado: reglaGramaje.etiq || '1',
+                    sellado: reglaGramaje.sell || '1',
+                    envasado: reglaGramaje.envs || '1',
+                    cernido: reglaGramaje.cern || '1'
+                };
+            } else {
+                // Si no hay reglas por gramaje, buscar reglas por nombre
+                const reglasPorProducto = reglasProduccion?.filter(r => {
+                    const nombreRegla = normalizarTexto(r.producto);
+                    return normalizedNombre === nombreRegla && !r.producto.startsWith('Regla ');
+                }) || [];
 
+                // Aplicar reglas por producto si existen
+                if (reglasPorProducto.length > 0) {
+                    const regla = reglasPorProducto[0];
+                    multiplicadores = {
+                        etiquetado: regla.etiq || '1',
+                        sellado: regla.sell || '1',
+                        envasado: regla.envs || '1',
+                        cernido: regla.cern || '1'
+                    };
+                }
+            }
 
             // Calcular resultados usando preciosBase
             let resultado = cantidad * preciosBase.envasado * parseFloat(multiplicadores.envasado);
@@ -585,8 +606,7 @@ function eventosVerificacion() {
             let resultadoSernido = 0;
             if (seleccion === 'Cernido') {
                 const kilos = (cantidad * gramaje) / 1000;
-                // Usar el valor exacto sin parseFloat
-                resultadoSernido = (kilos * multiplicadores.cernido) * 5;
+                resultadoSernido = (kilos * parseFloat(multiplicadores.cernido)) * 5;
             }
 
             return {
@@ -597,8 +617,11 @@ function eventosVerificacion() {
                 cernido: resultadoSernido
             };
         }
+        window.calcularTotal = calcularTotal;
+
 
         contenido.innerHTML = registrationHTML;
+
         mostrarAnuncioSecond();
 
         const btnEditar = contenido.querySelector('.btn-editar');
@@ -1155,4 +1178,250 @@ function eventosVerificacion() {
     }
     btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
     aplicarFiltros();
+
+    document.addEventListener('click', async function (e) {
+        if (e.target.closest('#nuevo-pago')) {
+            mostrarFormularioNuevoPago();
+        }
+    });
+
+    async function mostrarFormularioNuevoPago() {
+        const itemsVisibles = Array.from(document.querySelectorAll('.registro-item:not([style*="display: none"])'));
+        const registrosFiltrados = itemsVisibles.map(item =>
+            registrosProduccion.find(r => r.id === item.dataset.id)
+        ).filter(r => r);
+
+        // Usar la función global calcularTotal para generar la vista previa
+        const vistaPrevia = registrosFiltrados.map(registro => {
+            const calculado = calcularTotal(registro);
+            return `
+            <tr>
+                <td>${registro.nombre}</td>
+                <td>${registro.producto}</td>
+                <td>${registro.gramos}</td>
+                <td>${registro.c_real}</td>
+                <td>${calculado.cernido.toFixed(2)}</td>
+                <td>${calculado.envasado.toFixed(2)}</td>
+                <td>${calculado.etiquetado.toFixed(2)}</td>
+                <td>${calculado.sellado.toFixed(2)}</td>
+                <td><strong>${calculado.total.toFixed(2)}</strong></td>
+            </tr>
+        `;
+        }).join('');
+
+        // Calcular el subtotal general usando la misma función
+        const subtotalGeneral = registrosFiltrados.reduce((total, registro) => {
+            const calculado = calcularTotal(registro);
+            return total + calculado.total;
+        }, 0);
+
+        // Obtener nombres únicos para el select de beneficiarios
+        const nombresUnicos = [...new Set(registrosFiltrados.map(r => r.nombre))];
+
+        const contenido = document.querySelector('.anuncio-second .contenido');
+        contenido.innerHTML = `
+            <div class="encabezado">
+                <h1 class="titulo">Nuevo Pago</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+            </div>
+            <div class="relleno">
+                <p class="normal">Información general del pago</p>
+                <div class="entrada">
+                    <i class='bx bx-rename'></i>
+                    <div class="input">
+                        <p class="detalle">Nombre del pago</p>
+                        <input type="text" name="nombre_pago" required>
+                    </div>
+                </div>
+                <div class="entrada">
+                    <i class='bx bx-user'></i>
+                    <div class="input">
+                        <p class="detalle">Beneficiario</p>
+                        <select name="beneficiario" id="select-beneficiario">
+                            <option value=""></option>
+                            ${nombresUnicos.map(n => `<option value="${n}">${n}</option>`).join('')}
+                        </select>
+                        <input type="text" name="beneficiario_personalizado" id="beneficiario-personalizado" style="display:none;" placeholder="Nombre personalizado">
+                    </div>
+                </div>
+                <div class="entrada">
+                    <i class='bx bx-user-check'></i>
+                    <div class="input">
+                        <p class="detalle">Pagado por</p>
+                        <input type="text" name="pagado_por" value="${usuarioInfo.nombre}" readonly>
+                    </div>
+                </div>
+                <div class="entrada">
+                    <i class='bx bx-file'></i>
+                    <div class="input">
+                        <p class="detalle">Justificativos</p>
+                        <input name="justificativos" rows="2" readonly value="${registrosFiltrados.map(r => r.id).join(', ')}">
+                    </div>
+                </div>
+                <div class="campo-horizontal">
+                    <div class="entrada">
+                        <i class='bx bx-calculator'></i>
+                        <div class="input">
+                            <p class="detalle">Subtotal</p>
+                            <input type="number" name="subtotal" required value="${subtotalGeneral.toFixed(2)}">
+                        </div>
+                    </div>
+                    <div class="entrada">
+                        <i class='bx bx-minus-circle'></i>
+                        <div class="input">
+                            <p class="detalle">Descuento</p>
+                            <input type="number" name="descuento" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="campo-horizontal">
+                    <div class="entrada">
+                        <i class='bx bx-plus-circle'></i>
+                        <div class="input">
+                            <p class="detalle">Aumento</p>
+                            <input type="number" name="aumento" value="0">
+                        </div>
+                    </div>
+                    <div class="entrada">
+                        <i class='bx bx-dollar-circle'></i>
+                        <div class="input">
+                            <p class="detalle">Total</p>
+                            <input type="number" name="total" required value="${subtotalGeneral.toFixed(2)}">
+                        </div>
+                    </div>
+                </div>
+                <div class="entrada">
+                    <i class='bx bx-comment-detail'></i>
+                    <div class="input">
+                        <p class="detalle">Observaciones</p>
+                        <input type="text" name="observaciones">
+                    </div>
+                </div>
+                <p class="normal">Vista previa de registros incluidos</p>
+                <div class="tabla-responsive">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Operador</th>
+                            <th>Producto</th>
+                            <th>Gramaje</th>
+                            <th>Cantidad verf.</th>
+                            <th>Cernido</th>
+                            <th>Envasado</th>
+                            <th>Etiquetado</th>
+                            <th>Sellado</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        ${vistaPrevia}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="anuncio-botones">
+                <button type="submit" class="btn green"><i class='bx bx-save'></i> Guardar pago</button>
+            </div>
+        `;
+
+        mostrarAnuncioSecond();
+
+        const selectBenef = contenido.querySelector('#select-beneficiario');
+        const inputPersonalizado = contenido.querySelector('#beneficiario-personalizado');
+        selectBenef.addEventListener('change', function () {
+            if (this.value === 'otro') {
+                inputPersonalizado.style.display = 'block';
+                inputPersonalizado.required = true;
+            } else {
+                inputPersonalizado.style.display = 'none';
+                inputPersonalizado.required = false;
+            }
+        });
+        const inputs = contenido.querySelectorAll('input[name="subtotal"], input[name="descuento"], input[name="aumento"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', calcularTotal);
+        });
+
+        const btnGuardar = contenido.querySelector('button[type="submit"]');
+        btnGuardar.addEventListener('click', guardarPago);
+
+        async function guardarPago(e) {
+            e.preventDefault();
+
+            // Obtener los valores de la tabla directamente
+            const filasTabla = document.querySelectorAll('table tbody tr');
+            const justificativosDetallados = Array.from(filasTabla).map(fila => {
+                const producto = fila.cells[1].textContent; // Columna Producto
+                const gramaje = fila.cells[2].textContent; // Columna Gramaje
+                const cernido = fila.cells[4].textContent; // Columna Cernido
+                const envasado = fila.cells[5].textContent; // Columna Envasado
+                const etiquetado = fila.cells[6].textContent; // Columna Etiquetado
+                const sellado = fila.cells[7].textContent; // Columna Sellado
+
+                // Retornar string con producto y valores de la tabla
+                return `${producto} ${gramaje}gr(${envasado},${etiquetado},${sellado},${cernido})`;
+            }).join(';');
+
+            const formData = {
+                nombre_pago: contenido.querySelector('input[name="nombre_pago"]').value.trim(),
+                beneficiario: selectBenef.value === 'otro' ?
+                    inputPersonalizado.value.trim() :
+                    selectBenef.value,
+                id_beneficiario: registrosFiltrados[0].user,
+                pagado_por: contenido.querySelector('input[name="pagado_por"]').value.trim(),
+                justificativos: contenido.querySelector('input[name="justificativos"]').value,
+                justificativosDetallados, // Usando los valores de la tabla
+                subtotal: parseFloat(contenido.querySelector('input[name="subtotal"]').value),
+                descuento: parseFloat(contenido.querySelector('input[name="descuento"]').value) || 0,
+                aumento: parseFloat(contenido.querySelector('input[name="aumento"]').value) || 0,
+                total: parseFloat(contenido.querySelector('input[name="total"]').value),
+                observaciones: contenido.querySelector('input[name="observaciones"]').value.trim(),
+                registros: registrosFiltrados.map(r => r.id),
+                tipo: 'produccion'
+            };
+
+            // Validaciones
+            if (!formData.nombre_pago || !formData.beneficiario) {
+                mostrarNotificacion({
+                    message: 'Por favor complete los campos obligatorios',
+                    type: 'warning',
+                    duration: 3500
+                });
+                return;
+            }
+
+            try {
+                mostrarCarga();
+                const response = await fetch('/registrar-pago', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarNotificacion({
+                        message: 'Pago registrado correctamente',
+                        type: 'success',
+                        duration: 3000
+                    });
+                    cerrarAnuncioManual('anuncioSecond');
+                } else {
+                    throw new Error(data.error || 'Error al registrar el pago');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion({
+                    message: error.message || 'Error al registrar el pago',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                ocultarCarga();
+            }
+        }
+    }
 }

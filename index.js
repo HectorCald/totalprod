@@ -18,8 +18,6 @@ const port = process.env.PORT || 3000;
 const JWT_SECRET = 'secret-totalprod-hcco';
 
 
-
-
 /* ==================== CONFIGURACIÓN DE GOOGLE SHEETS ==================== */
 const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -90,7 +88,7 @@ app.get('/', (req, res) => {
             // Token inválido, continuar al login
         }
     }
-    
+
     res.render('login');
 });
 app.get('/dashboard', requireAuth, (req, res) => {
@@ -3260,7 +3258,7 @@ app.put('/rechazar-pedido/:id', requireAuth, async (req, res) => {
         const { motivo } = req.body;
 
         const sheets = google.sheets({ version: 'v4', auth });
-        
+
         // Obtener todos los pedidos
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
@@ -3297,7 +3295,7 @@ app.put('/llego-pedido/:id', requireAuth, async (req, res) => {
         const { motivo } = req.body;
 
         const sheets = google.sheets({ version: 'v4', auth });
-        
+
         // Obtener todos los pedidos
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
@@ -3333,7 +3331,7 @@ app.post('/registrar-movimiento-acopio', requireAuth, async (req, res) => {
     const { spreadsheetId, nombre } = req.user;
     const { pedidoId, ...movimientoData } = req.body;
 
-    
+
 
     try {
         const sheets = google.sheets({ version: 'v4', auth });
@@ -3342,7 +3340,7 @@ app.post('/registrar-movimiento-acopio', requireAuth, async (req, res) => {
             spreadsheetId,
             range: 'Movimientos alm-acopio!A2:A' // Assuming IDs are in column A
         });
-        
+
         const rows = response.data.values || [];
         const lastId = rows.length > 0 ?
             Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
@@ -3772,10 +3770,10 @@ app.get('/obtener-reglas-base', requireAuth, async (req, res) => {
         });
     }
 });
-app.post('/agregar-regla', requireAuth, async (req, res) => {
+app.post('/agregar-reglas-multiples', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
-        const { producto, base, multiplicador, gramajeMin, gramajeMax } = req.body;
+        const { producto, reglas, gramajeMin, gramajeMax } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener el último ID para generar el nuevo
@@ -3785,52 +3783,44 @@ app.post('/agregar-regla', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        const lastId = rows.length > 0 ? 
+        const lastId = rows.length > 0 ?
             parseInt(rows[rows.length - 1][0].split('-')[1]) : 0;
         const nuevoId = `REG-${(lastId + 1).toString().padStart(3, '0')}`;
 
-        // Formatear los valores según el tipo de base
-        const valores = {
+        // Formatear los valores y forzar el uso del punto decimal
+        const newRow = [
+            nuevoId,
             producto,
-            etiq: base === 'etiquetado' ? multiplicador || '1' : '1',
-            sell: base === 'sellado' ? multiplicador || '1' : '1',
-            envs: base === 'envasado' ? multiplicador || '1' : '1',
-            cern: base === 'cernido' ? multiplicador || '1' : '1',
-            grMin: gramajeMin || '',
-            grMax: gramajeMax || ''
-        };
+            reglas.etiquetado.toString().replace(',', '.') || '1',
+            reglas.sellado.toString().replace(',', '.') || '1',
+            reglas.envasado.toString().replace(',', '.') || '1',
+            reglas.cernido.toString().replace(',', '.') || '1',
+            gramajeMin || '',
+            gramajeMax || ''
+        ];
 
-        // Insertar la nueva regla
+        // Insertar la nueva regla usando USER_ENTERED para respetar el formato
         await sheets.spreadsheets.values.append({
             spreadsheetId,
             range: 'Reglas!A2:H',
-            valueInputOption: 'USER_ENTERED',
+            valueInputOption: 'RAW', // Cambiado a RAW para mantener el formato exacto
             insertDataOption: 'INSERT_ROWS',
             resource: {
-                values: [[
-                    nuevoId,
-                    valores.producto,
-                    valores.etiq,
-                    valores.sell,
-                    valores.envs,
-                    valores.cern,
-                    valores.grMin,
-                    valores.grMax
-                ]]
+                values: [newRow]
             }
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             id: nuevoId,
             message: 'Regla agregada correctamente'
         });
 
     } catch (error) {
-        console.error('Error al agregar regla:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Error al agregar la regla' 
+        console.error('Error al agregar reglas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al agregar las reglas'
         });
     }
 });
@@ -3915,14 +3905,14 @@ app.put('/actualizar-precios-base', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        
+
         // Preparar las actualizaciones
         const updates = [];
-        
+
         rows.forEach((row, index) => {
             const tipo = row[1];
             let newValue;
-            
+
             if (tipo === 'Etiquetado') newValue = etiquetado;
             else if (tipo === 'Envasado') newValue = envasado;
             else if (tipo === 'Sellado') newValue = sellado;
@@ -3944,7 +3934,7 @@ app.put('/actualizar-precios-base', requireAuth, async (req, res) => {
             }
         });
 
-        res.json({ 
+        res.json({
             success: true,
             message: 'Precios base actualizados correctamente',
             preciosActualizados: { etiquetado, envasado, sellado, cernido }
@@ -3952,10 +3942,352 @@ app.put('/actualizar-precios-base', requireAuth, async (req, res) => {
 
     } catch (error) {
         console.error('Error al actualizar precios base:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             error: 'Error al actualizar los precios base',
             detalles: error.message
+        });
+    }
+});
+
+/* ==================== RUTAS DE PAGOS ==================== */
+app.post('/registrar-pago', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const {
+            nombre_pago,
+            beneficiario,
+            pagado_por,
+            justificativos,
+            subtotal,
+            descuento,
+            aumento,
+            total,
+            observaciones,
+            registros,
+            tipo
+
+        } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener último ID para generar el nuevo
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ?
+            parseInt(rows[rows.length - 1][0].split('-')[1]) : 0;
+        const newId = `COMP-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Obtener fecha actual
+        const fecha = new Date().toLocaleDateString('es-ES');
+
+        // Insertar nuevo pago
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Pagos!A2:O',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,                      // ID
+                    fecha,                      // FECHA
+                    nombre_pago,                // NOMBRE DEL PAGO
+                    req.body.id_beneficiario,   // ID-BENEF (email del usuario)
+                    beneficiario,               // BENEFICIARIO
+                    pagado_por,                 // PAGADO POR
+                    justificativos,             // ID-JUST
+                    req.body.justificativosDetallados, // JUSTIFICATIVOS con procesos
+                    subtotal,                   // SUBTOTAL
+                    descuento,                  // DESCUENTO
+                    aumento,                    // AUMENTO
+                    total,                      // TOTAL
+                    observaciones,               // OBSERVACIONES
+                    'Pendiente',              // ESTADO (opcional, si se maneja)
+                    tipo                        // TIPO (opcional, si se maneja)
+                ]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Pago registrado correctamente',
+            id: newId
+        });
+
+    } catch (error) {
+        console.error('Error al registrar pago:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar el pago'
+        });
+    }
+});
+app.get('/obtener-pagos', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:O' // Columnas A hasta M para todos los campos
+        });
+
+        const rows = response.data.values || [];
+        const pagos = rows.map(row => ({
+            id: row[0] || '',                    // ID
+            fecha: row[1] || '',                 // FECHA
+            nombre_pago: row[2] || '',           // NOMBRE DEL PAGO
+            id_beneficiario: row[3] || '',       // ID-BENEF
+            beneficiario: row[4] || '',          // BENEFICIARIO
+            pagado_por: row[5] || '',            // PAGADO POR
+            justificativos_id: row[6] || '',     // ID-JUST
+            justificativos: row[7] || '',        // JUSTIFICATIVOS
+            subtotal: row[8] || '',              // SUBTOTAL
+            descuento: row[9] || '',             // DESCUENTO
+            aumento: row[10] || '',              // AUMENTO  
+            total: row[11] || '',                // TOTAL
+            observaciones: row[12] || '',        // OBSERVACIONES
+            estado: row[13] || 'Pendiente', // ESTADO (opcional, si se maneja)
+            tipo: row[14] || 'generico' // TIPO (opcional, si se maneja)
+        }));
+
+        res.json({
+            success: true,
+            pagos
+        });
+
+    } catch (error) {
+        console.error('Error al obtener pagos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los pagos'
+        });
+    }
+});
+
+
+
+app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Registros pagos!A2:G'
+        });
+
+        const rows = response.data.values || [];
+        const pagosParciales = rows
+            .filter(row => row[4] === id) // Filtrar por ID del pago principal
+            .map(row => ({
+                id: row[0],
+                fecha: row[1],
+                pagado_por: row[2],
+                beneficiario: row[3],
+                id_registro: row[4],
+                cantidad_pagada: parseFloat(row[5]),
+                observaciones: row[6]
+            }));
+
+        // Calcular total pagado
+        const totalPagado = pagosParciales.reduce((sum, pago) => sum + pago.cantidad_pagada, 0);
+
+        // Obtener el pago principal para verificar si está completo
+        const pagoPrincipalResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:N'
+        });
+
+        const pagoPrincipal = pagoPrincipalResponse.data.values
+            .find(row => row[0] === id);
+
+        if (pagoPrincipal) {
+            const totalAPagar = parseFloat(pagoPrincipal[11]); // Total del pago principal
+            
+            // Si el total pagado iguala o supera el total a pagar, actualizar estado
+            if (totalPagado >= totalAPagar) {
+                const rowIndex = pagoPrincipalResponse.data.values.findIndex(row => row[0] === id);
+                if (rowIndex !== -1) {
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `Pagos!N${rowIndex + 2}`,
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: [['Pagado']]
+                        }
+                    });
+                }
+            }
+        }
+
+        res.json({
+            success: true,
+            pagosParciales,
+            totalPagado,
+            saldoPendiente: pagoPrincipal ? Math.max(0, parseFloat(pagoPrincipal[11]) - totalPagado) : 0
+        });
+
+    } catch (error) {
+        console.error('Error al obtener pagos parciales:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los pagos parciales'
+        });
+    }
+});
+app.post('/registrar-pago-parcial', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const {
+            pago_id,
+            pagado_por,
+            beneficiario,
+            cantidad_pagada,
+            observaciones
+        } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Verificar el saldo pendiente antes de registrar el nuevo pago
+        const pagosResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Registros pagos!A2:G'
+        });
+
+        const pagosPrevios = pagosResponse.data.values || [];
+        const totalPagadoPrevio = pagosPrevios
+            .filter(row => row[4] === pago_id)
+            .reduce((sum, row) => sum + parseFloat(row[5] || 0), 0);
+
+        // Obtener el total a pagar del pago principal
+        const pagoPrincipalResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:L'
+        });
+
+        const pagoPrincipal = pagoPrincipalResponse.data.values
+            .find(row => row[0] === pago_id);
+
+        if (!pagoPrincipal) {
+            throw new Error('Pago principal no encontrado');
+        }
+
+        const totalAPagar = parseFloat(pagoPrincipal[11]); // Total del pago principal
+        const nuevoCantidadTotal = totalPagadoPrevio + parseFloat(cantidad_pagada);
+
+        // Verificar que no se exceda el total a pagar
+        if (nuevoCantidadTotal > totalAPagar) {
+            return res.status(400).json({
+                success: false,
+                error: 'La cantidad excede el saldo pendiente'
+            });
+        }
+
+        // Generar nuevo ID para el pago parcial
+        const lastId = pagosPrevios.length > 0 ?
+            Math.max(...pagosPrevios.map(row => parseInt(row[0].split('-')[1]))) : 0;
+        const newId = `PAG-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Registrar el nuevo pago parcial
+        const fecha = new Date().toLocaleDateString('es-ES');
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Registros pagos!A2:G',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,              // ID
+                    fecha,              // FECHA
+                    pagado_por,         // PAGADO POR
+                    beneficiario,       // BENEFICIARIO
+                    pago_id,           // ID-REGISTRO
+                    cantidad_pagada,    // CANTIDAD PAGADA
+                    observaciones       // OBSERVACIONES
+                ]]
+            }
+        });
+
+        // Si se completó el pago total, actualizar el estado
+        if (nuevoCantidadTotal >= totalAPagar) {
+            const pagoPrincipalIndex = pagoPrincipalResponse.data.values.findIndex(row => row[0] === pago_id);
+            if (pagoPrincipalIndex !== -1) {
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `Pagos!N${pagoPrincipalIndex + 2}`,
+                    valueInputOption: 'RAW',
+                    resource: {
+                        values: [['Pagado']]
+                    }
+                });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Pago parcial registrado correctamente',
+            id: newId
+        });
+
+    } catch (error) {
+        console.error('Error al registrar pago parcial:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar el pago parcial'
+        });
+    }
+});
+app.put('/anular-pago/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { motivo } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener todos los pagos
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Pagos!A2:N'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Pago no encontrado'
+            });
+        }
+
+        // Actualizar el estado a "Anulado"
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Pagos!N${rowIndex + 2}`,
+            valueInputOption: 'RAW',
+            resource: {
+                values: [['Anulado']]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Pago anulado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al anular pago:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al anular el pago'
         });
     }
 });
