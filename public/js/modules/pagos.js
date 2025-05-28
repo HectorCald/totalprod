@@ -511,13 +511,14 @@ function eventosPagos() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-anular btn yellow" data-id="${pago.id}"><i class='bx bx-x-circle'></i></button>
-            <button class="btn-pagar btn green" data-id="${pago.id}"><i class='bx bx-dollar'></i></button>
+            <button class="btn-anular btn yellow" data-id="${pago.id}"><i class='bx bx-x-circle'></i>Anular</button>
+            <button class="btn-pagar btn green" data-id="${pago.id}"><i class='bx bx-dollar'></i>Pagar</button>
         </div>
     `;
         }
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const pagarBtn = contenido.querySelector('.btn-pagar');
@@ -558,6 +559,7 @@ function eventosPagos() {
             `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnAnularPago = contenido.querySelector('.btn-anular-pago');
@@ -689,6 +691,7 @@ function eventosPagos() {
         `;
 
                 contenido.innerHTML = registrationHTML;
+                contenido.style.paddingBottom = '80px';
                 mostrarAnuncioTercer();
 
                 // Solo agregar el evento si hay saldo pendiente
@@ -861,6 +864,7 @@ function eventosPagos() {
         `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         // Función para calcular el total

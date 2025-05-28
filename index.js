@@ -406,7 +406,7 @@ app.get('/obtener-usuario-actual', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Usuarios!A2:I'  // Make sure we're getting all columns including the photo
+            range: 'Usuarios!A2:J'  // Make sure we're getting all columns including the photo
         });
 
         const rows = response.data.values || [];
@@ -423,6 +423,7 @@ app.get('/obtener-usuario-actual', requireAuth, async (req, res) => {
                 foto: usuario[5] || './icons/icon.png',
                 plugins: usuario[6] || '',
                 email: usuario[7] || '',
+                permisos: usuario[9] || '',
             };
 
             res.json({

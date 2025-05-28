@@ -293,21 +293,26 @@ function eventosRegistrosConteo() {
         }).join('')}
         </div>
         <div class="anuncio-botones">
-            <button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i></button>
-            <button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i></button>
-            <button class="btn-sobre-escribir btn yellow" data-id="${registro.id}"><i class='bx bx-revision'></i></button>
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            <button class="btn-sobre-escribir btn yellow" data-id="${registro.id}"><i class='bx bx-revision'></i>Remplazar</button>
         </div>
     `;
 
         contenido.innerHTML = infoHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
-        const btnEditar = contenido.querySelector('.btn-editar');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
-        const btnSobre = contenido.querySelector('.btn-sobre-escribir');
+        if (tienePermiso('edicion')) {
+            const btnEditar = contenido.querySelector('.btn-editar');
+            btnEditar.addEventListener('click', () => editar(registro));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(registro));
+        }
 
-        btnEditar.addEventListener('click', () => editar(registro));
-        btnEliminar.addEventListener('click', () => eliminar(registro));
+        const btnSobre = contenido.querySelector('.btn-sobre-escribir');
         btnSobre.addEventListener('click', () => sobreescribir(registro));
 
 

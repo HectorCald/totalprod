@@ -218,12 +218,13 @@ function eventosClientes() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-editar btn blue" data-id="${cliente.id}"><i class='bx bx-edit'></i></button>
-                <button class="btn-eliminar btn red" data-id="${cliente.id}"><i class="bx bx-trash"></i></button>
-                <button class="btn-historial btn yellow" data-id="${cliente.id}"><i class="bx bx-history"></i></button>
+                <button class="btn-editar btn blue" data-id="${cliente.id}"><i class='bx bx-edit'></i>Editar</button>
+                <button class="btn-eliminar btn red" data-id="${cliente.id}"><i class="bx bx-trash"></i>Eliminar</button>
+                <button class="btn-historial btn yellow" data-id="${cliente.id}"><i class="bx bx-history"></i>Historial</button>
             </div>
         `;
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const btnEditar = contenido.querySelector('.btn-editar');
@@ -265,6 +266,7 @@ function eventosClientes() {
                 </div>
             `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
     
             const btnEliminarCliente = contenido.querySelector('.btn-eliminar-cliente-confirmar');
@@ -359,10 +361,11 @@ function eventosClientes() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-guardar-cliente btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
+                <button class="btn-guardar-cliente btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
     
             const btnGuardarCliente = contenido.querySelector('.btn-guardar-cliente');
@@ -465,6 +468,7 @@ function eventosClientes() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const btnGuardarNuevoCliente = contenido.querySelector('.btn-guardar-nuevo-cliente');

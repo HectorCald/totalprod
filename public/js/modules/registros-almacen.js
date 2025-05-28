@@ -478,20 +478,27 @@ function eventosRegistrosAlmacen() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i></button>
-            <button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i></button>
-            <button class="btn-copia btn blue" data-id="${registro.id}"><i class='bx bx-copy'></i></button>
+            ${tienePermiso('anulacion') ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            <button class="btn-copia btn blue" data-id="${registro.id}"><i class='bx bx-copy'></i>Copiar</button>
         </div>
     `;
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
-        const btnAnular = contenido.querySelector('.btn-anular');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
+
+        if (tienePermiso('anulacion')) {
+            const btnAnular = contenido.querySelector('.btn-anular');
+            btnAnular.addEventListener('click', () => anular(registro));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(registro));
+        }
+
         const btnCopia = contenido.querySelector('.btn-copia');
 
-        btnAnular.addEventListener('click', () => anular(registro));
-        btnEliminar.addEventListener('click', () => eliminar(registro));
         btnCopia.addEventListener('click', () => copia(registro));
 
 
@@ -529,6 +536,7 @@ function eventosRegistrosAlmacen() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -623,6 +631,7 @@ function eventosRegistrosAlmacen() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnAnular = contenido.querySelector('.btn-anular-registro');

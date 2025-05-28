@@ -1,4 +1,4 @@
-import { crearNotificacion, mostrarNotificacion, mostrarAnuncio, ocultarAnuncio, mostrarCarga, ocultarCarga, configuracionesEntrada, mostrarAnuncioSecond, ocultarAnuncioSecond, registrarHistorial, exportarArchivos, cerrarAnuncioManual, mostrarAnuncioTercer, ocultarAnuncioTercer, scrollToTop } from './modules/componentes.js'
+import { crearNotificacion, mostrarNotificacion, mostrarAnuncio, ocultarAnuncio, mostrarCarga, ocultarCarga, configuracionesEntrada, mostrarAnuncioSecond, ocultarAnuncioSecond, registrarHistorial, exportarArchivos, cerrarAnuncioManual, mostrarAnuncioTercer, ocultarAnuncioTercer, scrollToTop, tienePermiso, actualizarPermisos } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
 import { crearPerfil } from './modules/perfil.js';
@@ -18,7 +18,7 @@ import { mostrarMisRegistros } from './modules/registros-produccion.js';
 import { mostrarConteo } from './modules/conteo-almacen.js';
 import { registrosConteoAlmacen } from './modules/registros-conteos.js';
 import { mostrarPedidos } from './modules/registros-pedidos-acopio.js';
-import { mostrarIngresosAcopio} from './modules/ingresos-acopio.js';
+import { mostrarIngresosAcopio } from './modules/ingresos-acopio.js';
 import { mostrarSalidasAcopio } from './modules/salidas-acopio.js';
 import { mostrarRegistrosAcopio } from './modules/registros-acopio.js';
 import { mostrarPagos } from './modules/pagos.js';
@@ -45,6 +45,10 @@ window.cerrarAnuncioManual = cerrarAnuncioManual
 window.mostrarAnuncioTercer = mostrarAnuncioTercer
 window.ocultarAnuncioTercer = ocultarAnuncioTercer
 window.scrollToTop = scrollToTop
+
+
+window.tienePermiso = tienePermiso
+window.actualizarPermisos = actualizarPermisos
 
 
 window.mostrarCarga = mostrarCarga

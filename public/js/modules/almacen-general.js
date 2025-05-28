@@ -159,6 +159,7 @@ export async function mostrarAlmacenGeneral() {
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
+
     const initialHTML = `  
         <div class="encabezado">
             <h1 class="titulo">Almacén General</h1>
@@ -207,14 +208,19 @@ function renderInitialHTML() {
                 <p style="text-align: center; color: #555;">¡Ups!, No se encontraron productos segun tu busqueda o filtrado.</p>
             </div>
         </div>
+
+        ${tienePermiso('creacion') ? `
         <div class="anuncio-botones">
             <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
             <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
             <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> Precios</button>
         </div>
+        ` : ''}
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    if (tienePermiso('creacion')) {
+        contenido.style.paddingBottom = '80px';
+    }
 }
 function updateHTMLWithData() {
     // Update etiquetas filter
@@ -259,7 +265,6 @@ function updateHTMLWithData() {
     `).join('');
     productosContainer.innerHTML = productosHTML;
 }
-
 
 
 function eventosAlmacenGeneral() {
@@ -483,9 +488,11 @@ function eventosAlmacenGeneral() {
         });
     });
 
-    btnCrearProducto.addEventListener('click', crearProducto);
-    btnEtiquetas.addEventListener('click', gestionarEtiquetas);
-    btnPrecios.addEventListener('click', gestionarPrecios);
+    if (tienePermiso('creacion')) {
+        btnCrearProducto.addEventListener('click', crearProducto);
+        btnEtiquetas.addEventListener('click', gestionarEtiquetas);
+        btnPrecios.addEventListener('click', gestionarPrecios);
+    }
 
 
     window.info = function (registroId) {
@@ -547,22 +554,28 @@ function eventosAlmacenGeneral() {
                 ${etiquetasFormateados}
             </div>
         </div>
+        ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
         <div class="anuncio-botones">
-            <button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i></button>
-            <button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i></button>
-        </div>
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+        </div>` : ''}
     `;
         contenido.innerHTML = registrationHTML;
         mostrarAnuncioSecond();
+        if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
+            contenido.style.paddingBottom = '80px';
+        }
 
-        const btnEditar = contenido.querySelector('.btn-editar');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
 
-        btnEditar.addEventListener('click', () => editar(producto));
-        btnEliminar.addEventListener('click', () => eliminar(producto));
-
+        if (tienePermiso('edicion')) {
+            const btnEditar = contenido.querySelector('.btn-editar');
+            btnEditar.addEventListener('click', () => editar(producto));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(producto));
+        }
         function eliminar(producto) {
-
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
             <div class="encabezado">
@@ -598,6 +611,7 @@ function eventosAlmacenGeneral() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -816,6 +830,7 @@ function eventosAlmacenGeneral() {
         `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
 
             // Eventos para manejar etiquetas
             const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');

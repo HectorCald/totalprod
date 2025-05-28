@@ -686,3 +686,26 @@ export function scrollToTop(view) {
     }
 }
 
+
+
+const permisos = {
+    creacion: false,
+    eliminacion: false,
+    edicion: false,
+    anulacion: false
+};
+
+export function actualizarPermisos(recuperar) {
+    const usuario = recuperar;
+    if (!usuario) return;
+
+    permisos.creacion = usuario.rol === 'Administración' || usuario.permisos?.includes('creacion');
+    permisos.eliminacion = usuario.rol === 'Administración' || usuario.permisos?.includes('eliminacion');
+    permisos.edicion = usuario.rol === 'Administración' || usuario.permisos?.includes('edicion');
+    permisos.anulacion = usuario.rol === 'Administración' || usuario.permisos?.includes('anulacion');
+}
+export function tienePermiso(tipo) {
+    return permisos[tipo] || false;
+}
+
+

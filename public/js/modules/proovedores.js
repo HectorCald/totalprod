@@ -220,12 +220,13 @@ function eventosProovedores() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-editar btn blue" data-id="${proovedor.id}"><i class='bx bx-edit'></i></button>
-                <button class="btn-eliminar btn red" data-id="${proovedor.id}"><i class="bx bx-trash"></i></button>
-                <button class="btn-historial btn yellow" data-id="${proovedor.id}"><i class="bx bx-history"></i></button>
+                <button class="btn-editar btn blue" data-id="${proovedor.id}"><i class='bx bx-edit'></i>Editar</button>
+                <button class="btn-eliminar btn red" data-id="${proovedor.id}"><i class="bx bx-trash"></i>Eliminar</button>
+                <button class="btn-historial btn yellow" data-id="${proovedor.id}"><i class="bx bx-history"></i>Historial</button>
             </div>
         `;
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const btnEditar = contenido.querySelector('.btn-editar');
@@ -267,6 +268,7 @@ function eventosProovedores() {
                 </div>
             `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
     
             const btnEliminarProovedor = contenido.querySelector('.btn-eliminar-proovedor-confirmar');
@@ -319,7 +321,7 @@ function eventosProovedores() {
             const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Editar cliente</h1>
-                <button class="btn close" onclick="info('${proovedor.id}');"><i class="fas fa-arrow-right"></i></button>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
                 <p class="normal"><i class='bx bx-chevron-right'></i> Información del cliente</p>
@@ -361,10 +363,11 @@ function eventosProovedores() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-guardar-proovedor btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
+                <button class="btn-guardar-proovedor btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
     
             const btnGuardarProveedor = contenido.querySelector('.btn-guardar-proovedor');
@@ -468,6 +471,7 @@ function eventosProovedores() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const btnGuardarNuevoProovedor = contenido.querySelector('.btn-guardar-nuevo-proovedor');

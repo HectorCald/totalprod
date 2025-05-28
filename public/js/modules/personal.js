@@ -34,7 +34,7 @@ async function obtenerPersonal() {
     }
 }
 
-// Reemplazar en la función mostrarProovedores
+
 export async function mostrarPersonal() {
     renderInitialHTML();
     mostrarAnuncio();
@@ -276,6 +276,7 @@ function eventosPersonal() {
         `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         // Eventos

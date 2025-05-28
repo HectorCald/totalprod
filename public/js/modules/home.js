@@ -1,3 +1,4 @@
+
 let usuarioInfo = {
     id: '',
     nombre: '',
@@ -315,6 +316,7 @@ export async function crearHome() {
     await obtenerUsuario();
     crearNav(usuarioInfo.rol);
     crearPerfil(usuarioInfo);
+    actualizarPermisos(usuarioInfo);
     
     const promesas = [
         usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,

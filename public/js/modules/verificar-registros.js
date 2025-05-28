@@ -531,9 +531,9 @@ function eventosVerificacion() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i></button>
-            <button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i></button>
-            ${registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i></button>` : `<button class="btn-verificar btn green" data-id="${registro.id}"><i class="bx bx-check-circle"></i></button>`}
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            ${registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : `<button class="btn-verificar btn green" data-id="${registro.id}"><i class="bx bx-check-circle"></i>Verificar</button>`}
         </div>
         `;
 
@@ -621,16 +621,20 @@ function eventosVerificacion() {
 
 
         contenido.innerHTML = registrationHTML;
-
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
-        const btnEditar = contenido.querySelector('.btn-editar');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
         const btnVerificar = contenido.querySelector('.btn-verificar');
         const btnAnular = contenido.querySelector('.btn-anular');
 
-        btnEditar.addEventListener('click', () => editar(registro));
-        btnEliminar.addEventListener('click', () => eliminar(registro));
+        if (tienePermiso('edicion')) {
+            const btnEditar = contenido.querySelector('.btn-editar');
+            btnEditar.addEventListener('click', () => editar(producto));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(producto));
+        }
         if (btnAnular) {
             btnAnular.addEventListener('click', () => anular(registro));
         }
@@ -676,6 +680,7 @@ function eventosVerificacion() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -837,6 +842,7 @@ function eventosVerificacion() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const productoInput = document.querySelector('.entrada .producto');
@@ -1002,6 +1008,7 @@ function eventosVerificacion() {
             </div>
             `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -1116,6 +1123,7 @@ function eventosVerificacion() {
         </div>
     `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');

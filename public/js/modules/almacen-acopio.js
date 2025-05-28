@@ -79,8 +79,10 @@ function eventosAlmacenAcopio() {
     const btnCrearProducto = document.querySelector('.btn-crear-producto');
     const btnEtiquetas = document.querySelector('.btn-etiquetas');
 
-    btnCrearProducto.addEventListener('click', crearProducto);
-    btnEtiquetas.addEventListener('click', gestionarEtiquetas);
+    if (tienePermiso('creacion')) {
+        btnCrearProducto.addEventListener('click', crearProducto);
+        btnEtiquetas.addEventListener('click', gestionarEtiquetas);
+    }
     const contenedor = document.querySelector('.relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
@@ -329,20 +331,25 @@ function eventosAlmacenAcopio() {
                     ${etiquetasFormateadas}
                 </div>
             </div>
+            ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
             <div class="anuncio-botones">
-                <button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i></button>
-                <button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i></button>
-            </div>
-        `;
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i></button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i></button>` : ''}
+            </div>` : ''}
+            `;
         contenido.innerHTML = registrationHTML;
         mostrarAnuncioSecond();
 
-        const btnEditar = contenido.querySelector('.btn-editar');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
 
-        btnEditar.addEventListener('click', () => editar(producto));
-        btnEliminar.addEventListener('click', () => eliminar(producto));
 
+        if (tienePermiso('edicion')) {
+            const btnEditar = contenido.querySelector('.btn-editar');
+            btnEditar.addEventListener('click', () => editar(producto));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(producto));
+        }
 
         function eliminar(producto) {
 
@@ -512,7 +519,7 @@ function eventosAlmacenAcopio() {
                             </div>
                         </div>
                     </div>`;
-                    }).join('');
+                }).join('');
 
             // Process current tags
             const etiquetasProducto = producto.etiquetas.split(';').filter(e => e.trim());
@@ -1069,13 +1076,17 @@ function renderInitialHTML() {
                 <p style="text-align: center; color: #555;">¡Ups!, No se encontraron productos segun tu busqueda o filtrado.</p>
             </div>
         </div>
+        ${tienePermiso('creacion') ? `
         <div class="anuncio-botones">
             <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
-            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> Etiquetas</button>
+            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
         </div>
+        ` : ''}
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom='80px';
+    if (tienePermiso('creacion')) {
+        contenido.style.paddingBottom = '80px';
+    }
 }
 function updateHTMLWithData() {
     // Update etiquetas filter
