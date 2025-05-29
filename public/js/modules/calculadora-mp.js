@@ -546,6 +546,7 @@ function eventosVerificacion() {
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
+        
 
         // Configurar los botones de información
         contenido.querySelectorAll('.btn-info').forEach(btn => {
@@ -1026,7 +1027,13 @@ function eventosVerificacion() {
 
         const productoInput = document.querySelector('.entrada .producto');
         const sugerenciasList = document.querySelector('#productos-list');
-        const gramajeInput = document.querySelector('.entrada .gramaje');
+        function normalizarTexto(texto) {
+        return texto
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+            .replace(/[-\s]+/g, ""); // Eliminar guiones y espacios
+    }
 
         productoInput.addEventListener('input', (e) => {
             const valor = normalizarTexto(e.target.value);
