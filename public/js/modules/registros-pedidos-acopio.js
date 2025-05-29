@@ -449,35 +449,47 @@ function eventosPedidos() {
             ` : ''}
         </div>
         <div class="anuncio-botones">
-            ${registro.estado === 'Pendiente' ? `
-                <button class="btn-entregar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i> Entregar</button>
+            ${registro.estado === 'Pendiente' && usuarioInfo.rol ==='Administración' ? `
+                <button class="btn-entregar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Entregar</button>
             ` : ''}
             ${registro.estado === 'Recibido' ? `
-                <button class="btn-ingresar btn blue" data-id="${registro.id}"><i class='bx bx-log-in'></i></button>
-                <button class="btn-rechazar btn yellow" data-id="${registro.id}"><i class='bx bx-block'></i></button>
+                <button class="btn-ingresar btn blue" data-id="${registro.id}"><i class='bx bx-log-in'></i>Ingresar</button>
+                <button class="btn-rechazar btn yellow" data-id="${registro.id}"><i class='bx bx-block'></i>Rechazar</button>
             ` : ''}
-            ${registro.estado === 'No llego' ? `
-                <button class="btn-llego btn yellow" data-id="${registro.id}"><i class='bx bx-check-circle'></i></button>
+            ${registro.estado === 'No llego' && usuarioInfo.rol ==='Administración'? `
+                <button class="btn-llego btn yellow" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Llego</button>
             ` : ''}
-            <button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i></button>
-            <button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i></button>
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
         </div>
         `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
+        if(registro.estado ==='Ingresado' || registro.estado === 'No llego' || registro.estado === 'Rechazado'){
+            contenido.style.paddingBottom = '10px';
+            if(tienePermiso('edicion') || tienePermiso('eliminacion')){
+                contenido.style.paddingBottom = '80px';
+            }
+        }
 
-        const btnEditar = contenido.querySelector('.btn-editar');
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
+
         const btnEntregar = contenido.querySelector('.btn-entregar');
         const btnIngresar = contenido.querySelector('.btn-ingresar');
         const btnRechazar = contenido.querySelector('.btn-rechazar');
         const btnLlego = contenido.querySelector('.btn-llego');
 
 
-        btnEditar.addEventListener('click', () => editar(registro));
-        btnEliminar.addEventListener('click', () => eliminar(registro));
+        if (tienePermiso('edicion')) {
+            const btnEditar = contenido.querySelector('.btn-editar');
+            btnEditar.addEventListener('click', () => editar(registro));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(registro));
+        }
         if (btnEntregar) {
             btnEntregar.addEventListener('click', () => entregar(registro));
         }
@@ -522,6 +534,7 @@ function eventosPedidos() {
         </div>
     `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnEliminar = contenido.querySelector('.btn-eliminar-registro');
@@ -705,6 +718,7 @@ function eventosPedidos() {
         </div>
             `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
             const productoInput = document.querySelector('.entrada .producto-pedido');
             const sugerenciasList = document.querySelector('#productos-list');
@@ -820,6 +834,7 @@ function eventosPedidos() {
         function entregar(registro) {
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
+            
         <div class="encabezado">
             <h1 class="titulo">Entregar Pedido</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
@@ -919,6 +934,7 @@ function eventosPedidos() {
     `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
 
@@ -1009,11 +1025,11 @@ function eventosPedidos() {
             mostrarIngresosAcopio(registro.idProducto, registro.id);
         }
         async function rechazar(registro) {
-            const contenido = document.querySelector('.anuncio-second .contenido');
+            const contenido = document.querySelector('.anuncio-tercer .contenido');
             const html = `
         <div class="encabezado">
             <h1 class="titulo">Rechazar Pedido ${registro.id}</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')">
                 <i class="fas fa-arrow-right"></i>
             </button>
         </div>
@@ -1042,7 +1058,8 @@ function eventosPedidos() {
 
     `;
             contenido.innerHTML = html;
-            mostrarAnuncioSecond();
+            contenido.style.paddingBottom = '80px';
+            mostrarAnuncioTercer();
             window.confirmarRechazo = async function (idPedido) {
                 const motivo = document.querySelector('.input-motivo').value;
     

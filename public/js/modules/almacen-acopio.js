@@ -71,6 +71,130 @@ async function obtenerAlmacenAcopio() {
 }
 
 
+export async function mostrarAlmacenAcopio() {
+    mostrarAnuncio();
+    renderInitialHTML(); // Render initial HTML immediately
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
+
+    // Load data in parallel
+    const [almacenGeneral, etiquetasResult] = await Promise.all([
+        obtenerAlmacenAcopio(),
+        obtenerEtiquetasAcopio(),
+    ]);
+
+    updateHTMLWithData(); // Update HTML once data is loaded
+    eventosAlmacenAcopio();
+}
+function renderInitialHTML() {
+
+    const contenido = document.querySelector('.anuncio .contenido');
+    const initialHTML = `  
+        <div class="encabezado">
+            <h1 class="titulo">Almacén Acopio</h1>
+            <button class="btn close" onclick="ocultarAnuncio();"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div class="relleno almacen-general">
+            <div class="entrada">
+                <i class='bx bx-search'></i>
+                <div class="input">
+                    <p class="detalle">Buscar</p>
+                    <input type="text" class="buscar-producto-acopio" placeholder="">
+                </div>
+            </div>
+            <div class="filtros-opciones etiquetas-filter">
+                <button class="btn-filtro activado">Todos</button>
+                ${Array(5).fill().map(() => `
+                    <div class="skeleton skeleton-etiqueta"></div>
+                `).join('')}
+            </div>
+            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+                <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
+                <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
+                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
+                <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
+                <button class="btn-filtro activado" title="Bruto">Bruto</button>
+                <button class="btn-filtro" title="Prima">Prima</button>
+            </div>
+            <div class="productos-container">
+                ${Array(10).fill().map(() => `
+                    <div class="skeleton-producto">
+                        <div class="skeleton-header">
+                            <div class="skeleton skeleton-img"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="no-encontrado" style="display: none; text-align: center; color: #555; font-size: 1.1rem;padding:20px">
+                <i class='bx bx-package' style="font-size: 50px;opacity:0.5"></i>
+                <p style="text-align: center; color: #555;">¡Ups!, No se encontraron productos segun tu busqueda o filtrado.</p>
+            </div>
+        </div>
+        ${tienePermiso('creacion') ? `
+        <div class="anuncio-botones">
+            <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
+            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
+        </div>
+        ` : ''}
+    `;
+    contenido.innerHTML = initialHTML;
+    if (tienePermiso('creacion')) {
+        contenido.style.paddingBottom = '80px';
+    }
+}
+function updateHTMLWithData() {
+    // Update etiquetas filter
+    const etiquetasFilter = document.querySelector('.etiquetas-filter');
+    const etiquetasHTML = etiquetasAcopio.map(etiqueta => `
+        <button class="btn-filtro">${etiqueta.etiqueta}</button>
+    `).join('');
+    etiquetasFilter.innerHTML = `
+        <button class="btn-filtro activado">Todos</button>
+        ${etiquetasHTML}
+    `;
+
+    // Update productos
+    const productosContainer = document.querySelector('.productos-container');
+    if (productos && productos.length > 0) {
+        const productosHTML = productos.map(producto => {
+            // Calcular total bruto
+            const totalBruto = producto.bruto.split(';')
+                .filter(lote => lote.trim())
+                .reduce((sum, lote) => sum + parseFloat(lote.split('-')[0] || 0), 0);
+
+            return `
+                <div class="registro-item" data-id="${producto.id}">
+                    <div class="header">
+                        <i class='bx bx-package'></i>
+                        <div class="info-header">
+                            <span class="id">${producto.id}
+                                <div class="precio-cantidad">
+                                    <span class="valor stock">${totalBruto.toFixed(2)} Kg.</span>
+                                </div>
+                            </span>
+                            <span class="nombre"><strong>${producto.producto}</strong></span>
+                            <span class="etiquetas">${producto.etiquetas ? producto.etiquetas.split(';').join(' • ') : ''}</span>
+                        </div>
+                    </div>
+                    <div class="registro-acciones">
+                        <button class="btn-info btn-icon blue" onclick="info('${producto.id}')">
+                            <i class='bx bx-info-circle'></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        productosContainer.innerHTML = productosHTML;
+    }
+}
+
+
 function eventosAlmacenAcopio() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
@@ -333,8 +457,8 @@ function eventosAlmacenAcopio() {
             </div>
             ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
             <div class="anuncio-botones">
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i></button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i></button>` : ''}
+            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             </div>` : ''}
             `;
         contenido.innerHTML = registrationHTML;
@@ -1008,129 +1132,5 @@ function eventosAlmacenAcopio() {
     }
 
     aplicarFiltros();
-}
-
-
-export async function mostrarAlmacenAcopio() {
-    mostrarAnuncio();
-    renderInitialHTML(); // Render initial HTML immediately
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
-
-    // Load data in parallel
-    const [almacenGeneral, etiquetasResult] = await Promise.all([
-        obtenerAlmacenAcopio(),
-        obtenerEtiquetasAcopio(),
-    ]);
-
-    updateHTMLWithData(); // Update HTML once data is loaded
-    eventosAlmacenAcopio();
-}
-function renderInitialHTML() {
-
-    const contenido = document.querySelector('.anuncio .contenido');
-    const initialHTML = `  
-        <div class="encabezado">
-            <h1 class="titulo">Almacén Acopio</h1>
-            <button class="btn close" onclick="ocultarAnuncio();"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-producto-acopio" placeholder="">
-                </div>
-            </div>
-            <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
-                ${Array(5).fill().map(() => `
-                    <div class="skeleton skeleton-etiqueta"></div>
-                `).join('')}
-            </div>
-            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
-                <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
-                <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
-                <button class="btn-filtro activado" title="Bruto">Bruto</button>
-                <button class="btn-filtro" title="Prima">Prima</button>
-            </div>
-            <div class="productos-container">
-                ${Array(10).fill().map(() => `
-                    <div class="skeleton-producto">
-                        <div class="skeleton-header">
-                            <div class="skeleton skeleton-img"></div>
-                            <div class="skeleton-content">
-                                <div class="skeleton skeleton-line"></div>
-                                <div class="skeleton skeleton-line"></div>
-                                <div class="skeleton skeleton-line"></div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="no-encontrado" style="display: none; text-align: center; color: #555; font-size: 1.1rem;padding:20px">
-                <i class='bx bx-package' style="font-size: 50px;opacity:0.5"></i>
-                <p style="text-align: center; color: #555;">¡Ups!, No se encontraron productos segun tu busqueda o filtrado.</p>
-            </div>
-        </div>
-        ${tienePermiso('creacion') ? `
-        <div class="anuncio-botones">
-            <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
-            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
-        </div>
-        ` : ''}
-    `;
-    contenido.innerHTML = initialHTML;
-    if (tienePermiso('creacion')) {
-        contenido.style.paddingBottom = '80px';
-    }
-}
-function updateHTMLWithData() {
-    // Update etiquetas filter
-    const etiquetasFilter = document.querySelector('.etiquetas-filter');
-    const etiquetasHTML = etiquetasAcopio.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta.etiqueta}</button>
-    `).join('');
-    etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
-
-    // Update productos
-    const productosContainer = document.querySelector('.productos-container');
-    if (productos && productos.length > 0) {
-        const productosHTML = productos.map(producto => {
-            // Calcular total bruto
-            const totalBruto = producto.bruto.split(';')
-                .filter(lote => lote.trim())
-                .reduce((sum, lote) => sum + parseFloat(lote.split('-')[0] || 0), 0);
-
-            return `
-                <div class="registro-item" data-id="${producto.id}">
-                    <div class="header">
-                        <i class='bx bx-package'></i>
-                        <div class="info-header">
-                            <span class="id">${producto.id}
-                                <div class="precio-cantidad">
-                                    <span class="valor stock">${totalBruto.toFixed(2)} Kg.</span>
-                                </div>
-                            </span>
-                            <span class="nombre"><strong>${producto.producto}</strong></span>
-                            <span class="etiquetas">${producto.etiquetas ? producto.etiquetas.split(';').join(' • ') : ''}</span>
-                        </div>
-                    </div>
-                    <div class="registro-acciones">
-                        <button class="btn-info btn-icon blue" onclick="info('${producto.id}')">
-                            <i class='bx bx-info-circle'></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        productosContainer.innerHTML = productosHTML;
-    }
 }
 

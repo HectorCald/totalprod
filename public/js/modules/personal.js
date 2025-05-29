@@ -240,31 +240,34 @@ function eventosPersonal() {
                             </select>
                         </div>
                     </div>
-    
-                <p class="normal">Plugins habilitados</p>
-                <div class="plugins-container">
-                    <label class="plugin-checkbox">
-                        <input type="checkbox" value="calcularmp" ${usuario.plugins?.includes('calcularmp') ? 'checked' : ''}>
-                        <span>Calculadora de materia prima</span>
-                    </label>
-                </div>
                 <p class="normal">Permisos concedidos</p>
                 <div class="permisos-container">
-                    <label class="plugin-checkbox">
-                        <input type="checkbox" value="eliminacion" ${usuario.permisos?.includes('eliminacion') ? 'checked' : ''}>
-                        <span>Eliminación</span>
-                    </label>
-                    <label class="plugin-checkbox">
-                        <input type="checkbox" value="edicion" ${usuario.permisos?.includes('edicion') ? 'checked' : ''}>
-                        <span>Edición</span>
-                    </label>
-                    <label class="plugin-checkbox">
-                        <input type="checkbox" value="anulacion" ${usuario.permisos?.includes('anulacion') ? 'checked' : ''}>
-                        <span>Anulación</span>
-                    </label>
-                    <label class="plugin-checkbox">
-                        <input type="checkbox" value="creacion" ${usuario.permisos?.includes('creacion') ? 'checked' : ''}>
-                        <span>Creación</span>
+                    <div class="campo-horizontal">
+                        <label class="eliminacion">
+                            <input type="checkbox" value="eliminacion" ${usuario.permisos?.includes('eliminacion') ? 'checked' : ''}>
+                            <span>Eliminación</span>
+                        </label>
+                        <label class="edicion">
+                            <input type="checkbox" value="edicion" ${usuario.permisos?.includes('edicion') ? 'checked' : ''}>
+                            <span>Edición</span>
+                        </label>
+                    </div>
+                    <div class="campo-horizontal">
+                        <label class="anulacion">
+                            <input type="checkbox" value="anulacion" ${usuario.permisos?.includes('anulacion') ? 'checked' : ''}>
+                            <span>Anulación</span>
+                        </label>
+                        <label class="creacion">
+                            <input type="checkbox" value="creacion" ${usuario.permisos?.includes('creacion') ? 'checked' : ''}>
+                            <span>Creación</span>
+                        </label>
+                    </div>
+                </div>
+                <p class="normal">Plugins habilitados</p>
+                <div class="plugins-container">
+                    <label class="plugin">
+                        <input type="checkbox" value="calcularmp" ${usuario.plugins?.includes('calcularmp') ? 'checked' : ''}>
+                        <span>Calculadora de materia prima</span>
                     </label>
                 </div>
             </div>

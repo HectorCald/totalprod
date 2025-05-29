@@ -314,7 +314,7 @@ export async function crearHome() {
     view.style.opacity = '0';  // Start with opacity 0
 
     await obtenerUsuario();
-    crearNav(usuarioInfo.rol);
+    crearNav(usuarioInfo);
     crearPerfil(usuarioInfo);
     actualizarPermisos(usuarioInfo);
     

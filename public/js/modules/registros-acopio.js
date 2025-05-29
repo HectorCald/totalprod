@@ -1,4 +1,4 @@
-let movimientosAcopio = [];
+    let movimientosAcopio = [];
 let usuarioInfo = recuperarUsuarioLocal();
 
 function recuperarUsuarioLocal() {
@@ -426,21 +426,28 @@ function eventosRegistrosAcopio() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i></button>
-                ${(esSalida || esUltimoIngreso) ? 
-                    `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class="bx bx-x-circle"></i></button>` 
+                ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+                ${((esSalida || esUltimoIngreso) && tienePermiso('anulacion')) ?
+                    `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class="bx bx-x-circle"></i>Anular</button>` 
                     : ''}
             </div>
         `;
     
         contenido.innerHTML = registrationHTML;
+        if (tienePermiso('anulacion') || tienePermiso('eliminacion')) {
+            contenido.style.paddingBottom = '80px';
+        }
         mostrarAnuncioSecond();
 
-        const btnEliminar = contenido.querySelector('.btn-eliminar');
-        const btnAnular = contenido.querySelector('.btn-anular');
+        if (tienePermiso('anulacion')) {
+            const btnAnular = contenido.querySelector('.btn-anular');
+            btnAnular.addEventListener('click', () => anular(registro));
+        }
+        if (tienePermiso('eliminacion')) {
+            const btnEliminar = contenido.querySelector('.btn-eliminar');
+            btnEliminar.addEventListener('click', () => eliminar(registro));
+        }
 
-        btnEliminar.addEventListener('click', () => eliminar(registro));
-        btnAnular.addEventListener('click', () => anular(registro));
         async function eliminar(registro) {
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const [fecha, hora] = registro.fecha.split(',').map(item => item.trim());
@@ -480,6 +487,7 @@ function eventosRegistrosAcopio() {
         `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón de confirmar eliminación
@@ -574,6 +582,7 @@ function eventosRegistrosAcopio() {
     `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnConfirmarAnular = contenido.querySelector('.btn-confirmar-anular');

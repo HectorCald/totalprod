@@ -189,7 +189,22 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
                     <button class="toggle-password"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
-            
+            ${usuarioInfo.rol !== 'Administración' ? `
+            <p class="normal">Permisos concedidos</p>
+            <div class="permisos-container">
+                <div class="campo-horizontal">
+                    ${usuarioInfo.permisos.includes('eliminacion') ? '<label class="eliminacion"><span>Eliminación</span></label>' : '<label class="nulo"><span>Eliminación</span></label>'}
+                    ${usuarioInfo.permisos.includes('edicion') ? '<label class="edicion"><span>Edición</span></label>' : '<label class="nulo"><span>Edición</span></label>'}
+                </div>
+                <div class="campo-horizontal">
+                    ${usuarioInfo.permisos.includes('anulacion') ? '<label class="anulacion"><span>Anulación</span></label>' : '<label class="nulo"><span>Anulación</span></label>'}
+                    ${usuarioInfo.permisos.includes('creacion') ? '<label class="creacion"><span>Creación</span></label>' : '<label class="nulo"><span>Creación</span></label>'}
+                </div>
+            </div>`: ''}
+            <p class="normal">Plugins habilitados</p>
+            <div class="plugins-container">
+                ${usuarioInfo.plugins.includes('calcularmp') ? '<label class="plugin"><span>Caculadora materia prima</span></label>' : '<label class="nulo"><span>Caculadora materia prima</span></label>'}
+            </div>
         </div>
         <div class="anuncio-botones">
             <button id="btn-guardar" class="btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
@@ -197,6 +212,7 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
     `;
 
     contenido.innerHTML = registrationHTML;
+    contenido.style.paddingBottom = '80px'; // Ajustar el padding para evitar que el botón quede oculto
     mostrarAnuncio();
     evetosCuenta();
     configuracionesEntrada();

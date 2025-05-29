@@ -24,6 +24,7 @@ import { mostrarRegistrosAcopio } from './modules/registros-acopio.js';
 import { mostrarPagos } from './modules/pagos.js';
 import { mostrarReglas } from './modules/reglas.js';
 import { mostrarPersonal } from './modules/personal.js';
+import { mostrarCalcularMp } from './modules/calculadora-mp.js';
 
 
 
@@ -86,9 +87,11 @@ window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
 window.mostrarPagos = mostrarPagos
 window.mostrarPersonal = mostrarPersonal
 
+
 window.crearPerfil = crearPerfil
 
 
+window.mostrarCalcularMp = mostrarCalcularMp
 
 
 document.addEventListener('DOMContentLoaded', async () => {

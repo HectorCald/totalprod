@@ -531,8 +531,8 @@ function eventosVerificacion() {
             </div>
         </div>
         <div class="anuncio-botones">
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            ${tienePermiso('edicion') && !registro.fecha_verificacion ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             ${registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : `<button class="btn-verificar btn green" data-id="${registro.id}"><i class="bx bx-check-circle"></i>Verificar</button>`}
         </div>
         `;
@@ -627,13 +627,14 @@ function eventosVerificacion() {
         const btnVerificar = contenido.querySelector('.btn-verificar');
         const btnAnular = contenido.querySelector('.btn-anular');
 
-        if (tienePermiso('edicion')) {
+        
+        if (tienePermiso('edicion') && !registro.fecha_verificacion) {
             const btnEditar = contenido.querySelector('.btn-editar');
-            btnEditar.addEventListener('click', () => editar(producto));
+            btnEditar.addEventListener('click', () => editar(registro));
         }
-        if (tienePermiso('eliminacion')) {
+        if (tienePermiso('eliminacion') && !registro.fecha_verificacion) {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
-            btnEliminar.addEventListener('click', () => eliminar(producto));
+            btnEliminar.addEventListener('click', () => eliminar(registro));
         }
         if (btnAnular) {
             btnAnular.addEventListener('click', () => anular(registro));
@@ -813,21 +814,6 @@ function eventosVerificacion() {
                             <input class="vencimiento" type="month" value="${registro.fecha_vencimiento}" placeholder=" " required>
                         </div>
                     </div>
-                <p class="normal">Información de verificación</p>
-                    <div class="entrada">
-                        <i class='bx bx-hash'></i>
-                        <div class="input">
-                            <p class="detalle">Cantidad real</p>
-                            <input class="cantidad_real" type="number" value="${registro.c_real}" autocomplete="off" placeholder=" " readonly>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-comment-detail'></i>
-                        <div class="input">
-                            <p class="detalle">Observaciones</p>
-                            <input class="observaciones" type="text" value="${registro.observaciones}" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
                 <p class="normal">Motivo de la edición</p>
                     <div class="entrada">
                         <i class='bx bx-comment-detail'></i>
@@ -891,6 +877,7 @@ function eventosVerificacion() {
             btnEditar.addEventListener('click', confirmarEdicion);
 
             async function confirmarEdicion() {
+                const idProdducto = window.idPro;
                 const producto = document.querySelector('.editar-produccion .producto').value;
                 const gramos = document.querySelector('.editar-produccion .gramaje').value;
                 const lote = document.querySelector('.editar-produccion .lote').value;
@@ -898,10 +885,7 @@ function eventosVerificacion() {
                 const microondas = document.querySelector('.editar-produccion .microondas').value;
                 const envases_terminados = document.querySelector('.editar-produccion .terminados').value;
                 const fecha_vencimiento = document.querySelector('.editar-produccion .vencimiento').value;
-                const verificado = document.querySelector('.editar-produccion .cantidad_real').value;
-                const observaciones = document.querySelector('.editar-produccion .observaciones').value;
                 const motivo = document.querySelector('.editar-produccion .motivo').value;
-
                 if (!motivo) { // Solo el campo "Motivo" es obligatorio
                     mostrarNotificacion({
                         message: 'Debe ingresar el motivo de la edición',
@@ -920,6 +904,7 @@ function eventosVerificacion() {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
+                            idPro: idProdducto,
                             producto,
                             gramos,
                             lote,
@@ -927,8 +912,6 @@ function eventosVerificacion() {
                             microondas,
                             envases_terminados,
                             fecha_vencimiento,
-                            verificado,
-                            observaciones,
                             motivo
                         })
                     });

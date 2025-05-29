@@ -805,7 +805,7 @@ app.delete('/eliminar-registro-produccion/:id', requireAuth, async (req, res) =>
 app.put('/editar-registro-produccion/:id', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
     const { id } = req.params;
-    const { producto, gramos, lote, proceso, microondas, envases_terminados, fecha_vencimiento, verificado, observaciones } = req.body;
+    const { idPro, producto, gramos, lote, proceso, microondas, envases_terminados, fecha_vencimiento } = req.body;
 
     try {
         const sheets = google.sheets({ version: 'v4', auth });
@@ -831,7 +831,7 @@ app.put('/editar-registro-produccion/:id', requireAuth, async (req, res) => {
         const updatedRow = [
             id,                             // ID
             existingRow[1],                 // FECHA
-            existingRow[2],
+            idPro,                      // ID PRODUCTO
             producto,                       // PRODUCTO
             lote,                 // LOTE
             gramos,                         // GRAMOS
@@ -841,9 +841,9 @@ app.put('/editar-registro-produccion/:id', requireAuth, async (req, res) => {
             fecha_vencimiento,              // FECHA VENCIMIENTO
             existingRow[10],                 // NOMBRE
             existingRow[11],
-            verificado,                // C_REAL
+            existingRow[12],                // C_REAL
             existingRow[13],                // FECHA_VERIFICACION
-            observaciones,                // OBSERVACIONES
+            existingRow[14],                // OBSERVACIONES
         ];
 
         // Actualizar la fila
@@ -4332,7 +4332,6 @@ app.get('/obtener-personal', requireAuth, async (req, res) => {
         });
     }
 });
-
 app.put('/actualizar-usuario-admin/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
@@ -4395,6 +4394,332 @@ app.put('/actualizar-usuario-admin/:id', requireAuth, async (req, res) => {
 });
 
 
+
+/* ==================== RUTAS DE CALCULAR MATERI PRIMA ==================== */
+app.get('/obtener-calculos-mp', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Calcular mp!A2:K'
+        });
+
+        const rows = response.data.values || [];
+        const calculos = rows.map(row => ({
+            id: row[0] || '',
+            fecha: row[1] || '',
+            nombre: row[2] || '',
+            responsable: row[3] || '',
+            materia_prima: row[4] || '',
+            gramaje: row[5] || '',
+            peso_inicial: row[6] || '',
+            peso_final: row[7] || '',
+            ctd_producida: row[8] || '',
+            peso_merma: row[9] || '',
+            observaciones: row[10] || ''
+        }));
+
+        res.json({
+            success: true,
+            calculos
+        });
+
+    } catch (error) {
+        console.error('Error al obtener cálculos de MP:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los cálculos de materia prima'
+        });
+    }
+});
+app.put('/agregar-peso-final-mp/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { peso_final } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener el registro actual
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Calcular mp!A2:K'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Registro no encontrado'
+            });
+        }
+
+        // Actualizar el peso final
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Calcular mp!H${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[peso_final]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Peso final actualizado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al agregar peso final:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al agregar el peso final'
+        });
+    }
+});
+app.put('/editar-calculo-mp/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { 
+            productos, 
+            peso_inicial, 
+            peso_final, 
+            peso_merma, 
+            observaciones, 
+            motivo 
+        } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get current data
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Calcular mp!A2:K'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Registro no encontrado'
+            });
+        }
+
+        // Format products data
+        const materia_prima = productos.map(p => p.producto).join('-');
+        const gramaje = productos.map(p => p.gramaje).join('-');
+        const ctd_producida = productos.map(p => p.cantidad).join('-');
+
+        // Prepare updated row
+        const updatedRow = [
+            rows[rowIndex][0], // ID
+            rows[rowIndex][1], // Fecha
+            rows[rowIndex][2], // Nombre
+            rows[rowIndex][3], // Responsable
+            materia_prima,     // Materia Prima
+            gramaje,          // Gramaje
+            peso_inicial,     // Peso Inicial
+            peso_final,       // Peso Final
+            ctd_producida,    // Cantidad Producida
+            peso_merma,       // Peso Merma
+            observaciones     // Observaciones
+        ];
+
+        // Update the row
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Calcular mp!A${rowIndex + 2}:K${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [updatedRow]
+            }
+        });
+
+        // Enviar respuesta de éxito con los datos actualizados
+        res.json({
+            success: true,
+            message: 'Cálculo actualizado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al editar cálculo:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message || 'Error al editar el cálculo'
+        });
+    }
+});
+app.delete('/eliminar-calculo-mp/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { motivo } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get spreadsheet info
+        const spreadsheet = await sheets.spreadsheets.get({
+            spreadsheetId
+        });
+
+        const calculosSheet = spreadsheet.data.sheets.find(
+            sheet => sheet.properties.title === 'Calcular mp'
+        );
+
+        if (!calculosSheet) {
+            return res.status(404).json({
+                success: false,
+                error: 'Hoja de cálculos no encontrada'
+            });
+        }
+
+        // Get current rows
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Calcular mp!A2:K'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Registro no encontrado'
+            });
+        }
+
+        // Delete the row
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: calculosSheet.properties.sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex + 1,
+                            endIndex: rowIndex + 2
+                        }
+                    }
+                }]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Cálculo eliminado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar cálculo:', error);
+        res.status(500).json({
+            success: false, 
+            error: 'Error al eliminar el cálculo'
+        });
+    }
+});
+app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!A2:B' // Solo ID y NOMBRE
+        });
+
+        const rows = response.data.values || [];
+        const nombres = rows.map(row => ({
+            id: row[0] || '',
+            nombre: row[1] || ''
+        }));
+
+        res.json({
+            success: true,
+            nombres
+        });
+
+    } catch (error) {
+        console.error('Error al obtener nombres:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los nombres'
+        });
+    }
+});
+app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { 
+            nombre_operador, 
+            responsable, 
+            peso_inicial, 
+            productos 
+        } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener último ID
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Calcular mp!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ? 
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
+        const newId = `RMP-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Fecha actual en formato dd/mm/yyyy
+        const fecha = new Date().toLocaleDateString('es-ES');
+
+        // Formatear productos y gramajes manteniendo los nombres completos
+        const materia_prima = productos.map(p => p.nombre).join('-');
+        const gramaje = productos.map(p => p.gramaje).join('-');
+
+        // Crear nuevo registro
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Calcular mp!A2:K',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,           // ID
+                    fecha,           // FECHA
+                    nombre_operador, // NOMBRE
+                    responsable,     // RESPONSABLE
+                    materia_prima,   // MATERIA PRIMA (nombres completos)
+                    gramaje,         // GRAMAJE (separado por guiones)
+                    peso_inicial,    // PESO INICIAL
+                    '',             // PESO FINAL (vacío)
+                    '',             // CTD PRODUCIDA (vacío)
+                    '',             // PESO MERMA (vacío)
+                    ''              // OBSERVACIONES (vacío)
+                ]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Cálculo registrado correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al registrar cálculo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar el cálculo'
+        });
+    }
+});
 
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */

@@ -1,5 +1,113 @@
 let usuarioInfo = '';
+// Primero agregamos la configuración de plugins
+const pluginsMenu = {
+    'calcularmp': {
+        clase: 'opcion-btn',
+        vista: 'calculadora-view',
+        icono: 'fa-calculator',
+        texto: 'Calcular MP',
+        detalle: 'Calculadora de materia prima',
+        onclick: 'onclick="mostrarCalcularMp();"'
+    }
+    // Aquí puedes agregar más plugins siguiendo el mismo formato
+};
 
+// Modificar la función obtenerOpcionesMenu para incluir plugins
+function obtenerOpcionesMenu() {
+    const rol = usuarioInfo.rol;
+    let atajosUsuario = [];
+    
+    // Obtener plugins como string del localStorage
+    const plugins = localStorage.getItem('plugins_activos') || '';
+    
+    // Primero agregamos las opciones del rol
+    const atajosRol = atajosPorRol[rol];
+    if (atajosRol) {
+        atajosUsuario = atajosRol.filter(opcion => {
+            return !opcion.soloAdmin || rol === 'Administración';
+        });
+    }
+
+    // Agregar plugins si están activos
+    Object.keys(pluginsMenu).forEach(plugin => {
+        if (usuarioInfo.plugins.includes(plugin)) {
+            atajosUsuario.push(pluginsMenu[plugin]);
+        }
+    });
+
+    return atajosUsuario;
+}
+
+// Modificar la función mostrarMenu para manejar los plugins en administrador
+function mostrarMenu() {
+    const contenido = document.querySelector('.anuncio .contenido');
+    const opcionesUsuario = obtenerOpcionesMenu();
+    const plugins = localStorage.getItem('plugins_activos') || '';
+    let opcionesHTML = '';
+
+    if (usuarioInfo.rol === 'Administración') {
+        // Agrupar por roles y plugins
+        const grupos = {
+            'Administración': atajosPorRol['Administración'],
+            'Producción': atajosPorRol['Producción'],
+            'Almacen': atajosPorRol['Almacen'],
+            'Acopio': atajosPorRol['Acopio'],
+        };
+
+        // Agregar sección de plugins si hay activos
+        const pluginsActivos = Object.keys(pluginsMenu)
+            .filter(plugin => plugins.includes(plugin))
+            .map(plugin => pluginsMenu[plugin]);
+
+        if (pluginsActivos.length > 0) {
+            grupos['Plugins'] = pluginsActivos;
+        }
+
+        // Generar HTML para cada grupo
+        opcionesHTML = Object.entries(grupos).map(([titulo, opciones]) => {
+            if (opciones && opciones.length > 0) {
+                return `
+                    <h2 class="normal">${titulo}</h2>
+                    ${opciones.map(opcion => `
+                        <div class="opcion" ${opcion.onclick}>
+                            <i class="fas ${opcion.icono}"></i>
+                            <div class="info">
+                                <p class="texto">${opcion.texto}</p>
+                                <p class="detalle">${opcion.detalle}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+            return '';
+        }).join('');
+    } else {
+        // Para otros roles, mostrar sus opciones y plugins juntos
+        opcionesHTML = opcionesUsuario.map(opcion => `
+            <div class="opcion" ${opcion.onclick}>
+                <i class="fas ${opcion.icono}"></i>
+                <div class="info">
+                    <p class="texto">${opcion.texto}</p>
+                    <p class="detalle">${opcion.detalle}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    const menuHTML = `
+        <div class="encabezado">
+            <h1 class="titulo">Menú de ${usuarioInfo.rol}</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div class="relleno">
+            ${opcionesHTML}
+        </div>
+    `;
+
+    contenido.innerHTML = menuHTML;
+    contenido.style.paddingBottom = '10px';
+    mostrarAnuncio();
+}
 const atajosPorRol = {
     'Producción': [
         {
@@ -90,14 +198,6 @@ const atajosPorRol = {
     'Almacen': [
         {
             clase: 'opcion-btn',
-            vista: 'verificarRegistros-view',
-            icono: 'fa-check-double',
-            texto: 'Verificar',
-            detalle: 'Verifica registros.',
-            onclick: 'onclick="mostrarVerificacion()"'
-        },
-        {
-            clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-dolly',
             texto: 'Almacen general',
@@ -127,6 +227,14 @@ const atajosPorRol = {
             texto: 'Conteo fisico',
             detalle: 'Realiza conteos fisicos.',
             onclick: 'onclick="mostrarConteo()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-check-double',
+            texto: 'Verificar',
+            detalle: 'Verifica registros.',
+            onclick: 'onclick="mostrarVerificacion()"'
         },
         {
             clase: 'opcion-btn',
@@ -188,22 +296,10 @@ const atajosPorRol = {
         },
     ]
 };
-function obtenerOpcionesMenu() {
-    const rol = usuarioInfo;
-    let atajosUsuario = [];
 
-    const atajosRol = atajosPorRol[rol];
-    if (atajosRol) {
-        // Filtrar opciones que no sean exclusivas de admin o que sean para el rol actual
-        atajosUsuario = atajosRol.filter(opcion => {
-            return !opcion.soloAdmin || rol === 'Administración';
-        });
-    }
-    return atajosUsuario.slice(0, 10);
-}
-export async function crearNav(rol) {
+export async function crearNav(usuario) {
 
-    usuarioInfo=rol;
+    usuarioInfo=usuario;
     // Solo ejecutar si estamos en el dashboard
     if (window.location.pathname === '/dashboard') {
         const view = document.querySelector('.nav');
@@ -227,60 +323,7 @@ function mostrarNav() {
     view.innerHTML = nav;
     eventosNav();
 }
-function mostrarMenu() {
-    const contenido = document.querySelector('.anuncio .contenido');
-    const opcionesUsuario = obtenerOpcionesMenu();
-    let opcionesHTML = '';
 
-    if (usuarioInfo === 'Administración') {
-        // Agrupar por roles
-        const grupos = {
-            'Administración': atajosPorRol['Administración'],
-            'Producción': atajosPorRol['Producción'],
-            'Almacen': atajosPorRol['Almacen'],
-            'Acopio': atajosPorRol['Acopio'],
-        };
-
-        // Generar HTML para cada grupo
-        opcionesHTML = Object.entries(grupos).map(([titulo, opciones]) => `
-                <h2 class="normal">${titulo}</h2>
-                ${opciones.map(opcion => `
-                    <div class="opcion" ${opcion.onclick}>
-                        <i class="fas ${opcion.icono}"></i>
-                        <div class="info">
-                            <p class="texto">${opcion.texto}</p>
-                            <p class="detalle">${opcion.detalle}</p>
-                        </div>
-                    </div>
-                `).join('')}
-        `).join('');
-    } else {
-        // Para otros roles, mantener el formato original
-        opcionesHTML = opcionesUsuario.map(opcion => `
-            <div class="opcion" ${opcion.onclick}>
-                <i class="fas ${opcion.icono}"></i>
-                <div class="info">
-                    <p class="texto">${opcion.texto}</p>
-                    <p class="detalle">${opcion.detalle}</p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    const menuHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Menú de ${usuarioInfo}</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            ${opcionesHTML}
-        </div>
-    `;
-
-    contenido.innerHTML = menuHTML;
-    contenido.style.paddingBottom = '10px';
-    mostrarAnuncio();
-}
 function eventosNav() {
     const refreshButton = document.querySelector('.nav-container .refresh');
     const menu = document.querySelector('.nav-container .menu');
