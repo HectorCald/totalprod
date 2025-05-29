@@ -1341,6 +1341,7 @@ function eventosVerificacion() {
                 <button type="submit" class="btn green"><i class='bx bx-save'></i> Guardar pago</button>
             </div>
         `;
+        contenido.style.paddingBottom = '80px';
 
         mostrarAnuncioSecond();
 

@@ -2003,7 +2003,7 @@
     width: 100%;
     border-collapse: collapse;
     min-width: 600px;
-    min-height: fit-content !important;
+    min-height: auto !important;
     color: var(--text);
     table-layout: auto;
     /* Ajusta las columnas al contenido */
