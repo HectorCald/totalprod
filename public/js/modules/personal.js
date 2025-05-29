@@ -269,6 +269,10 @@ function eventosPersonal() {
                         <input type="checkbox" value="calcularmp" ${usuario.plugins?.includes('calcularmp') ? 'checked' : ''}>
                         <span>Calculadora de materia prima</span>
                     </label>
+                    <label class="plugin">
+                        <input type="checkbox" value="tareasAc" ${usuario.plugins?.includes('tareasAc') ? 'checked' : ''}>
+                        <span>Calculadora de tiempo en tareas</span>
+                    </label>
                 </div>
             </div>
             <div class="anuncio-botones">

@@ -8,18 +8,25 @@ const pluginsMenu = {
         texto: 'Calcular MP',
         detalle: 'Calculadora de materia prima',
         onclick: 'onclick="mostrarCalcularMp();"'
+    },
+    'tareasAc': {
+        clase: 'opcion-btn',
+        vista: 'regAcopio-view',
+        icono: 'fa-tasks',
+        texto: 'Tareas AC',
+        detalle: 'Gestionar tareas de acopio',
+        onclick: 'onclick="mostrarTareas();"'
     }
-    // Aquí puedes agregar más plugins siguiendo el mismo formato
 };
 
 
 function obtenerOpcionesMenu() {
     const rol = usuarioInfo.rol;
     let atajosUsuario = [];
-    
+
     // Obtener plugins como string del localStorage
     const plugins = localStorage.getItem('plugins_activos') || '';
-    
+
     // Primero agregamos las opciones del rol
     const atajosRol = atajosPorRol[rol];
     if (atajosRol) {
@@ -180,14 +187,6 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
-            vista: 'regAcopio-view',
-            icono: 'fa-tasks',
-            texto: 'Tareas',
-            detalle: 'Gestionar tareas de acopio',
-            onclick: 'onclick="mostrarTareas();"'
-        },
-        {
-            clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
             texto: 'Registros acopio',
@@ -299,7 +298,7 @@ const atajosPorRol = {
 
 export async function crearNav(usuario) {
 
-    usuarioInfo=usuario;
+    usuarioInfo = usuario;
     // Solo ejecutar si estamos en el dashboard
     if (window.location.pathname === '/dashboard') {
         const view = document.querySelector('.nav');
@@ -327,7 +326,7 @@ function mostrarNav() {
 function eventosNav() {
     const refreshButton = document.querySelector('.nav-container .refresh');
     const menu = document.querySelector('.nav-container .menu');
-    
+
     refreshButton.addEventListener('click', () => {
         mostrarCarga();
         location.reload();
