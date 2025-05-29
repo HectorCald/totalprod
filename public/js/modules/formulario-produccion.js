@@ -49,6 +49,8 @@ async function verificarHorarioProduccion() {
             permitido: false,
             horario: 'Error al verificar horario'
         };
+    }finally{
+        ocultarCarga();
     }
 }
 

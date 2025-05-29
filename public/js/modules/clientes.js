@@ -260,6 +260,13 @@ function eventosClientes() {
                             <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Vas a eliminar un cliente del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button class="btn-eliminar-cliente-confirmar btn red"><i class="bx bx-trash"></i> Eliminar</button>
@@ -359,6 +366,13 @@ function eventosClientes() {
                         <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Estás por editar un cliente del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-guardar-cliente btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
