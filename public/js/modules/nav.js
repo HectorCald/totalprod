@@ -180,6 +180,14 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
+            vista: 'regAcopio-view',
+            icono: 'fa-tasks',
+            texto: 'Tareas',
+            detalle: 'Gestionar tareas de acopio',
+            onclick: 'onclick="mostrarTareas();"'
+        },
+        {
+            clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
             texto: 'Registros acopio',

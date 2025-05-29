@@ -2,8 +2,9 @@ let registrosProduccion = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let productosGlobal = [];
 let calculosMP = [];
+let nombresUsuariosGlobal = [];
 
-// Agregar la función para obtener los cálculos
+
 async function obtenerCalculosMP() {
     try {
         const response = await fetch('/obtener-calculos-mp');
@@ -35,8 +36,6 @@ async function obtenerCalculosMP() {
         return false;
     }
 }
-let nombresUsuariosGlobal = []; // Agregar al inicio con las otras variables globales
-
 async function obtenerNombresUsuarios() {
     try {
         const response = await fetch('/obtener-nombres-usuarios');
@@ -56,8 +55,6 @@ async function obtenerNombresUsuarios() {
         return false;
     }
 }
-
-
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
     if (usuarioGuardado) {
@@ -181,7 +178,7 @@ function updateHTMLWithData() {
     const productosHTML = calculosMP.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
             <div class="header">
-                <i class='bx bx-file'></i>
+                <i class='bx bx-calculator'></i>
                 <div class="info-header">
                     <span class="id">${registro.id}<span class="valor ${registro.peso_final ? 'finalizado' : 'pendiente'}">${registro.peso_final ? 'Finalizado' : 'Pendiente'}</span></span>
                     <span class="nombre"><strong>${registro.nombre}</strong></span>
@@ -426,7 +423,7 @@ function eventosVerificacion() {
                         resultado: `${datosProducto.ctd_producida} und.`
                     },
                     pesoUsadoIdeal: {
-                        formula: `${datosProducto.cantidadReal} unidades × ${datosProducto.gramaje}g ÷ 1000`,
+                        formula: `${datosProducto.ctd_producida} unidades × ${datosProducto.gramaje}g ÷ 1000`,
                         resultado: `${datosProducto.ctd_producida} kg`
                     }
                 }
@@ -438,7 +435,7 @@ function eventosVerificacion() {
             sum + parseFloat(prod.pesoUsadoIdeal), 0);
         const pesoFinalIdeal = (registro.peso_inicial - pesoUsadoIdealTotal).toFixed(2);
         const diferenciaPesoFinal = registro.peso_final ?
-            (registro.pesoFinal - pesoFinalIdeal).toFixed(2) : 'Pendiente';
+            (registro.peso_final - pesoFinalIdeal).toFixed(2) : 'Pendiente';
 
         const contenido = document.querySelector('.anuncio-second .contenido');
         // Dentro de la función info, actualizar la sección de detalles:
@@ -462,9 +459,8 @@ function eventosVerificacion() {
                 <div class="campo-vertical">
                     <span class="valor"><strong><i class='bx bx-package'></i> Peso Inicial: </strong>${registro.peso_inicial} kg</span>
                     <span class="valor"><strong><i class='bx bx-package'></i> Peso Final: </strong>
-                        <span class="${registro.peso_final ? 'con-peso' : 'pendiente'}">
                             ${registro.peso_final ? `${registro.peso_final} kg` : 'Pendiente'}
-                        </span>
+                       
                     </span>
                 </div>
         
@@ -496,7 +492,7 @@ function eventosVerificacion() {
                         <div class="calculo-item">
                             <div class="calculo-header">
                                 <span class="valor"><strong><i class='bx bx-calculator'></i> Diferencia en Peso Final: </strong>
-                                    <span class="${parseFloat(diferenciaPesoFinal) > 0 ? 'positivo' : 'negativo'}">${diferenciaPesoFinal} kg</span>
+                                    ${diferenciaPesoFinal} kg
                                     <i class="btn-info" title="Ver proceso">
                                     <i class="fas fa-info-circle"></i>
                                 </i>
@@ -546,7 +542,7 @@ function eventosVerificacion() {
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
-        
+
 
         // Configurar los botones de información
         contenido.querySelectorAll('.btn-info').forEach(btn => {
@@ -949,7 +945,7 @@ function eventosVerificacion() {
 
     }
     btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
-    aplicarFiltros();
+
 
     document.addEventListener('click', async function (e) {
         if (e.target.closest('#nuevo-registro')) {
@@ -1028,12 +1024,12 @@ function eventosVerificacion() {
         const productoInput = document.querySelector('.entrada .producto');
         const sugerenciasList = document.querySelector('#productos-list');
         function normalizarTexto(texto) {
-        return texto
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
-            .replace(/[-\s]+/g, ""); // Eliminar guiones y espacios
-    }
+            return texto
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+                .replace(/[-\s]+/g, ""); // Eliminar guiones y espacios
+        }
 
         productoInput.addEventListener('input', (e) => {
             const valor = normalizarTexto(e.target.value);
@@ -1191,5 +1187,7 @@ function eventosVerificacion() {
             }
         });
     }
+
+    aplicarFiltros();
 
 }

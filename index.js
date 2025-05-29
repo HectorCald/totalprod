@@ -4118,7 +4118,6 @@ app.put('/anular-pago/:id', requireAuth, async (req, res) => {
     }
 });
 
-
 /* ==================== RUTAS DE PAGOS PARCIALES ==================== */
 app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
     try {
@@ -4392,8 +4391,6 @@ app.put('/actualizar-usuario-admin/:id', requireAuth, async (req, res) => {
         });
     }
 });
-
-
 
 /* ==================== RUTAS DE CALCULAR MATERI PRIMA ==================== */
 app.get('/obtener-calculos-mp', requireAuth, async (req, res) => {
@@ -4720,6 +4717,427 @@ app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
         });
     }
 });
+
+/* ==================== RUTAS DE TAREAS ACOPIO==================== */
+app.get('/obtener-tareas', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Tareas!A2:H' // Columnas A a G para todos los campos
+        });
+
+        const rows = response.data.values || [];
+        const tareas = rows.map(row => ({
+            id: row[0] || '',                    // ID
+            fecha: row[1] || '',                 // FECHA
+            producto: row[2] || '',              // PRODUCTO
+            hora_inicio: row[3] || '',           // HORA-INICIO
+            hora_fin: row[4] || '',              // HORA-FIN
+            procedimientos: row[5] || '',        // PROCEDIMIENTOS
+            operador: row[6] || '',              // OPERADOR
+            observaciones: row[7] || ''          // OBSERVACIONES
+        }));
+
+        res.json({
+            success: true,
+            tareas
+        });
+
+    } catch (error) {
+        console.error('Error al obtener tareas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener las tareas'
+        });
+    }
+});
+app.get('/obtener-lista-tareas', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Lista tareas!A2:B' // Columnas A y B para ID y TAREA
+        });
+
+        const rows = response.data.values || [];
+        const tareas = rows.map(row => ({
+            id: row[0] || '',       // ID
+            tarea: row[1] || ''     // TAREA
+        }));
+
+        res.json({
+            success: true,
+            tareas
+        });
+
+    } catch (error) {
+        console.error('Error al obtener lista de tareas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener la lista de tareas'
+        });
+    }
+});
+app.put('/finalizar-tarea/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { hora_fin, procedimientos, observaciones } = req.body;
+        
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener fecha actual
+        const ahora = new Date();
+        const hora_fin_actual = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
+
+        // Obtener datos actuales
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Tareas!A2:H'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            });
+        }
+
+        // Preparar fila actualizada
+        const updatedRow = [
+            ...rows[rowIndex].slice(0, 4), // Mantener datos hasta hora_inicio
+            hora_fin_actual,               // Agregar hora_fin actual
+            procedimientos,                // Agregar procedimientos (lista de tareas)
+            rows[rowIndex][6],            // Mantener operador
+            observaciones || ''            // Agregar observaciones
+        ];
+
+        // Actualizar la fila
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Tareas!A${rowIndex + 2}:H${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [updatedRow]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea finalizada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al finalizar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al finalizar la tarea'
+        });
+    }
+});
+app.delete('/eliminar-tarea/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { motivo } = req.body;
+        
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get spreadsheet info
+        const spreadsheet = await sheets.spreadsheets.get({
+            spreadsheetId
+        });
+
+        const tareasSheet = spreadsheet.data.sheets.find(
+            sheet => sheet.properties.title === 'Tareas'
+        );
+
+        if (!tareasSheet) {
+            return res.status(404).json({
+                success: false,
+                error: 'Hoja de tareas no encontrada'
+            });
+        }
+
+        // Get current rows
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Tareas!A2:H'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            });
+        }
+
+        // Delete the row
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: tareasSheet.properties.sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex + 1,
+                            endIndex: rowIndex + 2
+                        }
+                    }
+                }]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea eliminada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al eliminar la tarea'
+        });
+    }
+});
+app.put('/editar-tarea/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { procedimientos, observaciones, motivo } = req.body;
+        
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener datos actuales
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Tareas!A2:H'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            });
+        }
+
+        // Preparar fila actualizada
+        const updatedRow = [
+            ...rows[rowIndex].slice(0, 5), // Mantener datos hasta procedimientos
+            procedimientos,                // Actualizar procedimientos
+            rows[rowIndex][6],            // Mantener operador
+            observaciones || ''           // Actualizar observaciones
+        ];
+
+        // Actualizar la fila
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Tareas!A${rowIndex + 2}:H${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [updatedRow]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea actualizada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al editar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al editar la tarea'
+        });
+    }
+});
+app.post('/registrar-tarea', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { producto, hora_inicio, operador } = req.body;
+        
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener último ID
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Tareas!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ? 
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
+        const newId = `TA-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Fecha actual en formato dd/mm/yyyy
+        const fecha = new Date().toLocaleDateString('es-ES');
+
+        // Crear nuevo registro
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Tareas!A2:H',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,           // ID
+                    fecha,           // FECHA
+                    producto,        // PRODUCTO
+                    hora_inicio,     // HORA-INICIO
+                    '',             // HORA-FIN
+                    '',             // PROCEDIMIENTOS
+                    operador,        // OPERADOR
+                    ''              // OBSERVACIONES
+                ]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea registrada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al registrar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar la tarea'
+        });
+    }
+});
+app.post('/agregar-tarea-lista', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { tarea } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get current tasks to calculate next ID
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Lista tareas!A2:B'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ?
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
+        const newId = `TL-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Add new task
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Lista tareas!A2:B',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[newId, tarea]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea agregada correctamente',
+            id: newId
+        });
+
+    } catch (error) {
+        console.error('Error al agregar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al agregar la tarea'
+        });
+    }
+});
+app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get spreadsheet info
+        const spreadsheet = await sheets.spreadsheets.get({
+            spreadsheetId
+        });
+
+        const tareasSheet = spreadsheet.data.sheets.find(
+            sheet => sheet.properties.title === 'Lista tareas'
+        );
+
+        if (!tareasSheet) {
+            return res.status(404).json({
+                success: false,
+                error: 'Hoja de tareas no encontrada'
+            });
+        }
+
+        // Get current rows
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Lista tareas!A2:B'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Tarea no encontrada'
+            });
+        }
+
+        // Delete the row
+        await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            resource: {
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: tareasSheet.properties.sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex + 1,
+                            endIndex: rowIndex + 2
+                        }
+                    }
+                }]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Tarea eliminada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar tarea:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al eliminar la tarea'
+        });
+    }
+});
+
+
+
+
 
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */

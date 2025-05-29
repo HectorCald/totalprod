@@ -763,8 +763,8 @@ function eventosPagos() {
             });
         }
     };
-    btnNuevoPago.addEventListener('click', nuevoPago);
-    function nuevoPago() {
+    btnNuevoPago.addEventListener('click', nuevoPagoGenerico);
+    function nuevoPagoGenerico() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">

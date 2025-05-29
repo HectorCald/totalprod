@@ -537,87 +537,6 @@ function eventosVerificacion() {
         </div>
         `;
 
-        function calcularTotal(registro) {
-            // Declarar todas las variables necesarias
-            const normalizedNombre = normalizarTexto(registro.producto);
-            const cantidad = parseFloat(registro.c_real) || 0;
-            const gramaje = parseFloat(registro.gramos) || 0;
-            const seleccion = registro.proceso || 'Ninguno';
-
-            let multiplicadores = {
-                etiquetado: '1',
-                sellado: '1',
-                envasado: '1',
-                cernido: '1'
-            };
-
-            // Primero buscar reglas por gramaje
-            const reglasGramaje = reglasProduccion?.filter(r => {
-                if (r.producto.startsWith('Regla ') && r.producto.includes('gr-')) {
-                    const [minStr, maxStr] = r.producto
-                        .replace('Regla ', '')
-                        .replace('gr', '')
-                        .split('-');
-
-                    const minGr = parseInt(minStr);
-                    const maxGr = parseInt(maxStr);
-                    return gramaje >= minGr && gramaje <= maxGr;
-                }
-                return false;
-            }) || [];
-
-            // Si encontramos reglas por gramaje, usamos la primera
-            if (reglasGramaje.length > 0) {
-                const reglaGramaje = reglasGramaje[0];
-                multiplicadores = {
-                    etiquetado: reglaGramaje.etiq || '1',
-                    sellado: reglaGramaje.sell || '1',
-                    envasado: reglaGramaje.envs || '1',
-                    cernido: reglaGramaje.cern || '1'
-                };
-            } else {
-                // Si no hay reglas por gramaje, buscar reglas por nombre
-                const reglasPorProducto = reglasProduccion?.filter(r => {
-                    const nombreRegla = normalizarTexto(r.producto);
-                    return normalizedNombre === nombreRegla && !r.producto.startsWith('Regla ');
-                }) || [];
-
-                // Aplicar reglas por producto si existen
-                if (reglasPorProducto.length > 0) {
-                    const regla = reglasPorProducto[0];
-                    multiplicadores = {
-                        etiquetado: regla.etiq || '1',
-                        sellado: regla.sell || '1',
-                        envasado: regla.envs || '1',
-                        cernido: regla.cern || '1'
-                    };
-                }
-            }
-
-            // Calcular resultados usando preciosBase
-            let resultado = cantidad * preciosBase.envasado * parseFloat(multiplicadores.envasado);
-            let resultadoEtiquetado = cantidad * preciosBase.etiquetado * parseFloat(multiplicadores.etiquetado);
-            let resultadoSellado = cantidad * preciosBase.sellado * parseFloat(multiplicadores.sellado);
-
-            if (normalizedNombre.includes('bote')) {
-                resultadoSellado = cantidad * 0.025;
-            }
-
-            let resultadoSernido = 0;
-            if (seleccion === 'Cernido') {
-                const kilos = (cantidad * gramaje) / 1000;
-                resultadoSernido = (kilos * parseFloat(multiplicadores.cernido)) * 5;
-            }
-
-            return {
-                total: resultado + resultadoEtiquetado + resultadoSellado + resultadoSernido,
-                envasado: resultado,
-                etiquetado: resultadoEtiquetado,
-                sellado: resultadoSellado,
-                cernido: resultadoSernido
-            };
-        }
-        window.calcularTotal = calcularTotal;
 
 
         contenido.innerHTML = registrationHTML;
@@ -627,7 +546,7 @@ function eventosVerificacion() {
         const btnVerificar = contenido.querySelector('.btn-verificar');
         const btnAnular = contenido.querySelector('.btn-anular');
 
-        
+
         if (tienePermiso('edicion') && !registro.fecha_verificacion) {
             const btnEditar = contenido.querySelector('.btn-editar');
             btnEditar.addEventListener('click', () => editar(registro));
@@ -1175,7 +1094,87 @@ function eventosVerificacion() {
             mostrarFormularioNuevoPago();
         }
     });
+    function calcularTotal(registro) {
+        // Declarar todas las variables necesarias
+        const normalizedNombre = normalizarTexto(registro.producto);
+        const cantidad = parseFloat(registro.c_real) || 0;
+        const gramaje = parseFloat(registro.gramos) || 0;
+        const seleccion = registro.proceso || 'Ninguno';
 
+        let multiplicadores = {
+            etiquetado: '1',
+            sellado: '1',
+            envasado: '1',
+            cernido: '1'
+        };
+
+        // Primero buscar reglas por gramaje
+        const reglasGramaje = reglasProduccion?.filter(r => {
+            if (r.producto.startsWith('Regla ') && r.producto.includes('gr-')) {
+                const [minStr, maxStr] = r.producto
+                    .replace('Regla ', '')
+                    .replace('gr', '')
+                    .split('-');
+
+                const minGr = parseInt(minStr);
+                const maxGr = parseInt(maxStr);
+                return gramaje >= minGr && gramaje <= maxGr;
+            }
+            return false;
+        }) || [];
+
+        // Si encontramos reglas por gramaje, usamos la primera
+        if (reglasGramaje.length > 0) {
+            const reglaGramaje = reglasGramaje[0];
+            multiplicadores = {
+                etiquetado: reglaGramaje.etiq || '1',
+                sellado: reglaGramaje.sell || '1',
+                envasado: reglaGramaje.envs || '1',
+                cernido: reglaGramaje.cern || '1'
+            };
+        } else {
+            // Si no hay reglas por gramaje, buscar reglas por nombre
+            const reglasPorProducto = reglasProduccion?.filter(r => {
+                const nombreRegla = normalizarTexto(r.producto);
+                return normalizedNombre === nombreRegla && !r.producto.startsWith('Regla ');
+            }) || [];
+
+            // Aplicar reglas por producto si existen
+            if (reglasPorProducto.length > 0) {
+                const regla = reglasPorProducto[0];
+                multiplicadores = {
+                    etiquetado: regla.etiq || '1',
+                    sellado: regla.sell || '1',
+                    envasado: regla.envs || '1',
+                    cernido: regla.cern || '1'
+                };
+            }
+        }
+
+        // Calcular resultados usando preciosBase
+        let resultado = cantidad * preciosBase.envasado * parseFloat(multiplicadores.envasado);
+        let resultadoEtiquetado = cantidad * preciosBase.etiquetado * parseFloat(multiplicadores.etiquetado);
+        let resultadoSellado = cantidad * preciosBase.sellado * parseFloat(multiplicadores.sellado);
+
+        if (normalizedNombre.includes('bote')) {
+            resultadoSellado = cantidad * 0.025;
+        }
+
+        let resultadoSernido = 0;
+        if (seleccion === 'Cernido') {
+            const kilos = (cantidad * gramaje) / 1000;
+            resultadoSernido = (kilos * parseFloat(multiplicadores.cernido)) * 5;
+        }
+
+        return {
+            total: resultado + resultadoEtiquetado + resultadoSellado + resultadoSernido,
+            envasado: resultado,
+            etiquetado: resultadoEtiquetado,
+            sellado: resultadoSellado,
+            cernido: resultadoSernido
+        };
+    }
+    window.calcularTotal = calcularTotal;
     async function mostrarFormularioNuevoPago() {
         const itemsVisibles = Array.from(document.querySelectorAll('.registro-item:not([style*="display: none"])'));
         const registrosFiltrados = itemsVisibles.map(item =>

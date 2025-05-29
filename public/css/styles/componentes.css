@@ -296,10 +296,6 @@
     opacity: 1;
 }
 
-
-
-
-
 .carga {
     position: fixed;
     top: 0;
@@ -452,7 +448,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
-    padding-top: 55px;
+    padding-top: 52px;
     padding-bottom: 10px;
 }
 
@@ -946,6 +942,42 @@
     }
 }
 
+.lista-tareas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .tarea-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 15px;
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        color: var(--text);
+
+        span{
+            font-size: var(--text-detalle);
+            color: var(--text);
+        }
+    }
+
+    .btn-eliminar-tarea {
+        background: none;
+        border: none;
+        color: #ff4444;
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+
+        i{
+            color: red !important;
+        }
+    }
+}
+
 .registro-item {
     background-color: var(--primary-color);
     border-radius: 10px;
@@ -1159,6 +1191,7 @@
         font-weight: 900 !important;
         font-size: 10px !important;
     }
+
     .finalizado {
         color: var(--success);
         background: none;
@@ -1280,23 +1313,29 @@
             background-color: var(--success) !important;
         }
     }
-    .creacion{
+
+    .creacion {
         border-left: 5px solid #4CAF50
     }
-    .anulacion{
+
+    .anulacion {
         border-left: 5px solid #ff9800;
     }
-    .edicion{
+
+    .edicion {
         border-left: 5px solid #2196F3;
     }
-    .eliminacion{
+
+    .eliminacion {
         border-left: 5px solid #f44336;
     }
-    .nulo{
+
+    .nulo {
         border-left: 5px solid gray;
         opacity: 0.3;
     }
-    .plugin{
+
+    .plugin {
         border-left: 5px solid #4CAF50
     }
 }

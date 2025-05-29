@@ -25,6 +25,7 @@ import { mostrarPagos } from './modules/pagos.js';
 import { mostrarReglas } from './modules/reglas.js';
 import { mostrarPersonal } from './modules/personal.js';
 import { mostrarCalcularMp } from './modules/calculadora-mp.js';
+import { mostrarTareas } from './modules/tareas-acopio.js';
 
 
 
@@ -82,6 +83,7 @@ window.mostrarPedidos = mostrarPedidos
 window.mostrarIngresosAcopio = mostrarIngresosAcopio
 window.mostrarSalidasAcopio = mostrarSalidasAcopio
 window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
+window.mostrarTareas = mostrarTareas
 
 
 window.mostrarPagos = mostrarPagos
