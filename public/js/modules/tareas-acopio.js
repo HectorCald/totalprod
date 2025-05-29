@@ -505,6 +505,13 @@ function eventosTareas() {
                             <input class="motivo" type="text" required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button class="btn-eliminar-registro btn red">
@@ -629,6 +636,13 @@ function eventosTareas() {
                             <input class="motivo" type="text" required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button class="btn-editar-registro btn blue">
@@ -846,6 +860,13 @@ function eventosTareas() {
                             <input type="text" class="observaciones">
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Estás por finalizar una tarea. Asegúrate de llenar los campos necesarios y con la información correcta, ya que esta accion no se puede deshacer.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button class="btn-finalizar-tarea btn green">

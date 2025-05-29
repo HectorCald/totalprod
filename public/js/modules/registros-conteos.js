@@ -339,6 +339,13 @@ function eventosRegistrosConteo() {
                             <input type="text" class="motivo-eliminacion" placeholder=" " required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button id="confirmar-eliminacion" class="btn red"><i class='bx bx-trash'></i> Confirmar eliminación</button>
@@ -346,6 +353,7 @@ function eventosRegistrosConteo() {
             `;
 
             contenido.innerHTML = eliminarHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             document.getElementById('confirmar-eliminacion').addEventListener('click', async () => {
@@ -430,6 +438,13 @@ function eventosRegistrosConteo() {
                             <input type="text" class="motivo-edicion" placeholder=" " required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="anuncio-botones">
                     <button id="guardar-edicion" class="btn blue"><i class='bx bx-save'></i> Guardar cambios</button>
@@ -437,6 +452,7 @@ function eventosRegistrosConteo() {
             `;
 
             contenido.innerHTML = editarHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             document.getElementById('guardar-edicion').addEventListener('click', async () => {
@@ -530,6 +546,13 @@ function eventosRegistrosConteo() {
                     <input class="motivo-sobreescritura" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por sobre escribir el stock del almacen con el stock de este registro. Asegúrate de que el stock en este registro es el correcto, por que esta accion no se puede deshacer.</p>
+                </div>
+            </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn-confirmar-sobreescritura btn red"><i class='bx bx-edit'></i> Confirmar sobreescritura</button>
@@ -537,6 +560,7 @@ function eventosRegistrosConteo() {
     `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             const btnConfirmarSobreescritura = contenido.querySelector('.btn-confirmar-sobreescritura');

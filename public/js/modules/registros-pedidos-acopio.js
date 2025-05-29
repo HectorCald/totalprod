@@ -528,6 +528,13 @@ function eventosPedidos() {
                     <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                </div>
+            </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn-eliminar-registro btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
@@ -710,6 +717,12 @@ function eventosPedidos() {
                 <div class="input">
                     <p class="detalle">Motivo de edición</p>
                     <input class="motivo" type="text" required>
+                </div>
+            </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
                 </div>
             </div>
         </div>
@@ -927,6 +940,13 @@ function eventosPedidos() {
                     <input class="observaciones" type="text" autocomplete="off">
                 </div>
             </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por realizar una entrega. Asegúrate de llenar los campos con información correcta, ya que esta acción podria afectar información relacionada.</p>
+                </div>
+            </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn-confirmar-entrega btn green"><i class='bx bx-check-circle'></i> Confirmar entrega</button>
@@ -1051,6 +1071,13 @@ function eventosPedidos() {
                         <input class="input-motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Estás por rechazar un pedido. Asegúrate de ingresar el motivo del rechazo, ya que podrían afectar información relacionada.</p>
+                    </div>
+                </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn red" onclick="confirmarRechazo('${registro.id}')"><i class='bx bx-x-circle'></i> Confirmar Rechazo</button>

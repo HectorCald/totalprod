@@ -1,4 +1,57 @@
 let productosGlobal = [];
+let configuracionHorario = {
+    horaInicio: '',
+    horaFin: '',
+    estado: ''
+};
+async function verificarHorarioProduccion() {
+    try {
+        mostrarCarga();
+        const response = await fetch('/obtener-configuraciones');
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error('No se pudieron obtener las configuraciones');
+        }
+
+        const { horario, sistema } = data.configuraciones;
+
+        // Guardar configuración en variable global
+        configuracionHorario = {
+            horaInicio: horario.horaInicio,
+            horaFin: horario.horaFin,
+            estado: sistema.estado
+        };
+
+        // Verificar si el sistema está activo
+        if (sistema.estado !== 'Activo') {
+            return {
+                permitido: false,
+                horario: 'Sistema inactivo'
+            };
+        }
+
+        const horaActual = new Date();
+        const [horaInicio, minutosInicio] = horario.horaInicio.split(':').map(Number);
+        const [horaFin, minutosFin] = horario.horaFin.split(':').map(Number);
+
+        const tiempoActual = horaActual.getHours() * 60 + horaActual.getMinutes();
+        const tiempoInicio = horaInicio * 60 + minutosInicio;
+        const tiempoFin = horaFin * 60 + minutosFin;
+
+        return {
+            permitido: tiempoActual >= tiempoInicio && tiempoActual <= tiempoFin,
+            horario: `${configuracionHorario.horaInicio} a ${configuracionHorario.horaFin}`
+        };
+    } catch (error) {
+        console.error('Error al verificar horario:', error);
+        return {
+            permitido: false,
+            horario: 'Error al verificar horario'
+        };
+    }
+}
+
 
 async function obtenerProductos() {
     try {
@@ -25,13 +78,24 @@ async function obtenerProductos() {
             duration: 3500
         });
         return false;
-    }finally{
+    } finally {
         ocultarCarga();
     }
 }
-
-
 export async function mostrarFormularioProduccion() {
+    const horarioValido = await verificarHorarioProduccion();
+    if (!horarioValido.permitido) {
+        let mensaje = configuracionHorario.estado !== 'Activo' 
+            ? 'Sistema inactivo temporalmente'
+            : `Fuera de horario de producción (${configuracionHorario.horaInicio} a ${configuracionHorario.horaFin})`;
+            
+        mostrarNotificacion({
+            message: mensaje,
+            type: 'warning',
+            duration: 4000
+        });
+        return;
+    }
     mostrarAnuncio();
     const contenido = document.querySelector('.anuncio .contenido');
     const registrationHTML = `
@@ -120,11 +184,11 @@ export async function mostrarFormularioProduccion() {
     `;
 
     contenido.innerHTML = registrationHTML;
-    contenido.style.paddingBottom='80px';
+    contenido.style.paddingBottom = '80px';
     await obtenerProductos();
     evetosFormularioProduccion();
     configuracionesEntrada();
-    
+
 }
 function evetosFormularioProduccion() {
     const selectMicroondas = document.querySelector('.select');
@@ -323,12 +387,8 @@ function evetosFormularioProduccion() {
                 type: 'error',
                 duration: 3500
             });
-        }finally{
+        } finally {
             ocultarCarga();
         }
     });
 }
-
-
-
-

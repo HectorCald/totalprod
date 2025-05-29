@@ -5136,6 +5136,86 @@ app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
 });
 
 
+/* ==================== RUTAS DE CONFIGURACIONES DEL SISTEMA ==================== */
+app.get('/obtener-configuraciones', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Configuraciones!A2:F'
+        });
+
+        const rows = response.data.values || [];
+        
+        // Obtener configuraciones de horario y estado
+        const configuraciones = {
+            horario: {
+                nombre: rows[0][0] || '',
+                horaInicio: rows[0][1] || '',
+                horaFin: rows[0][2] || ''
+            },
+            sistema: {
+                nombre: rows[0][4] || '',
+                estado: rows[0][5] || ''
+            }
+        };
+
+        res.json({
+            success: true,
+            configuraciones
+        });
+
+    } catch (error) {
+        console.error('Error al obtener configuraciones:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener las configuraciones'
+        });
+    }
+});
+app.put('/actualizar-configuraciones', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { horaInicio, horaFin, estado } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Actualizar configuraciones
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'Configuraciones!B2:C2',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[horaInicio, horaFin]]
+            }
+        });
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'Configuraciones!F2',
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[estado]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Configuraciones actualizadas correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar configuraciones:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al actualizar las configuraciones'
+        });
+    }
+});
+
+
 
 
 

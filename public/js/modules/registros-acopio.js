@@ -480,6 +480,12 @@ function eventosRegistrosAcopio() {
                         <input class="motivo-eliminacion" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados ademas de que no se te regresara ningun peso o lote de este registro. Asegúrate de que deseas continuar.</p>
+                    </div>
+                </div>
             </div>
             <div class="anuncio-botones">
                 <button class="btn-confirmar-eliminar btn red"><i class='bx bx-trash'></i> Confirmar eliminación</button>
@@ -575,6 +581,13 @@ function eventosRegistrosAcopio() {
                     <input class="motivo-anulacion" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por anular un registro del sistema. Esta acción eliminará el registro, pero te devolvera el peso en caso de (Salida) y quitar nuevo lote en caso de (Ingreso).</p>
+                </div>
+            </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn-confirmar-anular btn red"><i class='bx bx-x-circle'></i> Confirmar anulación</button>

@@ -406,29 +406,35 @@ function eventosMisRegistros() {
                 ${registro.observaciones ? `<span><strong><i class='bx bx-comment-detail'></i>Observaciones: </strong> ${registro.observaciones}</span>` : ''}
             </div>
         </div>
-        ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
+        ${tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')? `
         <div class="anuncio-botones">
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            ${tienePermiso('edicion') && !registro.fecha_verificacion ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            ${registro.fecha_verificacion && tienePermiso('anulacion') ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
         </div>` : ''}
         `;
 
 
         contenido.innerHTML = registrationHTML;
-        if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
+        if (tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')) {  
             contenido.style.paddingBottom = '80px';
         }
         mostrarAnuncioSecond();
+        if (tienePermiso('anulacion') && registro.fecha_verificacion) {
+            const btnAnular = contenido.querySelector('.btn-anular');
+            btnAnular.addEventListener('click', () => anular(registro));
+        }
 
-
-        if (tienePermiso('edicion')) {
+        if (tienePermiso('edicion') && !registro.fecha_verificacion) {
             const btnEditar = contenido.querySelector('.btn-editar');
             btnEditar.addEventListener('click', () => editar(registro));
         }
-        if (tienePermiso('eliminacion')) {
+        if (tienePermiso('eliminacion') && !registro.fecha_verificacion) {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }
+        
+        
 
         function eliminar(registro) {
 
@@ -461,6 +467,13 @@ function eventosMisRegistros() {
                                 <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                             </div>
                         </div>
+                        <div class="info-sistema">
+                            <i class='bx bx-info-circle'></i>
+                            <div class="detalle-info">
+                                <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="anuncio-botones">
                         <button class="btn-eliminar-registro btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
@@ -623,6 +636,13 @@ function eventosMisRegistros() {
                                     <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                                 </div>
                             </div>
+                            <div class="info-sistema">
+                                <i class='bx bx-info-circle'></i>
+                                <div class="detalle-info">
+                                    <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                                </div>
+                            </div>
+
                     </div>
                     <div class="anuncio-botones">
                         <button class="btn-editar-registro btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
@@ -743,6 +763,108 @@ function eventosMisRegistros() {
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el registro',
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarCarga();
+                }
+            }
+        }
+        function anular(registro) {
+            const contenido = document.querySelector('.anuncio-tercer .contenido');
+            const registrationHTML = `
+        <div class="encabezado">
+            <h1 class="titulo">Anular verificación</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div class="relleno verificar-registro">
+            <p class="normal">Información del registro</p>
+            <div class="campo-horizontal">
+                <div class="campo-vertical">
+                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
+                    <span class="valor"><strong><i class='bx bx-package'></i> Verificado: </strong>${registro.c_real} Und.</span>
+                    <span class="valor"><strong><i class='bx bx-calendar-check'></i> Fecha: </strong>${registro.fecha_verificacion}</span>
+                </div>
+                <div class="imagen-producto">
+                ${producto.imagen && producto.imagen.startsWith('data:image') ?
+                    `<img class="imagen" src="${producto.imagen}">` :
+                    `<i class='bx bx-package'></i>`}
+                </div>
+            </div>
+
+            <p class="normal">Motivo de la anulación</p>
+            <div class="entrada">
+                <i class='bx bx-comment-detail'></i>
+                <div class="input">
+                    <p class="detalle">Motivo</p>
+                    <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                </div>
+            </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por anular un registro del sistema. Esta acción no lo eliminará, pero eliminar la fecha y la cantidad en la verificación, esto podria afectar a los pesos en almacen acopio.</p>
+                </div>
+            </div>
+
+        </div>
+        <div class="anuncio-botones">
+            <button class="btn-anular-verificacion btn red"><i class='bx bx-x-circle'></i> Anular verificación</button>
+        </div>
+    `;
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
+            mostrarAnuncioTercer();
+
+            const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');
+            btnAnularVerificacion.addEventListener('click', confirmarAnulacion);
+
+            async function confirmarAnulacion() {
+                const motivo = document.querySelector('.motivo').value.trim();
+
+                if (!motivo) {
+                    mostrarNotificacion({
+                        message: 'Debe ingresar el motivo de la anulación',
+                        type: 'warning',
+                        duration: 3500
+                    });
+                    return;
+                }
+
+                try {
+                    mostrarCarga();
+                    const response = await fetch(`/anular-verificacion-produccion/${registroId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ motivo })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        ocultarCarga();
+                        mostrarNotificacion({
+                            message: 'Verificación anulada correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        ocultarAnuncioSecond();
+                        await mostrarMisRegistros();
+                    } else {
+                        throw new Error(data.error || 'Error al anular la verificación');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarNotificacion({
+                        message: error.message || 'Error al anular la verificación',
                         type: 'error',
                         duration: 3500
                     });

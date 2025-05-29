@@ -974,6 +974,7 @@
 
         i{
             color: red !important;
+            font-size: var(--text-2xl) !important;
         }
     }
 }
@@ -2020,4 +2021,62 @@
 .tabla-responsive thead {
     background-color: var(--primary-color);
     font-weight: bold;
+}
+
+
+
+
+
+.estado-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-estado {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--primary-color);
+    transition: all 0.3s ease;
+    color: var(--text);
+
+    i{
+        color: var(--text);
+    }
+}
+
+.btn-estado.active {
+    background: var(--tercer-color);
+    color: white;
+
+    i{
+        color: white !important;
+    }
+}
+
+
+
+
+.info-sistema{
+    display: flex;
+    background-color: rgba(128, 128, 128, 0.153);
+    padding: 10px;
+    border-radius: 10px;
+    gap: 5px;
+
+    i{
+        color: gray !important;
+    }
+    .detalle-info{
+        
+        p{
+            font-size: 10px;
+            color: gray;
+        }
+    }
 }

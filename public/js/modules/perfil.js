@@ -203,10 +203,10 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
             </div>
             <p class="normal">Plugins habilitados</p>
             <div class="plugins-container">
-                ${usuarioInfo.plugins.includes('calcularmp') ? '<label class="plugin"><span>Caculadora materia prima</span></label>' : '<label class="nulo"><span>Caculadora materia prima</span></label>'}
+                ${usuarioInfo.plugins.includes('calcularmp') ? '<label class="plugin"><span>Calculadora materia prima</span></label>' : '<label class="nulo"><span>Calculadora materia prima</span></label>'}
             </div>
             <div class="plugins-container">
-                ${usuarioInfo.plugins.includes('tareasAc') ? '<label class="plugin"><span>Caculadora de tiempo en tareas</span></label>' : '<label class="nulo"><span>Caculadora de tiempo en tareas</span></label>'}
+                ${usuarioInfo.plugins.includes('tareasAc') ? '<label class="plugin"><span>Calculadora de tiempo en tareas</span></label>' : '<label class="nulo"><span>Calculadora de tiempo en tareas</span></label>'}
             </div>`: ''}
         </div>
         <div class="anuncio-botones">

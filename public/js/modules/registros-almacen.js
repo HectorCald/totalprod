@@ -530,6 +530,13 @@ function eventosRegistrosAlmacen() {
                         <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-eliminar-registro btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
@@ -625,6 +632,13 @@ function eventosRegistrosAlmacen() {
                         <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Estás por anular un registro del sistema. Esta acción eliminará el regsitro, pero te regresara el stock que ingreso o salio de almacen en este registro.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-anular-registro btn red"><i class='bx bx-x-circle'></i> Confirmar anulación</button>

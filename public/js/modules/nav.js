@@ -293,6 +293,15 @@ const atajosPorRol = {
             detalle: 'Genera reportes.',
             onclick: 'onclick="mostrarProovedores()"'
         },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-cog',
+            texto: 'Configuraciones',
+            detalle: 'Configuraciones del sistema',
+            onclick: 'onclick="mostrarConfiguracionesSistema()"'
+        },
+
     ]
 };
 

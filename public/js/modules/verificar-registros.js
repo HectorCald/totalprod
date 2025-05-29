@@ -594,6 +594,13 @@ function eventosVerificacion() {
                         <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Vas a eliminar un registro del sistema. Esta acción no se puede deshacer y podría afectar a otros registros relacionados. Asegúrate de que deseas continuar.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-eliminar-registro btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
@@ -741,6 +748,13 @@ function eventosVerificacion() {
                             <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                        </div>
+                    </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-editar-registro btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
@@ -904,6 +918,13 @@ function eventosVerificacion() {
                         <input class="observaciones" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Estás por verificar un registro del sistema. Esta acción restara el peso de la cantidad verificada por el gramaje de dicho producto en almacen acopio, asegurate de ingresar la cantidad correcta para evitar anulaciones posteriores.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-verificar-registro btn green"><i class='bx bx-check-circle'></i> Verificar y finalizar</button>
@@ -1019,6 +1040,13 @@ function eventosVerificacion() {
                     <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Estás por anular verificación de un registro del sistema. Esta acción no lo eliminará, pero quitara la fecha y la cantidad verificada, esto prodria afectar al peso de dicho producto en almacen acopio.</p>
+                </div>
+            </div>
+
         </div>
         <div class="anuncio-botones">
             <button class="btn-anular-verificacion btn red"><i class='bx bx-x-circle'></i> Anular verificación</button>

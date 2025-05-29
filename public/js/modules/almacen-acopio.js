@@ -462,6 +462,9 @@ function eventosAlmacenAcopio() {
             </div>` : ''}
             `;
         contenido.innerHTML = registrationHTML;
+        if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
+            contenido.style.paddingBottom = '80px';
+        }
         mostrarAnuncioSecond();
 
 
@@ -524,13 +527,20 @@ function eventosAlmacenAcopio() {
                         <span class="nombre"><strong><i class='bx bx-cube'></i> Producto: </strong>${producto.producto}</span>
                     </div>
                     <p class="normal">Motivo de la eliminación</p>
-                <div class="entrada">
-                    <i class='bx bx-comment-detail'></i>
-                    <div class="input">
-                        <p class="detalle">Motivo</p>
-                        <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                    <div class="entrada">
+                        <i class='bx bx-comment-detail'></i>
+                        <div class="input">
+                            <p class="detalle">Motivo</p>
+                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                        </div>
                     </div>
-                </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Vas a eliminar un producto del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <div class="anuncio-botones">
@@ -538,6 +548,7 @@ function eventosAlmacenAcopio() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -709,6 +720,13 @@ function eventosAlmacenAcopio() {
                         <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                     </div>
                 </div>
+                <div class="info-sistema">
+                    <i class='bx bx-info-circle'></i>
+                    <div class="detalle-info">
+                        <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada con regsitros ya existentes.</p>
+                    </div>
+                </div>
+
             </div>
             <div class="anuncio-botones">
                 <button class="btn-editar-producto btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
@@ -716,6 +734,7 @@ function eventosAlmacenAcopio() {
         `;
 
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
 
             // Event handlers for tags
             const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
