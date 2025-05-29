@@ -1,5 +1,5 @@
 let usuarioInfo = '';
-// Primero agregamos la configuración de plugins
+
 const pluginsMenu = {
     'calcularmp': {
         clase: 'opcion-btn',
@@ -12,7 +12,7 @@ const pluginsMenu = {
     // Aquí puedes agregar más plugins siguiendo el mismo formato
 };
 
-// Modificar la función obtenerOpcionesMenu para incluir plugins
+
 function obtenerOpcionesMenu() {
     const rol = usuarioInfo.rol;
     let atajosUsuario = [];
@@ -38,30 +38,22 @@ function obtenerOpcionesMenu() {
     return atajosUsuario;
 }
 
-// Modificar la función mostrarMenu para manejar los plugins en administrador
+
 function mostrarMenu() {
     const contenido = document.querySelector('.anuncio .contenido');
     const opcionesUsuario = obtenerOpcionesMenu();
-    const plugins = localStorage.getItem('plugins_activos') || '';
     let opcionesHTML = '';
 
     if (usuarioInfo.rol === 'Administración') {
-        // Agrupar por roles y plugins
+        // Agrupar por roles
         const grupos = {
             'Administración': atajosPorRol['Administración'],
             'Producción': atajosPorRol['Producción'],
             'Almacen': atajosPorRol['Almacen'],
             'Acopio': atajosPorRol['Acopio'],
+            // Agregar todos los plugins disponibles para administración
+            'Plugins': Object.values(pluginsMenu)
         };
-
-        // Agregar sección de plugins si hay activos
-        const pluginsActivos = Object.keys(pluginsMenu)
-            .filter(plugin => plugins.includes(plugin))
-            .map(plugin => pluginsMenu[plugin]);
-
-        if (pluginsActivos.length > 0) {
-            grupos['Plugins'] = pluginsActivos;
-        }
 
         // Generar HTML para cada grupo
         opcionesHTML = Object.entries(grupos).map(([titulo, opciones]) => {
@@ -82,7 +74,7 @@ function mostrarMenu() {
             return '';
         }).join('');
     } else {
-        // Para otros roles, mostrar sus opciones y plugins juntos
+        // Para otros roles, mostrar solo sus opciones y plugins activados
         opcionesHTML = opcionesUsuario.map(opcion => `
             <div class="opcion" ${opcion.onclick}>
                 <i class="fas ${opcion.icono}"></i>

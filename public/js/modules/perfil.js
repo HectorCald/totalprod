@@ -200,11 +200,11 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
                     ${usuarioInfo.permisos.includes('anulacion') ? '<label class="anulacion"><span>Anulación</span></label>' : '<label class="nulo"><span>Anulación</span></label>'}
                     ${usuarioInfo.permisos.includes('creacion') ? '<label class="creacion"><span>Creación</span></label>' : '<label class="nulo"><span>Creación</span></label>'}
                 </div>
-            </div>`: ''}
+            </div>
             <p class="normal">Plugins habilitados</p>
             <div class="plugins-container">
                 ${usuarioInfo.plugins.includes('calcularmp') ? '<label class="plugin"><span>Caculadora materia prima</span></label>' : '<label class="nulo"><span>Caculadora materia prima</span></label>'}
-            </div>
+            </div>`: ''}
         </div>
         <div class="anuncio-botones">
             <button id="btn-guardar" class="btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
