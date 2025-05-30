@@ -469,7 +469,7 @@ function mostrarPaso3() {
                 <div class="input">
                     <p class="detalle">Contraseña</p>
                     <input class="password-registro" type="password" placeholder=" " required>
-                    <button class="toggle-password"><i class="fas fa-eye"></i></button>
+                    <button class="toggle-password-nuevo"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
             <div class="password-requirements campo-vertical">
@@ -522,20 +522,21 @@ function setupPaso3() {
     });
 
     // Toggle password visibility
-    document.querySelector('.toggle-password').addEventListener('click', (e) => {
-        e.preventDefault();
-        const passwordInput = e.target.closest('.input').querySelector('input');
-        const icon = e.target.closest('.toggle-password').querySelector('i');
-        
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            passwordInput.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
+    document.querySelectorAll('.toggle-password-nuevo').forEach(toggleButton => {
+        toggleButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const passwordInput = toggleButton.parentElement.querySelector('input[type="password"], input[type="text"]');
+            const icon = toggleButton.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
     });
 
     // Final registration

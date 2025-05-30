@@ -240,6 +240,7 @@ function eventosPersonal() {
                             </select>
                         </div>
                     </div>
+                    ${usuario.rol != 'Administración' ? `
                 <p class="normal">Permisos concedidos</p>
                 <div class="permisos-container">
                     <div class="campo-horizontal">
@@ -273,7 +274,7 @@ function eventosPersonal() {
                         <input type="checkbox" value="tareasAc" ${usuario.plugins?.includes('tareasAc') ? 'checked' : ''}>
                         <span>Calculadora de tiempo en tareas</span>
                     </label>
-                </div>
+                </div> ` :''}
             </div>
             <div class="anuncio-botones">
                 <button class="btn-guardar btn green" data-id="${usuario.id}">
