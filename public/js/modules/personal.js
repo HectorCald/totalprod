@@ -234,7 +234,7 @@ function eventosPersonal() {
                             <p class="detalle">Rol</p>
                             <select class="rol-usuario">
                                 <option value="Administración" ${usuario.rol === 'Administración' ? 'selected' : ''}>Administración</option>
-                                <option value="Almacen" ${usuario.rol === 'Almacén' ? 'selected' : ''}>Almacén</option>
+                                <option value="Almacen" ${usuario.rol === 'Almacen' ? 'selected' : ''}>Almacén</option>
                                 <option value="Acopio" ${usuario.rol === 'Acopio' ? 'selected' : ''}>Acopio</option>
                                 <option value="Producción" ${usuario.rol === 'Producción' ? 'selected' : ''}>Producción</option>
                             </select>
