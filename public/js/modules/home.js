@@ -265,7 +265,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
-            texto: 'Registros',
+            texto: 'Registros acopio',
             detalle: 'Ver todos los registros',
             onclick: 'onclick="mostrarRegistrosAcopio();"'
         },
@@ -386,7 +386,7 @@ const pluginsMenu = {
         vista: 'calculadora-view',
         icono: 'fa-calculator',
         texto: 'Calcular MP',
-        detalle: 'Calculadora de materia prima',
+        detalle: 'Calcula Mat.Prima',
         onclick: 'onclick="mostrarCalcularMp();"'
     },
     'tareasAc': {
@@ -394,7 +394,7 @@ const pluginsMenu = {
         vista: 'regAcopio-view',
         icono: 'fa-tasks',
         texto: 'Tareas AC',
-        detalle: 'Gestionar tareas de acopio',
+        detalle: 'Gestionar tareas.',
         onclick: 'onclick="mostrarTareas();"'
     }
 };
@@ -699,8 +699,8 @@ export function mostrarHome(view) {
     const home = `
         <h1 class="titulo"><i class='bx bx-home'></i> Inicio</h1>
         <div class="seccion1">
-            <h2 class="normal">Tus atajos<button class="btn-editar-atajos" onclick="editarAtajos()">
-                <i class="fas fa-edit"></i>
+            <h2 class="normal" style="display:flex; align-items:center">Tus atajos<button class="btn-editar-atajos" onclick="editarAtajos()">
+                <i class='bx bx-edit'></i>
             </button></h2>
             <div class="funciones-rol">
                 ${funcionesHTML}
