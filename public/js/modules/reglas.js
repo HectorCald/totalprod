@@ -473,6 +473,7 @@ function eventosReglas() {
         `;
 
         contenido.innerHTML = seleccionHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         // Agregar eventos a los botones
@@ -785,6 +786,7 @@ function eventosReglas() {
         `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         const btnGuardar = contenido.querySelector('.btn-guardar-base');

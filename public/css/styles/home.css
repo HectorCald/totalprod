@@ -15,12 +15,18 @@
     .seccion1 {
         display: flex;
         width: 100%;
-        min-height: 200px;
+        min-height: 220px;
         background: none;
         flex-direction: column;
         overflow: hidden;
         padding-bottom: 10px;
 
+        .btn-editar-atajos{
+            background: none;
+            color: var(--tercer-color);
+            margin-left: 10px;
+            border: none;
+        }
 
 
         .funciones-rol {
@@ -60,6 +66,7 @@
                     font-size: var(--text-detalle);
                     font-weight: 500;
                     color: var(--text);
+                    text-align: center;
                 }
 
                 .detalle {

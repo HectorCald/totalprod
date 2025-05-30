@@ -14,6 +14,10 @@ let usuarioInfo = {
 let registrosProduccion = [];
 let registrosMovimientos = [];
 let movimientosAcopio = [];
+function obtenerAtajosGuardados() {
+    const atajosGuardados = localStorage.getItem(`atajos_${usuarioInfo.rol}`);
+    return atajosGuardados ? JSON.parse(atajosGuardados) : null;
+}
 
 async function obtenerUsuario() {
     try {
@@ -189,124 +193,401 @@ async function obtenerMovimientosAcopio() {
         return false;
     }
 }
-function obtenerFunciones() {
-    const atajosPorRol = {
-        'Producción': [
-            {
-                clase: 'opcion-btn',
-                vista: 'formProduccion-view',
-                icono: 'fa-clipboard-list',
-                texto: 'Formulario',
-                detalle: 'Nueva producción.',
-                onclick: 'onclick="mostrarFormularioProduccion()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'cuentasProduccion-view',
-                icono: 'fa-history',
-                texto: 'Mis registros',
-                detalle: 'Ver mis registros.',
-                onclick: 'onclick="mostrarMisRegistros()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'gestionPro-view',
-                icono: 'fa-chart-line',
-                texto: 'Estadisticas',
-                detalle: 'Ver mis estadisticas.',
-                onclick: 'onclick="document.querySelector(\'.seccion3 .normal\').scrollIntoView({behavior: \'smooth\', block: \'start\'})"'
-            }
-        ],
-        'Acopio': [
-            {
-                clase: 'opcion-btn',
-                vista: 'almAcopio-view',
-                icono: 'fa-shopping-cart',
-                texto: 'Nuevo Pedido',
-                detalle: 'Hacer nuevo pedido',
-                onclick: 'onclick="mostrarHacerPedido()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'almacen-view',
-                icono: 'fa-arrow-down',
-                texto: 'Ingresos',
-                detalle: 'Ingresos de tu almacen.',
-                onclick: 'onclick="mostrarIngresosAcopio()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'regAlmacen-view',
-                icono: 'fa-arrow-up',
-                texto: 'Salidas',
-                detalle: 'Salidas de tu almacen.',
-                onclick: 'onclick="mostrarSalidasAcopio()"'
-            }
-        ],
-        'Almacen': [
-            {
-                clase: 'opcion-btn',
-                vista: 'verificarRegistros-view',
-                icono: 'fa-check-double',
-                texto: 'Verificar',
-                detalle: 'Verifica registros.',
-                onclick: 'onclick="mostrarVerificacion()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'almacen-view',
-                icono: 'fa-arrow-down',
-                texto: 'Ingresos',
-                detalle: 'Ingresos de tu almacen.',
-                onclick: 'onclick="mostrarIngresos()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'regAlmacen-view',
-                icono: 'fa-arrow-up',
-                texto: 'Salidas',
-                detalle: 'Salidas de tu almacen.',
-                onclick: 'onclick="mostrarSalidas()"'
-            }
-        ],
-        'Administración': [
-            {
-                clase: 'opcion-btn',
-                vista: 'verificarRegistros-view',
-                icono: 'fa-check-double',
-                texto: 'Verificar',
-                detalle: 'Verifica registros.',
-                onclick: 'onclick="mostrarVerificacion()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'almacen-view',
-                icono: 'fa-arrow-down',
-                texto: 'Ingresos',
-                detalle: 'Ingresos de tu almacen.',
-                onclick: 'onclick="mostrarIngresos()"'
-            },
-            {
-                clase: 'opcion-btn',
-                vista: 'regAlmacen-view',
-                icono: 'fa-arrow-up',
-                texto: 'Salidas',
-                detalle: 'Salidas de tu almacen.',
-                onclick: 'onclick="mostrarSalidas()"'
-            }
-        ]
-    };
+const atajosPorRol = {
+    'Producción': [
+        {
+            clase: 'opcion-btn',
+            vista: 'formProduccion-view',
+            icono: 'fa-clipboard-list',
+            texto: 'Formulario',
+            detalle: 'Registra tu producción',
+            onclick: 'onclick="mostrarFormularioProduccion();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'cuentasProduccion-view',
+            icono: 'fa-history',
+            texto: 'Mis registros',
+            detalle: 'Ver mis registros',
+            onclick: 'onclick="mostrarMisRegistros();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'cuentasProduccion-view',
+            icono: 'fa-chart-bar',
+            texto: 'Estadisticas',
+            detalle: 'Ver estadisticas',
+            onclick: 'onclick="mostrarMisEstadisticas();"'
+        },
+    ],
+    'Acopio': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almAcopio-view',
+            icono: 'fa-dolly',
+            texto: 'Almacen',
+            detalle: 'Gestiona tu almacen',
+            onclick: 'onclick="mostrarAlmacenAcopio();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos de tu almacen.',
+            onclick: 'onclick="mostrarIngresosAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas de tu almacen.',
+            onclick: 'onclick="mostrarSalidasAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almAcopio-view',
+            icono: 'fa-shopping-cart',
+            texto: 'Nuevo Pedido',
+            detalle: 'Hacer nuevo pedido',
+            onclick: 'onclick="mostrarHacerPedido()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAcopio-view',
+            icono: 'fa-history',
+            texto: 'Pedidos',
+            detalle: 'Gestionar pedidos',
+            onclick: 'onclick="mostrarPedidos();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-history',
+            texto: 'Registros',
+            detalle: 'Ver todos los registros',
+            onclick: 'onclick="mostrarRegistrosAcopio();"'
+        },
+    ],
+    'Almacen': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-dolly',
+            texto: 'Almacen',
+            detalle: 'Gestiona tu almacen.',
+            onclick: 'onclick="mostrarAlmacenGeneral()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos de tu almacen.',
+            onclick: 'onclick="mostrarIngresos()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas de tu almacen.',
+            onclick: 'onclick="mostrarSalidas()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-clipboard-list',
+            texto: 'Conteo fisico',
+            detalle: 'Realiza conteos.',
+            onclick: 'onclick="mostrarConteo()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-check-double',
+            texto: 'Verificar',
+            detalle: 'Verifica registros.',
+            onclick: 'onclick="mostrarVerificacion()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-history',
+            texto: 'Registros alm.',
+            detalle: 'Ver registros de almacen',
+            onclick: 'onclick="mostrarMovimientosAlmacen()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-history',
+            texto: 'Registros cont',
+            detalle: 'Ver registros de conteo',
+            onclick: 'onclick="registrosConteoAlmacen()"'
+        }
+    ],
+    'Administración': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-user-circle',
+            texto: 'Clientes',
+            detalle: 'Gestiona tus clientes',
+            onclick: 'onclick="mostrarClientes()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-truck',
+            texto: 'Proovedores',
+            detalle: 'Gestiona tus proovedores',
+            onclick: 'onclick="mostrarProovedores()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-users',
+            texto: 'Personal',
+            detalle: 'Gestiona tus empleados',
+            onclick: 'onclick="mostrarPersonal()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-credit-card',
+            texto: 'Pagos',
+            detalle: 'Realiza y registra pagos.',
+            onclick: 'onclick="mostrarPagos()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-file-invoice',
+            texto: 'Reportes',
+            detalle: 'Genera reportes.',
+            onclick: 'onclick="mostrarProovedores()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-cog',
+            texto: 'Ajustes',
+            detalle: 'Ajustes del sistema',
+            onclick: 'onclick="mostrarConfiguracionesSistema()"'
+        },
 
-    // Collect all shortcuts for user's roles
-    const rol = usuarioInfo.rol;
-    let atajosUsuario = [];
-
-    const atajosRol = atajosPorRol[rol];
-    if (atajosRol) {
-        atajosUsuario = [...atajosRol];
+    ]
+};
+const pluginsMenu = {
+    'calcularmp': {
+        clase: 'opcion-btn',
+        vista: 'calculadora-view',
+        icono: 'fa-calculator',
+        texto: 'Calcular MP',
+        detalle: 'Calculadora de materia prima',
+        onclick: 'onclick="mostrarCalcularMp();"'
+    },
+    'tareasAc': {
+        clase: 'opcion-btn',
+        vista: 'regAcopio-view',
+        icono: 'fa-tasks',
+        texto: 'Tareas AC',
+        detalle: 'Gestionar tareas de acopio',
+        onclick: 'onclick="mostrarTareas();"'
     }
-    return atajosUsuario.slice(0, 3);
+};
+
+function obtenerFunciones() {
+    const rol = usuarioInfo.rol;
+    const atajosGuardados = obtenerAtajosGuardados();
+
+    if (atajosGuardados) {
+        if (rol === 'Administración') {
+            // Para administración, buscar en todos los roles y plugins
+            return atajosGuardados.map(id => {
+                // Primero buscar en los roles
+                for (const rolOpciones of Object.values(atajosPorRol)) {
+                    const atajo = rolOpciones.find(a => a.texto === id);
+                    if (atajo) return atajo;
+                }
+                // Luego buscar en los plugins
+                const plugin = Object.values(pluginsMenu).find(p => p.texto === id);
+                if (plugin) return plugin;
+                
+                return null;
+            }).filter(Boolean);
+        } else {
+            // Para otros roles, buscar en su rol específico y sus plugins activos
+            let atajosDisponibles = [...(atajosPorRol[rol] || [])];
+            
+            // Agregar plugins si están activos para este usuario
+            if (usuarioInfo.plugins) {
+                Object.keys(pluginsMenu).forEach(plugin => {
+                    if (usuarioInfo.plugins.includes(plugin)) {
+                        atajosDisponibles.push(pluginsMenu[plugin]);
+                    }
+                });
+            }
+
+            return atajosGuardados.map(id =>
+                atajosDisponibles.find(atajo => atajo.texto === id)
+            ).filter(Boolean);
+        }
+    }
+
+    // Si no hay atajos guardados, usar los 3 primeros del rol y plugins
+    let atajosDisponibles = [...(atajosPorRol[rol] || [])];
+    
+    // Agregar plugins disponibles para el usuario
+    if (rol === 'Administración') {
+        // Para administración, agregar todos los plugins
+        atajosDisponibles = [...atajosDisponibles, ...Object.values(pluginsMenu)];
+    } else if (usuarioInfo.plugins) {
+        // Para otros roles, solo agregar sus plugins activos
+        Object.keys(pluginsMenu).forEach(plugin => {
+            if (usuarioInfo.plugins.includes(plugin)) {
+                atajosDisponibles.push(pluginsMenu[plugin]);
+            }
+        });
+    }
+
+    return atajosDisponibles.slice(0, 3);
 }
+
+function editarAtajos() {
+    const contenido = document.querySelector('.anuncio .contenido');
+    const rol = usuarioInfo.rol;
+    const atajosActuales = obtenerAtajosGuardados() || 
+        atajosPorRol[rol].slice(0, 3).map(a => a.texto);
+
+    let atajosHTML = '';
+
+    if (rol === 'Administración') {
+        // Agrupar por roles y plugins
+        const grupos = {
+            'Administración': atajosPorRol['Administración'],
+            'Producción': atajosPorRol['Producción'],
+            'Almacen': atajosPorRol['Almacen'],
+            'Acopio': atajosPorRol['Acopio'],
+            'Plugins': Object.values(pluginsMenu)
+        };
+
+        // Generar HTML por grupos
+        atajosHTML = Object.entries(grupos).map(([titulo, opciones]) => `
+            <div class="grupo-atajos">
+                <h2 class="normal">${titulo}</h2>
+                <div class="atajos-lista">
+                    ${opciones.map(atajo => `
+                        <div class="atajo-item">
+                            <input type="checkbox" 
+                                   value="${atajo.texto}" 
+                                   ${atajosActuales.includes(atajo.texto) ? 'checked' : ''}
+                                   onchange="actualizarSeleccion(this)">
+                            <i class="fas ${atajo.icono}"></i>
+                            <span>${atajo.texto}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        // Para otros roles, mostrar sus opciones y plugins activos
+        const atajosDisponibles = [...(atajosPorRol[rol] || [])];
+        
+        // Agregar plugins si están activos
+        if (usuarioInfo.plugins) {
+            Object.keys(pluginsMenu).forEach(plugin => {
+                if (usuarioInfo.plugins.includes(plugin)) {
+                    atajosDisponibles.push(pluginsMenu[plugin]);
+                }
+            });
+        }
+
+        atajosHTML = `
+            <div class="atajos-lista">
+                ${atajosDisponibles.map(atajo => `
+                    <div class="atajo-item">
+                        <input type="checkbox" 
+                               value="${atajo.texto}" 
+                               ${atajosActuales.includes(atajo.texto) ? 'checked' : ''}
+                               onchange="actualizarSeleccion(this)">
+                        <i class="fas ${atajo.icono}"></i>
+                        <span>${atajo.texto}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    const html = `
+        <div class="encabezado">
+            <h1 class="titulo">Editar atajos</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <div class="relleno">
+            <p class="normal">Selecciona 3 atajos para mostrar en inicio</p>
+            ${atajosHTML}
+        </div>
+        <div class="anuncio-botones">
+            <button class="btn-guardar btn blue" onclick="guardarAtajos()">
+                <i class="fas fa-save"></i> Guardar cambios
+            </button>
+        </div>
+    `;
+
+    contenido.innerHTML = html;
+    contenido.style.paddingBottom = '80px';
+    mostrarAnuncio();
+}
+
+
+
+window.editarAtajos = editarAtajos;
+
+// Función global para manejar la selección
+window.actualizarSeleccion = function (checkbox) {
+    const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]');
+    const seleccionados = [...checkboxes].filter(cb => cb.checked);
+
+    if (seleccionados.length > 3) {
+        checkbox.checked = false;
+        mostrarNotificacion({
+            message: 'Solo puedes seleccionar 3 atajos',
+            type: 'warning',
+            duration: 3000
+        });
+    }
+};
+
+// Función global para guardar los atajos
+window.guardarAtajos = function () {
+    const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]:checked');
+    const seleccionados = [...checkboxes].map(cb => cb.value);
+
+    if (seleccionados.length !== 3) {
+        mostrarNotificacion({
+            message: 'Debes seleccionar exactamente 3 atajos',
+            type: 'warning',
+            duration: 3000
+        });
+        return;
+    }
+
+    localStorage.setItem(`atajos_${usuarioInfo.rol}`, JSON.stringify(seleccionados));
+    cerrarAnuncioManual('anuncio');
+    mostrarHome(document.querySelector('.home-view'));
+
+    mostrarNotificacion({
+        message: 'Atajos actualizados correctamente',
+        type: 'success',
+        duration: 3000
+    });
+};
+
 
 
 export async function crearHome() {
@@ -317,7 +598,7 @@ export async function crearHome() {
     crearNav(usuarioInfo);
     crearPerfil(usuarioInfo);
     actualizarPermisos(usuarioInfo);
-    
+
     const promesas = [
         usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,
         usuarioInfo.rol === 'Almacen' ? obtenerMovimientosAlmacen() : null,
@@ -338,13 +619,17 @@ export async function crearHome() {
 }
 export function mostrarHome(view) {
     const funcionesUsuario = obtenerFunciones();
-    const funcionesHTML = funcionesUsuario.map(funcion => `
-        <div class="funcion" ${funcion.onclick}>
-            <i class='fas ${funcion.icono}'></i>
-            <p class="nombre">${funcion.texto}</p>
-            <p class="detalle">${funcion.detalle} </p>
+    const funcionesHTML = `
+        <div class="funciones-rol">
+            ${funcionesUsuario.map(funcion => `
+                <div class="funcion" ${funcion.onclick}>
+                    <i class='fas ${funcion.icono}'></i>
+                    <p class="nombre">${funcion.texto}</p>
+                    <p class="detalle">${funcion.detalle}</p>
+                </div>
+            `).join('')}
         </div>
-    `).join('');
+    `;
 
     // Determinar qué registros mostrar según el rol
     let registrosFiltrados = [];
@@ -402,7 +687,7 @@ export function mostrarHome(view) {
             entradas: entradas,
             salidas: salidas
         };
-    }else if (usuarioInfo.rol === 'Administración') {
+    } else if (usuarioInfo.rol === 'Administración') {
         destacados = {
             totalProduccion: registrosProduccion.length,
             totalAlmacen: registrosMovimientos.length,
@@ -414,7 +699,9 @@ export function mostrarHome(view) {
     const home = `
         <h1 class="titulo"><i class='bx bx-home'></i> Inicio</h1>
         <div class="seccion1">
-            <h2 class="normal">Tus atajos</h2>
+            <h2 class="normal">Tus atajos<button class="btn-editar-atajos" onclick="editarAtajos()">
+                <i class="fas fa-edit"></i>
+            </button></h2>
             <div class="funciones-rol">
                 ${funcionesHTML}
             </div>

@@ -297,8 +297,8 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-cog',
-            texto: 'Configuraciones',
-            detalle: 'Configuraciones del sistema',
+            texto: 'Ajustes',
+            detalle: 'Ajustes del sistema',
             onclick: 'onclick="mostrarConfiguracionesSistema()"'
         },
 

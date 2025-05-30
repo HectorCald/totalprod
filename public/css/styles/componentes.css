@@ -957,7 +957,7 @@
         transition: all 0.3s ease;
         color: var(--text);
 
-        span{
+        span {
             font-size: var(--text-detalle);
             color: var(--text);
         }
@@ -972,7 +972,7 @@
         border-radius: 3px;
         transition: all 0.3s ease;
 
-        i{
+        i {
             color: red !important;
             font-size: var(--text-2xl) !important;
         }
@@ -2046,7 +2046,7 @@
     transition: all 0.3s ease;
     color: var(--text);
 
-    i{
+    i {
         color: var(--text);
     }
 }
@@ -2055,7 +2055,7 @@
     background: var(--tercer-color);
     color: white;
 
-    i{
+    i {
         color: white !important;
     }
 }
@@ -2063,21 +2063,50 @@
 
 
 
-.info-sistema{
+.info-sistema {
     display: flex;
     background-color: rgba(128, 128, 128, 0.153);
     padding: 10px;
     border-radius: 10px;
     gap: 5px;
 
-    i{
+    i {
         color: gray !important;
     }
-    .detalle-info{
-        
-        p{
+
+    .detalle-info {
+
+        p {
             font-size: 10px;
             color: gray;
         }
     }
+}
+
+.atajos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    color: var(--text);
+
+
+    .atajo-item {
+        width: 100%;
+        height: 40px;
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        cursor: pointer;
+
+        input[type="checkbox"]:checked {
+            background-color: var(--success) !important;
+        }
+    }
+
 }

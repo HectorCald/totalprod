@@ -450,7 +450,7 @@ function eventosProovedores() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i> Información del proovedor</p>
+                <p class="normal">Información del proovedor</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">

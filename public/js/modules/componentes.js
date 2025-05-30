@@ -791,5 +791,3 @@ export function actualizarPermisos(recuperar) {
 export function tienePermiso(tipo) {
     return permisos[tipo] || false;
 }
-
-

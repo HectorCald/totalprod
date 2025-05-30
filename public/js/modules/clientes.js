@@ -447,7 +447,7 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i> Información del cliente</p>
+                <p class="normal">Información del cliente</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
