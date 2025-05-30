@@ -71,7 +71,20 @@ function requireAuth(req, res, next) {
 }
 /* ==================== RUTAS DE VISTAS ==================== */
 app.get('/', (req, res) => {
+    const token = req.cookies.token;
 
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
+            // Determine dashboard URL based on spreadsheet ID from token
+            const dashboardUrl = decoded.spreadsheetId === process.env.SPREADSHEET_ID_1
+                ? '/dashboard'
+                : '/dashboard_otro';
+            return res.redirect(dashboardUrl);
+        } catch (error) {
+            // Token inválido, continuar al login
+        }
+    }
 
     res.render('login');
 });
