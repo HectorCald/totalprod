@@ -146,7 +146,7 @@ function updateHTMLWithData() {
 
 function eventosPagos() {
     const btnExcel = document.getElementById('exportar-excel');
-    const registrosAExportar = registrosProduccion;
+    const registrosAExportar =pagosGlobal;
     const btnNuevoPago = document.getElementById('nuevo-pago-generico');
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
@@ -930,7 +930,7 @@ function eventosPagos() {
             }
         });
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+    btnExcel.addEventListener('click', () => exportarArchivos('pagos', registrosAExportar));
 
     aplicarFiltros();
 }

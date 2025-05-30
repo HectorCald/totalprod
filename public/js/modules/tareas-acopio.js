@@ -1038,7 +1038,7 @@ function eventosTareas() {
         }
 
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+
     document.addEventListener('click', async function (e) {
         if (e.target.closest('#nuevo-registro')) {
             mostrarFormularioNuevoRegistro();
@@ -1305,7 +1305,7 @@ function eventosTareas() {
         });
     }
 
-
+    btnExcel.addEventListener('click', () => exportarArchivos('tareas', registrosAExportar));
     aplicarFiltros();
 
 }

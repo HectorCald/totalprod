@@ -243,7 +243,7 @@ export function ocultarCarga() {
 
 export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
     let container = document.querySelector('.notification-container');
-    
+
     if (!container) {
         container = document.createElement('div');
         container.className = 'notification-container';
@@ -252,7 +252,7 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
 
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    
+
     notification.innerHTML = `
         <i class='bx bx-${type === 'success' ? 'check' : type === 'error' ? 'x-circle' : type === 'warning' ? 'error' : 'info-circle'}'></i>
         <span>${message}</span>
@@ -287,7 +287,7 @@ export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
 function closeNotification(notification) {
     notification.classList.remove('show');
     notification.classList.add('hide');
-    
+
     // Esperar a que termine la animación antes de remover
     notification.addEventListener('transitionend', () => {
         notification.remove();
@@ -441,6 +441,27 @@ export async function registrarHistorial(origen, suceso, detalle) {
 
 
 export function exportarArchivos(rExp, registrosAExportar) {
+    function calcularTiempoTranscurrido(horaInicio, horaFin) {
+        try {
+            const [horasInicio, minutosInicio] = horaInicio.split(':').map(Number);
+            const [horasFin, minutosFin] = horaFin.split(':').map(Number);
+
+            let diferenciaMinutos = (horasFin * 60 + minutosFin) - (horasInicio * 60 + minutosInicio);
+
+            if (diferenciaMinutos < 0) {
+                // Si el tiempo es negativo, asumimos que cruza la medianoche
+                diferenciaMinutos += 24 * 60;
+            }
+
+            const horas = Math.floor(diferenciaMinutos / 60);
+            const minutos = diferenciaMinutos % 60;
+
+            return `${horas}h ${minutos}m`;
+        } catch (error) {
+            console.error('Error al calcular tiempo:', error);
+            return 'Error en cálculo';
+        }
+    }
     const registrosVisibles = Array.from(document.querySelectorAll('.registro-item'))
         .filter(item => item.style.display !== 'none')
         .map(item => {
@@ -457,7 +478,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     'Envases Terminados': registro.envases_terminados,
                     'Fecha Vencimiento': registro.fecha_vencimiento,
                     'Nombre': registro.nombre,
-                    'Cantidad Real': registro.c_real,
+                    'Cantidad Real': registro.c_real || 'Pendiente',
                     'Fecha Verificación': registro.fecha_verificacion || 'Pendiente',
                     'Observaciones': registro.observaciones || 'Sin observaciones',
                 };
@@ -646,14 +667,77 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     'Peso': registro.peso,
                     'Operador': registro.operario,
                     'Caracteristicas': registro.caracteristicas,
-                    'Observaciones': registro.observaciones,
+                    'Observaciones': registro.observaciones || 'Sin observaciones',
+                };
+            } else if (rExp === 'pagos') {
+                return {
+                    'ID': registro.id,
+                    'Fecha': registro.fecha,
+                    'Nombre del pago': registro.nombre_pago,
+                    'Beneficiario': registro.beneficiario,
+                    'Pagado por': registro.pagado_por,
+                    'Justuficativos': registro.justificativos,
+                    'Subtotal': registro.subtotal,
+                    'Descuento': registro.descuento || '0',
+                    'Aumento': registro.aumento || '0',
+                    'Total': registro.total,
+                    'Observaciones': registro.observaciones || 'Sin observaciones',
+                    'Estado': registro.estado || 'Pendiente',
+                    'Tipo': registro.tipo,
+                };
+            } else if (rExp === 'calcularmp') {
+                return {
+                    'ID': registro.id,
+                    'Fecha': registro.fecha,
+                    'Operador': registro.nombre,
+                    'Responsable': registro.responsable,
+                    'Materia prima': registro.materia_prima,
+                    'Gramaje': registro.gramaje,
+                    'Peso inicial': registro.peso_inicial,
+                    'Peso final': registro.peso_final || 'Pendiente',
+                    'Cantidad producida': registro.ctd_producida,
+                    'Peso merma': registro.peso_merma || 'No registrado',
+                    'Observaciones': registro.observaciones || 'Sin observaciones',
+                };
+            } else if (rExp === 'tareas') {
+                return {
+                    'ID': registro.id || '',
+                    'Fecha': registro.fecha || '',
+                    'Producto': registro.producto || '',
+                    'Hora inicio': registro.hora_inicio || '',
+                    'Hora final': registro.hora_fin || 'Pendiente',
+                    'Tiempo transcurrido': registro.hora_inicio && registro.hora_fin ?
+                        calcularTiempoTranscurrido(registro.hora_inicio, registro.hora_fin) :
+                        'Pendiente',
+                    'Procedimientos': registro.procedimientos || 'Pendiente',
+                    'Operador': registro.operador || '',
+                    'Observaciones': registro.observaciones || 'Sin observaciones',
                 };
             }
         });
-
+    if (registrosVisibles.length === 0) {
+        mostrarNotificacion({
+            message: 'No hay registros visibles para exportar',
+            type: 'warning',
+            duration: 3500
+        });
+        return;
+    }
     // Generar nombre del archivo con la fecha actual
     const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
     const nombreArchivo = `Registros_${fecha}.xlsx`;
+
+
+    // Verificar que haya datos para procesar
+    if (!registrosVisibles[0]) {
+        mostrarNotificacion({
+            message: 'No hay datos válidos para exportar',
+            type: 'warning',
+            duration: 3500
+        });
+        return;
+    }
+
 
     // Crear y descargar el archivo Excel
     const worksheet = XLSX.utils.json_to_sheet(registrosVisibles);

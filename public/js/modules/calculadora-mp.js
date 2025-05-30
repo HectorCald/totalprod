@@ -193,7 +193,7 @@ function updateHTMLWithData() {
 
 function eventosVerificacion() {
     const btnExcel = document.getElementById('exportar-excel');
-    const registrosAExportar = registrosProduccion;
+    const registrosAExportar = calculosMP;
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
@@ -944,7 +944,7 @@ function eventosVerificacion() {
         }
 
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+
 
 
     document.addEventListener('click', async function (e) {
@@ -1187,7 +1187,7 @@ function eventosVerificacion() {
             }
         });
     }
-
+    btnExcel.addEventListener('click', () => exportarArchivos('calcularmp', registrosAExportar));
     aplicarFiltros();
 
 }
