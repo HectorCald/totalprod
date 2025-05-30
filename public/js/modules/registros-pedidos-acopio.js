@@ -430,10 +430,12 @@ function eventosPedidos() {
             ${registro.estado !== 'Pendiente' ? `
             <p class="normal">Información de recepción</p>
             <div class="campo-vertical">
-                <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (KG): </strong>${registro.cantidadEntregadaKg || 'No registrado'}</span>
+                ${usuarioInfo.rol === 'Administración' ? `
+                <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (KG): </strong>${registro.cantidadEntregadaKg || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
-                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${registro.precio || 'No registrado'}</span>
+                ${usuarioInfo.rol === 'Administración' ? `
+                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${registro.precio || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones compras: </strong>${registro.observacionesCompras || 'Sin observaciones'}</span>
             </div>
