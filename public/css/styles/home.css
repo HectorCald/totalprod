@@ -27,6 +27,7 @@
             margin-left: 10px;
             border: none;
             font-size: var(--text-titulo);
+            border: 1px solid red;
         }
 
 
@@ -37,7 +38,7 @@
             gap: 10px;
             overflow-x: hidden;
             overflow-y: hidden;
-            padding-top: 10px;
+            padding-top: 5px;
 
             .funcion {
                 background-color: var(--primary-color);
