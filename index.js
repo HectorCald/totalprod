@@ -131,13 +131,13 @@ app.post('/login', async (req, res) => {
                                 spreadsheetId
                             },
                             JWT_SECRET,
-                            { expiresIn: '744h' }
+                            { expiresIn: '89280h' }
                         );
 
                         res.cookie('token', token, {
                             httpOnly: true,
                             secure: true,
-                            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 días en milisegundos
+                            maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // 10 años en milisegundos
                         });
 
                         // Determine dashboard URL based on spreadsheet ID
