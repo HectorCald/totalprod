@@ -180,7 +180,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${registro.id}<span class="valor ${registro.tipo}">${registro.tipo}</span></span>
                     <span class="nombre"><strong>${registro.nombre_movimiento}</strong></span>
-                    <span class="fecha">${registro.fecha_hora}</span>
+                    <span class="fecha">${registro.fecha_hora} <span class="anulado">Bs./${registro.total}</span></span>
                 </div>
             </div>
         </div>
