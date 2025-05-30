@@ -315,7 +315,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
-            texto: 'Registros alm.',
+            texto: 'Registros almacen',
             detalle: 'Ver registros de almacen',
             onclick: 'onclick="mostrarMovimientosAlmacen()"'
         },
@@ -323,7 +323,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-history',
-            texto: 'Registros cont',
+            texto: 'Registros conteo',
             detalle: 'Ver registros de conteo',
             onclick: 'onclick="registrosConteoAlmacen()"'
         }
