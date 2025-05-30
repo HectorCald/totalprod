@@ -225,7 +225,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'almAcopio-view',
             icono: 'fa-dolly',
-            texto: 'Almacen',
+            texto: 'Almacen Acopio',
             detalle: 'Gestiona tu almacen',
             onclick: 'onclick="mostrarAlmacenAcopio();"'
         },
@@ -233,16 +233,16 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-arrow-down',
-            texto: 'Ingresos',
-            detalle: 'Ingresos de tu almacen.',
+            texto: 'Ingresos Acopio',
+            detalle: 'Ingresos a acopio',
             onclick: 'onclick="mostrarIngresosAcopio()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-arrow-up',
-            texto: 'Salidas',
-            detalle: 'Salidas de tu almacen.',
+            texto: 'Salidas Acopio',
+            detalle: 'Salidas de acopio',
             onclick: 'onclick="mostrarSalidasAcopio()"'
         },
         {
