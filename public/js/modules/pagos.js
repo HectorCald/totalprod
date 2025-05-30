@@ -105,7 +105,7 @@ function renderInitialHTML() {
         </div>
         <div class="anuncio-botones">
             <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
-            <button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
+            <button id="nuevo-pago-generico" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -147,7 +147,7 @@ function updateHTMLWithData() {
 function eventosPagos() {
     const btnExcel = document.getElementById('exportar-excel');
     const registrosAExportar = registrosProduccion;
-    const btnNuevoPago = document.getElementById('nuevo-pago');
+    const btnNuevoPago = document.getElementById('nuevo-pago-generico');
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
@@ -764,6 +764,7 @@ function eventosPagos() {
         }
     };
     btnNuevoPago.addEventListener('click', nuevoPagoGenerico);
+
     function nuevoPagoGenerico() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `

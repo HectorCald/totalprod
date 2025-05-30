@@ -8,7 +8,6 @@ import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 
-
 /* ==================== CONFIGURACIÓN INICIAL ==================== */
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +15,6 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 const JWT_SECRET = 'secret-totalprod-hcco';
-
 
 /* ==================== CONFIGURACIÓN DE GOOGLE SHEETS ==================== */
 const auth = new google.auth.GoogleAuth({
@@ -29,7 +27,6 @@ const auth = new google.auth.GoogleAuth({
         "https://www.googleapis.com/auth/spreadsheets"
     ]
 });
-
 
 /* ==================== MIDDLEWARES Y CONFIGURACIÓN DE APP ==================== */
 app.use(cors());
@@ -97,8 +94,6 @@ app.get('/dashboard', requireAuth, (req, res) => {
 app.get('/dashboard_otro', requireAuth, (req, res) => {
     res.render('dashboard_otro')
 });
-
-
 
 /* ==================== RUTAS DE AUTENTICACION ==================== */
 app.post('/login', async (req, res) => {
@@ -5135,7 +5130,6 @@ app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
     }
 });
 
-
 /* ==================== RUTAS DE CONFIGURACIONES DEL SISTEMA ==================== */
 app.get('/obtener-configuraciones', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
@@ -5214,11 +5208,6 @@ app.put('/actualizar-configuraciones', requireAuth, async (req, res) => {
         });
     }
 });
-
-
-
-
-
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */
 if (process.env.NODE_ENV !== 'production') {
