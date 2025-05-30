@@ -531,6 +531,7 @@ function eventosPedidos() {
         `;
 
         mostrarAnuncioSecond();
+        anuncioSecond.style.paddingBottom = '80px';
 
         const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
         botonLimpiar.addEventListener('click', () => {

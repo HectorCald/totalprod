@@ -527,12 +527,13 @@ function eventosPedidos(producto, pedido) {
         </div>
         <div class="anuncio-botones">
             <button class="btn-procesar-ingreso btn green">
-                <i class='bx bx-check'></i> Registrar Ingreso
+                <i class='bx bx-check'></i> Procesar Ingreso
             </button>
         </div>
     `;
 
         mostrarAnuncioSecond();
+        anuncioSecond.style.paddingBottom = '80px';
 
         // Agregar evento para actualizar lote cuando cambie el tipo de materia
         const tipoMateriaSelect = anuncioSecond.querySelector('.tipo-materia');

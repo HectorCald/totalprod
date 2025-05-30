@@ -1388,7 +1388,7 @@ function eventosVerificacion() {
                     selectBenef.value,
                 id_beneficiario: registrosFiltrados[0].user,
                 pagado_por: contenido.querySelector('input[name="pagado_por"]').value.trim(),
-                justificativos: contenido.querySelector('input[name="justificativos"]').value,
+                justificativos_id: contenido.querySelector('input[name="justificativos"]').value,
                 justificativosDetallados, // Usando los valores de la tabla
                 subtotal: parseFloat(contenido.querySelector('input[name="subtotal"]').value),
                 descuento: parseFloat(contenido.querySelector('input[name="descuento"]').value) || 0,

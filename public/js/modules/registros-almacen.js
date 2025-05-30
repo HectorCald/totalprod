@@ -123,6 +123,7 @@ function renderInitialHTML() {
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Ingresos</button>
                 <button class="btn-filtro">Salidas</button>
+                <button class="btn-filtro">Anulados</button>
                 <select class="proovedor-cliente" style="width:100%">
                     <option value="Todos" class="defecto">Todos</option>
                 </select>
@@ -180,7 +181,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${registro.id}<span class="valor ${registro.tipo}">${registro.tipo}</span></span>
                     <span class="nombre"><strong>${registro.nombre_movimiento}</strong></span>
-                    <span class="fecha">${registro.fecha_hora} <span class="anulado">Bs./${registro.total}</span></span>
+                    <span class="fecha">${registro.fecha_hora} <span class="neutro">Bs./${registro.total}</span></span>
                 </div>
             </div>
         </div>
@@ -271,6 +272,8 @@ function eventosRegistrosAlmacen() {
             }
             else if (tipoFiltro === 'todos') {
                 filtroNombreActual = 'todos';
+            }else if (tipoFiltro === 'anulados') {
+                filtroNombreActual = 'anulado';
             }
 
             aplicarFiltros();
@@ -307,6 +310,9 @@ function eventosRegistrosAlmacen() {
                     mostrar = (tipoRegistro === 'ingreso');
                 } else if (filtroTipo === 'salida') {
                     mostrar = (tipoRegistro === 'salida');
+                }
+                else if (filtroTipo === 'anulado') {
+                    mostrar = (tipoRegistro === 'anulado');
                 }
             }
 
@@ -478,7 +484,7 @@ function eventosRegistrosAlmacen() {
             </div>
         </div>
         <div class="anuncio-botones">
-            ${tienePermiso('anulacion') ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
+            ${tienePermiso('anulacion') && registro.tipo != 'Anulado' ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
             ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             <button class="btn-copia btn blue" data-id="${registro.id}"><i class='bx bx-copy'></i>Copiar</button>
         </div>
@@ -635,7 +641,7 @@ function eventosRegistrosAlmacen() {
                 <div class="info-sistema">
                     <i class='bx bx-info-circle'></i>
                     <div class="detalle-info">
-                        <p>Estás por anular un registro del sistema. Esta acción eliminará el regsitro, pero te regresara el stock que ingreso o salio de almacen en este registro.</p>
+                        <p>Estás por anular un registro del sistema. Esta acción no eliminará el regsitro y te regresara el stock que ingreso o salio de almacen en este registro, pero asegurante de anular este registro</p>
                     </div>
                 </div>
 
@@ -666,11 +672,14 @@ function eventosRegistrosAlmacen() {
                 try {
                     mostrarCarga();
                     const response = await fetch(`/anular-movimiento/${registro.id}`, {
-                        method: 'DELETE',
+                        method: 'PUT', // Cambiado a PUT ya que vamos a actualizar
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ motivo })
+                        body: JSON.stringify({
+                            motivo,
+                            estado: 'Anulado'
+                        })
                     });
 
                     if (!response.ok) throw new Error('Error en la respuesta del servidor');

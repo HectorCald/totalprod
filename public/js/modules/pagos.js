@@ -135,7 +135,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${registro.id}<span class="valor ${registro.estado === 'Pendiente' ? 'pendiente' : registro.estado === 'Pagado' ? 'pagado' : 'anulado'}">${registro.estado}</span></span>
                     <span class="nombre"><strong>${registro.nombre_pago} (${registro.beneficiario})</strong></span>
-                    <span class="fecha">${registro.fecha}</span>
+                    <span class="fecha">${registro.fecha}<span class="neutro">Bs./${registro.total}</span></span>
                 </div>
             </div>
         </div>
@@ -381,7 +381,7 @@ function eventosPagos() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         let registrationHTML;
 
-        if (pago.tipo === 'generico') {
+        if (pago.tipo === 'generico' || pago.tipo === 'Acopio') {
             // Template para pagos genéricos
             registrationHTML = `
                 <div class="encabezado">
@@ -401,7 +401,8 @@ function eventosPagos() {
     
                     <p class="normal">Detalles del pago</p>
                     <div class="campo-vertical">
-                        <span class="valor"><strong><i class='bx bx-detail'></i> Concepto: </strong>${pago.justificativos}</span>
+                        <span class="valor"><strong><i class='bx bx-detail'></i> Concepto: </strong></span>
+                        <span class="valor">${pago.justificativos}</span>
                         <hr style="margin: 10px 0; opacity: 0.2;">
                         <span class="valor"><strong><i class='bx bx-dollar'></i> Monto Base: </strong>Bs. ${pago.subtotal}</span>
                         <span class="valor"><strong><i class='bx bx-minus-circle'></i> Descuento: </strong>Bs. ${pago.descuento}</span>
@@ -416,12 +417,10 @@ function eventosPagos() {
                         <span class="estado"><strong><i class='bx bx-check-circle'></i> Estado: </strong><span class="valor ${pago.estado === 'Pendiente' ? 'pendiente' : pago.estado === 'Pagado' ? 'pagado' : 'anulado'}">${pago.estado}</span></span>
                     </div>
                 </div>
-                ${pago.estado === 'Pendiente' ? `
                     <div class="anuncio-botones">
                         <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>
-                        <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>
+                        ${pago.estado ==='Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
                     </div>
-                ` : ''}
             `;
         } else {
             // Procesar justificativos para pagos normales (existente)
@@ -507,12 +506,11 @@ function eventosPagos() {
             <p class="normal">Información administrativa</p>
             <div class="campo-vertical">
                 <span class="valor"><strong><i class='bx bx-user-check'></i> Registrado por: </strong>${pago.pagado_por}</span>
-                <span class="valor"><strong><i class='bx bx-hash'></i> ID Registros: </strong>${pago.justificativos_id}</span>
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-anular btn yellow" data-id="${pago.id}"><i class='bx bx-x-circle'></i>Anular</button>
-            <button class="btn-pagar btn green" data-id="${pago.id}"><i class='bx bx-dollar'></i>Pagar</button>
+            <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>
+            ${pago.estado ==='Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
         </div>
     `;
         }

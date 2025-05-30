@@ -449,14 +449,14 @@ function eventosPedidos() {
             ` : ''}
         </div>
         <div class="anuncio-botones">
-            ${registro.estado === 'Pendiente' && usuarioInfo.rol ==='Administración' ? `
+            ${registro.estado === 'Pendiente' && usuarioInfo.rol === 'Administración' ? `
                 <button class="btn-entregar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Entregar</button>
             ` : ''}
             ${registro.estado === 'Recibido' ? `
                 <button class="btn-ingresar btn blue" data-id="${registro.id}"><i class='bx bx-log-in'></i>Ingresar</button>
                 <button class="btn-rechazar btn yellow" data-id="${registro.id}"><i class='bx bx-block'></i>Rechazar</button>
             ` : ''}
-            ${registro.estado === 'No llego' && usuarioInfo.rol ==='Administración'? `
+            ${registro.estado === 'No llego' && usuarioInfo.rol === 'Administración' ? `
                 <button class="btn-llego btn yellow" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Llego</button>
             ` : ''}
             ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
@@ -468,9 +468,9 @@ function eventosPedidos() {
         contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
-        if(registro.estado ==='Ingresado' || registro.estado === 'No llego' || registro.estado === 'Rechazado'){
+        if (registro.estado === 'Ingresado' || registro.estado === 'No llego' || registro.estado === 'Rechazado') {
             contenido.style.paddingBottom = '10px';
-            if(tienePermiso('edicion') || tienePermiso('eliminacion')){
+            if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
                 contenido.style.paddingBottom = '80px';
             }
         }
@@ -967,12 +967,12 @@ function eventosPedidos() {
                     const cantidadUnd = document.querySelector('.verificar-registro .cantidad-und').value;
                     const unidadMedida = document.querySelector('.verificar-registro .unidad-medida').value;
                     const proovedor = document.querySelector('.verificar-registro .proovedor').value;
-                    const precio = document.querySelector('.verificar-registro .precio').value;
-                    const transporteOtros = document.querySelector('.verificar-registro .transporte').value;
+                    const precio = parseFloat(document.querySelector('.verificar-registro .precio').value);
+                    const transporteOtros = parseFloat(document.querySelector('.verificar-registro .transporte').value) || 0;
                     const estadoCompra = document.querySelector('.verificar-registro .estado-compra').value;
                     const observaciones = document.querySelector('.verificar-registro .observaciones').value;
 
-                    // Basic validations
+                    // Validaciones básicas
                     if (!cantidadKg || !cantidadUnd || !proovedor || !precio) {
                         mostrarNotificacion({
                             message: 'Por favor complete todos los campos requeridos',
@@ -984,7 +984,8 @@ function eventosPedidos() {
 
                     mostrarCarga();
 
-                    const response = await fetch(`/entregar-pedido/${registro.id}`, {
+                    // 1. Registrar la entrega del pedido
+                    const entregaResponse = await fetch(`/entregar-pedido/${registro.id}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
@@ -994,44 +995,93 @@ function eventosPedidos() {
                             cantidadUnidad: parseInt(cantidadUnd),
                             unidadMedida,
                             proovedor,
-                            precio: parseFloat(precio),
-                            transporteOtros: transporteOtros || '',
+                            precio,
+                            transporteOtros,
                             estadoCompra,
-                            observaciones: observaciones || 'Sin observaciones'
+                            observaciones
                         })
                     });
 
-                    const data = await response.json();
+                    const entregaData = await entregaResponse.json();
 
-                    if (data.success) {
-                        // Update message format
-                        if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
-                            mensajeCompras = 'Se compro:\n';
-                        }
-                        mensajeCompras = mensajeCompras.replace(/\n\nSe compro en la App de TotalProd.$/, '');
-                        mensajeCompras = mensajeCompras.replace(/\n$/, '');
-                        mensajeCompras += `\n• ${registro.producto} - ${cantidadUnd} ${unidadMedida} (${estadoCompra})`;
-                        mensajeCompras += '\n\nSe compro en la App de TotalProd.';
+                    if (entregaData.success) {
+                        // 2. Crear registro de pago genérico
+                        const totalPago = precio + transporteOtros;
+                        const proveedorInfo = proovedoresAcopioGlobal.find(p => p.nombre === proovedor);
 
-                        localStorage.setItem('damabrava_mensaje_compras', mensajeCompras);
+                        const pagoGenerico = {
+                            nombre_pago: `Materia prima (${registro.producto})`,
+                            id_beneficiario: proveedorInfo?.id || 'No registrado',
+                            beneficiario: proovedor,
+                            pagado_por: usuarioInfo.nombre,
+                            justificativos_id: registro.id,
+                            justificativos: 'Pago de materia prima: '+ registro.producto+' (Bs./' + precio +')Transporte: (Bs./' + transporteOtros+')'+'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
+                            subtotal: totalPago,
+                            descuento: 0,
+                            aumento: 0,
+                            total: totalPago,
+                            observaciones: observaciones,
+                            estado: 'Pagado',
+                            tipo: 'Acopio'
+                        };
 
-                        mostrarNotificacion({
-                            message: 'Pedido entregado correctamente',
-                            type: 'success',
-                            duration: 3000
+                        const pagoResponse = await fetch('/registrar-pago', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(pagoGenerico)
                         });
 
-                        ocultarCarga();
-                        ocultarAnuncioTercer();
-                        ocultarAnuncioSecond();
-                        await mostrarPedidos();
+                        const pagoData = await pagoResponse.json();
+
+                        if (pagoData.success) {
+                            // 3. Registrar pago parcial
+                            const pagoParcial = {
+                                pago_id: pagoData.id,
+                                pagado_por: usuarioInfo.nombre,
+                                beneficiario: proovedor,
+                                cantidad_pagada: totalPago,
+                                observaciones: observaciones
+                            };
+
+                            await fetch('/registrar-pago-parcial', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(pagoParcial)
+                            });
+
+                            // Actualizar mensaje de compras y notificar éxito
+                            if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
+                                mensajeCompras = 'Se compro:\n';
+                            }
+                            mensajeCompras = mensajeCompras.replace(/\n\nSe compro en la App de TotalProd.$/, '');
+                            mensajeCompras = mensajeCompras.replace(/\n$/, '');
+                            mensajeCompras += `\n• ${registro.producto} - ${cantidadUnd} ${unidadMedida} (${estadoCompra})`;
+                            mensajeCompras += '\n\nSe compro en la App de TotalProd.';
+
+                            localStorage.setItem('damabrava_mensaje_compras', mensajeCompras);
+
+                            mostrarNotificacion({
+                                message: 'Pedido entregado y pago registrado correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+
+                            ocultarCarga();
+                            ocultarAnuncioTercer();
+                            ocultarAnuncioSecond();
+                            await mostrarPedidos();
+                        }
                     } else {
-                        throw new Error(data.error || 'Error al entregar el pedido');
+                        throw new Error(entregaData.error || 'Error al entregar el pedido');
                     }
                 } catch (error) {
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message || 'Error al entregar el pedido',
+                        message: error.message || 'Error en la operación',
                         type: 'error',
                         duration: 3500
                     });
@@ -1089,7 +1139,7 @@ function eventosPedidos() {
             mostrarAnuncioTercer();
             window.confirmarRechazo = async function (idPedido) {
                 const motivo = document.querySelector('.input-motivo').value;
-    
+
                 if (!motivo) {
                     mostrarNotificacion({
                         message: 'Debe ingresar un motivo de rechazo',
@@ -1098,7 +1148,7 @@ function eventosPedidos() {
                     });
                     return;
                 }
-    
+
                 try {
                     mostrarCarga();
                     const response = await fetch(`/rechazar-pedido/${idPedido}`, {
@@ -1106,7 +1156,7 @@ function eventosPedidos() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ motivo })
                     });
-    
+
                     const data = await response.json();
                     if (data.success) {
                         mostrarNotificacion({

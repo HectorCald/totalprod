@@ -1854,7 +1854,7 @@ app.delete('/eliminar-registro-almacen/:id', requireAuth, async (req, res) => {
         });
     }
 });
-app.delete('/anular-movimiento/:id', requireAuth, async (req, res) => {
+app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
@@ -1864,14 +1864,14 @@ app.delete('/anular-movimiento/:id', requireAuth, async (req, res) => {
         // Obtener el registro a anular
         const responseMovimiento = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Movimientos alm-gral!A2:F'
+            range: 'Movimientos alm-gral!A2:P'
         });
 
         const movimientos = responseMovimiento.data.values || [];
         const movimientoIndex = movimientos.findIndex(row => row[0] === id);
 
         if (movimientoIndex === -1) {
-            return res.status(404).json({ success: false, error: 'Movimiento no encontrado' });
+            throw new Error('Registro no encontrado');
         }
 
         const movimiento = movimientos[movimientoIndex];
@@ -1891,14 +1891,15 @@ app.delete('/anular-movimiento/:id', requireAuth, async (req, res) => {
         for (let i = 0; i < idProductos.length; i++) {
             const idProducto = idProductos[i];
             const cantidad = parseInt(cantidades[i]);
-
             const productoIndex = productos.findIndex(row => row[0] === idProducto);
+
             if (productoIndex !== -1) {
                 const stockActual = parseInt(productos[productoIndex][3]);
-                const nuevoStock = tipo.toLowerCase() === 'ingreso' ?
-                    stockActual - cantidad :
+                const nuevoStock = tipo.toLowerCase() === 'ingreso' ? 
+                    stockActual - cantidad : 
                     stockActual + cantidad;
 
+                // Actualizar stock en la hoja
                 await sheets.spreadsheets.values.update({
                     spreadsheetId,
                     range: `Almacen general!D${productoIndex + 2}`,
@@ -1910,43 +1911,35 @@ app.delete('/anular-movimiento/:id', requireAuth, async (req, res) => {
             }
         }
 
-        // Obtener el ID de la hoja
-        const spreadsheet = await sheets.spreadsheets.get({
-            spreadsheetId
+        // Actualizar estado del movimiento a "Anulado"
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Movimientos alm-gral!C${movimientoIndex + 2}`,
+            valueInputOption: 'RAW',
+            resource: {
+                values: [['Anulado']]
+            }
         });
 
-        const movimientosSheet = spreadsheet.data.sheets.find(
-            sheet => sheet.properties.title === 'Movimientos alm-gral'
-        );
-
-        if (!movimientosSheet) {
-            return res.status(404).json({
-                success: false,
-                error: 'Hoja de Movimientos no encontrada'
-            });
-        }
-
-        // Eliminar la fila completa
-        await sheets.spreadsheets.batchUpdate({
+        // Agregar el motivo en las observaciones
+        const observacionesActuales = movimiento[13] || '';
+        const nuevasObservaciones = `${observacionesActuales} [ANULADO: ${motivo}]`;
+        await sheets.spreadsheets.values.update({
             spreadsheetId,
+            range: `Movimientos alm-gral!N${movimientoIndex + 2}`,
+            valueInputOption: 'RAW',
             resource: {
-                requests: [{
-                    deleteDimension: {
-                        range: {
-                            sheetId: movimientosSheet.properties.sheetId,
-                            dimension: 'ROWS',
-                            startIndex: movimientoIndex + 1, // +1 por el encabezado
-                            endIndex: movimientoIndex + 2
-                        }
-                    }
-                }]
+                values: [[nuevasObservaciones]]
             }
         });
 
         res.json({ success: true });
     } catch (error) {
         console.error('Error al anular movimiento:', error);
-        res.status(500).json({ success: false, error: 'Error al anular el movimiento' });
+        res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Error al anular el movimiento' 
+        });
     }
 });
 
@@ -3525,13 +3518,10 @@ app.put('/anular-movimiento-acopio/:id', requireAuth, async (req, res) => {
         const sheets = google.sheets({ version: 'v4', auth });
 
         // 1. Obtener el registro a anular y la información de la hoja
-        const [movimientosResponse, spreadsheet] = await Promise.all([
-            sheets.spreadsheets.values.get({
-                spreadsheetId,
-                range: 'Movimientos alm-acopio!A2:K'
-            }),
-            sheets.spreadsheets.get({ spreadsheetId })
-        ]);
+        const movimientosResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Movimientos alm-acopio!A2:J'
+        });
 
         const movimientos = movimientosResponse.data.values || [];
         const movimientoIndex = movimientos.findIndex(row => row[0] === id);
@@ -3548,14 +3538,14 @@ app.put('/anular-movimiento-acopio/:id', requireAuth, async (req, res) => {
         // 2. Obtener y actualizar datos del almacén
         const almacenResponse = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Almacen acopio!A2:J'
+            range: 'Almacen acopio!A2:D'
         });
 
         const productos = almacenResponse.data.values || [];
         const productoIndex = productos.findIndex(row => row[0] === idProducto);
 
         if (productoIndex === -1) {
-            throw new Error('Producto no encontrado');
+            throw new Error('Producto no encontrado en almacén');
         }
 
         // 3. Actualizar lotes según el tipo de movimiento
@@ -3572,13 +3562,17 @@ app.put('/anular-movimiento-acopio/:id', requireAuth, async (req, res) => {
         let lotesActuales = lotesResponse.data.values?.[0]?.[0] || '';
         let lotesArray = lotesActuales.split(';').filter(Boolean);
 
+        // Lógica de actualización de lotes
         if (esIngreso) {
+            // Si es ingreso, quitar el último lote
             lotesArray.pop();
         } else {
+            // Si es salida, devolver el peso al último lote
             if (lotesArray.length > 0) {
-                const [pesoActual, lote] = lotesArray[0].split('-');
-                const nuevoPeso = (parseFloat(pesoActual) + peso).toFixed(2);
-                lotesArray[0] = `${nuevoPeso}-${lote}`;
+                const ultimoLoteIndex = lotesArray.length - 1;
+                const [pesoActual, numeroLote] = lotesArray[ultimoLoteIndex].split('-');
+                const nuevoLote = `${(parseFloat(pesoActual) + peso).toFixed(2)}-${numeroLote}`;
+                lotesArray[ultimoLoteIndex] = nuevoLote;
             }
         }
 
@@ -3592,30 +3586,31 @@ app.put('/anular-movimiento-acopio/:id', requireAuth, async (req, res) => {
             }
         });
 
-        // 5. Eliminar el registro
-        const movimientosSheet = spreadsheet.data.sheets.find(
-            sheet => sheet.properties.title === 'Movimientos alm-acopio'
-        );
-
-        await sheets.spreadsheets.batchUpdate({
+        // 5. Actualizar el registro como anulado y agregar motivo
+        await sheets.spreadsheets.values.update({
             spreadsheetId,
+            range: `Movimientos alm-acopio!C${movimientoIndex + 2}`,
+            valueInputOption: 'RAW',
             resource: {
-                requests: [{
-                    deleteDimension: {
-                        range: {
-                            sheetId: movimientosSheet.properties.sheetId,
-                            dimension: 'ROWS',
-                            startIndex: movimientoIndex + 1,
-                            endIndex: movimientoIndex + 2
-                        }
-                    }
-                }]
+                values: [['Anulado']]
+            }
+        });
+
+        // Agregar el motivo en observaciones
+        const observacionesActuales = movimiento[9] || '';
+        const nuevasObservaciones = `${observacionesActuales} [ANULADO: ${motivo}]`;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Movimientos alm-acopio!J${movimientoIndex + 2}`,
+            valueInputOption: 'RAW',
+            resource: {
+                values: [[nuevasObservaciones]]
             }
         });
 
         res.json({
             success: true,
-            message: 'Movimiento anulado y eliminado correctamente'
+            message: 'Movimiento anulado correctamente'
         });
 
     } catch (error) {
@@ -3954,6 +3949,7 @@ app.post('/registrar-pago', requireAuth, async (req, res) => {
             nombre_pago,
             beneficiario,
             pagado_por,
+            justificativos_id,
             justificativos,
             subtotal,
             descuento,
@@ -3995,8 +3991,8 @@ app.post('/registrar-pago', requireAuth, async (req, res) => {
                     req.body.id_beneficiario,   // ID-BENEF (email del usuario)
                     beneficiario,               // BENEFICIARIO
                     pagado_por,                 // PAGADO POR
-                    justificativos,             // ID-JUST
-                    req.body.justificativosDetallados, // JUSTIFICATIVOS con procesos
+                    justificativos_id,             // ID-JUST
+                    req.body.justificativosDetallados || justificativos, // JUSTIFICATIVOS con procesos
                     subtotal,                   // SUBTOTAL
                     descuento,                  // DESCUENTO
                     aumento,                    // AUMENTO

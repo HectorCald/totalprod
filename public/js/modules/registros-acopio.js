@@ -584,7 +584,7 @@ function eventosRegistrosAcopio() {
             <div class="info-sistema">
                 <i class='bx bx-info-circle'></i>
                 <div class="detalle-info">
-                    <p>Estás por anular un registro del sistema. Esta acción eliminará el registro, pero te devolvera el peso en caso de (Salida) y quitar nuevo lote en caso de (Ingreso).</p>
+                    <p>Estás por anular un registro del sistema. Esta acción mantendrá el registro pero lo marcará como anulado, además te devolverá el peso en caso de (Salida) y quitará el lote en caso de (Ingreso).</p>
                 </div>
             </div>
 

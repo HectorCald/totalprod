@@ -449,12 +449,13 @@ function eventosPedidos() {
         </div>
         <div class="anuncio-botones">
             <button class="btn-procesar-ingreso btn green">
-                <i class='bx bx-check'></i> Registrar Ingreso
+                <i class='bx bx-check'></i> Procesar salida
             </button>
         </div>
     `;
 
         mostrarAnuncioSecond();
+        anuncioSecond.style.paddingBottom = '80px';
 
         // Eventos para manejar los cambios
         const tipoMateriaSelect = anuncioSecond.querySelector('.tipo-materia');
