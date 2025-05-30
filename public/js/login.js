@@ -278,6 +278,7 @@ function mostrarPaso1() {
     `;
 
     contenido.innerHTML = paso1HTML;
+    contenido.style.paddingBottom = '80px';
     mostrarAnuncio();
     configuracionesEntrada();
     setupPaso1();
@@ -357,6 +358,7 @@ function mostrarPaso2() {
     `;
 
     contenido.innerHTML = paso2HTML;
+    contenido.style.paddingBottom = '80px';
     mostrarAnuncioSecond();
     configuracionesEntrada();
     setupPaso2();
@@ -492,6 +494,7 @@ function mostrarPaso3() {
     `;
 
     contenido.innerHTML = paso3HTML;
+    contenido.style.paddingBottom = '80px';
     mostrarAnuncioTercer();
     configuracionesEntrada();
     setupPaso3();
