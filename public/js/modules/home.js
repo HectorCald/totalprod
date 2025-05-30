@@ -234,7 +234,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-arrow-down',
             texto: 'Ingresos Acopio',
-            detalle: 'Ingresos a acopio',
+            detalle: 'Ingresos a tu almacen',
             onclick: 'onclick="mostrarIngresosAcopio()"'
         },
         {
@@ -242,7 +242,7 @@ const atajosPorRol = {
             vista: 'regAlmacen-view',
             icono: 'fa-arrow-up',
             texto: 'Salidas Acopio',
-            detalle: 'Salidas de acopio',
+            detalle: 'Salidas de tu almacen',
             onclick: 'onclick="mostrarSalidasAcopio()"'
         },
         {
