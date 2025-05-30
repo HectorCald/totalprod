@@ -426,7 +426,7 @@ function eventosRegistrosAcopio() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+                ${tienePermiso('eliminacion') && registro.tipo==='Anulado'? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
                 ${((esSalida || esUltimoIngreso) && tienePermiso('anulacion')) ?
                     `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class="bx bx-x-circle"></i>Anular</button>` 
                     : ''}
@@ -434,16 +434,21 @@ function eventosRegistrosAcopio() {
         `;
     
         contenido.innerHTML = registrationHTML;
-        if (tienePermiso('anulacion') || tienePermiso('eliminacion')) {
+        contenido.style.paddingBottom = '10px';
+        if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {
             contenido.style.paddingBottom = '80px';
         }
+        if (tienePermiso('eliminacion') && registro.tipo === 'Anulado') {
+            contenido.style.paddingBottom = '80px';
+        }
+
         mostrarAnuncioSecond();
 
-        if (tienePermiso('anulacion')) {
+        if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {   
             const btnAnular = contenido.querySelector('.btn-anular');
             btnAnular.addEventListener('click', () => anular(registro));
         }
-        if (tienePermiso('eliminacion')) {
+        if (tienePermiso('eliminacion') && registro.tipo === 'Anulado') {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }

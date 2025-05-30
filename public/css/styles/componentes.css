@@ -2079,20 +2079,20 @@
 
 .info-sistema {
     display: flex;
-    background-color: rgba(128, 128, 128, 0.153);
+    background-color: var(--primary-color);
     padding: 10px;
     border-radius: 10px;
     gap: 5px;
 
     i {
-        color: gray !important;
+        color: var(--error) !important;
     }
 
     .detalle-info {
 
         p {
             font-size: 10px;
-            color: gray;
+            color: var(--error);
         }
     }
 }

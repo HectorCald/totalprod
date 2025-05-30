@@ -485,7 +485,7 @@ function eventosRegistrosAlmacen() {
         </div>
         <div class="anuncio-botones">
             ${tienePermiso('anulacion') && registro.tipo != 'Anulado' ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+            ${tienePermiso('eliminacion') && registro.tipo === 'Anulado' ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             <button class="btn-copia btn blue" data-id="${registro.id}"><i class='bx bx-copy'></i>Copiar</button>
         </div>
     `;
@@ -494,11 +494,11 @@ function eventosRegistrosAlmacen() {
         mostrarAnuncioSecond();
 
 
-        if (tienePermiso('anulacion')) {
+        if (tienePermiso('anulacion') && registro.tipo != 'Anulado') {
             const btnAnular = contenido.querySelector('.btn-anular');
             btnAnular.addEventListener('click', () => anular(registro));
         }
-        if (tienePermiso('eliminacion')) {
+        if (tienePermiso('eliminacion') && registro.tipo === 'Anulado') {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }

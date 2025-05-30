@@ -514,33 +514,43 @@ function eventosVerificacion() {
                 ${registro.fecha_verificacion ? `<span><strong><i class='bx bx-box'></i> Sueltos:</strong> ${unidadesSueltas} und.</span>` : ''}
                 ${registro.observaciones ? `<span><strong><i class='bx bx-comment-detail'></i>Observaciones: </strong> ${registro.observaciones}</span>` : ''}
             </div>
-            <p class="normal">Detalles de pago</p>
-            <div class="campo-vertical">
-                ${registro.fecha_verificacion ? `
-                    ${(() => {
+            
+            ${registro.fecha_verificacion && usuarioInfo.rol === 'Administración' ? `
+                ${(() => {
                     const calculado = calcularTotal(registro);
                     return `
-                            <span><strong><i class='bx bx-dollar'></i> Envasado:</strong> Bs.${calculado.envasado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Etiquetado:</strong> Bs.${calculado.etiquetado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Sellado:</strong> Bs.${calculado.sellado.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Cernido:</strong> Bs.${calculado.cernido.toFixed(2)}</span>
-                            <span><strong><i class='bx bx-dollar'></i> Total:</strong> Bs.${calculado.total.toFixed(2)}</span>
-                        `;
+                <p class="normal">Detalles de pago</p>
+                <div class="campo-vertical">
+                    <span><strong><i class='bx bx-dollar'></i> Envasado:</strong> Bs.${calculado.envasado.toFixed(2)}</span>
+                    <span><strong><i class='bx bx-dollar'></i> Etiquetado:</strong> Bs.${calculado.etiquetado.toFixed(2)}</span>
+                    <span><strong><i class='bx bx-dollar'></i> Sellado:</strong> Bs.${calculado.sellado.toFixed(2)}</span>
+                    <span><strong><i class='bx bx-dollar'></i> Cernido:</strong> Bs.${calculado.cernido.toFixed(2)}</span>
+                    <span><strong><i class='bx bx-dollar'></i> Total:</strong> Bs.${calculado.total.toFixed(2)}</span>
+                </div>`;
                 })()}
-                ` : ''}
-            </div>
+            ` : ''}
+            
         </div>
         <div class="anuncio-botones">
             ${tienePermiso('edicion') && !registro.fecha_verificacion ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
             ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
-            ${registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : `<button class="btn-verificar btn green" data-id="${registro.id}"><i class="bx bx-check-circle"></i>Verificar</button>`}
+            ${tienePermiso('anulacion') && registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
+            ${!registro.fecha_verificacion ? `<button class="btn-verificar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Verificar</button>` : ''}
         </div>
         `;
-
-
-
+        
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '10px';
+        if (tienePermiso('edicion') || tienePermiso('eliminacion') && !registro.fecha_verificacion) {
+            contenido.style.paddingBottom = '80px';
+        }
+        if (tienePermiso('anulacion') && registro.fecha_verificacion) {	
+            contenido.style.paddingBottom = '80px';
+        }
+        if (!registro.fecha_verificacion) {	
+            contenido.style.paddingBottom = '80px';
+        }
+
         mostrarAnuncioSecond();
 
         const btnVerificar = contenido.querySelector('.btn-verificar');
