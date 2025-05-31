@@ -91,15 +91,25 @@ async function obtenerMisRegistros() {
         const data = await response.json();
 
         if (data.success) {
-            // Filtrar registros por el email del usuario actual y ordenar de más reciente a más antiguo
+            if(usuarioInfo.rol === 'Producción') {
             registrosProduccion = data.registros
                 .filter(registro => registro.user === usuarioInfo.email)
                 .sort((a, b) => {
                     const idA = parseInt(a.id.split('-')[1]);
                     const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA; // Orden descendente por número de ID
+                    return idB - idA;
                 });
             return true;
+            }
+            else if(usuarioInfo.rol === 'Administración') {
+            registrosProduccion = data.registros
+                .sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+            return true;
+            }
 
         } else {
             mostrarNotificacion({
