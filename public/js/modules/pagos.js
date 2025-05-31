@@ -77,6 +77,7 @@ function renderInitialHTML() {
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Pagados</button>
                 <button class="btn-filtro">Pendientes</button>
+                <button class="btn-filtro">Anulados</button>
                 <select class="tipo">
                     <option value="todos" selected>Todos</option>
                     <option value="genericos" selected>Genericos</option>
@@ -146,7 +147,7 @@ function updateHTMLWithData() {
 
 function eventosPagos() {
     const btnExcel = document.getElementById('exportar-excel');
-    const registrosAExportar =pagosGlobal;
+    const registrosAExportar = pagosGlobal;
     const btnNuevoPago = document.getElementById('nuevo-pago-generico');
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
@@ -187,11 +188,11 @@ function eventosPagos() {
     // Nuevo
 
     // Agregar listener para el select de tipo
-    selectTipo.addEventListener('change', function() {
+    selectTipo.addEventListener('change', function () {
         filtroTipoActual = this.value;
         aplicarFiltros();
     });
-    selectTipo.addEventListener('focus', function() {
+    selectTipo.addEventListener('focus', function () {
         scrollToCenter(this, this.parentElement);
     });
 
@@ -225,7 +226,7 @@ function eventosPagos() {
 
             // Filtro por tipo
             if (filtroTipoActual !== 'todos') {
-                switch(filtroTipoActual) {
+                switch (filtroTipoActual) {
                     case 'genericos':
                         mostrar = registroData.tipo === 'generico';
                         break;
@@ -244,6 +245,8 @@ function eventosPagos() {
                     mostrar = registroData.estado === 'Pendiente';
                 } else if (filtroEstadoActual === 'Pagados') {
                     mostrar = registroData.estado === 'Pagado';
+                } else if (filtroEstadoActual === 'Anulados') {
+                    mostrar = registroData.estado === 'Anulado';
                 }
             }
 
@@ -418,8 +421,8 @@ function eventosPagos() {
                     </div>
                 </div>
                     <div class="anuncio-botones">
-                        <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>
-                        ${pago.estado ==='Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
+                        ${pago.estado !== 'Anulado' ? ` <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>` : ''}
+                        ${pago.estado === 'Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
                     </div>
             `;
         } else {
@@ -509,8 +512,8 @@ function eventosPagos() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>
-            ${pago.estado ==='Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
+            ${pago.estado !== 'Anulado' ? ` <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>` : ''}
+            ${pago.estado === 'Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
         </div>
     `;
         }
@@ -637,7 +640,7 @@ function eventosPagos() {
                     <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Saldo pendiente: </strong>Bs. ${saldoPendiente.toFixed(2)}</span>
                 </div>
 
-                ${saldoPendiente > 0 ? `
+                ${saldoPendiente > 0  && pago.estado !== 'Anulado' ? `
                     <p class="normal">Detalles del pago</p>
                     <div class="entrada">
                         <i class='bx bx-dollar'></i>
@@ -679,7 +682,7 @@ function eventosPagos() {
                     </table>
                 </div>
             </div>
-            ${saldoPendiente > 0 ? `
+            ${saldoPendiente > 0 && pago.estado !== 'Anulado' ? `
                 <div class="anuncio-botones">
                     <button class="btn-realizar-pago btn green">
                         <i class='bx bx-check-circle'></i> Realizar pago
@@ -689,7 +692,9 @@ function eventosPagos() {
         `;
 
                 contenido.innerHTML = registrationHTML;
-                contenido.style.paddingBottom = '80px';
+                if (pago.estado === 'Anulado' && saldoPendiente <= 0) {
+                    contenido.style.paddingBottom = '80px';
+                }
                 mostrarAnuncioTercer();
 
                 // Solo agregar el evento si hay saldo pendiente

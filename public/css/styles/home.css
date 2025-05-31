@@ -50,6 +50,7 @@
                 align-items: center;
                 padding: 15px 10px !important;
                 gap: 5px;
+                cursor: pointer;
 
                 i {
                     min-width: 50px;

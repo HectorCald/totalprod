@@ -557,8 +557,6 @@ function editarAtajos() {
 
 
 window.editarAtajos = editarAtajos;
-
-// Función global para manejar la selección
 window.actualizarSeleccion = function (checkbox) {
     const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]');
     const seleccionados = [...checkboxes].filter(cb => cb.checked);
@@ -572,8 +570,6 @@ window.actualizarSeleccion = function (checkbox) {
         });
     }
 };
-
-// Función global para guardar los atajos
 window.guardarAtajos = function () {
     const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]:checked');
     const seleccionados = [...checkboxes].map(cb => cb.value);

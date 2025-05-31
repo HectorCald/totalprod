@@ -435,7 +435,7 @@ function eventosPedidos() {
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
-                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${registro.precio || 'No registrado'}</span>` : ''}
+                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs./'+registro.precio || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones compras: </strong>${registro.observacionesCompras || 'Sin observaciones'}</span>
             </div>
