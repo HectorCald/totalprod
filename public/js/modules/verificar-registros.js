@@ -202,7 +202,7 @@ function renderInitialHTML() {
         </div>
         <div class="anuncio-botones">
             <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
-            <button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
+            ${usuarioInfo.rol === 'Administración' ? `<button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>` : ''} 
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -536,18 +536,19 @@ function eventosVerificacion() {
             ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             ${tienePermiso('anulacion') && registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
             ${!registro.fecha_verificacion ? `<button class="btn-verificar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Verificar</button>` : ''}
+            ${registro.observaciones !== 'Sin observaciones' && registro.observaciones !== '' ? `<button class="btn-arreglado btn orange" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Arreglado</button>` : ''}
         </div>
         `;
-        
+
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '10px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion') && !registro.fecha_verificacion) {
             contenido.style.paddingBottom = '80px';
         }
-        if (tienePermiso('anulacion') && registro.fecha_verificacion) {	
+        if (tienePermiso('anulacion') && registro.fecha_verificacion) {
             contenido.style.paddingBottom = '80px';
         }
-        if (!registro.fecha_verificacion) {	
+        if (!registro.fecha_verificacion) {
             contenido.style.paddingBottom = '80px';
         }
 
@@ -555,6 +556,7 @@ function eventosVerificacion() {
 
         const btnVerificar = contenido.querySelector('.btn-verificar');
         const btnAnular = contenido.querySelector('.btn-anular');
+        const btnArreglado = contenido.querySelector('.btn-arreglado');
 
 
         if (tienePermiso('edicion') && !registro.fecha_verificacion) {
@@ -570,6 +572,9 @@ function eventosVerificacion() {
         }
         if (btnVerificar) {
             btnVerificar.addEventListener('click', () => verificar(registro));
+        }
+        if (btnArreglado) {
+            btnArreglado.addEventListener('click', () => arreglado(registro));
         }
 
 
@@ -1120,6 +1125,49 @@ function eventosVerificacion() {
                 } finally {
                     ocultarCarga();
                 }
+            }
+        }
+        async function arreglado(registro) {
+            try {
+                mostrarCarga();
+
+                const response = await fetch(`/actualizar-observaciones-registro/${registro.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        observaciones: 'Sin observaciones'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarNotificacion({
+                        message: 'Se marcó como arreglado correctamente',
+                        type: 'success',
+                        duration: 3000
+                    });
+
+                    ocultarAnuncioSecond();
+                    await mostrarVerificacion();
+                } else {
+                    throw new Error(data.error || 'Error al marcar como arreglado');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion({
+                    message: error.message || 'Error al marcar como arreglado',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                ocultarCarga();
             }
         }
 

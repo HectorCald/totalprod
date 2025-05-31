@@ -798,6 +798,7 @@ app.delete('/eliminar-registro-produccion/:id', requireAuth, async (req, res) =>
     }
 });
 app.put('/editar-registro-produccion/:id', requireAuth, async (req, res) => {
+
     const { spreadsheetId } = req.user;
     const { id } = req.params;
     const { idPro, producto, gramos, lote, proceso, microondas, envases_terminados, fecha_vencimiento } = req.body;
@@ -1408,6 +1409,52 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error al actualizar stock:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.put('/actualizar-observaciones-registro/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { observaciones } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener el registro actual
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Produccion!A2:O'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Registro no encontrado'
+            });
+        }
+
+        // Actualizar solo la columna de observaciones (O)
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Produccion!O${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[observaciones]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Observaciones actualizadas correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar observaciones:', error);
+        res.status(500).json({
+            success: false, 
+            error: 'Error al actualizar las observaciones'
+        });
     }
 });
 
