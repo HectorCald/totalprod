@@ -1191,6 +1191,13 @@
         font-weight: 900 !important;
         font-size: 10px !important;
     }
+    .observado{
+        color: orange;
+        background: none;
+        border-radius: 10px;
+        font-weight: 900 !important;
+        font-size: 10px !important;
+    }
     .neutro{
         color: var(--text);
         background: none;

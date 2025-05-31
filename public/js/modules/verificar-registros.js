@@ -244,7 +244,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion ? 'verificado' : 'pendiente'}">${registro.fecha_verificacion ? 'Verificado' : 'Pendiente'}</span></span>
+                    <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion  ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'Verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
                     <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
                     <span class="fecha">${registro.fecha}</span>
                 </div>
@@ -326,7 +326,7 @@ function eventosVerificacion() {
                 } else if (filtroEstadoActual === 'Verificados') {
                     mostrar = !!registroData.fecha_verificacion;
                 } else if (filtroEstadoActual === 'Observados') {
-                    mostrar = registroData.observaciones && registroData.observaciones !== 'Sin observaciones';
+                    mostrar = registroData.fecha_verificacion && registroData.observaciones !== 'Sin observaciones';
                 }
             }
 

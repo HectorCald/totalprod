@@ -141,7 +141,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.fecha_verificacion ? 'verificado' : 'pendiente'}">${registro.fecha_verificacion ? 'Verificado' : 'Pendiente'}</span></span>
+                    <span class="id">${registro.id}<span class="valor ${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion  ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'Verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
                     <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
                     <span class="fecha">${registro.fecha}</span>
                 </div>
@@ -255,12 +255,13 @@ function eventosMisRegistros() {
             let mostrar = true;
 
             // Aplicar todos los filtros
-            if (filtroTipo !== 'todos') {
-                if (filtroTipo === 'observado') {
-                    mostrar = registroData.observaciones && registroData.observaciones !== 'Sin observaciones';
-                } else {
-                    const estadoRegistro = registroData.fecha_verificacion ? 'verificado' : 'pendiente';
-                    mostrar = (filtroTipo === estadoRegistro);
+            if (filtroTipo && filtroTipo !== 'todos') {
+                if (filtroTipo === 'pendiente') {
+                    mostrar = !registroData.fecha_verificacion;
+                } else if (filtroTipo === 'verificado') {
+                    mostrar = registroData.fecha_verificacion;
+                } else if (filtroTipo === 'observado') {
+                    mostrar = registroData.fecha_verificacion && registroData.observaciones !== 'Sin observaciones';
                 }
             }
 
