@@ -692,7 +692,8 @@ function eventosPagos() {
         `;
 
                 contenido.innerHTML = registrationHTML;
-                if (pago.estado === 'Anulado' && saldoPendiente <= 0) {
+                contenido.style.paddingBottom = '10px';
+                if (pago.estado !== 'Anulado' && saldoPendiente !== 0) {
                     contenido.style.paddingBottom = '80px';
                 }
                 mostrarAnuncioTercer();
