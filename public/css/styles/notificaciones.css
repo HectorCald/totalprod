@@ -110,6 +110,7 @@
                     color: var(--text);
                     font-size: 12px;
                     width: 100%;
+                    line-height: 1;
                 }
             }
         }
