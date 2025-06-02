@@ -398,48 +398,6 @@ export function configuracionesEntrada() {
         document.querySelector('.password').value = savedCredentials.password;
     }
 }
-export async function registrarHistorial(origen, suceso, detalle) {
-    try {
-        mostrarCarga();
-        const response = await fetch('/registrar-historial', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                origen,
-                suceso,
-                detalle
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: data.error || 'Error al registrar historial',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
-        }
-    } catch (error) {
-        console.error('Error al registrar historial:', error);
-        mostrarNotificacion({
-            message: 'Error al registrar historial',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    } finally {
-        ocultarCarga();
-    }
-}
-
-
-
 export function exportarArchivos(rExp, registrosAExportar) {
     function calcularTiempoTranscurrido(horaInicio, horaFin) {
         try {
@@ -756,8 +714,6 @@ export function exportarArchivos(rExp, registrosAExportar) {
         duration: 3000
     });
 }
-
-
 export function scrollToTop(view) {
     const view2 = document.querySelector(view);
     if (view2 && view2.scrollTo) {
@@ -769,16 +725,12 @@ export function scrollToTop(view) {
         console.warn('El parámetro "view" no es un contenedor válido.');
     }
 }
-
-
-
 const permisos = {
     creacion: false,
     eliminacion: false,
     edicion: false,
     anulacion: false
 };
-
 export function actualizarPermisos(recuperar) {
     const usuario = recuperar;
     if (!usuario) return;
@@ -790,4 +742,37 @@ export function actualizarPermisos(recuperar) {
 }
 export function tienePermiso(tipo) {
     return permisos[tipo] || false;
+}
+
+
+export async function registrarNotificacion(destino, suceso, detalle) {
+    try {
+        const response = await fetch('/registrar-notificacion', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                destino,
+                suceso, 
+                detalle
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            return true;
+        } else {
+            throw new Error(data.error || 'Error al registrar la notificación');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion({
+            message: 'Error al registrar la notificación',
+            type: 'error',
+            duration: 3000
+        });
+        return false;
+    }
 }

@@ -244,7 +244,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion  ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'Verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
+                    <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'Verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
                     <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
                     <span class="fecha">${registro.fecha}</span>
                 </div>
@@ -665,6 +665,14 @@ function eventosVerificacion() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarVerificacion();
@@ -877,6 +885,14 @@ function eventosVerificacion() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Edición',
+                            usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarVerificacion();
@@ -1006,6 +1022,14 @@ function eventosVerificacion() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Verificación',
+                            usuarioInfo.nombre + ' verifico el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
+                        registrarNotificacion(
+                            registro.user,
+                            'Verificación',
+                            usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
 
                         ocultarAnuncioSecond();
                         await mostrarIngresos(registro.idProducto);
@@ -1109,6 +1133,14 @@ function eventosVerificacion() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Información',
+                            usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarVerificacion();
@@ -1480,11 +1512,16 @@ function eventosVerificacion() {
                 const data = await response.json();
 
                 if (data.success) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
                         type: 'success',
                         duration: 3000
                     });
+                    registrarNotificacion(
+                        'Administración',
+                        'Información',
+                        usuarioInfo.nombre + ' registro un nuevo pago pendiente de producción')
                     cerrarAnuncioManual('anuncioSecond');
                 } else {
                     throw new Error(data.error || 'Error al registrar el pago');

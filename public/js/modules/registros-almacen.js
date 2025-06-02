@@ -272,7 +272,7 @@ function eventosRegistrosAlmacen() {
             }
             else if (tipoFiltro === 'todos') {
                 filtroNombreActual = 'todos';
-            }else if (tipoFiltro === 'anulados') {
+            } else if (tipoFiltro === 'anulados') {
                 filtroNombreActual = 'anulado';
             }
 
@@ -584,13 +584,17 @@ function eventosRegistrosAlmacen() {
                     const data = await response.json();
 
                     if (data.success) {
-
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro de almacen llamado: '+registro.nombre_movimiento+' con el id: '+registro.id+' tipo: '+registro.tipo+' por el motivo de: '+motivo)
+
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarMovimientosAlmacen();
@@ -687,12 +691,16 @@ function eventosRegistrosAlmacen() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro con el nombre de: '+registro.nombre_movimiento+' con el id: '+registro.id+'tipo '+registro.tipo+' por el motivo de: '+motivo)
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarMovimientosAlmacen();

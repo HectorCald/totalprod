@@ -585,12 +585,17 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Producto eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await mostrarAlmacenAcopio();
                     } else {
@@ -828,12 +833,17 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Producto actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
+                        
                         ocultarAnuncioSecond();
                         await mostrarAlmacenAcopio();
                     } else {

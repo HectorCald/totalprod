@@ -141,7 +141,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion  ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones==='Sin observaciones'? 'Verificado' : registro.observaciones !=='Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
+                    <span class="id">${registro.id}<span class="valor ${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'Verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
                     <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
                     <span class="fecha">${registro.fecha}</span>
                 </div>
@@ -407,7 +407,7 @@ function eventosMisRegistros() {
                 ${registro.observaciones ? `<span><strong><i class='bx bx-comment-detail'></i>Observaciones: </strong> ${registro.observaciones}</span>` : ''}
             </div>
         </div>
-        ${tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')? `
+        ${tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion') ? `
         <div class="anuncio-botones">
             ${tienePermiso('edicion') && !registro.fecha_verificacion ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
             ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
@@ -417,7 +417,7 @@ function eventosMisRegistros() {
 
 
         contenido.innerHTML = registrationHTML;
-        if (tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')) {  
+        if (tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')) {
             contenido.style.paddingBottom = '80px';
         }
         mostrarAnuncioSecond();
@@ -434,8 +434,8 @@ function eventosMisRegistros() {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }
-        
-        
+
+
 
         function eliminar(registro) {
 
@@ -524,6 +524,14 @@ function eventosMisRegistros() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarVerificacion();
@@ -754,6 +762,14 @@ function eventosMisRegistros() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Edición',
+                            usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarVerificacion();
@@ -857,6 +873,14 @@ function eventosMisRegistros() {
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        registrarNotificacion(
+                            registro.user,
+                            'Información',
+                            usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
                         ocultarAnuncioSecond();
                         await mostrarMisRegistros();
                     } else {

@@ -1,4 +1,13 @@
 let registrosConteos = [];
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 
 
 async function obtenerRegistrosConteo() {
@@ -380,12 +389,17 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro conteo con el nombre de: ' + registro.nombre + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await registrosConteoAlmacen();
                     } else {
@@ -495,12 +509,17 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el registro conteo con el nombre de: ' + registro.nombre + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await registrosConteoAlmacen();
                     } else {
@@ -589,13 +608,17 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Inventario actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-
-                        ocultarCarga();
+                        registrarNotificacion(
+                        'Administración',
+                        'Información',
+                        usuarioInfo.nombre + ' sobre escribio el stock del almacen general en base al registro con el nombre de: '+registro.nombre+' con el id: '+registro.id+' por el motivo de: '+motivo)
+                        
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await registrosConteoAlmacen();

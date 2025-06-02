@@ -1,4 +1,13 @@
 let clientes = [];
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 async function obtenerClientes() {
     try {
         const response = await fetch('/obtener-clientes');
@@ -296,13 +305,17 @@ function eventosClientes() {
                     });
     
                     if (response.ok) {
-                        
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Cliente eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino al cliente: '+cliente.nombre+' con el id: '+cliente.id+' por el motivo de: '+motivo)
+                        
                         ocultarAnuncioSecond();
                         await mostrarClientes();
                     } else {
@@ -410,12 +423,17 @@ function eventosClientes() {
                     });
     
                     if (response.ok) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Cliente actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito al cliente: '+cliente.nombre+' con el id: '+cliente.id+' por el motivo de: '+motivo)
+                        
                         ocultarAnuncioSecond();
                         await mostrarClientes();
                     } else {
@@ -512,12 +530,17 @@ function eventosClientes() {
                 });
 
                 if (response.ok) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Cliente creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' creo un nuevo cliente: '+nombre)
+                    
                     ocultarAnuncioSecond();
                     await mostrarClientes();
                 } else {

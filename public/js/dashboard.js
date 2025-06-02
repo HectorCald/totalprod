@@ -1,4 +1,19 @@
-import { crearNotificacion, mostrarNotificacion, mostrarAnuncio, ocultarAnuncio, mostrarCarga, ocultarCarga, configuracionesEntrada, mostrarAnuncioSecond, ocultarAnuncioSecond, registrarHistorial, exportarArchivos, cerrarAnuncioManual, mostrarAnuncioTercer, ocultarAnuncioTercer, scrollToTop, tienePermiso, actualizarPermisos } from './modules/componentes.js'
+import { crearNotificacion, 
+    mostrarNotificacion, 
+    mostrarAnuncio, 
+    ocultarAnuncio, 
+    mostrarCarga, 
+    ocultarCarga, 
+    configuracionesEntrada, 
+    mostrarAnuncioSecond, 
+    ocultarAnuncioSecond, 
+    exportarArchivos, 
+    cerrarAnuncioManual, 
+    mostrarAnuncioTercer, 
+    ocultarAnuncioTercer, 
+    scrollToTop, tienePermiso, 
+    actualizarPermisos, 
+    registrarNotificacion } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
 import { crearPerfil } from './modules/perfil.js';
@@ -28,17 +43,13 @@ import { mostrarCalcularMp } from './modules/calculadora-mp.js';
 import { mostrarTareas } from './modules/tareas-acopio.js';
 import { mostrarConfiguracionesSistema} from './modules/configuraciones-sistema.js';
 
-
-
 window.crearHome = crearHome
 window.mostrarHome = mostrarHome
-
 window.crearNav = crearNav
-
-
 window.crearNotificacion = crearNotificacion
 window.mostrarNotificacion = mostrarNotificacion
-
+window.crearPerfil = crearPerfil
+window.crearNotificaciones = crearNotificaciones
 
 window.ocultarAnuncio = ocultarAnuncio
 window.mostrarAnuncio = mostrarAnuncio
@@ -48,25 +59,18 @@ window.cerrarAnuncioManual = cerrarAnuncioManual
 window.mostrarAnuncioTercer = mostrarAnuncioTercer
 window.ocultarAnuncioTercer = ocultarAnuncioTercer
 window.scrollToTop = scrollToTop
-
-
 window.tienePermiso = tienePermiso
 window.actualizarPermisos = actualizarPermisos
-
-
 window.mostrarCarga = mostrarCarga
 window.ocultarCarga = ocultarCarga
 window.configuracionesEntrada = configuracionesEntrada
-window.registrarHistorial = registrarHistorial
-window.crearNotificaciones = crearNotificaciones
 window.exportarArchivos = exportarArchivos
-
+window.registrarNotificacion = registrarNotificacion
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarVerificacion = mostrarVerificacion
 window.mostrarMisRegistros = mostrarMisRegistros
 window.mostrarReglas = mostrarReglas
-
 
 window.mostrarAlmacenGeneral = mostrarAlmacenGeneral
 window.mostrarSalidas = mostrarSalidas
@@ -77,7 +81,6 @@ window.mostrarProovedores = mostrarProovedores
 window.mostrarConteo = mostrarConteo
 window.registrosConteoAlmacen = registrosConteoAlmacen
 
-
 window.mostrarHacerPedido = mostrarHacerPedido
 window.mostrarAlmacenAcopio = mostrarAlmacenAcopio
 window.mostrarPedidos = mostrarPedidos
@@ -85,14 +88,9 @@ window.mostrarIngresosAcopio = mostrarIngresosAcopio
 window.mostrarSalidasAcopio = mostrarSalidasAcopio
 window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
 
-
 window.mostrarPagos = mostrarPagos
 window.mostrarPersonal = mostrarPersonal
 window.mostrarConfiguracionesSistema = mostrarConfiguracionesSistema
-
-
-window.crearPerfil = crearPerfil
-
 
 window.mostrarCalcularMp = mostrarCalcularMp
 window.mostrarTareas = mostrarTareas
@@ -101,5 +99,4 @@ window.mostrarTareas = mostrarTareas
 document.addEventListener('DOMContentLoaded', async () => {
     flotante();
     await crearHome();
-    crearNotificaciones();
 });

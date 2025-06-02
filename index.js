@@ -4756,7 +4756,7 @@ app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
     }
 });
 
-/* ==================== RUTAS DE TAREAS ACOPIO==================== */
+/* ==================== RUTAS DE TAREAS ACOPIO ==================== */
 app.get('/obtener-tareas', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
 
@@ -5169,6 +5169,95 @@ app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al eliminar la tarea'
+        });
+    }
+});
+
+/* ==================== RUTAS DE NOTIFICACIONES ==================== */
+app.get('/obtener-mis-notificaciones', requireAuth, async (req, res) => {
+    const { spreadsheetId, email, rol } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Historial!A2:E'
+        });
+
+        const rows = response.data.values || [];
+
+        // Mapear todas las notificaciones
+        const notificaciones = rows
+            .map(row => ({
+                id: row[0] || '',
+                fecha: row[1] || '',
+                destino: row[2] || '',
+                suceso: row[3] || '',
+                detalle: row[4] || ''
+            }))
+            .reverse(); // Más recientes primero
+
+        res.json({
+            success: true,
+            notificaciones
+        });
+
+    } catch (error) {
+        console.error('Error al obtener notificaciones:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener las notificaciones'
+        });
+    }
+});
+app.post('/registrar-notificacion', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { destino, suceso, detalle } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener último ID para generar el nuevo
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Historial!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ? 
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
+        const newId = `HI-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Fecha actual en formato dd/mm/yyyy
+        const fecha = new Date().toLocaleString('es-ES');
+
+        // Crear nuevo registro
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Historial!A2:E',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,       // ID
+                    fecha,       // FECHA
+                    destino,     // DESTINO
+                    suceso,      // SUCESO
+                    detalle      // DETALLE
+                ]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Notificación registrada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al registrar notificación:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar la notificación'
         });
     }
 });

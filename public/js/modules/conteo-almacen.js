@@ -1,5 +1,14 @@
 let productos = [];
 let etiquetas = [];
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 
 async function obtenerEtiquetas() {
     try {
@@ -69,7 +78,7 @@ export async function mostrarConteo() {
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-    
+
     // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
         obtenerAlmacenGeneral(),
@@ -78,7 +87,7 @@ export async function mostrarConteo() {
 
     updateHTMLWithData(); // Update HTML once data is loaded
     eventosConteo();
-    
+
 }
 function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
@@ -286,7 +295,7 @@ function eventosConteo() {
                 setTimeout(() => {
                     registro.style.opacity = '1';
                     registro.style.transform = 'translateY(0)';
-                },  20);
+                }, 20);
             });
 
             // Mensaje vacío
@@ -308,7 +317,7 @@ function eventosConteo() {
             behavior: 'smooth'
         });
     }
-    inputBusqueda.addEventListener('focus', function() {
+    inputBusqueda.addEventListener('focus', function () {
         this.select();
     });
 
@@ -425,11 +434,16 @@ function eventosConteo() {
                 const data = await response.json();
 
                 if (data.success) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Conteo registrado correctamente',
                         type: 'success',
                         duration: 3000
                     });
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' hizo un nuevo registro de conteo fisico con el nombre de '+nombre+' observaciones: '+observaciones)
 
                     // Limpiar el localStorage y cerrar la vista previa
                     localStorage.removeItem('damabrava_stock_fisico');

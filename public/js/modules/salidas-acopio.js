@@ -553,16 +553,20 @@ function eventosPedidos() {
             });
 
             if (!movimientoResponse.ok) throw new Error('Error al registrar movimiento');
-
+            ocultarCarga();
             mostrarNotificacion({
                 message: 'Salida registrada correctamente',
                 type: 'success',
                 duration: 3000
             });
+            registrarNotificacion(
+                'Administración',
+                'Creación',
+                usuarioInfo.nombre + 'registro una salida de almacen acopio de: '+nombreProducto)
 
             carritoIngresosAcopio.clear();
             localStorage.setItem('damabrava_ingreso_acopio', '[]');
-            ocultarCarga();
+
             ocultarAnuncioSecond();
             await mostrarSalidasAcopio();
 

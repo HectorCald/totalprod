@@ -20,7 +20,7 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            gap: 5px;
+            gap: 10px;
 
             i {
                 color: gray;
@@ -33,23 +33,28 @@
                 align-items: center;
                 background-color: var(--primary-color);
             }
-            i.bx-trash{
+
+            i.bx-trash {
                 color: var(--error);
                 background-color: rgba(224, 89, 89, 0.099);
             }
-            i.bx-edit{
-                color: rgb(54, 121, 255);
+
+            i.bx-edit {
+                color: rgb(43, 121, 200);
                 background-color: rgba(89, 134, 224, 0.099);
             }
-            i.bx-info-circle{
+
+            i.bx-info-circle {
                 color: gray;
                 background-color: rgba(202, 202, 202, 0.099);
             }
-            i.bx-check-circle{
+
+            i.bx-check-circle {
                 color: var(--success);
                 background-color: rgba(121, 180, 81, 0.099);
             }
-            i.bx-plus-circle{
+
+            i.bx-plus-circle {
                 color: orange;
                 background-color: rgba(173, 136, 68, 0.101);
             }
@@ -65,7 +70,7 @@
                     align-items: center;
 
                     .suceso {
-                        font-size: var(--text-subtitulo);
+                        font-size: var(--text-detalle);
                         font-weight: 600;
                         color: gray;
                         text-align: left;
@@ -75,33 +80,62 @@
                         display: flex;
                         text-align: left;
                     }
-                    .suceso.Eliminación{
+
+                    .suceso.Eliminación {
                         color: var(--error);
                     }
-                    .suceso.Edición{
-                        color: rgb(54, 121, 255);
+
+                    .suceso.Edición {
+                        color: rgb(43, 121, 200);
                     }
-                    .suceso.Verificación{
+
+                    .suceso.Verificación {
                         color: var(--success);
                     }
-                    .suceso.Creación{
+
+                    .suceso.Creación {
                         color: orange;
                     }
 
                     .fecha {
-                        color: var(--cero-color);
-                        font-size: var(--text-detalle);
-                        width: 80px;
+                        color: gray;
+                        font-size: 12px;
+                        width: auto;
+                        text-align: right;
                     }
 
                 }
 
                 .detalle {
                     color: var(--text);
-                    font-size: var(--text-detalle);
+                    font-size: 12px;
                     width: 100%;
                 }
             }
         }
+    }
+
+}
+
+.notificacion {
+    transition: background-color 0.3s ease;
+}
+
+.nueva-notificacion {
+    background-color: rgba(142, 142, 142, 0.1);
+    animation: parpadeoNotificacion 1s infinite;
+}
+
+@keyframes parpadeoNotificacion {
+    0% {
+        background-color: rgba(134, 134, 134, 0.248);
+    }
+
+    50% {
+        background-color: var(--primary-color);
+    }
+
+    100% {
+        background-color: rgba(134, 134, 134, 0.248);
     }
 }

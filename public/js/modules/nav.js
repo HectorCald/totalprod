@@ -5,7 +5,7 @@ const pluginsMenu = {
         clase: 'opcion-btn',
         vista: 'calculadora-view',
         icono: 'fa-calculator',
-        texto: 'Calcular MP',
+        texto: 'Materia Prima',
         detalle: 'Calculadora de materia prima',
         onclick: 'onclick="mostrarCalcularMp();"'
     },
@@ -13,12 +13,208 @@ const pluginsMenu = {
         clase: 'opcion-btn',
         vista: 'regAcopio-view',
         icono: 'fa-tasks',
-        texto: 'Tareas AC',
-        detalle: 'Gestionar tareas de acopio',
+        texto: 'Tareas Acopio',
+        detalle: 'Gestiona el tiempo en tareas.',
         onclick: 'onclick="mostrarTareas();"'
     }
 };
+const atajosPorRol = {
+    'Producción': [
+        {
+            clase: 'opcion-btn',
+            vista: 'formProduccion-view',
+            icono: 'fa-clipboard-list',
+            texto: 'Formulario',
+            detalle: 'Registra una nueva producción.',
+            onclick: 'onclick="mostrarFormularioProduccion();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'cuentasProduccion-view',
+            icono: 'fa-history',
+            texto: 'Mis registros',
+            detalle: 'Tus registros de producción.',
+            onclick: 'onclick="mostrarMisRegistros();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'cuentasProduccion-view',
+            icono: 'fa-solid fa-book',
+            texto: 'Reglas precios',
+            detalle: 'Todas las reglas para precios.',
+            onclick: 'onclick="mostrarReglas();"',
+            soloAdmin: true
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-history',
+            texto: 'Registros producción',
+            detalle: 'Todos los registros de producción.',
+            onclick: 'onclick="mostrarVerificacion()"',
+            soloAdmin: true
+        },
+    ],
+    'Acopio': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almAcopio-view',
+            icono: 'fa-dolly',
+            texto: 'Almacen acopio',
+            detalle: 'Gestiona el almacen de acopio.',
+            onclick: 'onclick="mostrarAlmacenAcopio();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos al almacen de acopio.',
+            onclick: 'onclick="mostrarIngresosAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas del almacen acopio.',
+            onclick: 'onclick="mostrarSalidasAcopio()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almAcopio-view',
+            icono: 'fa-shopping-cart',
+            texto: 'Nuevo Pedido',
+            detalle: 'Realiza pedidos de materia prima.',
+            onclick: 'onclick="mostrarHacerPedido()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAcopio-view',
+            icono: 'fa-history',
+            texto: 'Pedidos',
+            detalle: 'Gestiona pedidos de materia prima.',
+            onclick: 'onclick="mostrarPedidos();"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-history',
+            texto: 'Registros acopio',
+            detalle: 'Todos los registros de acopio.',
+            onclick: 'onclick="mostrarRegistrosAcopio();"'
+        },
+    ],
+    'Almacen': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-dolly',
+            texto: 'Almacen general',
+            detalle: 'Gestiona el almacen general.',
+            onclick: 'onclick="mostrarAlmacenGeneral()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-down',
+            texto: 'Ingresos',
+            detalle: 'Ingresos del almacen general.',
+            onclick: 'onclick="mostrarIngresos()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-arrow-up',
+            texto: 'Salidas',
+            detalle: 'Salidas del almacen general.',
+            onclick: 'onclick="mostrarSalidas()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-clipboard-list',
+            texto: 'Conteo fisico',
+            detalle: 'Realiza conteos fisicos del almacen.',
+            onclick: 'onclick="mostrarConteo()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'verificarRegistros-view',
+            icono: 'fa-check-double',
+            texto: 'Verificar',
+            detalle: 'Verifica registros de producción.',
+            onclick: 'onclick="mostrarVerificacion()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'regAlmacen-view',
+            icono: 'fa-history',
+            texto: 'Registros almacen',
+            detalle: 'Todos los registros de almacen.',
+            onclick: 'onclick="mostrarMovimientosAlmacen()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-history',
+            texto: 'Registros conteo',
+            detalle: 'Todos los registros de conteo.',
+            onclick: 'onclick="registrosConteoAlmacen()"'
+        }
+    ],
+    'Administración': [
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-users',
+            texto: 'Personal',
+            detalle: 'Gestiona todo el personal.',
+            onclick: 'onclick="mostrarPersonal()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-user-circle',
+            texto: 'Clientes',
+            detalle: 'Gestiona todos los clientes.',
+            onclick: 'onclick="mostrarClientes()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-truck',
+            texto: 'Proovedores',
+            detalle: 'Gestiona todos los proovedores.',
+            onclick: 'onclick="mostrarProovedores()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-credit-card',
+            texto: 'Pagos',
+            detalle: 'Realiza y registra pagos en general.',
+            onclick: 'onclick="mostrarPagos()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-file-invoice',
+            texto: 'Reportes',
+            detalle: 'Genera reportes de toda la empresa.',
+            onclick: 'onclick="mostrarProovedores()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-cog',
+            texto: 'Ajustes',
+            detalle: 'Ajustes del sistema o/y aplicación',
+            onclick: 'onclick="mostrarConfiguracionesSistema()"'
+        },
 
+    ]
+};
 
 function obtenerOpcionesMenu() {
     const rol = usuarioInfo.rol;
@@ -107,204 +303,6 @@ function mostrarMenu() {
     contenido.style.paddingBottom = '10px';
     mostrarAnuncio();
 }
-const atajosPorRol = {
-    'Producción': [
-        {
-            clase: 'opcion-btn',
-            vista: 'formProduccion-view',
-            icono: 'fa-clipboard-list',
-            texto: 'Formulario',
-            detalle: 'Registra una nueva producción',
-            onclick: 'onclick="mostrarFormularioProduccion();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'cuentasProduccion-view',
-            icono: 'fa-history',
-            texto: 'Mis registros',
-            detalle: 'Ver mis registros de producción',
-            onclick: 'onclick="mostrarMisRegistros();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'cuentasProduccion-view',
-            icono: 'fa-solid fa-book',
-            texto: 'Reglas precios',
-            detalle: 'Todas las reglas para precios',
-            onclick: 'onclick="mostrarReglas();"',
-            soloAdmin: true
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'verificarRegistros-view',
-            icono: 'fa-history',
-            texto: 'Registros producción',
-            detalle: 'Verifica registros.',
-            onclick: 'onclick="mostrarVerificacion()"',
-            soloAdmin: true
-        },
-    ],
-    'Acopio': [
-        {
-            clase: 'opcion-btn',
-            vista: 'almAcopio-view',
-            icono: 'fa-dolly',
-            texto: 'Almacen acopio',
-            detalle: 'Gestiona tu almacen de acopio',
-            onclick: 'onclick="mostrarAlmacenAcopio();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-arrow-down',
-            texto: 'Ingresos',
-            detalle: 'Ingresos de tu almacen.',
-            onclick: 'onclick="mostrarIngresosAcopio()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-arrow-up',
-            texto: 'Salidas',
-            detalle: 'Salidas de tu almacen.',
-            onclick: 'onclick="mostrarSalidasAcopio()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almAcopio-view',
-            icono: 'fa-shopping-cart',
-            texto: 'Nuevo Pedido',
-            detalle: 'Hacer nuevo pedido',
-            onclick: 'onclick="mostrarHacerPedido()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAcopio-view',
-            icono: 'fa-history',
-            texto: 'Pedidos acopio',
-            detalle: 'Gestionar todos los pedidos',
-            onclick: 'onclick="mostrarPedidos();"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-history',
-            texto: 'Registros acopio',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="mostrarRegistrosAcopio();"'
-        },
-    ],
-    'Almacen': [
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-dolly',
-            texto: 'Almacen general',
-            detalle: 'Gestiona tu almacen.',
-            onclick: 'onclick="mostrarAlmacenGeneral()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-arrow-down',
-            texto: 'Ingresos',
-            detalle: 'Ingresos de tu almacen.',
-            onclick: 'onclick="mostrarIngresos()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-arrow-up',
-            texto: 'Salidas',
-            detalle: 'Salidas de tu almacen.',
-            onclick: 'onclick="mostrarSalidas()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-clipboard-list',
-            texto: 'Conteo fisico',
-            detalle: 'Realiza conteos fisicos.',
-            onclick: 'onclick="mostrarConteo()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'verificarRegistros-view',
-            icono: 'fa-check-double',
-            texto: 'Verificar',
-            detalle: 'Verifica registros.',
-            onclick: 'onclick="mostrarVerificacion()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-history',
-            texto: 'Registros almacen',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="mostrarMovimientosAlmacen()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-history',
-            texto: 'Registros conteo',
-            detalle: 'Aqui puedes ver todos los registros',
-            onclick: 'onclick="registrosConteoAlmacen()"'
-        }
-    ],
-    'Administración': [
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-user-circle',
-            texto: 'Clientes',
-            detalle: 'Gestiona tus clientes',
-            onclick: 'onclick="mostrarClientes()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-truck',
-            texto: 'Proovedores',
-            detalle: 'Gestiona tus proovedores',
-            onclick: 'onclick="mostrarProovedores()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-users',
-            texto: 'Personal',
-            detalle: 'Gestiona tus empleados',
-            onclick: 'onclick="mostrarPersonal()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-credit-card',
-            texto: 'Pagos',
-            detalle: 'Realiza y registra pagos.',
-            onclick: 'onclick="mostrarPagos()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-file-invoice',
-            texto: 'Reportes',
-            detalle: 'Genera reportes.',
-            onclick: 'onclick="mostrarProovedores()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-cog',
-            texto: 'Ajustes',
-            detalle: 'Ajustes del sistema',
-            onclick: 'onclick="mostrarConfiguracionesSistema()"'
-        },
-
-    ]
-};
-
 export async function crearNav(usuario) {
 
     usuarioInfo = usuario;
@@ -314,8 +312,6 @@ export async function crearNav(usuario) {
         mostrarNav(view);
     }
 }
-
-
 function mostrarNav() {
     const view = document.querySelector('.nav');
     const nav = `
@@ -331,7 +327,6 @@ function mostrarNav() {
     view.innerHTML = nav;
     eventosNav();
 }
-
 function eventosNav() {
     const refreshButton = document.querySelector('.nav-container .refresh');
     const menu = document.querySelector('.nav-container .menu');

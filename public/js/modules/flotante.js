@@ -50,21 +50,36 @@ export function flotante() {
         btnPefil.style.color = 'var(--tercer-color)';
     });
 
+
     btnNotificacion.addEventListener('click', () => {
-        // Limpiar clases anteriores
         notificacion.classList.remove('slide-out-flotante');
         home.classList.remove('slide-in-flotante');
         perfil.classList.remove('slide-in-flotante');
 
         home.classList.add('slide-out-flotante');
         perfil.classList.add('slide-out-flotante');
+
         setTimeout(() => {
             home.style.display = 'none';
             perfil.style.display = 'none';
             notificacion.style.display = 'flex';
             notificacion.classList.remove('slide-out-flotante');
             notificacion.classList.add('slide-in-flotante');
+
+            // Quitar indicador inmediatamente
+            const indicador = btnNotificacion.querySelector('.indicador');
+            if (indicador) indicador.remove();
+
+            // Quitar animaciones después de 3 segundos
+            setTimeout(() => {
+                const notificacionesNuevas = notificacion.querySelectorAll('.notificacion.nueva-notificacion');
+                notificacionesNuevas.forEach(element => {
+                    element.classList.remove('nueva-notificacion');
+                });
+                localStorage.setItem('cantidad_notificaciones', historialNotificaciones.length.toString());
+            }, 3000);
         }, 300);
+
         btnHome.style.color = 'var(--text)';
         btnPefil.style.color = 'var(--text)';
         btnNotificacion.style.color = 'var(--tercer-color)';

@@ -155,7 +155,7 @@ export async function mostrarSalidas() {
     const carritoBasico = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
 
     updateHTMLWithData();
-    
+
     // Actualizar carrito con datos actuales
     carritoSalidas = new Map();
     carritoBasico.forEach((item, id) => {
@@ -166,7 +166,7 @@ export async function mostrarSalidas() {
                 cantidad: item.cantidad,
                 subtotal: parseFloat(productoActual.precios.split(';')[0].split(',')[1])
             });
-            
+
             // Actualizar UI
             const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
             if (headerItem) {
@@ -922,17 +922,19 @@ function eventosSalidas() {
             localStorage.removeItem('damabrava_carrito');
             document.querySelector('.btn-flotante-salidas').style.display = 'none';
 
-
+            ocultarCarga();
             mostrarNotificacion({
                 message: 'Salida registrada exitosamente',
                 type: 'success',
                 duration: 3000
             });
-            ocultarCarga();
+            registrarNotificacion(
+                'Administración',
+                'Creación',
+                usuarioInfo.nombre + 'registro una salida de almacen' + ' para: ' + clienteSelect.value)
+
             ocultarAnuncioSecond();
             await mostrarSalidas();
-
-
         } catch (error) {
             console.error('Error al procesar la salida:', error);
             mostrarNotificacion({

@@ -4,6 +4,15 @@ let configuracionHorario = {
     horaFin: '',
     estado: ''
 };
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 async function verificarHorarioProduccion() {
     try {
         mostrarCarga();
@@ -49,11 +58,10 @@ async function verificarHorarioProduccion() {
             permitido: false,
             horario: 'Error al verificar horario'
         };
-    }finally{
+    } finally {
         ocultarCarga();
     }
 }
-
 
 async function obtenerProductos() {
     try {
@@ -87,10 +95,10 @@ async function obtenerProductos() {
 export async function mostrarFormularioProduccion() {
     const horarioValido = await verificarHorarioProduccion();
     if (!horarioValido.permitido) {
-        let mensaje = configuracionHorario.estado !== 'Activo' 
+        let mensaje = configuracionHorario.estado !== 'Activo'
             ? 'Sistema inactivo temporalmente'
             : `Fuera de horario de producción (${configuracionHorario.horaInicio} a ${configuracionHorario.horaFin})`;
-            
+
         mostrarNotificacion({
             message: mensaje,
             type: 'warning',
@@ -379,6 +387,10 @@ function evetosFormularioProduccion() {
                     type: 'success',
                     duration: 3000
                 });
+                registrarNotificacion(
+                    'Almacen',
+                    'Creación',
+                    usuarioInfo.nombre + ' registro una nueva producción de ' + producto)
             } else {
                 throw new Error(data.error || 'Error al registrar la producción');
             }

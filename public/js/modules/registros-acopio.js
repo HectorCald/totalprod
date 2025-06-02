@@ -1,4 +1,4 @@
-    let movimientosAcopio = [];
+let movimientosAcopio = [];
 let usuarioInfo = recuperarUsuarioLocal();
 
 function recuperarUsuarioLocal() {
@@ -354,37 +354,37 @@ function eventosRegistrosAcopio() {
     window.info = function (registroId) {
         const registro = movimientosAcopio.find(r => r.id === registroId);
         if (!registro) return;
-    
+
         // Separar fecha y hora
         const [fecha, hora] = registro.fecha.split(',').map(item => item.trim());
-    
+
         // Preparar la sección de características
         const caracteristicasHTML = registro.caracteristicas && registro.caracteristicas.trim() ? `
             <p class="normal"><i class='bx bx-chevron-right'></i>Características del producto</p>
             <div class="campo-vertical">
                 ${registro.caracteristicas.split(';').map(caracteristica => {
-                    const [nombre, valor] = caracteristica.split(':').map(item => item.trim());
-                    return `<span class="valor"><strong><i class='bx bx-check-circle'></i> ${nombre}: </strong>${valor}</span>`;
-                }).join('')}
+            const [nombre, valor] = caracteristica.split(':').map(item => item.trim());
+            return `<span class="valor"><strong><i class='bx bx-check-circle'></i> ${nombre}: </strong>${valor}</span>`;
+        }).join('')}
             </div>
         ` : '';
-    
+
         // Check if it's the last ingreso record
         const esIngreso = registro.tipo.toLowerCase().startsWith('ingreso');
-        const esUltimoIngreso = esIngreso ? 
+        const esUltimoIngreso = esIngreso ?
             movimientosAcopio
-                .filter(r => r.tipo.toLowerCase().startsWith('ingreso') && 
-                            r.idProducto === registro.idProducto && 
-                            r.tipo === registro.tipo)
+                .filter(r => r.tipo.toLowerCase().startsWith('ingreso') &&
+                    r.idProducto === registro.idProducto &&
+                    r.tipo === registro.tipo)
                 .sort((a, b) => {
                     const idA = parseInt(a.id.split('-')[1]);
                     const idB = parseInt(b.id.split('-')[1]);
                     return idB - idA;
-                })[0]?.id === registro.id 
+                })[0]?.id === registro.id
             : false;
-    
+
         const esSalida = registro.tipo.toLowerCase().startsWith('salida');
-    
+
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">
@@ -426,13 +426,13 @@ function eventosRegistrosAcopio() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                ${tienePermiso('eliminacion') && registro.tipo==='Anulado'? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+                ${tienePermiso('eliminacion') && registro.tipo === 'Anulado' ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
                 ${((esSalida || esUltimoIngreso) && tienePermiso('anulacion')) ?
-                    `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class="bx bx-x-circle"></i>Anular</button>` 
-                    : ''}
+                `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class="bx bx-x-circle"></i>Anular</button>`
+                : ''}
             </div>
         `;
-    
+
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '10px';
         if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {
@@ -444,7 +444,7 @@ function eventosRegistrosAcopio() {
 
         mostrarAnuncioSecond();
 
-        if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {   
+        if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {
             const btnAnular = contenido.querySelector('.btn-anular');
             btnAnular.addEventListener('click', () => anular(registro));
         }
@@ -528,14 +528,17 @@ function eventosRegistrosAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro con el nombre de: ' + registro.nombreMovimiento + ' y el id: ' + registro.id + ' por el motivo de: ' + motivo)
 
-                        // Actualizar la lista de movimientos
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarRegistrosAcopio();
@@ -629,13 +632,18 @@ function eventosRegistrosAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + nombreMovimiento + ' y el id: ' + registro.id + ' por el motivo de: ' + motivo)
 
-                        ocultarCarga();
+
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarRegistrosAcopio();

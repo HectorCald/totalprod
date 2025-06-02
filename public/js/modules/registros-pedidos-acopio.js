@@ -435,7 +435,7 @@ function eventosPedidos() {
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
-                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs./'+registro.precio || 'No registrado'}</span>` : ''}
+                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs./' + registro.precio || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones compras: </strong>${registro.observacionesCompras || 'Sin observaciones'}</span>
             </div>
@@ -579,12 +579,17 @@ function eventosPedidos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Pedido eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el registro de pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await mostrarPedidos();
                     } else {
@@ -823,12 +828,17 @@ function eventosPedidos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Pedido actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el registro pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await mostrarPedidos();
                     } else {
@@ -1017,7 +1027,7 @@ function eventosPedidos() {
                             beneficiario: proovedor,
                             pagado_por: usuarioInfo.nombre,
                             justificativos_id: registro.id,
-                            justificativos: 'Pago de materia prima: '+ registro.producto+' (Bs./' + precio +')Transporte: (Bs./' + transporteOtros+')'+'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
+                            justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + precio + ')Transporte: (Bs./' + transporteOtros + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
                             subtotal: totalPago,
                             descuento: 0,
                             aumento: 0,
@@ -1038,6 +1048,7 @@ function eventosPedidos() {
                         const pagoData = await pagoResponse.json();
 
                         if (pagoData.success) {
+
                             // 3. Registrar pago parcial
                             const pagoParcial = {
                                 pago_id: pagoData.id,
@@ -1054,6 +1065,11 @@ function eventosPedidos() {
                                 },
                                 body: JSON.stringify(pagoParcial)
                             });
+                            ocultarCarga();
+                            registrarNotificacion(
+                                'Administración',
+                                'Información',
+                                usuarioInfo.nombre + ' registro un nuevo pago pendiente generico de materia prima del monto: Bs./'+totalPago+' del producto: '+registro.producto)
 
                             // Actualizar mensaje de compras y notificar éxito
                             if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
@@ -1071,8 +1087,12 @@ function eventosPedidos() {
                                 type: 'success',
                                 duration: 3000
                             });
+                            registrarNotificacion(
+                                'Administración',
+                                'Información',
+                                usuarioInfo.nombre + ' hizo la entrega/compra de materia prima del producto: ' + registro.producto + ' con el id de registro: ' + registro.id)
 
-                            ocultarCarga();
+
                             ocultarAnuncioTercer();
                             ocultarAnuncioSecond();
                             await mostrarPedidos();
@@ -1161,12 +1181,17 @@ function eventosPedidos() {
 
                     const data = await response.json();
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Pedido rechazado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' realizo el rechazo del pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarPedidos();
@@ -1193,12 +1218,16 @@ function eventosPedidos() {
 
                 const data = await response.json();
                 if (data.success) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Se cambio el estado a llego',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
+                    registrarNotificacion(
+                        'Administración',
+                        'Información',
+                        usuarioInfo.nombre + ' se cambio el estado del registro: ' + registro.producto + ' con el id: ' + registro.id + ' se cambio de "no llego" a "llego" ')
                     cerrarAnuncioManual('anuncioTercer');
                     cerrarAnuncioManual('anuncioSecond');
                     await mostrarPedidos();

@@ -1,6 +1,14 @@
 
 let personal = [];
+let usuarioInfo = recuperarUsuarioLocal();
 
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 async function obtenerPersonal() {
     try {
         const response = await fetch('/obtener-personal');
@@ -274,7 +282,7 @@ function eventosPersonal() {
                         <input type="checkbox" value="tareasAc" ${usuario.plugins?.includes('tareasAc') ? 'checked' : ''}>
                         <span>Calculadora de tiempo en tareas</span>
                     </label>
-                </div> ` :''}
+                </div> ` : ''}
             </div>
             <div class="anuncio-botones">
                 <button class="btn-guardar btn green" data-id="${usuario.id}">
@@ -316,12 +324,17 @@ function eventosPersonal() {
                 });
 
                 if (response.ok) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Usuario actualizado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
+                    registrarNotificacion(
+                        'Administración',
+                        'Edición',
+                        usuarioInfo.nombre + ' realizo cambios en el perfil de: '+usuario.nombre+' que es parte del personal de la empresa')
+
                     ocultarAnuncioSecond();
                     await mostrarPersonal();
                 } else {

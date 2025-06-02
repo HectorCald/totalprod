@@ -1,4 +1,13 @@
 let proovedores = [];
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 async function obtenerProovedores() {
     try {
         const response = await fetch('/obtener-proovedores');
@@ -135,7 +144,7 @@ function eventosProovedores() {
 
     btnNuevoCliente.addEventListener('click', crearCliente);
 
-    
+
 
     items.forEach(item => {
         item.addEventListener('click', function () {
@@ -147,7 +156,7 @@ function eventosProovedores() {
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
-    inputBusqueda.addEventListener('focus', function() {
+    inputBusqueda.addEventListener('focus', function () {
         this.select();
     });
     function aplicarFiltros() {
@@ -277,11 +286,11 @@ function eventosProovedores() {
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
-    
+
             const btnEliminarProovedor = contenido.querySelector('.btn-eliminar-proovedor-confirmar');
             btnEliminarProovedor.addEventListener('click', async () => {
                 const motivo = document.querySelector('.motivo').value.trim();
-    
+
                 if (!motivo) {
                     mostrarNotificacion({
                         message: 'Debe ingresar el motivo de la eliminación',
@@ -290,21 +299,25 @@ function eventosProovedores() {
                     });
                     return;
                 }
-    
+
                 try {
                     mostrarCarga();
                     const response = await fetch(`/eliminar-proovedor/${proovedorId}`, {
                         method: 'DELETE'
                     });
-    
+
                     if (response.ok) {
-                        
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Proovedor eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo de: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await mostrarProovedores();
                     } else {
@@ -323,7 +336,7 @@ function eventosProovedores() {
             });
         }
         async function editar(proovedor) {
-    
+
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
             <div class="encabezado">
@@ -383,7 +396,7 @@ function eventosProovedores() {
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '80px';
             mostrarAnuncioTercer();
-    
+
             const btnGuardarProveedor = contenido.querySelector('.btn-guardar-proovedor');
             btnGuardarProveedor.addEventListener('click', async () => {
                 const nombre = document.querySelector('.editar-nombre').value.trim();
@@ -391,7 +404,7 @@ function eventosProovedores() {
                 const direccion = document.querySelector('.editar-direccion').value.trim();
                 const zona = document.querySelector('.editar-zona').value.trim();
                 const motivo = document.querySelector('.motivo').value.trim();
-    
+
                 if (!nombre) {
                     mostrarNotificacion({
                         message: 'El nombre es obligatorio',
@@ -400,7 +413,7 @@ function eventosProovedores() {
                     });
                     return;
                 }
-    
+
                 try {
                     mostrarCarga();
                     const response = await fetch(`/editar-proovedor/${proovedorId}`, {
@@ -410,14 +423,19 @@ function eventosProovedores() {
                         },
                         body: JSON.stringify({ nombre, telefono, direccion, zona, motivo })
                     });
-    
+
                     if (response.ok) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Proovedor actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo: ' + motivo)
+
                         ocultarAnuncioSecond();
                         await mostrarProovedores();
                     } else {
@@ -440,7 +458,7 @@ function eventosProovedores() {
             mostrarMovimientosAlmacen(proovedor.nombre);
         }
     }
-    
+
 
     async function crearCliente() {
         const contenido = document.querySelector('.anuncio-second .contenido');
@@ -515,12 +533,17 @@ function eventosProovedores() {
                 });
 
                 if (response.ok) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Proovedor creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' creo un nuevo proovedor: '+nombre)
+
                     ocultarAnuncioSecond();
                     await mostrarProovedores();
                 } else {

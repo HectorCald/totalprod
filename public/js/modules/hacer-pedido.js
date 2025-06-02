@@ -653,9 +653,9 @@ function eventosPedidos() {
             if (data.success) {
                 // Generar el texto del pedido
                 mensajePedido = 'Pedido de materia prima:\n\n' + productosParaEnviar
-                .map(item => `• ${item.nombre} - ${item.cantidad}${item.observaciones ? ` (${item.observaciones})` : ''}`)
-                .join('\n') +
-                '\n\nEl pedido ya se encuentra en la App de TotalProd.';
+                    .map(item => `• ${item.nombre} - ${item.cantidad}${item.observaciones ? ` (${item.observaciones})` : ''}`)
+                    .join('\n') +
+                    '\n\nEl pedido ya se encuentra en la App de TotalProd.';
 
 
                 // Guardar el mensaje en localStorage
@@ -664,17 +664,21 @@ function eventosPedidos() {
                 // Clear cart
                 carritoPedidos.clear();
                 localStorage.setItem('damabrava_carrito_pedidos', '[]');
-
+                ocultarCarga();
                 mostrarNotificacion({
                     message: 'Pedido registrado correctamente',
                     type: 'success',
                     duration: 3000
                 });
+                registrarNotificacion(
+                    'Administración',
+                    'Creación',
+                    usuarioInfo.nombre + ' registro un nuevo pedido de materia prima del producto: '+nombre+' '+cantidad)
 
                 // Mostrar el formato del pedido
                 mostrarMensajePedido();
 
-                ocultarCarga();
+
                 await mostrarHacerPedido();
             } else {
                 throw new Error(data.error || 'Error al registrar el pedido');

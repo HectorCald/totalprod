@@ -591,11 +591,16 @@ function eventosPagos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Pago anulado correctamente',
                             type: 'success',
                             duration: 3000
                         });
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro de pago con el nombre de: ' + pago.nombre_pago + ' con el id: ' + pago.id + ' por el motivo de: ' + motivo)
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarPagos(); // Recargar la lista de pagos
@@ -640,7 +645,7 @@ function eventosPagos() {
                     <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Saldo pendiente: </strong>Bs. ${saldoPendiente.toFixed(2)}</span>
                 </div>
 
-                ${saldoPendiente > 0  && pago.estado !== 'Anulado' ? `
+                ${saldoPendiente > 0 && pago.estado !== 'Anulado' ? `
                     <p class="normal">Detalles del pago</p>
                     <div class="entrada">
                         <i class='bx bx-dollar'></i>
@@ -742,11 +747,16 @@ function eventosPagos() {
                             const data = await response.json();
 
                             if (data.success) {
+                                ocultarCarga();
                                 mostrarNotificacion({
                                     message: 'Pago registrado correctamente',
                                     type: 'success',
                                     duration: 3000
                                 });
+                                registrarNotificacion(
+                                    'Administración',
+                                    'Información',
+                                    usuarioInfo.nombre + ' realizo el pago de: ' + cantidad + ' a ' + pago.beneficiario)
                                 cerrarAnuncioManual('anuncioTercer');
                                 mostrarPagos();
                             } else {
@@ -912,11 +922,16 @@ function eventosPagos() {
                 const result = await response.json();
 
                 if (result.success) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
                         type: 'success',
                         duration: 3000
                     });
+                    registrarNotificacion(
+                        'Administración',
+                        'Información',
+                        usuarioInfo.nombre + ' registro un nuevo pago pendiente generico')
                     cerrarAnuncioManual('anuncioSecond');
                     await mostrarPagos();
                 } else {

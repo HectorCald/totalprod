@@ -655,13 +655,16 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
-
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Producto eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Eliminación',
+                            usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
                         ocultarAnuncioSecond();
                         await mostrarAlmacenGeneral();
                     } else {
@@ -1018,12 +1021,17 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
+                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Producto actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
+
                         ocultarAnuncioTercer();
                         ocultarAnuncioSecond();
                         await mostrarAlmacenGeneral();
@@ -1159,6 +1167,7 @@ function eventosAlmacenGeneral() {
     `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px'
 
         // Eventos para manejar etiquetas
         const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
@@ -1259,12 +1268,16 @@ function eventosAlmacenGeneral() {
                 const data = await response.json();
 
                 if (data.success) {
+                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Producto creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarCarga();
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' creo un nuevo producto: ' + producto+' '+gramos+'gr.')
                     ocultarAnuncioSecond();
                     await mostrarAlmacenGeneral();
                 } else {

@@ -210,7 +210,7 @@ const atajosPorRol = {
             vista: 'formProduccion-view',
             icono: 'fa-clipboard-list',
             texto: 'Formulario',
-            detalle: 'Registra tu producción',
+            detalle: 'Registro de producción',
             onclick: 'onclick="mostrarFormularioProduccion();"'
         },
         {
@@ -218,7 +218,7 @@ const atajosPorRol = {
             vista: 'cuentasProduccion-view',
             icono: 'fa-history',
             texto: 'Mis registros',
-            detalle: 'Ver mis registros',
+            detalle: 'Registros de producción',
             onclick: 'onclick="mostrarMisRegistros();"'
         },
         {
@@ -226,7 +226,7 @@ const atajosPorRol = {
             vista: 'cuentasProduccion-view',
             icono: 'fa-chart-bar',
             texto: 'Estadisticas',
-            detalle: 'Ver estadisticas',
+            detalle: 'Estadisticas registradas',
             onclick: 'onclick="mostrarMisEstadisticas();"'
         },
     ],
@@ -235,24 +235,24 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'almAcopio-view',
             icono: 'fa-dolly',
-            texto: 'Almacen Acopio',
-            detalle: 'Gestiona tu almacen',
+            texto: 'Almacen Ac.',
+            detalle: 'Gestiona acopio',
             onclick: 'onclick="mostrarAlmacenAcopio();"'
         },
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-arrow-down',
-            texto: 'Ingresos Acopio',
-            detalle: 'Ingresos a tu almacen',
+            texto: 'Ingresos Ac.',
+            detalle: 'Ingresos a acopio',
             onclick: 'onclick="mostrarIngresosAcopio()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-arrow-up',
-            texto: 'Salidas Acopio',
-            detalle: 'Salidas de tu almacen',
+            texto: 'Salidas Ac.',
+            detalle: 'Salidas de acopio',
             onclick: 'onclick="mostrarSalidasAcopio()"'
         },
         {
@@ -268,15 +268,15 @@ const atajosPorRol = {
             vista: 'regAcopio-view',
             icono: 'fa-history',
             texto: 'Pedidos',
-            detalle: 'Gestionar pedidos',
+            detalle: 'Gestiona los pedidos',
             onclick: 'onclick="mostrarPedidos();"'
         },
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
-            texto: 'Registros acopio',
-            detalle: 'Ver todos los registros',
+            texto: 'Registros Ac.',
+            detalle: 'Registros de acopio',
             onclick: 'onclick="mostrarRegistrosAcopio();"'
         },
     ],
@@ -286,7 +286,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-dolly',
             texto: 'Almacen',
-            detalle: 'Gestiona tu almacen.',
+            detalle: 'Gestiona el almacen.',
             onclick: 'onclick="mostrarAlmacenGeneral()"'
         },
         {
@@ -294,7 +294,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-arrow-down',
             texto: 'Ingresos',
-            detalle: 'Ingresos de tu almacen.',
+            detalle: 'Ingresos del almacen.',
             onclick: 'onclick="mostrarIngresos()"'
         },
         {
@@ -302,7 +302,7 @@ const atajosPorRol = {
             vista: 'regAlmacen-view',
             icono: 'fa-arrow-up',
             texto: 'Salidas',
-            detalle: 'Salidas de tu almacen.',
+            detalle: 'Salidas del almacen.',
             onclick: 'onclick="mostrarSalidas()"'
         },
         {
@@ -325,16 +325,16 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
             icono: 'fa-history',
-            texto: 'Registros almacen',
-            detalle: 'Ver registros de almacen',
+            texto: 'Registros A.',
+            detalle: 'Registros de almacen.',
             onclick: 'onclick="mostrarMovimientosAlmacen()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
             icono: 'fa-history',
-            texto: 'Registros conteo',
-            detalle: 'Ver registros de conteo',
+            texto: 'Registros C.',
+            detalle: 'Registros de conteos.',
             onclick: 'onclick="registrosConteoAlmacen()"'
         }
     ],
@@ -396,7 +396,7 @@ const pluginsMenu = {
         vista: 'calculadora-view',
         icono: 'fa-calculator',
         texto: 'Calcular MP',
-        detalle: 'Calcula Mat.Prima',
+        detalle: 'Calcula Materia P.',
         onclick: 'onclick="mostrarCalcularMp();"'
     },
     'tareasAc': {
@@ -604,6 +604,7 @@ export async function crearHome() {
     crearNav(usuarioInfo);
     crearPerfil(usuarioInfo);
     actualizarPermisos(usuarioInfo);
+    crearNotificaciones(usuarioInfo);
 
     const promesas = [
         usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,

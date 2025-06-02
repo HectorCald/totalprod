@@ -621,12 +621,16 @@ function eventosPedidos(producto, pedido) {
                     type: 'success',
                     duration: 3000
                 });
-                if(pedido){
+                registrarNotificacion(
+                    'Administración',
+                    'Creación',
+                    usuarioInfo.nombre + 'registro un ingreso al almacen de acopio de: ' + nombreProducto)
+                if (pedido) {
                     ocultarCarga();
                     ocultarAnuncioSecond();
                     await mostrarPedidos();
                 }
-                else{
+                else {
                     ocultarCarga();
                     ocultarAnuncioSecond();
                     await mostrarIngresosAcopio();

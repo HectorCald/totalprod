@@ -1,4 +1,13 @@
 let configuracionesGlobal = null;
+let usuarioInfo = recuperarUsuarioLocal();
+
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 
 async function obtenerConfiguraciones() {
     try {
@@ -16,7 +25,7 @@ async function obtenerConfiguraciones() {
             type: 'error',
             duration: 3500
         });
-    }finally{
+    } finally {
         ocultarCarga();
     }
 }
@@ -24,7 +33,7 @@ async function obtenerConfiguraciones() {
 export async function mostrarConfiguracionesSistema() {
     await obtenerConfiguraciones()
     const contenido = document.querySelector('.anuncio .contenido');
-    
+
     const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Configuraciones del Sistema</h1>
@@ -75,7 +84,7 @@ export async function mostrarConfiguracionesSistema() {
     `;
 
     contenido.innerHTML = registrationHTML;
-    contenido.style.paddingBottom = '80px'; 
+    contenido.style.paddingBottom = '80px';
     mostrarAnuncio();
     eventosConfiguraciones();
     setTimeout(() => {
@@ -130,6 +139,10 @@ function eventosConfiguraciones() {
                     type: 'success',
                     duration: 3000
                 });
+                registrarNotificacion(
+                    'Administración',
+                    'Información',
+                    usuarioInfo.nombre + ' realizo cambios en los ajustes del sistema o aplciación')
                 cerrarAnuncioManual('anuncio');
                 await obtenerConfiguraciones();
             }
