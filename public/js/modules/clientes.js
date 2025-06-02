@@ -86,8 +86,8 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarClientes() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100)

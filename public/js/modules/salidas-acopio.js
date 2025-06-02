@@ -82,8 +82,8 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarSalidasAcopio() {
-    mostrarAnuncio();
     renderInitialHTML(); // Render initial HTML immediately
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

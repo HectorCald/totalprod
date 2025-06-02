@@ -113,8 +113,8 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarPagos() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

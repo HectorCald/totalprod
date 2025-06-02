@@ -73,8 +73,8 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarConteo() {
-    mostrarAnuncio();
     renderInitialHTML(); // Render initial HTML immediately
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

@@ -139,8 +139,8 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarSalidas() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

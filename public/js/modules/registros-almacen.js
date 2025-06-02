@@ -155,8 +155,8 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarMovimientosAlmacen() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
@@ -593,7 +593,7 @@ function eventosRegistrosAlmacen() {
                         registrarNotificacion(
                             'Administración',
                             'Eliminación',
-                            usuarioInfo.nombre + ' elimino el registro de almacen llamado: '+registro.nombre_movimiento+' con el id: '+registro.id+' tipo: '+registro.tipo+' por el motivo de: '+motivo)
+                            usuarioInfo.nombre + ' elimino el registro de almacen llamado: ' + registro.nombre_movimiento + ' con el id: ' + registro.id + ' tipo: ' + registro.tipo + ' por el motivo de: ' + motivo)
 
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
@@ -700,7 +700,7 @@ function eventosRegistrosAlmacen() {
                         registrarNotificacion(
                             'Administración',
                             'Información',
-                            usuarioInfo.nombre + ' anulo el registro con el nombre de: '+registro.nombre_movimiento+' con el id: '+registro.id+'tipo '+registro.tipo+' por el motivo de: '+motivo)
+                            usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + registro.nombre_movimiento + ' con el id: ' + registro.id + 'tipo ' + registro.tipo + ' por el motivo de: ' + motivo)
                         cerrarAnuncioManual('anuncioTercer');
                         cerrarAnuncioManual('anuncioSecond');
                         await mostrarMovimientosAlmacen();

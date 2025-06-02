@@ -83,8 +83,8 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarHacerPedido() {
-    mostrarAnuncio();
     renderInitialHTML(); // Render initial HTML immediately
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);

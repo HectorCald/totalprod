@@ -54,8 +54,8 @@ async function obtenerMovimientosAcopio() {
 
 
 export async function mostrarRegistrosAcopio() {
-    mostrarAnuncio();
     renderInitialHTML();
+    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
