@@ -344,7 +344,7 @@ function eventosProovedores() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal"><i class='bx bx-chevron-right'></i> Información del cliente</p>
+                <p class="normal">Información del cliente</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -373,7 +373,7 @@ function eventosProovedores() {
                         <input class="editar-zona" type="text" value="${proovedor.zona || ''}">
                     </div>
                 </div>
-                <p class="normal"><i class='bx bx-chevron-right'></i>Motivo de la edición</p>
+                <p class="normal">Motivo de la edición</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
