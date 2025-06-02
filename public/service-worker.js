@@ -16,7 +16,6 @@ const ASSETS_TO_CACHE = [
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
 ];
-
 const syncQueue = new Map();
 
 self.addEventListener('install', event => {
