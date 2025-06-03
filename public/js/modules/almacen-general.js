@@ -474,6 +474,9 @@ function eventosAlmacenGeneral() {
             aplicarFiltros();
         });
     });
+    selectPrecios.addEventListener('click', (e) => {
+        scrollToCenter(e.target, e.target.parentElement);
+    });
     selectPrecios.addEventListener('change', (e) => {
         scrollToCenter(e.target, e.target.parentElement);
         aplicarFiltros();
