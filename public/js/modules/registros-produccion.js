@@ -376,8 +376,8 @@ function eventosMisRegistros() {
                     <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
                 </div>
                 <div class="imagen-producto">
-                ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                `<img class="imagen" src="${producto.imagen}">` :
+                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                 `<i class='bx bx-package'></i>`}
                 </div>
             </div>
@@ -455,9 +455,9 @@ function eventosMisRegistros() {
                             <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
                             </div>
                             <div class="imagen-producto">
-                            ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                    `<img class="imagen" src="${producto.imagen}">` :
-                    `<i class='bx bx-package'></i>`}
+                            ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                            `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
+                            `<i class='bx bx-package'></i>`}
                             </div>
                         </div>
                         <p class="normal">Motivo de la eliminación</p>
@@ -805,8 +805,8 @@ function eventosMisRegistros() {
                     <span class="valor"><strong><i class='bx bx-calendar-check'></i> Fecha: </strong>${registro.fecha_verificacion}</span>
                 </div>
                 <div class="imagen-producto">
-                ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                    `<img class="imagen" src="${producto.imagen}">` :
+                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                     `<i class='bx bx-package'></i>`}
                 </div>
             </div>

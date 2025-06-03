@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import xlsx from 'xlsx';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 /* ==================== CONFIGURACIÓN INICIAL ==================== */
 dotenv.config();
@@ -39,6 +41,30 @@ const auth = new google.auth.GoogleAuth({
         "https://www.googleapis.com/auth/spreadsheets.readonly",
         "https://www.googleapis.com/auth/spreadsheets"
     ]
+});
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const cloudinaryStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'damabrava',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    }
+});
+
+const uploadImage = multer({ 
+    storage: cloudinaryStorage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos de imagen'));
+        }
+    }
 });
 
 /* ==================== MIDDLEWARES Y CONFIGURACIÓN DE APP ==================== */
@@ -1310,67 +1336,76 @@ app.delete('/eliminar-producto/:id', requireAuth, async (req, res) => {
         res.status(500).json({ success: false, error: 'Error al eliminar el producto' });
     }
 });
-app.put('/actualizar-producto/:id', requireAuth, async (req, res) => {
+app.put('/actualizar-producto/:id', requireAuth, uploadImage.single('imagen'), async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
-        const {
-            producto,
-            gramos,
-            stock,
-            cantidadxgrupo,
-            lista,
-            codigo_barras,
-            precios,
-            etiquetas,
-            alm_acopio_id, // Changed from acopio_id to match frontend
-            alm_acopio_producto,
-            imagen,
-            uSueltas
+        const { 
+            producto, gramos, stock, cantidadxgrupo, lista, 
+            codigo_barras, etiquetas, precios, uSueltas, 
+            alm_acopio_id, alm_acopio_producto, motivo 
         } = req.body;
+
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Get current products
+        // Obtener datos actuales del producto
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
             range: 'Almacen general!A2:M'
         });
 
-        const rows = response.data.values || [];
-        const rowIndex = rows.findIndex(row => row[0] === id);
+        const productos = response.data.values || [];
+        const rowIndex = productos.findIndex(row => row[0] === id);
 
         if (rowIndex === -1) {
             return res.status(404).json({ success: false, error: 'Producto no encontrado' });
         }
 
-        const updatedRow = [
-            id,
-            producto,
-            gramos,
-            stock,
-            cantidadxgrupo,
-            lista,
-            codigo_barras || 'no definido',
-            precios,
-            etiquetas,
-            alm_acopio_id || '',  // Ensure empty string if null/undefined
-            alm_acopio_producto || '',
-            imagen || '',
-            uSueltas || ''
+        // Manejar la imagen
+        let imagenUrl = productos[rowIndex][11]; // Mantener la imagen actual por defecto
+
+        if (req.file) {
+            // Si hay una nueva imagen, subir a Cloudinary
+            imagenUrl = req.file.path; // Cloudinary ya nos da la URL
+            
+            // Si había una imagen anterior y es de Cloudinary, eliminarla
+            const oldImageUrl = productos[rowIndex][6];
+            if (oldImageUrl && oldImageUrl.includes('cloudinary')) {
+                const publicId = oldImageUrl.split('/').pop().split('.')[0];
+                await cloudinary.uploader.destroy(publicId);
+            }
+        }
+
+        // Actualizar el producto
+        const updatedValues = [
+            [
+                id,
+                producto,
+                gramos,
+                stock,
+                cantidadxgrupo,
+                lista,
+                codigo_barras,
+                precios,
+                etiquetas,
+                alm_acopio_id || '',
+                alm_acopio_producto,
+                imagenUrl, // URL de Cloudinary o la imagen anterior
+                uSueltas || '0'
+            ]
         ];
 
-        // Remove console.log that was causing the error
         await sheets.spreadsheets.values.update({
             spreadsheetId,
             range: `Almacen general!A${rowIndex + 2}:M${rowIndex + 2}`,
-            valueInputOption: 'USER_ENTERED',
-            resource: { values: [updatedRow] }
+            valueInputOption: 'RAW',
+            resource: { values: updatedValues }
         });
 
-        res.json({
-            success: true,
+        res.json({ 
+            success: true, 
             message: 'Producto actualizado correctamente',
-            producto: updatedRow
+            imagenUrl: imagenUrl
         });
 
     } catch (error) {

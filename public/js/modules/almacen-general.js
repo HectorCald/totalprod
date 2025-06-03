@@ -183,7 +183,7 @@ function renderInitialHTML() {
             <div class="filtros-opciones cantidad-filter">
                 <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
+                <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
                 <button class="btn-filtro">Sueltas</button>
                 <select class="precios-select" style="width:100%">
@@ -247,22 +247,22 @@ function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = productos.map(producto => `
         <div class="registro-item" data-id="${producto.id}">
-            <div class="header">
-                ${producto.imagen && producto.imagen.startsWith('data:image') ?
-            `<img class="imagen" src="${producto.imagen}">` :
-            `<i class='bx bx-package'></i>`}
-                <div class="info-header">
-                    <div class="id">${producto.id}
-                        <div class="precio-cantidad">
-                            <span class="valor stock">${producto.stock} Und.</span>
-                            <span class="valor precio">Bs/.${producto.precios.split(';')[0].split(',')[1]}</span>
-                        </div>
-                    </div>
-                    <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
-                    <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+    <div class="header">
+        ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+        `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
+        `<i class='bx bx-package'></i>`}
+        <div class="info-header">
+            <div class="id">${producto.id}
+                <div class="precio-cantidad">
+                    <span class="valor stock">${producto.stock} Und.</span>
+                    <span class="valor precio">Bs/.${producto.precios.split(';')[0].split(',')[1]}</span>
                 </div>
             </div>
+            <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+            <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
         </div>
+    </div>
+</div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
 }
@@ -534,8 +534,8 @@ function eventosAlmacenGeneral() {
                     <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
                 </div>
                 <div class="imagen-producto">
-                ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                `<img class="imagen" src="${producto.imagen}">` :
+                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                 `<i class='bx bx-package'></i>`}
                 </div>
             </div>
@@ -596,8 +596,8 @@ function eventosAlmacenGeneral() {
                         <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
                     </div>
                     <div class="imagen-producto">
-                    ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                    `<img class="imagen" src="${producto.imagen}">` :
+                    ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                     `<i class='bx bx-package'></i>`}
                     </div>
                 </div>
@@ -944,7 +944,10 @@ function eventosAlmacenGeneral() {
 
             async function confirmarEdicionProducto() {
                 try {
-                    // Validar campos requeridos
+                    // Crear FormData para enviar la imagen y los datos
+                    const formData = new FormData();
+
+                    // Obtener todos los campos del formulario
                     const producto = document.querySelector('.editar-producto .producto').value.trim();
                     const gramos = document.querySelector('.editar-producto .gramaje').value.trim();
                     const stock = document.querySelector('.editar-producto .stock').value.trim();
@@ -958,6 +961,15 @@ function eventosAlmacenGeneral() {
                         productosAcopio.find(p => p.id === alm_acopio_id)?.producto :
                         '';
 
+                    // Validar motivo
+                    if (!motivo) {
+                        mostrarNotificacion({
+                            message: 'Debe ingresar el motivo de la edición',
+                            type: 'warning',
+                            duration: 3500
+                        });
+                        return;
+                    }
 
                     // Obtener etiquetas seleccionadas
                     const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.etiquetas-actuales .etiqueta-item'))
@@ -970,53 +982,32 @@ function eventosAlmacenGeneral() {
                         .map(input => `${input.dataset.ciudad},${input.value}`)
                         .join(';');
 
-                    // Validar campos obligatorios
-                    if (!motivo) {
-                        mostrarNotificacion({
-                            message: 'Debe ingresar el motivo de la edición',
-                            type: 'warning',
-                            duration: 3500
-                        });
-                        return;
-                    }
+                    // Agregar todos los campos al FormData
+                    formData.append('producto', producto);
+                    formData.append('gramos', gramos);
+                    formData.append('stock', stock);
+                    formData.append('cantidadxgrupo', cantidadxgrupo);
+                    formData.append('lista', lista);
+                    formData.append('codigo_barras', codigo_barras);
+                    formData.append('etiquetas', etiquetasSeleccionadas);
+                    formData.append('precios', preciosActualizados);
+                    formData.append('uSueltas', uSueltas);
+                    formData.append('alm_acopio_id', alm_acopio_id);
+                    formData.append('alm_acopio_producto', alm_acopio_producto);
+                    formData.append('motivo', motivo);
+
                     // Procesar imagen si existe
                     const imagenInput = document.querySelector('.editar-producto .imagen-producto');
-                    let imagenBase64 = null;
                     if (imagenInput.files && imagenInput.files[0]) {
-                        imagenBase64 = await procesarImagen(imagenInput.files[0]);
+                        formData.append('imagen', imagenInput.files[0]);
                     }
-
-                    // Preparar datos para enviar
-                    const productoActual = productos.find(p => p.id === registroId);
-
-                    // Prepare data for update
-                    const datosActualizados = {
-                        producto,
-                        gramos: parseInt(gramos),
-                        stock: parseInt(stock),
-                        cantidadxgrupo: parseInt(cantidadxgrupo),
-                        lista,
-                        codigo_barras,
-                        etiquetas: etiquetasSeleccionadas,
-                        precios: preciosActualizados,
-                        uSueltas: parseInt(uSueltas),
-                        alm_acopio_id: alm_acopio_id,  // Aseguramos que sea cadena vacía si no hay selección
-                        alm_acopio_producto: alm_acopio_producto,
-                        motivo,
-                        imagen: imagenBase64 || productoActual.imagen
-                    };
-                    console.log(alm_acopio_id)
 
                     mostrarCarga();
 
                     const response = await fetch(`/actualizar-producto/${registroId}`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(datosActualizados)
+                        body: formData // Ya no necesitamos headers porque FormData los establece automáticamente
                     });
-
 
                     if (!response.ok) {
                         throw new Error('Error en la respuesta del servidor');
@@ -1034,7 +1025,8 @@ function eventosAlmacenGeneral() {
                         registrarNotificacion(
                             'Administración',
                             'Edición',
-                            usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
+                            usuarioInfo.nombre + ' editó el producto ' + producto + ' su motivo fue: ' + motivo
+                        );
 
                         ocultarAnuncioTercer();
                         ocultarAnuncioSecond();
