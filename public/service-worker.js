@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v5'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v6'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
     '/css/styles/estilos-base.css',
 ];
 const syncQueue = new Map();
+
 
 self.addEventListener('install', event => {
     event.waitUntil(

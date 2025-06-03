@@ -1,3 +1,4 @@
+
 let productos = [];
 let productosAcopio = [];
 let etiquetas = [];
@@ -1277,7 +1278,7 @@ function eventosAlmacenGeneral() {
                     registrarNotificacion(
                         'Administración',
                         'Creación',
-                        usuarioInfo.nombre + ' creo un nuevo producto: ' + producto+' '+gramos+'gr.')
+                        usuarioInfo.nombre + ' creo un nuevo producto: ' + producto + ' ' + gramos + 'gr.')
                     ocultarAnuncioSecond();
                     await mostrarAlmacenGeneral();
                 } else {
@@ -1444,6 +1445,9 @@ function eventosAlmacenGeneral() {
                     <button class="btn-agregar-precio"><i class='bx bx-plus'></i></button>
                 </div>
             </div>
+
+            <p class="normal">Subir planilla de precios</p>
+            <buttom class="btn blue" id="excel-precios"><i class='bx bx-upload' style="color:white !important"></i>Cargar archivo excel</buttom>
         </div>
     `;
 
@@ -1509,7 +1513,122 @@ function eventosAlmacenGeneral() {
                 ocultarCarga();
             }
         });
+        const inputExcel = contenido.querySelector('#excel-precios');
+        let file = null;
 
+
+
+        inputExcel.addEventListener('click', () => {
+            // Crear un nuevo input temporal
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.accept = '.xlsx,.xls';
+
+            // Cuando se seleccione un archivo
+            tempInput.addEventListener('change', (e) => {
+                file = e.target.files[0];
+                actualizarPlanilla(file.name);
+            });
+
+            // Simular click en el input temporal
+            tempInput.click();
+        });
+
+        async function actualizarPlanilla(fileName = '') {
+            const contenido = document.querySelector('.anuncio-tercer .contenido');
+            const registrationHTML = `
+        <div class="encabezado">
+            <h1 class="titulo">Subir planilla de precios</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div class="relleno">
+            <p class="normal">Archivo seleccionado</p>
+            <div class="archivo-info">
+                <i class='bx bx-file'></i>
+                <span style="color: gray; font-size: 12px">${fileName}</span>
+            </div>
+
+            <p class="normal">Motivo de la actualización</p>
+            <div class="entrada">
+                <i class='bx bx-comment-detail'></i>
+                <div class="input">
+                    <p class="detalle">Motivo</p>
+                    <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                </div>
+            </div>
+
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Esta acción actualizará los precios de los productos según la planilla. Asegúrese de que el formato sea correcto.</p>
+                </div>
+            </div>
+        </div>
+        <div class="anuncio-botones">
+            <button class="btn-procesar-planilla btn blue"><i class="bx bx-check"></i> Procesar planilla</button>
+        </div>
+    `;
+
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '80px';
+
+            mostrarAnuncioTercer();
+
+            // Modifica la parte del frontend donde registras la notificación
+            const btnProcesar = contenido.querySelector('.btn-procesar-planilla');
+            btnProcesar.addEventListener('click', async () => {
+                const motivo = contenido.querySelector('.motivo').value.trim();
+                if (!motivo) {
+                    mostrarNotificacion({
+                        message: 'Debe ingresar un motivo',
+                        type: 'warning',
+                        duration: 3500
+                    });
+                    return;
+                }
+
+                try {
+                    mostrarCarga();
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('motivo', motivo);
+
+                    const response = await fetch('/actualizar-precios-planilla', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        ocultarCarga();
+                        mostrarNotificacion({
+                            message: 'Precios actualizados correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            `${usuarioInfo.nombre} actualizó los precios mediante planilla. Motivo: ${motivo}`
+                        );
+                        ocultarAnuncioSecond();
+                        await mostrarAlmacenGeneral();
+                    } else {
+                        throw new Error(data.error || 'Error al procesar la planilla');
+                    }
+                } catch (error) {
+                    mostrarNotificacion({
+                        message: error.message,
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarCarga();
+                }
+            });
+
+        };
         contenido.addEventListener('click', async (e) => {
             if (e.target.closest('.btn-eliminar-precio')) {
                 const precioItem = e.target.closest('.precio-item');
@@ -1551,6 +1670,7 @@ function eventosAlmacenGeneral() {
                 }
             }
         });
+
     }
 
     aplicarFiltros();

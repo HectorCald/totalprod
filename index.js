@@ -7,6 +7,8 @@ import { dirname, join } from 'path';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
+import multer from 'multer';
+import xlsx from 'xlsx';
 
 /* ==================== CONFIGURACIÓN INICIAL ==================== */
 dotenv.config();
@@ -15,6 +17,17 @@ const __dirname = dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 const JWT_SECRET = 'secret-totalprod-hcco';
+const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.includes('spreadsheet') || 
+            file.mimetype.includes('excel')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Formato no soportado'));
+        }
+    }
+});
 
 /* ==================== CONFIGURACIÓN DE GOOGLE SHEETS ==================== */
 const auth = new google.auth.GoogleAuth({
@@ -309,85 +322,90 @@ app.post('/check-company-id', async (req, res) => {
 });
 
 /* ==================== RUTAS DE HISTORIAL ==================== */
-app.post('/registrar-historial', requireAuth, async (req, res) => {
-    const { spreadsheetId } = req.user;
-    const { origen, suceso, detalle } = req.body;
-
-    try {
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Get last ID to generate new one
-        const lastIdResponse = await sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetId,
-            range: 'Historial!A2:A'
-        });
-
-        const lastId = lastIdResponse.data.values ?
-            Math.max(...lastIdResponse.data.values.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
-        const newId = `HI-${(lastId + 1).toString().padStart(3, '0')}`;
-
-        const newRow = [
-            newId,              // ID
-            origen,            // ORIGEN
-            suceso,            // SUCESO
-            detalle            // DETALLE
-        ];
-
-        await sheets.spreadsheets.values.append({
-            spreadsheetId: spreadsheetId,
-            range: 'Historial!A:D',
-            valueInputOption: 'USER_ENTERED',
-            insertDataOption: 'INSERT_ROWS',
-            resource: {
-                values: [newRow]
-            }
-        });
-
-        res.json({
-            success: true,
-            message: 'Historial registrado correctamente'
-        });
-
-    } catch (error) {
-        console.error('Error al registrar historial:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al registrar el historial'
-        });
-    }
-});
-app.get('/obtener-historial', requireAuth, async (req, res) => {
-    const { spreadsheetId } = req.user;
+app.get('/obtener-mis-notificaciones', requireAuth, async (req, res) => {
+    const { spreadsheetId, email, rol } = req.user;
 
     try {
         const sheets = google.sheets({ version: 'v4', auth });
 
         const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetId,
-            range: 'Historial!A2:E' // Columns A through E
+            spreadsheetId,
+            range: 'Historial!A2:E'
         });
 
         const rows = response.data.values || [];
 
-        // Map the data to the specified format
-        const historial = rows.map(row => ({
-            id: row[0] || '',
-            fecha: row[1] || '',
-            destino: row[2] || '',
-            suceso: row[3] || '',
-            detalle: row[4] || ''
-        }));
+        // Mapear todas las notificaciones
+        const notificaciones = rows
+            .map(row => ({
+                id: row[0] || '',
+                fecha: row[1] || '',
+                destino: row[2] || '',
+                suceso: row[3] || '',
+                detalle: row[4] || ''
+            }))
+            .reverse(); // Más recientes primero
 
         res.json({
             success: true,
-            historial
+            notificaciones
         });
 
     } catch (error) {
-        console.error('Error al obtener historial:', error);
+        console.error('Error al obtener notificaciones:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al obtener el historial'
+            error: 'Error al obtener las notificaciones'
+        });
+    }
+});
+app.post('/registrar-notificacion', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { destino, suceso, detalle } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener último ID para generar el nuevo
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Historial!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ? 
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
+        const newId = `HI-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Fecha actual en formato dd/mm/yyyy
+        const fecha = new Date().toLocaleString('es-ES');
+
+        // Crear nuevo registro
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Historial!A2:E',
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[
+                    newId,       // ID
+                    fecha,       // FECHA
+                    destino,     // DESTINO
+                    suceso,      // SUCESO
+                    detalle      // DETALLE
+                ]]
+            }
+        });
+
+        res.json({
+            success: true,
+            message: 'Notificación registrada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al registrar notificación:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar la notificación'
         });
     }
 });
@@ -2253,6 +2271,100 @@ app.delete('/eliminar-precio/:id', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar precio:', error);
         res.status(500).json({ success: false, error: 'Error al eliminar precio' });
+    }
+});
+app.post('/actualizar-precios-planilla', requireAuth, upload.single('file'), async (req, res) => {
+    try {
+        const { spreadsheetId, nombre } = req.user;
+        const { motivo } = req.body;
+        const excelBuffer = req.file.buffer;
+        
+        // Leer el archivo Excel
+        const workbook = xlsx.read(excelBuffer);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = xlsx.utils.sheet_to_json(worksheet);
+
+        // Obtener headers del Excel (primera fila)
+        const headers = Object.keys(data[0]);
+        // Filtrar cabeceras excluyendo 'ID' y 'Producto'
+        const cabeceras = headers.filter(header => !['ID', 'Producto'].includes(header));
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Primero limpiamos la hoja de precios actual
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: 'Precios!A2:B'
+        });
+
+        // Registrar los nuevos precios
+        const nuevosPrecios = cabeceras.map((nombrePrecio, index) => {
+            const id = `PR-${(index + 1).toString().padStart(3, '0')}`;
+            return [id, nombrePrecio];
+        });
+
+        // Agregar nuevos precios
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Precios!A2:B',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: nuevosPrecios
+            }
+        });
+
+        // Obtener TODOS los productos del almacén
+        const productosResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Almacen general!A2:H'
+        });
+
+        const productos = productosResponse.data.values || [];
+
+        // Crear un mapa de los productos en el Excel para búsqueda rápida
+        const productosExcel = new Map(data.map(row => [row['ID'], row]));
+
+        // Procesar todos los productos del almacén
+        const actualizaciones = productos.map((producto, index) => {
+            const id = producto[0];
+            const productoExcel = productosExcel.get(id);
+
+            // Construir string de precios para todos los productos
+            let preciosActualizados = cabeceras.map(nombrePrecio => {
+                // Si el producto está en el Excel, usar su valor, si no, usar 0
+                const valor = productoExcel ? (productoExcel[nombrePrecio] || '0') : '0';
+                return `${nombrePrecio},${valor}`;
+            }).join(';');
+
+            return {
+                range: `Almacen general!H${index + 2}`,
+                values: [[preciosActualizados]]
+            };
+        });
+
+        // Actualizar todos los productos en batch
+        if (actualizaciones.length > 0) {
+            await sheets.spreadsheets.values.batchUpdate({
+                spreadsheetId,
+                resource: {
+                    valueInputOption: 'RAW',
+                    data: actualizaciones
+                }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Precios actualizados correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar precios:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Error al actualizar los precios'
+        });
     }
 });
 
@@ -5169,95 +5281,6 @@ app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al eliminar la tarea'
-        });
-    }
-});
-
-/* ==================== RUTAS DE NOTIFICACIONES ==================== */
-app.get('/obtener-mis-notificaciones', requireAuth, async (req, res) => {
-    const { spreadsheetId, email, rol } = req.user;
-
-    try {
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId,
-            range: 'Historial!A2:E'
-        });
-
-        const rows = response.data.values || [];
-
-        // Mapear todas las notificaciones
-        const notificaciones = rows
-            .map(row => ({
-                id: row[0] || '',
-                fecha: row[1] || '',
-                destino: row[2] || '',
-                suceso: row[3] || '',
-                detalle: row[4] || ''
-            }))
-            .reverse(); // Más recientes primero
-
-        res.json({
-            success: true,
-            notificaciones
-        });
-
-    } catch (error) {
-        console.error('Error al obtener notificaciones:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al obtener las notificaciones'
-        });
-    }
-});
-app.post('/registrar-notificacion', requireAuth, async (req, res) => {
-    try {
-        const { spreadsheetId } = req.user;
-        const { destino, suceso, detalle } = req.body;
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Obtener último ID para generar el nuevo
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId,
-            range: 'Historial!A2:A'
-        });
-
-        const rows = response.data.values || [];
-        const lastId = rows.length > 0 ? 
-            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
-        const newId = `HI-${(lastId + 1).toString().padStart(3, '0')}`;
-
-        // Fecha actual en formato dd/mm/yyyy
-        const fecha = new Date().toLocaleString('es-ES');
-
-        // Crear nuevo registro
-        await sheets.spreadsheets.values.append({
-            spreadsheetId,
-            range: 'Historial!A2:E',
-            valueInputOption: 'USER_ENTERED',
-            insertDataOption: 'INSERT_ROWS',
-            resource: {
-                values: [[
-                    newId,       // ID
-                    fecha,       // FECHA
-                    destino,     // DESTINO
-                    suceso,      // SUCESO
-                    detalle      // DETALLE
-                ]]
-            }
-        });
-
-        res.json({
-            success: true,
-            message: 'Notificación registrada correctamente'
-        });
-
-    } catch (error) {
-        console.error('Error al registrar notificación:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al registrar la notificación'
         });
     }
 });

@@ -392,11 +392,6 @@ export function configuracionesEntrada() {
         });
     });
 
-    const savedCredentials = JSON.parse(localStorage.getItem('credentials'));
-    if (savedCredentials) {
-        document.querySelector('.email').value = savedCredentials.email;
-        document.querySelector('.password').value = savedCredentials.password;
-    }
 }
 export function exportarArchivos(rExp, registrosAExportar) {
     function calcularTiempoTranscurrido(horaInicio, horaFin) {
