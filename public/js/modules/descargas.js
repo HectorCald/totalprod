@@ -127,6 +127,27 @@ async function generarCatalogo(tipoPrecio) {
     try {
         mostrarCarga();
         const { normales, botes, items } = filtrarProductos();
+        const imageCache = new Map();
+        const preloadImages = async (productos) => {
+            const promises = productos.map(async producto => {
+                const imageUrl = producto.imagen || '/img/Logotipo-damabrava.png';
+                try {
+                    const img = await loadImage(imageUrl);
+                    imageCache.set(imageUrl, img);
+                } catch (error) {
+                    const defaultImg = await loadImage('/img/Logotipo-damabrava.png');
+                    imageCache.set(imageUrl, defaultImg);
+                }
+            });
+            await Promise.all(promises);
+        };
+
+        // Precargar todas las imágenes al inicio
+        await Promise.all([
+            preloadImages(normales),
+            preloadImages(botes),
+            preloadImages(items)
+        ]);
 
         // Variables para control de páginas y productos
         const pageWidth = 297; // Ancho A4 landscape en mm
@@ -329,15 +350,15 @@ async function generarCatalogo(tipoPrecio) {
     }
 }
 
-function loadImage(url) {
+const loadImage = async (url) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous';
+        img.crossOrigin = 'Anonymous'; // Esto puede causar retrasos
         img.onload = () => resolve(img);
         img.onerror = reject;
         img.src = url;
     });
-}
+};
 
 function obtenerPrecio(preciosString, tipoPrecio) {
     const precios = preciosString.split(';');
