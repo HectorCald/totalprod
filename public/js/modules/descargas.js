@@ -3,8 +3,6 @@ let productos = [];
 let precios = [];
 
 
-const DEFAULT_IMAGE = '/public/img/Logotipo-damabrava-1x1.png';
-
 async function obtenerDatos() {
     try {
         mostrarCarga()
@@ -102,7 +100,7 @@ async function mostrarOpcionesCatalogo() {
 
     const contenido = document.querySelector('.anuncio-second .contenido');
     const botonesPrecios = precios.map(precio => `
-        <button class="btn especial btn-precio" style="color: var(--text); border: 1px solid red"data-precio="${precio.precio}">
+        <button class="btn especial btn-precio" style="color: white; border: 1px solid red"data-precio="${precio.precio}">
             <i class='bx bxs-file-pdf' style="color:red !important;"></i> Catálogo ${precio.precio}
         </button>
     `).join('');
@@ -129,30 +127,6 @@ async function generarCatalogo(tipoPrecio) {
     try {
         mostrarCarga();
         const { normales, botes, items } = filtrarProductos();
-        const imageCache = new Map();
-        const preloadImages = async (productos) => {
-            const uniqueUrls = new Set(productos.map(p => p.imagen).filter(Boolean));
-            uniqueUrls.add(DEFAULT_IMAGE); // Asegurar que la imagen por defecto esté en caché
-
-            const promises = Array.from(uniqueUrls).map(async url => {
-                try {
-                    const img = await loadImage(url);
-                    imageCache.set(url, img);
-                } catch (error) {
-                    console.warn(`Failed to preload image: ${url}`, error);
-                    // No rechazar la promesa completa si falla una imagen
-                }
-            });
-
-            await Promise.allSettled(promises); // Usar allSettled en lugar de all
-        };
-
-        // Precargar todas las imágenes al inicio
-        await Promise.all([
-            preloadImages(normales),
-            preloadImages(botes),
-            preloadImages(items)
-        ]);
 
         // Variables para control de páginas y productos
         const pageWidth = 297; // Ancho A4 landscape en mm
@@ -167,7 +141,7 @@ async function generarCatalogo(tipoPrecio) {
         // Primera página (cabecera)
         try {
             const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
-            doc.addImage(cabecera, 'webp', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+            doc.addImage(cabecera, 'PNG', 0, 0, pageWidth, pageHeight);
         } catch (error) {
             console.error('Error al cargar cabecera:', error);
         }
@@ -180,32 +154,26 @@ async function generarCatalogo(tipoPrecio) {
         // Función auxiliar para procesar producto individual
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
+                // Imagen del producto
                 const imgSize = 60;
-                const imageUrl = producto.imagen || DEFAULT_IMAGE;
+                const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
+                let img;
 
-                // Usar imagen del caché o cargarla si no existe
-                let img = imageCache.get(imageUrl) || imageCache.get(DEFAULT_IMAGE);
-                if (!img) {
-                    try {
-                        img = await loadImage(imageUrl);
-                        imageCache.set(imageUrl, img);
-                    } catch (error) {
-                        console.warn(`Error loading image for ${producto.producto}:`, error);
-                        img = await loadImage(DEFAULT_IMAGE);
-                        imageCache.set(DEFAULT_IMAGE, img);
-                    }
+                try {
+                    img = await loadImage(imageUrl);
+                } catch (imgError) {
+                    img = await loadImage('/img/logotipo-damabrava-1x1.png');
                 }
 
-                // En la función procesarProducto, modificar la parte de addImage:
                 doc.addImage(
                     img,
-                    'png',
+                    'JPEG',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
                     imgSize,
                     imgSize,
                     undefined,
-                    'FAST'  // Removido el parámetro 0 para mantener transparencia
+                    'MEDIUM'
                 );
 
                 // Nombre del producto (Lobster y naranja)
@@ -227,7 +195,7 @@ async function generarCatalogo(tipoPrecio) {
                 const precio = obtenerPrecio(producto.precios, tipoPrecio);
                 if (precio) {
                     // Gramaje
-                    const textoGramaje = `Gramaje: ${producto.gramos} gr`;
+                    const textoGramaje = `Gramaje: ${producto.gramos}gr`;
                     const gramajeWidth = doc.getTextWidth(textoGramaje);
                     doc.text(
                         textoGramaje,
@@ -236,7 +204,7 @@ async function generarCatalogo(tipoPrecio) {
                     );
 
                     // Precio
-                    const textoPrecio = `Precio: Bs./${precio}`;
+                    const textoPrecio = `Precio: $${precio}`;
                     const precioWidth = doc.getTextWidth(textoPrecio);
                     doc.text(
                         textoPrecio,
@@ -255,7 +223,7 @@ async function generarCatalogo(tipoPrecio) {
 
             try {
                 const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
-                doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
             }
@@ -291,7 +259,7 @@ async function generarCatalogo(tipoPrecio) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
                         const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
-                        doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
+                        doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
                     }
@@ -302,7 +270,7 @@ async function generarCatalogo(tipoPrecio) {
                     const row = Math.floor(j / 3);
                     const col = j % 3;
                     const xPos = margin + (col * (productoWidth + margin));
-                    const yPos = (i === 0 ? margin + 5 : margin) + (row * (productoHeight + margin));
+                    const yPos = (i === 0 ? margin : margin) + (row * (productoHeight + margin));
                     await procesarProducto(productosEnPagina[j], xPos, yPos);
                 }
             }
@@ -329,7 +297,7 @@ async function generarCatalogo(tipoPrecio) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
                         const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
-                        doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
+                        doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
                     }
@@ -364,38 +332,10 @@ async function generarCatalogo(tipoPrecio) {
 const loadImage = async (url) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous';
-
-        const timeout = setTimeout(() => {
-            img.src = '';
-            reject(new Error(`Timeout loading image: ${url}`));
-        }, 5000);
-
-        img.onload = () => {
-            clearTimeout(timeout);
-            if (img.complete && img.naturalWidth > 0) {
-                resolve(img);
-            } else {
-                reject(new Error(`Invalid image: ${url}`));
-            }
-        };
-
-        img.onerror = () => {
-            clearTimeout(timeout);
-            // Si falla cualquier imagen, usar logotipo por defecto
-            if (url !== DEFAULT_IMAGE) {
-                console.warn(`Error loading image: ${url}, using default`);
-                const defaultImg = new Image();
-                defaultImg.crossOrigin = 'Anonymous';
-                defaultImg.onload = () => resolve(defaultImg);
-                defaultImg.onerror = () => reject(new Error('Failed to load default image'));
-                defaultImg.src = DEFAULT_IMAGE;
-            } else {
-                reject(new Error('Failed to load default image'));
-            }
-        };
-
-        img.src = url || DEFAULT_IMAGE;
+        img.crossOrigin = 'Anonymous'; // Esto puede causar retrasos
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = url;
     });
 };
 
