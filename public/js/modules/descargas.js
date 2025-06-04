@@ -199,7 +199,7 @@ async function generarCatalogo(tipoPrecio) {
                 // En la función procesarProducto, modificar la parte de addImage:
                 doc.addImage(
                     img,
-                    'webp',
+                    'png',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
                     imgSize,
