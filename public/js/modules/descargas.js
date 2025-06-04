@@ -3,7 +3,7 @@ let productos = [];
 let precios = [];
 
 
-const DEFAULT_IMAGE = '/img/Logotipo-damabrava-trans.webp';
+const DEFAULT_IMAGE = '/img/img-png/Logotipo-damabrava-1x1.png';
 
 async function obtenerDatos() {
     try {
@@ -167,7 +167,7 @@ async function generarCatalogo(tipoPrecio) {
         // Primera página (cabecera)
         try {
             const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
-            doc.addImage(cabecera, 'webp', 0, 0, pageWidth, pageHeight);
+            doc.addImage(cabecera, 'webp', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
         } catch (error) {
             console.error('Error al cargar cabecera:', error);
         }
@@ -196,7 +196,7 @@ async function generarCatalogo(tipoPrecio) {
                     }
                 }
 
-                                // En la función procesarProducto, modificar la parte de addImage:
+                // En la función procesarProducto, modificar la parte de addImage:
                 doc.addImage(
                     img,
                     'webp',
@@ -205,13 +205,12 @@ async function generarCatalogo(tipoPrecio) {
                     imgSize,
                     imgSize,
                     undefined,
-                    'FAST',
-                    0  // Fondo blanco (0 = transparent/white)
+                    'FAST'  // Removido el parámetro 0 para mantener transparencia
                 );
 
                 // Nombre del producto (Lobster y naranja)
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
+                doc.setFontSize(18);
                 doc.setTextColor('#f39c12');
                 const nombreY = yPos + imgSize + 8;
                 const textWidth = doc.getTextWidth(producto.producto);
@@ -223,12 +222,12 @@ async function generarCatalogo(tipoPrecio) {
 
                 // Gramaje y precio separados
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(12);
+                doc.setFontSize(15);
                 doc.setTextColor('#FFFFFF');
                 const precio = obtenerPrecio(producto.precios, tipoPrecio);
                 if (precio) {
                     // Gramaje
-                    const textoGramaje = `Gramaje: ${producto.gramos}gr`;
+                    const textoGramaje = `Gramaje: ${producto.gramos} gr`;
                     const gramajeWidth = doc.getTextWidth(textoGramaje);
                     doc.text(
                         textoGramaje,
@@ -237,7 +236,7 @@ async function generarCatalogo(tipoPrecio) {
                     );
 
                     // Precio
-                    const textoPrecio = `Precio: $${precio}`;
+                    const textoPrecio = `Precio: Bs./${precio}`;
                     const precioWidth = doc.getTextWidth(textoPrecio);
                     doc.text(
                         textoPrecio,
@@ -256,7 +255,7 @@ async function generarCatalogo(tipoPrecio) {
 
             try {
                 const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
-                doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
+                doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
             }
@@ -283,9 +282,9 @@ async function generarCatalogo(tipoPrecio) {
 
             // Título sección botes
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(24);
+            doc.setFontSize(20);
             doc.setTextColor('#FFFFFF');
-            doc.text('BOTES', margin, margin + 10);
+            doc.text('BOTES', margin, margin);
 
             for (let i = 0; i < botes.length; i += productosPerPage) {
                 if (i > 0) {
@@ -303,7 +302,7 @@ async function generarCatalogo(tipoPrecio) {
                     const row = Math.floor(j / 3);
                     const col = j % 3;
                     const xPos = margin + (col * (productoWidth + margin));
-                    const yPos = (i === 0 ? margin + 20 : margin) + (row * (productoHeight + margin));
+                    const yPos = (i === 0 ? margin + 5 : margin) + (row * (productoHeight + margin));
                     await procesarProducto(productosEnPagina[j], xPos, yPos);
                 }
             }
@@ -321,7 +320,7 @@ async function generarCatalogo(tipoPrecio) {
 
             // Título sección items
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(24);
+            doc.setFontSize(20);
             doc.setTextColor('#FFFFFF');
             doc.text('ARTICULOS ADICIONALES', margin, margin + 10);
 
