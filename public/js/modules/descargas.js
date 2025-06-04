@@ -3,7 +3,7 @@ let productos = [];
 let precios = [];
 
 
-const DEFAULT_IMAGE = '/img/Logotipo-damabrava-1x1.png';
+const DEFAULT_IMAGE = '/public/img/Logotipo-damabrava-1x1.png';
 
 async function obtenerDatos() {
     try {
@@ -181,23 +181,22 @@ async function generarCatalogo(tipoPrecio) {
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
                 const imgSize = 60;
-                let img;
+                const imageUrl = producto.imagen || DEFAULT_IMAGE;
 
-                try {
-                    // Intentar cargar la imagen del producto
-                    if (producto.imagen) {
-                        img = await loadImage(producto.imagen);
-                    } else {
-                        // Si no hay imagen, usar directamente la por defecto
-                        img = await loadImage('/img/Logotipo-damabrava-1x1.png');
+                // Usar imagen del caché o cargarla si no existe
+                let img = imageCache.get(imageUrl) || imageCache.get(DEFAULT_IMAGE);
+                if (!img) {
+                    try {
+                        img = await loadImage(imageUrl);
+                        imageCache.set(imageUrl, img);
+                    } catch (error) {
+                        console.warn(`Error loading image for ${producto.producto}:`, error);
+                        img = await loadImage(DEFAULT_IMAGE);
+                        imageCache.set(DEFAULT_IMAGE, img);
                     }
-                } catch (error) {
-                    // Si falla la carga, usar la imagen por defecto
-                    console.warn(`Error loading image for ${producto.producto}:`, error);
-                    img = await loadImage('/img/Logotipo-damabrava-1x1.png');
                 }
 
-                // Agregar la imagen al PDF
+                // En la función procesarProducto, modificar la parte de addImage:
                 doc.addImage(
                     img,
                     'png',
@@ -206,7 +205,7 @@ async function generarCatalogo(tipoPrecio) {
                     imgSize,
                     imgSize,
                     undefined,
-                    'FAST'
+                    'FAST'  // Removido el parámetro 0 para mantener transparencia
                 );
 
                 // Nombre del producto (Lobster y naranja)
