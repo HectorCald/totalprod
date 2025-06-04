@@ -3,7 +3,7 @@ let productos = [];
 let precios = [];
 
 
-const DEFAULT_IMAGE = '/img/img-png/Logotipo-damabrava-1x1.png';
+const DEFAULT_IMAGE = '/img/Logotipo-damabrava-1x1.png';
 
 async function obtenerDatos() {
     try {
@@ -102,7 +102,7 @@ async function mostrarOpcionesCatalogo() {
 
     const contenido = document.querySelector('.anuncio-second .contenido');
     const botonesPrecios = precios.map(precio => `
-        <button class="btn especial btn-precio" style="color: white; border: 1px solid red"data-precio="${precio.precio}">
+        <button class="btn especial btn-precio" style="color: var(--text); border: 1px solid red"data-precio="${precio.precio}">
             <i class='bx bxs-file-pdf' style="color:red !important;"></i> Catálogo ${precio.precio}
         </button>
     `).join('');
