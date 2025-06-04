@@ -212,7 +212,7 @@ function renderInitialHTML(producto) {
             <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
                 <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
+                <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
                 <select class="precios-select" style="width:100%">
                     <option class="skeleton skeleton-etiqueta" value="">Precios</option>
@@ -271,9 +271,9 @@ function updateHTMLWithData() {
         return `
         <div class="registro-item" data-id="${producto.id}">
             <div class="header">
-                ${producto.imagen && producto.imagen.startsWith('data:image') ?
-                `<img class="imagen" src="${producto.imagen}">` :
-                `<i class='bx bx-package'></i>`}
+                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
+                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
+                    `<i class='bx bx-package'></i>`}
                 <div class="info-header">
                     <span class="id">${producto.id}
                         <div class="precio-cantidad">

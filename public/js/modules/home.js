@@ -387,6 +387,14 @@ const atajosPorRol = {
             detalle: 'Ajustes del sistema',
             onclick: 'onclick="mostrarConfiguracionesSistema()"'
         },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-download',
+            texto: 'Descargas',
+            detalle: 'Descarga archivos',
+            onclick: 'onclick="mostrarDescargaCatalogo()"'
+        },
 
     ]
 };
