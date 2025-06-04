@@ -2,7 +2,7 @@
 let productos = [];
 let precios = [];
 
-
+const DEFAULT_IMAGE = '/img/Logotipo-damabrava.png';
 async function obtenerDatos() {
     try {
         mostrarCarga()
@@ -129,17 +129,20 @@ async function generarCatalogo(tipoPrecio) {
         const { normales, botes, items } = filtrarProductos();
         const imageCache = new Map();
         const preloadImages = async (productos) => {
-            const promises = productos.map(async producto => {
-                const imageUrl = producto.imagen || '/img/Logotipo-damabrava.png';
+            const uniqueUrls = new Set(productos.map(p => p.imagen).filter(Boolean));
+            uniqueUrls.add(DEFAULT_IMAGE); // Asegurar que la imagen por defecto esté en caché
+
+            const promises = Array.from(uniqueUrls).map(async url => {
                 try {
-                    const img = await loadImage(imageUrl);
-                    imageCache.set(imageUrl, img);
+                    const img = await loadImage(url);
+                    imageCache.set(url, img);
                 } catch (error) {
-                    const defaultImg = await loadImage('/img/Logotipo-damabrava.png');
-                    imageCache.set(imageUrl, defaultImg);
+                    console.warn(`Failed to preload image: ${url}`, error);
+                    // No rechazar la promesa completa si falla una imagen
                 }
             });
-            await Promise.all(promises);
+
+            await Promise.allSettled(promises); // Usar allSettled en lugar de all
         };
 
         // Precargar todas las imágenes al inicio
@@ -175,15 +178,20 @@ async function generarCatalogo(tipoPrecio) {
         // Función auxiliar para procesar producto individual
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
-                // Imagen del producto
                 const imgSize = 60;
-                const imageUrl = producto.imagen || '/img/Logotipo-damabrava.png';
-                let img;
+                const imageUrl = producto.imagen || DEFAULT_IMAGE;
 
-                try {
-                    img = await loadImage(imageUrl);
-                } catch (imgError) {
-                    img = await loadImage('/img/Logotipo-damabrava.png');
+                // Usar imagen del caché o cargarla si no existe
+                let img = imageCache.get(imageUrl) || imageCache.get(DEFAULT_IMAGE);
+                if (!img) {
+                    try {
+                        img = await loadImage(imageUrl);
+                        imageCache.set(imageUrl, img);
+                    } catch (error) {
+                        console.warn(`Error loading image for ${producto.producto}:`, error);
+                        img = await loadImage(DEFAULT_IMAGE);
+                        imageCache.set(DEFAULT_IMAGE, img);
+                    }
                 }
 
                 doc.addImage(
@@ -353,10 +361,30 @@ async function generarCatalogo(tipoPrecio) {
 const loadImage = async (url) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous'; // Esto puede causar retrasos
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = url;
+        img.crossOrigin = 'Anonymous';
+
+        // Timeout para evitar esperas indefinidas
+        const timeout = setTimeout(() => {
+            img.src = ''; // Cancelar la carga
+            reject(new Error('Timeout loading image'));
+        }, 5000); // 5 segundos máximo
+
+        img.onload = () => {
+            clearTimeout(timeout);
+            resolve(img);
+        };
+
+        img.onerror = () => {
+            clearTimeout(timeout);
+            // En lugar de rechazar, cargar la imagen por defecto
+            const defaultImg = new Image();
+            defaultImg.crossOrigin = 'Anonymous';
+            defaultImg.onload = () => resolve(defaultImg);
+            defaultImg.onerror = () => reject(new Error('Failed to load default image'));
+            defaultImg.src = DEFAULT_IMAGE;
+        };
+
+        img.src = url || DEFAULT_IMAGE;
     });
 };
 
