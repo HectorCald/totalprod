@@ -181,22 +181,23 @@ async function generarCatalogo(tipoPrecio) {
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
                 const imgSize = 60;
-                const imageUrl = producto.imagen || DEFAULT_IMAGE;
+                let img;
 
-                // Usar imagen del caché o cargarla si no existe
-                let img = imageCache.get(imageUrl) || imageCache.get(DEFAULT_IMAGE);
-                if (!img) {
-                    try {
-                        img = await loadImage(imageUrl);
-                        imageCache.set(imageUrl, img);
-                    } catch (error) {
-                        console.warn(`Error loading image for ${producto.producto}:`, error);
-                        img = await loadImage(DEFAULT_IMAGE);
-                        imageCache.set(DEFAULT_IMAGE, img);
+                try {
+                    // Intentar cargar la imagen del producto
+                    if (producto.imagen) {
+                        img = await loadImage(producto.imagen);
+                    } else {
+                        // Si no hay imagen, usar directamente la por defecto
+                        img = await loadImage('/img/Logotipo-damabrava-1x1.png');
                     }
+                } catch (error) {
+                    // Si falla la carga, usar la imagen por defecto
+                    console.warn(`Error loading image for ${producto.producto}:`, error);
+                    img = await loadImage('/img/Logotipo-damabrava-1x1.png');
                 }
 
-                // En la función procesarProducto, modificar la parte de addImage:
+                // Agregar la imagen al PDF
                 doc.addImage(
                     img,
                     'png',
@@ -205,7 +206,7 @@ async function generarCatalogo(tipoPrecio) {
                     imgSize,
                     imgSize,
                     undefined,
-                    'FAST'  // Removido el parámetro 0 para mantener transparencia
+                    'FAST'
                 );
 
                 // Nombre del producto (Lobster y naranja)
@@ -255,7 +256,7 @@ async function generarCatalogo(tipoPrecio) {
 
             try {
                 const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
-                doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
             }
