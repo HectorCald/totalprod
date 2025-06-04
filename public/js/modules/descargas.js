@@ -1,7 +1,7 @@
 
 let productos = [];
 let precios = [];
-const imageCache = new Map();
+
 
 async function obtenerDatos() {
     try {
@@ -119,58 +119,15 @@ async function mostrarOpcionesCatalogo() {
     // Agregar eventos a los botones
     const botones = contenido.querySelectorAll('.btn-precio');
     botones.forEach(boton => {
-        boton.addEventListener('click', async () => await generarCatalogo(boton.dataset.precio));
+        boton.addEventListener('click', () => generarCatalogo(boton.dataset.precio));
     });
-}
-// Agregar esta función después de filtrarProductos()
-async function precargarImagenes(productos) {
-    // Crear array de promesas de carga
-    const imagesToLoad = new Set([
-        '/img/cabecera-catalogo-trans.webp',
-        '/img/fondo-catalogo-trans.webp',
-        '/img/logotipo-damabrava-1x1.png'
-    ]);
-
-    // Añadir imágenes de productos
-    productos.forEach(producto => {
-        if (producto.imagen) {
-            imagesToLoad.add(producto.imagen);
-        }
-    });
-
-    // Cargar todas las imágenes en paralelo con límite de concurrencia
-    const batchSize = 5; // Procesar 5 imágenes a la vez
-    const urls = Array.from(imagesToLoad);
-    const results = new Map();
-
-    for (let i = 0; i < urls.length; i += batchSize) {
-        const batch = urls.slice(i, i + batchSize);
-        const promises = batch.map(url =>
-            loadImage(url)
-                .catch(() => loadImage('/img/logotipo-damabrava-1x1.png'))
-        );
-
-        const loadedImages = await Promise.all(promises);
-
-        batch.forEach((url, index) => {
-            results.set(url, loadedImages[index]);
-        });
-    }
-
-    return results;
 }
 
 async function generarCatalogo(tipoPrecio) {
     try {
         mostrarCarga();
         const { normales, botes, items } = filtrarProductos();
-        console.time('precargarImagenes');
         const imagenesCargadas = await precargarImagenes([...normales, ...botes, ...items]);
-        console.timeEnd('precargarImagenes');
-
-        // Crear el PDF
-        console.time('generarPDF');
-
 
         // Variables para control de páginas y productos
         const pageWidth = 297; // Ancho A4 landscape en mm
@@ -200,10 +157,10 @@ async function generarCatalogo(tipoPrecio) {
             try {
                 const imgSize = 60;
                 const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
-                const img = imagenesCargadas.get(imageUrl);
+                const img = imagenesCargadas.get(imageUrl) || imagenesCargadas.get('/img/logotipo-damabrava-1x1.png');
 
-                if (img) {
-                    doc.addImage(img, 'PNG', xPos + (productoWidth - imgSize) / 2, yPos, imgSize, imgSize, undefined, 'FAST');
+                if (!img) {
+                    throw new Error('Imagen no encontrada en caché');
                 }
 
                 doc.addImage(
@@ -371,30 +328,11 @@ async function generarCatalogo(tipoPrecio) {
 }
 
 const loadImage = async (url) => {
-    // Revisar caché primero
-    if (imageCache.has(url)) {
-        return imageCache.get(url);
-    }
-
     return new Promise((resolve, reject) => {
         const img = new Image();
-        const timeout = setTimeout(() => {
-            img.src = '';
-            reject(new Error('Timeout loading image'));
-        }, 3000); // Reducir timeout a 3 segundos
-
-        img.onload = () => {
-            clearTimeout(timeout);
-            // Guardar en caché
-            imageCache.set(url, img);
-            resolve(img);
-        };
-
-        img.onerror = () => {
-            clearTimeout(timeout);
-            reject(new Error(`Failed to load: ${url}`));
-        };
-
+        img.crossOrigin = 'Anonymous'; // Esto puede causar retrasos
+        img.onload = () => resolve(img);
+        img.onerror = reject;
         img.src = url;
     });
 };
@@ -408,6 +346,40 @@ function obtenerPrecio(preciosString, tipoPrecio) {
     }
     return null;
 }
+// Agregar esta función después de filtrarProductos()
+async function precargarImagenes(productos) {
+    const imagenesUnicas = new Set();
+    const imagenesCargadas = new Map();
 
+    // Recolectar todas las URLs únicas de imágenes
+    productos.forEach(producto => {
+        const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
+        imagenesUnicas.add(imageUrl);
+    });
 
+    // También precargar imágenes del catálogo
+    imagenesUnicas.add('/img/cabecera-catalogo-trans.webp');
+    imagenesUnicas.add('/img/fondo-catalogo-trans.webp');
+
+    // Cargar todas las imágenes en paralelo
+    const promesasImagenes = Array.from(imagenesUnicas).map(async url => {
+        try {
+            const img = await loadImage(url);
+            imagenesCargadas.set(url, img);
+        } catch (error) {
+            console.warn(`Error precargando imagen ${url}:`, error);
+            // Si falla, intentar cargar la imagen por defecto
+            try {
+                const defaultImg = await loadImage('/img/logotipo-damabrava-1x1.png');
+                imagenesCargadas.set(url, defaultImg);
+            } catch (defaultError) {
+                console.error('Error cargando imagen por defecto:', defaultError);
+            }
+        }
+    });
+
+    // Esperar a que todas las imágenes se carguen
+    await Promise.allSettled(promesasImagenes);
+    return imagenesCargadas;
+}
 
