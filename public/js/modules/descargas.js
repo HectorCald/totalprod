@@ -122,11 +122,48 @@ async function mostrarOpcionesCatalogo() {
         boton.addEventListener('click', () => generarCatalogo(boton.dataset.precio));
     });
 }
+// Agregar esta función después de filtrarProductos()
+async function precargarImagenes(productos) {
+    const imagenesUnicas = new Set();
+    const imagenesCargadas = new Map();
+
+    // Recolectar todas las URLs únicas de imágenes
+    productos.forEach(producto => {
+        const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
+        imagenesUnicas.add(imageUrl);
+    });
+
+    // También precargar imágenes del catálogo
+    imagenesUnicas.add('/img/cabecera-catalogo-trans.webp');
+    imagenesUnicas.add('/img/fondo-catalogo-trans.webp');
+
+    // Cargar todas las imágenes en paralelo
+    const promesasImagenes = Array.from(imagenesUnicas).map(async url => {
+        try {
+            const img = await loadImage(url);
+            imagenesCargadas.set(url, img);
+        } catch (error) {
+            console.warn(`Error precargando imagen ${url}:`, error);
+            // Si falla, intentar cargar la imagen por defecto
+            try {
+                const defaultImg = await loadImage('/img/logotipo-damabrava-1x1.png');
+                imagenesCargadas.set(url, defaultImg);
+            } catch (defaultError) {
+                console.error('Error cargando imagen por defecto:', defaultError);
+            }
+        }
+    });
+
+    // Esperar a que todas las imágenes se carguen
+    await Promise.allSettled(promesasImagenes);
+    return imagenesCargadas;
+}
 
 async function generarCatalogo(tipoPrecio) {
     try {
         mostrarCarga();
         const { normales, botes, items } = filtrarProductos();
+        const imagenesCargadas = await precargarImagenes([...normales, ...botes, ...items]);
 
         // Variables para control de páginas y productos
         const pageWidth = 297; // Ancho A4 landscape en mm
@@ -154,26 +191,23 @@ async function generarCatalogo(tipoPrecio) {
         // Función auxiliar para procesar producto individual
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
-                // Imagen del producto
                 const imgSize = 60;
                 const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
-                let img;
+                const img = imagenesCargadas.get(imageUrl) || imagenesCargadas.get('/img/logotipo-damabrava-1x1.png');
 
-                try {
-                    img = await loadImage(imageUrl);
-                } catch (imgError) {
-                    img = await loadImage('/img/logotipo-damabrava-1x1.png');
+                if (!img) {
+                    throw new Error('Imagen no encontrada en caché');
                 }
 
                 doc.addImage(
                     img,
-                    'JPEG',
+                    'PNG',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
                     imgSize,
                     imgSize,
                     undefined,
-                    'MEDIUM'
+                    'FAST'
                 );
 
                 // Nombre del producto (Lobster y naranja)
@@ -348,3 +382,6 @@ function obtenerPrecio(preciosString, tipoPrecio) {
     }
     return null;
 }
+
+
+
