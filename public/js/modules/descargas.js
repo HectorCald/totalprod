@@ -2,7 +2,9 @@
 let productos = [];
 let precios = [];
 
-const DEFAULT_IMAGE = '/img/Logotipo-damabrava.png';
+
+const DEFAULT_IMAGE = '/img/Logotipo-damabrava-trans.webp';
+
 async function obtenerDatos() {
     try {
         mostrarCarga()
@@ -164,8 +166,8 @@ async function generarCatalogo(tipoPrecio) {
 
         // Primera página (cabecera)
         try {
-            const cabecera = await loadImage('/img/cabecera-catalogo.png');
-            doc.addImage(cabecera, 'PNG', 0, 0, pageWidth, pageHeight);
+            const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
+            doc.addImage(cabecera, 'webp', 0, 0, pageWidth, pageHeight);
         } catch (error) {
             console.error('Error al cargar cabecera:', error);
         }
@@ -194,15 +196,17 @@ async function generarCatalogo(tipoPrecio) {
                     }
                 }
 
+                                // En la función procesarProducto, modificar la parte de addImage:
                 doc.addImage(
                     img,
-                    'JPEG',
+                    'webp',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
                     imgSize,
                     imgSize,
                     undefined,
-                    'MEDIUM'
+                    'FAST',
+                    0  // Fondo blanco (0 = transparent/white)
                 );
 
                 // Nombre del producto (Lobster y naranja)
@@ -251,8 +255,8 @@ async function generarCatalogo(tipoPrecio) {
             doc.addPage([pageWidth, pageHeight]);
 
             try {
-                const fondo = await loadImage('/img/fondo-catalogo.webp');
-                doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
+                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
             }
@@ -271,7 +275,7 @@ async function generarCatalogo(tipoPrecio) {
         if (botes.length > 0) {
             doc.addPage([pageWidth, pageHeight]);
             try {
-                const fondo = await loadImage('/img/fondo-catalogo.webp');
+                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
                 doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
@@ -287,8 +291,8 @@ async function generarCatalogo(tipoPrecio) {
                 if (i > 0) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
-                        const fondo = await loadImage('/img/fondo-catalogo.webp');
-                        doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
+                        const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                        doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
                     }
@@ -309,7 +313,7 @@ async function generarCatalogo(tipoPrecio) {
         if (items.length > 0) {
             doc.addPage([pageWidth, pageHeight]);
             try {
-                const fondo = await loadImage('/img/fondo-catalogo.webp');
+                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
                 doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
@@ -325,8 +329,8 @@ async function generarCatalogo(tipoPrecio) {
                 if (i > 0) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
-                        const fondo = await loadImage('/img/fondo-catalogo.webp');
-                        doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
+                        const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                        doc.addImage(fondo, 'webp', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
                     }
@@ -363,25 +367,33 @@ const loadImage = async (url) => {
         const img = new Image();
         img.crossOrigin = 'Anonymous';
 
-        // Timeout para evitar esperas indefinidas
         const timeout = setTimeout(() => {
-            img.src = ''; // Cancelar la carga
-            reject(new Error('Timeout loading image'));
-        }, 5000); // 5 segundos máximo
+            img.src = '';
+            reject(new Error(`Timeout loading image: ${url}`));
+        }, 5000);
 
         img.onload = () => {
             clearTimeout(timeout);
-            resolve(img);
+            if (img.complete && img.naturalWidth > 0) {
+                resolve(img);
+            } else {
+                reject(new Error(`Invalid image: ${url}`));
+            }
         };
 
         img.onerror = () => {
             clearTimeout(timeout);
-            // En lugar de rechazar, cargar la imagen por defecto
-            const defaultImg = new Image();
-            defaultImg.crossOrigin = 'Anonymous';
-            defaultImg.onload = () => resolve(defaultImg);
-            defaultImg.onerror = () => reject(new Error('Failed to load default image'));
-            defaultImg.src = DEFAULT_IMAGE;
+            // Si falla cualquier imagen, usar logotipo por defecto
+            if (url !== DEFAULT_IMAGE) {
+                console.warn(`Error loading image: ${url}, using default`);
+                const defaultImg = new Image();
+                defaultImg.crossOrigin = 'Anonymous';
+                defaultImg.onload = () => resolve(defaultImg);
+                defaultImg.onerror = () => reject(new Error('Failed to load default image'));
+                defaultImg.src = DEFAULT_IMAGE;
+            } else {
+                reject(new Error('Failed to load default image'));
+            }
         };
 
         img.src = url || DEFAULT_IMAGE;
