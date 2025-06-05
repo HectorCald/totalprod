@@ -1243,7 +1243,6 @@ function eventosVerificacion() {
 
         // Si encontramos reglas por gramaje, usamos la primera
         if (reglasGramaje.length > 0) {
-            alert('gramaje')
             const reglaGramaje = reglasGramaje[0];
             multiplicadores = {
                 etiquetado: reglaGramaje.etiq || '1',
@@ -1260,7 +1259,6 @@ function eventosVerificacion() {
 
             // Aplicar reglas por producto si existen
             if (reglasPorProducto.length > 0) {
-                alert('producto')
                 const regla = reglasPorProducto[0];
                 multiplicadores = {
                     etiquetado: regla.etiq || '1',
