@@ -386,6 +386,7 @@ function eventosReglas() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom='80px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar

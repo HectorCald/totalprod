@@ -525,19 +525,17 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-        <p class="normal">Información general</p>
-            <div class="campo-horizontal">
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
-                </div>
-                <div class="imagen-producto">
+            <div id="imagen-producto-registro">
                 ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
                 `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                 `<i class='bx bx-package'></i>`}
-                </div>
+            </div>
+            <p class="normal">Información general</p>
+            <div class="campo-vertical">
+                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
+                <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
+                <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
             </div>
 
             <p class="normal">Detalles adicionales</p>
