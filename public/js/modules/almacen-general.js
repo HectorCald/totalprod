@@ -524,7 +524,7 @@ function eventosAlmacenGeneral() {
             <h1 class="titulo">${producto.producto}</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno verificar-registro">
+        <div class="relleno">
             <div id="imagen-producto-registro">
                 ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
                 `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
@@ -1044,7 +1044,7 @@ function eventosAlmacenGeneral() {
                 }
             }
         }
-    }
+    }   
 
     function crearProducto() {
 

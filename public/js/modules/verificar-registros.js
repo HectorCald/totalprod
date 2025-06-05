@@ -1223,7 +1223,7 @@ function eventosVerificacion() {
             etiquetado: '1',
             sellado: '1',
             envasado: '1',
-            cernido: '1'
+            cernido: preciosBase.cernido
         };
 
         // Primero buscar reglas por gramaje
@@ -1243,28 +1243,30 @@ function eventosVerificacion() {
 
         // Si encontramos reglas por gramaje, usamos la primera
         if (reglasGramaje.length > 0) {
+            alert('gramaje')
             const reglaGramaje = reglasGramaje[0];
             multiplicadores = {
                 etiquetado: reglaGramaje.etiq || '1',
                 sellado: reglaGramaje.sell || '1',
                 envasado: reglaGramaje.envs || '1',
-                cernido: reglaGramaje.cern || '1'
+                cernido: reglaGramaje.cern || preciosBase.cernido
             };
         } else {
             // Si no hay reglas por gramaje, buscar reglas por nombre
             const reglasPorProducto = reglasProduccion?.filter(r => {
-                const nombreRegla = normalizarTexto(r.producto);
-                return normalizedNombre === nombreRegla && !r.producto.startsWith('Regla ');
+                const nombreRegla =  normalizarTexto(r.producto);
+                return normalizedNombre === nombreRegla || normalizedNombre.includes(nombreRegla);
             }) || [];
 
             // Aplicar reglas por producto si existen
             if (reglasPorProducto.length > 0) {
+                alert('producto')
                 const regla = reglasPorProducto[0];
                 multiplicadores = {
                     etiquetado: regla.etiq || '1',
                     sellado: regla.sell || '1',
                     envasado: regla.envs || '1',
-                    cernido: regla.cern || '1'
+                    cernido: regla.cern || preciosBase.cernido
                 };
             }
         }
@@ -1273,10 +1275,6 @@ function eventosVerificacion() {
         let resultado = cantidad * preciosBase.envasado * parseFloat(multiplicadores.envasado);
         let resultadoEtiquetado = cantidad * preciosBase.etiquetado * parseFloat(multiplicadores.etiquetado);
         let resultadoSellado = cantidad * preciosBase.sellado * parseFloat(multiplicadores.sellado);
-
-        if (normalizedNombre.includes('bote')) {
-            resultadoSellado = cantidad * 0.025;
-        }
 
         let resultadoSernido = 0;
         if (seleccion === 'Cernido') {
