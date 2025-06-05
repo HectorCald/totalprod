@@ -255,7 +255,7 @@ function updateHTMLWithData() {
             <div class="id">${producto.id}
                 <div class="precio-cantidad">
                     <span class="valor stock">${producto.stock} Und.</span>
-                    <span class="valor precio">Bs/.${producto.precios.split(';')[0].split(',')[1]}</span>
+                    <span class="valor precio">Bs. ${producto.precios.split(';')[0].split(',')[1]}</span>
                 </div>
             </div>
             <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
@@ -431,7 +431,7 @@ function eventosAlmacenGeneral() {
                     const precioFiltrado = preciosProducto.find(p => p.split(',')[0] === precioSeleccionado);
                     if (precioFiltrado) {
                         const precio = parseFloat(precioFiltrado.split(',')[1]);
-                        registro.querySelector('.precio').textContent = `Bs/.${precio.toFixed(2)}`;
+                        registro.querySelector('.precio').textContent = `Bs. ${precio.toFixed(2)}`;
                     }
                 }
                 contenedor.appendChild(registro);
@@ -508,7 +508,7 @@ function eventosAlmacenGeneral() {
             .filter(precio => precio.trim()) // Eliminar elementos vacíos
             .map(precio => {
                 const [ciudad, valor] = precio.split(',');
-                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs ${valor}</span>`;
+                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${valor}</span>`;
             })
             .join('');
         const etiquetasFormateados = producto.etiquetas.split(';')
