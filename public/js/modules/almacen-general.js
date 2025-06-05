@@ -508,7 +508,7 @@ function eventosAlmacenGeneral() {
             .filter(precio => precio.trim()) // Eliminar elementos vacíos
             .map(precio => {
                 const [ciudad, valor] = precio.split(',');
-                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs/.${valor}</span>`;
+                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs ${valor}</span>`;
             })
             .join('');
         const etiquetasFormateados = producto.etiquetas.split(';')
@@ -525,7 +525,8 @@ function eventosAlmacenGeneral() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <div id="imagen-producto-registro">
+            <p class="normal">Imagen del producto</p>
+            <div class="imagen-producto-registro">
                 ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
                 `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
                 `<i class='bx bx-package'></i>`}

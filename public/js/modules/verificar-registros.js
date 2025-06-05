@@ -1274,6 +1274,7 @@ function eventosVerificacion() {
         let resultadoEtiquetado = cantidad * preciosBase.etiquetado * parseFloat(multiplicadores.etiquetado);
         let resultadoSellado = cantidad * preciosBase.sellado * parseFloat(multiplicadores.sellado);
 
+
         let resultadoSernido = 0;
         if (seleccion === 'Cernido') {
             const kilos = (cantidad * gramaje) / 1000;

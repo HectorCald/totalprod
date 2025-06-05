@@ -753,9 +753,6 @@
     padding-left: 10px;
 }
 
-.imagen-producto {
-    display: none;
-}
 
 .custom-file-upload {
     display: flex;
@@ -1256,14 +1253,28 @@
     }
 }
 
-#imagen-producto-registro {
-    max-width: 100% !important;
-    max-height: 200px !important;
-    border: 1px solid red !important;
+.imagen-producto-registro {
+    max-width: 100%;
+    max-height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    img{
-        width: 200px !important;
-        height: 200px !important;
+    .imagen{
+        width: 350px;
+        height: 350px;
+        background-color: var(--primary-color);
+        border-radius: 10px;
+    }
+    i{
+        width: 350px;
+        height: 350px;
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        font-size: 200px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 }
 

@@ -584,13 +584,16 @@ function eventosReglas() {
                     <i class='bx bx-purchase-tag'></i>
                     <div class="input">
                         <p class="detalle">Sellado (x1 por defecto)</p>
-                        <select class="multiplicador-sellado">
-                            <option value="1" selected>x1</option>
-                            <option value="2">x2</option>
-                            <option value="3">x3</option>
-                            <option value="4">x4</option>
-                            <option value="5">x5</option>
-                        </select>
+                        <input 
+                            class="multiplicador-sellado" 
+                            type="number" 
+                            value="1" 
+                            step="0.001" 
+                            min="0.001" 
+                            placeholder=" "
+                            lang="en"
+                            inputmode="decimal"
+                            pattern="[0-9]*[.,]?[0-9]*">
                     </div>
                 </div>
     
@@ -685,7 +688,7 @@ function eventosReglas() {
 
                 const etiquetado = document.querySelector('.multiplicador-etiquetado').value;
                 const envasado = document.querySelector('.multiplicador-envasado').value;
-                const sellado = document.querySelector('.multiplicador-sellado').value;
+                const sellado = document.querySelector('.multiplicador-sellado').value.replace(',', '.');
                 const cernido = document.querySelector('.precio-cernido').value.replace(',', '.');
 
                 const response = await fetch('/agregar-reglas-multiples', {

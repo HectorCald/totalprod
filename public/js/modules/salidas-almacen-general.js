@@ -273,7 +273,7 @@ function updateHTMLWithData() {
                     <span class="id">${producto.id}
                         <div class="precio-cantidad">
                             <span class="valor stock">${producto.stock} Und.</span>
-                            <span class="valor precio">Bs/.${producto.precios.split(';')[0].split(',')[1]}</span>
+                            <span class="valor precio">Bs ${producto.precios.split(';')[0].split(',')[1]}</span>
                             <span class="carrito-cantidad">${cantidadEnCarrito}</span>
                         </div>
                     </span>
@@ -342,7 +342,7 @@ function eventosSalidas() {
                 const precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
                 const precioSpan = registro.querySelector('.precio');
                 if (precioSpan) {
-                    precioSpan.textContent = `Bs/.${precio.toFixed(2)}`;
+                    precioSpan.textContent = `Bs ${precio.toFixed(2)}`;
                 }
             }
         });
@@ -634,7 +634,7 @@ function eventosSalidas() {
                             <div class="subtotal-delete">
                                 <div class="info-valores">
                                     <p class="stock-disponible">${item.stock - item.cantidad} Und.</p>
-                                    <p class="subtotal">Bs/.${(item.cantidad * item.subtotal).toFixed(2)}</p>
+                                    <p class="subtotal">Bs ${(item.cantidad * item.subtotal).toFixed(2)}</p>
                                 </div>
                                 <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
                                     <i class="bx bx-trash"></i>
@@ -644,8 +644,8 @@ function eventosSalidas() {
                     `).join('')}
                     <div class="carrito-total">
                     <div class="campo-vertical">
-                        <span><strong>Subtotal: </strong>Bs/.${subtotal.toFixed(2)}</span>
-                        <span class="total-final"><strong>Total Final: </strong>Bs/.${subtotal.toFixed(2)}</span>
+                        <span><strong>Subtotal: </strong>Bs ${subtotal.toFixed(2)}</span>
+                        <span class="total-final"><strong>Total Final: </strong>Bs ${subtotal.toFixed(2)}</span>
                     </div>
                     <div class="campo-horizontal">
                         <div class="entrada">
