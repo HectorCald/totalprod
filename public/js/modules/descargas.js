@@ -165,7 +165,7 @@ async function generarCatalogo(tipoPrecio) {
 
                 doc.addImage(
                     img,
-                    'PNG',
+                    'WEBP',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
                     imgSize,

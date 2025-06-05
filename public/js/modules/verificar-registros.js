@@ -1253,7 +1253,7 @@ function eventosVerificacion() {
         } else {
             // Si no hay reglas por gramaje, buscar reglas por nombre
             const reglasPorProducto = reglasProduccion?.filter(r => {
-                const nombreRegla =  normalizarTexto(r.producto);
+                const nombreRegla = normalizarTexto(r.producto);
                 return normalizedNombre === nombreRegla || normalizedNombre.includes(nombreRegla);
             }) || [];
 
@@ -1506,19 +1506,26 @@ function eventosVerificacion() {
         async function guardarPago(e) {
             e.preventDefault();
 
-            // Obtener los valores de la tabla directamente
-            const filasTabla = document.querySelectorAll('table tbody tr');
-            const justificativosDetallados = Array.from(filasTabla).map(fila => {
-                const producto = fila.cells[1].textContent; // Columna Producto
-                const gramaje = fila.cells[2].textContent; // Columna Gramaje
-                const cernido = fila.cells[4].textContent; // Columna Cernido
-                const envasado = fila.cells[5].textContent; // Columna Envasado
-                const etiquetado = fila.cells[6].textContent; // Columna Etiquetado
-                const sellado = fila.cells[7].textContent; // Columna Sellado
+            // Obtener solo las filas de productos (excluir las filas de totales)
+            const filasTabla = Array.from(document.querySelectorAll('table tbody tr'))
+                .filter(fila => !fila.classList.contains('totales') && !fila.classList.contains('totales-ajustados'));
 
-                // Retornar string con producto y valores de la tabla
-                return `${producto} ${gramaje}gr(${envasado},${etiquetado},${sellado},${cernido})`;
-            }).join(';');
+            const justificativosDetallados = filasTabla.map(fila => {
+                try {
+                    const producto = fila.cells[1].textContent; // Columna Producto
+                    const gramaje = fila.cells[2].textContent; // Columna Gramaje
+                    const cernido = fila.cells[4].textContent; // Columna Cernido
+                    const envasado = fila.cells[5].textContent; // Columna Envasado
+                    const etiquetado = fila.cells[6].textContent; // Columna Etiquetado
+                    const sellado = fila.cells[7].textContent; // Columna Sellado
+
+                    // Retornar string con producto y valores de la tabla
+                    return `${producto} ${gramaje}gr(${envasado},${etiquetado},${sellado},${cernido})`;
+                } catch (error) {
+                    console.warn('Error procesando fila:', error);
+                    return '';
+                }
+            }).filter(Boolean).join(';');
 
             const formData = {
                 nombre_pago: contenido.querySelector('input[name="nombre_pago"]').value.trim(),
