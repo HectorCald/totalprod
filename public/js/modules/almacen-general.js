@@ -4,6 +4,158 @@ let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
 let usuarioInfo = recuperarUsuarioLocal();
+const DB_NAME = 'damabrava_db';
+const STORE_NAME = 'imagenes_cache';
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+async function guardarImagenLocal(id, imageUrl) {
+    try {
+        console.log(`⌛ Guardando imagen ${id}...`);
+        const db = await initDB();
+
+        // Primero verificar si existe
+        const tx1 = db.transaction(STORE_NAME, 'readonly');
+        const store1 = tx1.objectStore(STORE_NAME);
+        
+        const existente = await new Promise((resolve) => {
+            const request = store1.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+        });
+
+        if (existente && 
+            existente.url === imageUrl && 
+            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
+            console.log(`📦 Imagen ya en caché: ${id}`);
+            return existente;
+        }
+
+        // Si necesita actualizarse, procesar y guardar en una nueva transacción
+        const blob = await urlToBlob(imageUrl);
+        const base64 = await blobToBase64(blob);
+
+        const imagenCache = {
+            id,
+            url: imageUrl,
+            data: base64,
+            timestamp: Date.now()
+        };
+
+        // Nueva transacción para guardar
+        const tx2 = db.transaction(STORE_NAME, 'readwrite');
+        const store2 = tx2.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store2.put(imagenCache);
+            
+            // Esperar a que complete la transacción
+            tx2.oncomplete = () => {
+                console.log(`✅ Imagen ${id} guardada exitosamente`);
+                resolve(imagenCache);
+            };
+            
+            tx2.onerror = () => {
+                console.error(`Error en transacción para ${id}:`, tx2.error);
+                reject(tx2.error);
+            };
+            
+            tx2.onabort = () => {
+                console.error(`Transacción abortada para ${id}`);
+                reject(new Error('Transacción abortada'));
+            };
+        });
+
+    } catch (error) {
+        console.error(`❌ Error guardando imagen ${id}:`, error);
+        return null;
+    }
+}
+
+async function obtenerImagenLocal(id) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo imagen del cache:', error);
+        return null;
+    }
+}
+
+async function limpiarCacheImagenes() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.clear();
+        console.log('🧹 Cache limpiado completamente');
+    } catch (error) {
+        console.error('Error limpiando cache:', error);
+    }
+}
+
+async function limpiarImagenesAntiguas() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        
+        const unDia = 24 * 60 * 60 * 1000;
+        const ahora = Date.now();
+
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (ahora - cursor.value.timestamp > unDia) {
+                    store.delete(cursor.key);
+                    console.log(`🗑️ Eliminada imagen antigua: ${cursor.key}`);
+                }
+                cursor.continue();
+            }
+        };
+    } catch (error) {
+        console.error('Error limpiando imágenes antiguas:', error);
+    }
+}
+
+
+async function urlToBlob(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return blob;
+}
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+
+
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
     if (usuarioGuardado) {
@@ -136,6 +288,16 @@ async function obtenerAlmacenGeneral() {
     }
 }
 
+function necesitaActualizacion(imagenCache, nuevaUrl) {
+    if (!imagenCache) return true;
+    if (imagenCache.url !== nuevaUrl) return true;
+
+    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
+    const unDia = 24 * 60 * 60 * 1000;
+    if (Date.now() - imagenCache.timestamp > unDia) return true;
+
+    return false;
+}
 
 
 export async function mostrarAlmacenGeneral() {
@@ -153,9 +315,8 @@ export async function mostrarAlmacenGeneral() {
         obtenerAlmacenAcopio()
     ]);
 
-    updateHTMLWithData(); // Update HTML once data is loaded
+    await updateHTMLWithData(); 
     eventosAlmacenGeneral();
-
 }
 function renderInitialHTML() {
 
@@ -223,7 +384,7 @@ function renderInitialHTML() {
         contenido.style.paddingBottom = '80px';
     }
 }
-function updateHTMLWithData() {
+async function updateHTMLWithData() {
     // Update etiquetas filter
     const etiquetasUnicas = [...new Set(etiquetas.map(etiqueta => etiqueta.etiqueta))];
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
@@ -236,35 +397,51 @@ function updateHTMLWithData() {
     `;
 
     // Update precios select
-    const preciosSelect = document.querySelector('.precios-select');
-    const preciosOpciones = precios.map((precio, index) => {
-        const primerPrecio = precio.precio.split(';')[0].split(',')[0];
-        return `<option value="${precio.id}" ${index === 1 ? 'selected' : ''}>${primerPrecio}</option>`;
-    }).join('');
-    preciosSelect.innerHTML = preciosOpciones;
-
-    // Update productos
     const productosContainer = document.querySelector('.productos-container');
-    const productosHTML = productos.map(producto => `
-        <div class="registro-item" data-id="${producto.id}">
-    <div class="header">
-        ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-        `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-        `<i class='bx bx-package'></i>`}
-        <div class="info-header">
-            <div class="id">${producto.id}
-                <div class="precio-cantidad">
-                    <span class="valor stock">${producto.stock} Und.</span>
-                    <span class="valor precio">Bs. ${producto.precios.split(';')[0].split(',')[1]}</span>
+    const productosHTML = await Promise.all(productos.map(async producto => {
+        let imagenUrl = producto.imagen;
+        let imagenMostrar = imagenUrl;
+
+        if (imagenUrl && imagenUrl.includes('https://res.cloudinary.com')) {
+            const imagenCache = await obtenerImagenLocal(producto.id);
+            console.log(`Producto ${producto.id}: ${imagenCache ? 'Encontrado en caché' : 'No está en caché'}`);
+
+            if (imagenCache && !necesitaActualizacion(imagenCache, imagenUrl)) {
+                imagenMostrar = imagenCache.data;
+            } else {
+                // Usar la URL original mientras se guarda en caché
+                imagenMostrar = imagenUrl;
+                // Guardar en segundo plano
+                guardarImagenLocal(producto.id, imagenUrl).then(() => {
+                    console.log(`Cache actualizado para: ${producto.id}`);
+                });
+            }
+        }
+
+        return `
+            <div class="registro-item" data-id="${producto.id}">
+                <div class="header">
+                    ${imagenMostrar && imagenMostrar.includes('data:image/') ? 
+                        `<img class="imagen" src="${imagenMostrar}" alt="${producto.producto}" 
+                         onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">` :
+                        `<i class='bx bx-package'></i>`}
+                    <div class="info-header">
+                        <div class="id">${producto.id}
+                            <div class="precio-cantidad">
+                                <span class="valor stock">${producto.stock} Und.</span>
+                                <span class="valor precio">Bs. ${producto.precios.split(';')[0].split(',')[1]}</span>
+                            </div>
+                        </div>
+                        <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                        <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+                    </div>
                 </div>
             </div>
-            <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
-            <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
-        </div>
-    </div>
-</div>
-    `).join('');
-    productosContainer.innerHTML = productosHTML;
+        `;
+    }));
+
+    // Renderizar HTML inmediatamente sin esperar promises
+    productosContainer.innerHTML = productosHTML.join('');
 }
 
 
@@ -1045,7 +1222,7 @@ function eventosAlmacenGeneral() {
                 }
             }
         }
-    }   
+    }
 
     function crearProducto() {
 

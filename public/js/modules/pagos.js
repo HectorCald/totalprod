@@ -499,6 +499,7 @@ function eventosPagos() {
                         ${justificativosFormateados.map(j => `
                             <tr>
                                 <td>${j.producto}</td>
+                                <td>${j.producto}</td>
                                 <td>Bs. ${j.envasado.toFixed(2)}</td>
                                 <td>Bs. ${j.etiquetado.toFixed(2)}</td>
                                 <td>Bs. ${j.sellado.toFixed(2)}</td>
@@ -863,7 +864,7 @@ function eventosPagos() {
                         <i class='bx bx-dollar-circle'></i>
                         <div class="input">
                             <p class="detalle">Total a Pagar</p>
-                            <input type="number" name="total" step="0.01" readonly>
+                            <input type="number" name="total" step="0.01" value="0" readonly>
                         </div>
                     </div>
     
