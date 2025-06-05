@@ -1257,9 +1257,14 @@
 }
 
 #imagen-producto-registro {
-    max-width: 100px !important;
-    max-height: 100px !important;
-    border: 1px solid red;
+    max-width: 100% !important;
+    max-height: 200px !important;
+    border: 1px solid red !important;
+
+    img{
+        width: 200px !important;
+        height: 200px !important;
+    }
 }
 
 .registro-item[style*="display: none"] {
@@ -1722,6 +1727,9 @@
     background-color: var(--primary-color) !important;
     padding: 10px !important;
 }
+
+
+
 
 .btn-calendario {
     width: fit-content;

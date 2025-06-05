@@ -1316,6 +1316,55 @@ function eventosVerificacion() {
             </tr>
         `;
         }).join('');
+        const totales = registrosFiltrados.reduce((acc, registro) => {
+            const calculado = calcularTotal(registro);
+            return {
+                cernido: acc.cernido + calculado.cernido,
+                envasado: acc.envasado + calculado.envasado,
+                etiquetado: acc.etiquetado + calculado.etiquetado,
+                sellado: acc.sellado + calculado.sellado,
+                total: acc.total + calculado.total
+            };
+        }, { cernido: 0, envasado: 0, etiquetado: 0, sellado: 0, total: 0 });
+
+        // Modificar la parte de la tabla para incluir los totales
+        const tablaHTML = `
+    <div class="tabla-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Operador</th>
+                    <th>Producto</th>
+                    <th>Gramaje</th>
+                    <th>Cantidad verf.</th>
+                    <th>Cernido</th>
+                    <th>Envasado</th>
+                    <th>Etiquetado</th>
+                    <th>Sellado</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${vistaPrevia}
+                <tr class="totales" style="background-color: rgba(0,0,0,0.1); font-weight: bold;">
+                    <td colspan="4" style="text-align: right;">TOTALES:</td>
+                    <td>${totales.cernido.toFixed(2)}</td>
+                    <td>${totales.envasado.toFixed(2)}</td>
+                    <td>${totales.etiquetado.toFixed(2)}</td>
+                    <td>${totales.sellado.toFixed(2)}</td>
+                    <td><strong>${totales.total.toFixed(2)}</strong></td>
+                </tr>
+                <tr class="totales-ajustados" style="background-color: rgba(0,0,0,0.15); font-weight: bold;">
+                    <td colspan="4" style="text-align: right;">TOTAL AJUSTADO:</td>
+                    <td colspan="4" style="text-align: right;">
+                        Aumentos: +<span class="aumento-preview">0.00</span> | 
+                        Descuentos: -<span class="descuento-preview">0.00</span>
+                    </td>
+                    <td><strong><span class="total-final-preview">${totales.total.toFixed(2)}</span></strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`;
 
         // Calcular el subtotal general usando la misma función
         const subtotalGeneral = registrosFiltrados.reduce((total, registro) => {
@@ -1406,26 +1455,7 @@ function eventosVerificacion() {
                     </div>
                 </div>
                 <p class="normal">Vista previa de registros incluidos</p>
-                <div class="tabla-responsive">
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Operador</th>
-                            <th>Producto</th>
-                            <th>Gramaje</th>
-                            <th>Cantidad verf.</th>
-                            <th>Cernido</th>
-                            <th>Envasado</th>
-                            <th>Etiquetado</th>
-                            <th>Sellado</th>
-                            <th>Total</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        ${vistaPrevia}
-                        </tbody>
-                    </table>
-                </div>
+                ${tablaHTML}
             </div>
             <div class="anuncio-botones">
                 <button type="submit" class="btn green"><i class='bx bx-save'></i> Guardar pago</button>
@@ -1434,6 +1464,28 @@ function eventosVerificacion() {
         contenido.style.paddingBottom = '80px';
 
         mostrarAnuncioSecond();
+
+
+        // Actualizar los eventos de los inputs para reflejar los cambios en tiempo real
+        const actualizarTotalesPreview = () => {
+            const descuento = parseFloat(document.querySelector('input[name="descuento"]').value) || 0;
+            const aumento = parseFloat(document.querySelector('input[name="aumento"]').value) || 0;
+            const totalFinal = totales.total + aumento - descuento;
+
+            document.querySelector('.descuento-preview').textContent = descuento.toFixed(2);
+            document.querySelector('.aumento-preview').textContent = aumento.toFixed(2);
+            document.querySelector('.total-final-preview').textContent = totalFinal.toFixed(2);
+            document.querySelector('input[name="total"]').value = totalFinal.toFixed(2);
+        };
+
+        // Agregar los event listeners después de mostrar la tabla
+        const addEventListeners = () => {
+            const inputs = contenido.querySelectorAll('input[name="descuento"], input[name="aumento"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', actualizarTotalesPreview);
+            });
+        };
+        addEventListeners();
 
         const selectBenef = contenido.querySelector('#select-beneficiario');
         const inputPersonalizado = contenido.querySelector('#beneficiario-personalizado');
