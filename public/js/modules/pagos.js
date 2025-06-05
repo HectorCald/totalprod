@@ -411,7 +411,8 @@ function eventosPagos() {
                         <span class="valor"><strong><i class='bx bx-minus-circle'></i> Descuento: </strong>Bs. ${pago.descuento}</span>
                         <span class="valor"><strong><i class='bx bx-plus-circle'></i> Aumento: </strong>Bs. ${pago.aumento}</span>
                         <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total: </strong>Bs. ${pago.total}</span>
-                        ${pago.observaciones ? `<span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong>${pago.observaciones}</span>` : ''}
+                        ${pago.observaciones ? `<span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong></span>
+                           <span style="padding-left:20px;width: 100%;">${pago.observaciones}</span>` : ''}
                     </div>
     
                     <p class="normal">Información administrativa</p>
@@ -476,7 +477,7 @@ function eventosPagos() {
                 <span class="valor"><strong><i class='bx bx-plus-circle'></i> Aumento: </strong>Bs. ${pago.aumento}</span>
                 <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total: </strong>Bs. ${pago.total}</span>
                 ${pago.observaciones ? `<span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong></span>
-                    <span>${pago.observaciones}</span>
+                    <span style="padding-left:20px;width: 100%;">${pago.observaciones}</span>
                     ` : ''}
                 
             </div>
