@@ -197,7 +197,7 @@ async function generarCatalogo(tipoPrecio) {
                     );
 
                     // Precio
-                    const textoPrecio = `Precio: Bs/${precio}`;
+                    const textoPrecio = `Precio: Bs. ${precio}`;
                     const precioWidth = doc.getTextWidth(textoPrecio);
                     doc.text(
                         textoPrecio,
