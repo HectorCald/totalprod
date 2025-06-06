@@ -1037,7 +1037,7 @@
             justify-content: center;
             align-items: center;
             font-size: var(--text-5xl);
-            filter: brightness(1.1) saturate(1.2) sepia(0.3);
+            filter: brightness(1.2) saturate(1.5) sepia(0.2) hue-rotate(10deg);
         }
 
         .info-header {
@@ -1292,7 +1292,7 @@
         background-color: var(--primary-color);
         border-radius: 10px;
         padding: 15px;
-        filter: brightness(1.1) saturate(1.2) sepia(0.3);
+        filter: brightness(1.2) saturate(1.5) sepia(0.2) hue-rotate(10deg);
     }
     i{
         width: 250px;

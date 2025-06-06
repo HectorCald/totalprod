@@ -70,7 +70,7 @@ function filtrarProductos() {
         items: productosItems
     };
 }
-function ajustarBrillo(img, brillo = 50, realceRojo = 30) {
+function ajustarBrillo(img, brillo = 0, saturacion = 1.5) {
     const canvas = document.createElement('canvas');
     canvas.width = img.width;
     canvas.height = img.height;
@@ -81,10 +81,10 @@ function ajustarBrillo(img, brillo = 50, realceRojo = 30) {
     const data = imageData.data;
 
     for (let i = 0; i < data.length; i += 4) {
-        // Aumentar el rojo más que otros colores
-        data[i] = Math.min(255, data[i] + brillo + realceRojo);     // Rojo (+realceRojo adicional)
-        data[i + 1] = Math.min(255, data[i + 1] + brillo); // Verde
-        data[i + 2] = Math.min(255, data[i + 2] + brillo); // Azul
+        // Aumentar todos los canales de color por igual
+        data[i] = Math.min(255, data[i] * saturacion + brillo);     // Rojo
+        data[i + 1] = Math.min(255, data[i + 1] * saturacion + brillo); // Verde
+        data[i + 2] = Math.min(255, data[i + 2] * saturacion + brillo); // Azul
     }
 
     ctx.putImageData(imageData, 0, 0);
@@ -116,18 +116,25 @@ async function mostrarOpcionesCatalogo() {
 
     const contenido = document.querySelector('.anuncio-second .contenido');
     const botonesPrecios = precios.map(precio => `
-        <button class="btn especial btn-precio" style="color: white; border: 1px solid red"data-precio="${precio.precio}">
-            <i class='bx bxs-file-pdf' style="color:red !important;"></i> Catálogo ${precio.precio}
+        <button class="btn red btn-precio" data-precio="${precio.precio}">
+            <i class='bx bxs-file-pdf' style="color:white !important;"></i> Catálogo ${precio.precio}
         </button>
     `).join('');
 
     contenido.innerHTML = `
         <div class="encabezado">
-            <h1 class="titulo">Seleccionar Catálogo</h1>
+            <h1 class="titulo">Catálogos</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-                ${botonesPrecios}
+        <p class="normal">Selecciona un catalogo para generar el PDF</p>
+            ${botonesPrecios}
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Generar un catalogo podria tardar de 1 minuto a 2 minutos segun la conexion de internet.</p>
+                </div>
+            </div>
         </div>
     `;
     mostrarAnuncioSecond();
@@ -157,7 +164,7 @@ async function generarCatalogo(tipoPrecio) {
         // Primera página (cabecera)
         try {
             const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
-            doc.addImage(cabecera, 'PNG', 0, 0, pageWidth, pageHeight);
+            doc.addImage(cabecera, 'WEBP', 0, 0, pageWidth, pageHeight);
         } catch (error) {
             console.error('Error al cargar cabecera:', error);
         }
@@ -179,7 +186,7 @@ async function generarCatalogo(tipoPrecio) {
                 }
 
                 // Ajustar brillo antes de agregar al PDF
-                const imagenAclarada = ajustarBrillo(img, 20, 30); // Más brillo general (50) y realce rojo (30)
+                const imagenAclarada = ajustarBrillo(img, 0, 1.2); // brillo = 70, saturación = 1.5x
 
                 doc.addImage(
                     imagenAclarada,
