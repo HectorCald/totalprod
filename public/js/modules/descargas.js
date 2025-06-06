@@ -146,6 +146,11 @@ async function mostrarOpcionesCatalogo() {
     // Agregar eventos a los botones
     const botones = contenido.querySelectorAll('.btn-precio');
     botones.forEach(boton => {
+        const progressContainer = document.querySelector('.progress-container');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.progress-text span');
+        progressBar.style.width = '1px';
+        progressText.textContent = '0%';
         boton.addEventListener('click', () => generarCatalogo(boton.dataset.precio));
     });
 }
@@ -155,6 +160,8 @@ async function generarCatalogo(tipoPrecio) {
         const progressBar = document.querySelector('.progress-bar');
         const progressText = document.querySelector('.progress-text span');
         progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
 
         const updateProgress = (percent) => {
             progressBar.style.width = `${percent}%`;
@@ -370,9 +377,6 @@ async function generarCatalogo(tipoPrecio) {
             type: 'error',
             duration: 3500
         });
-    } finally {
-        // Ocultar barra de progreso al finalizar
-        document.querySelector('.progress-container').style.display = 'none';
     }
 }
 const loadImage = async (url) => {
