@@ -2213,12 +2213,11 @@
 }
 
 .btn-precio:disabled {
-    background-color: var(--cero-color) !important;
-    opacity: 0.5;
+    opacity: 0.2;
     cursor: not-allowed;
     transition: all 0.3s ease;
 }
 
 .btn-precio:disabled i {
-    opacity: 0.5;
+    opacity: 0.2;
 }

@@ -159,7 +159,7 @@ async function generarCatalogo(tipoPrecio) {
     const botones = document.querySelectorAll('.btn-precio');
         botones.forEach(btn => {
             btn.disabled = true;
-            btn.style.opacity = '0.5';
+            btn.style.opacity = '0.2';
             btn.style.cursor = 'not-allowed';
         });
 
