@@ -127,13 +127,17 @@ async function mostrarOpcionesCatalogo() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-        <p class="normal">Selecciona un catalogo para generar el PDF</p>
+            <p class="normal">Selecciona un catalogo para generar el PDF</p>
             ${botonesPrecios}
             <div class="info-sistema">
                 <i class='bx bx-info-circle'></i>
                 <div class="detalle-info">
                     <p>Generar un catalogo podria tardar de 1 minuto a 2 minutos segun la conexion de internet.</p>
                 </div>
+            </div>
+            <div class="progress-container" style="display: none;">
+                <div class="progress-bar"></div>
+                <p class="progress-text">Generando catálogo: <span>0%</span></p>
             </div>
         </div>
     `;
@@ -147,8 +151,20 @@ async function mostrarOpcionesCatalogo() {
 }
 async function generarCatalogo(tipoPrecio) {
     try {
-        mostrarCarga();
+        const progressContainer = document.querySelector('.progress-container');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.progress-text span');
+        progressContainer.style.display = 'block';
+
+        const updateProgress = (percent) => {
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = `${percent}%`;
+        };
+
         const { normales, botes, items } = filtrarProductos();
+        const totalProductos = normales.length + botes.length + items.length;
+        let productosCompletados = 0;
+
         const imagenesCargadas = await precargarImagenes([...normales, ...botes, ...items]);
 
         // Variables para control de páginas y productos
@@ -165,6 +181,7 @@ async function generarCatalogo(tipoPrecio) {
         try {
             const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
             doc.addImage(cabecera, 'WEBP', 0, 0, pageWidth, pageHeight);
+            updateProgress(5); // Inicio del progreso
         } catch (error) {
             console.error('Error al cargar cabecera:', error);
         }
@@ -186,7 +203,7 @@ async function generarCatalogo(tipoPrecio) {
                 }
 
                 // Ajustar brillo antes de agregar al PDF
-                const imagenAclarada = ajustarBrillo(img, 0, 1.2); // brillo = 70, saturación = 1.5x
+                const imagenAclarada = ajustarBrillo(img, 0, 1.2);
 
                 doc.addImage(
                     imagenAclarada,
@@ -235,6 +252,12 @@ async function generarCatalogo(tipoPrecio) {
                         nombreY + 12
                     );
                 }
+                
+                // Actualizar progreso después de cada producto
+                productosCompletados++;
+                const porcentaje = Math.round((productosCompletados / totalProductos) * 100);
+                updateProgress(porcentaje);
+
             } catch (error) {
                 console.error('Error al procesar producto:', error);
             }
@@ -348,7 +371,8 @@ async function generarCatalogo(tipoPrecio) {
             duration: 3500
         });
     } finally {
-        ocultarCarga();
+        // Ocultar barra de progreso al finalizar
+        document.querySelector('.progress-container').style.display = 'none';
     }
 }
 const loadImage = async (url) => {
