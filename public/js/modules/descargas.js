@@ -157,11 +157,6 @@ async function mostrarOpcionesCatalogo() {
 }
 async function generarCatalogo(tipoPrecio) {
     try {
-        // Deshabilitar interacción táctil al inicio
-        document.body.style.pointerEvents = 'none';
-        document.body.style.touchAction = 'none';
-        document.body.style.userSelect = 'none';
-
         const progressContainer = document.querySelector('.progress-container');
         const progressBar = document.querySelector('.progress-bar');
         const progressText = document.querySelector('.progress-text span');
@@ -172,13 +167,6 @@ async function generarCatalogo(tipoPrecio) {
         const updateProgress = (percent) => {
             progressBar.style.width = `${percent}%`;
             progressText.textContent = `${percent}%`;
-            
-            // Reactivar interacción cuando llegue a 100%
-            if (percent >= 100) {
-                document.body.style.pointerEvents = 'auto';
-                document.body.style.touchAction = 'auto';
-                document.body.style.userSelect = 'auto';
-            }
         };
 
         const { normales, botes, items } = filtrarProductos();
