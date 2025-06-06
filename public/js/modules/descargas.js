@@ -156,6 +156,13 @@ async function mostrarOpcionesCatalogo() {
     });
 }
 async function generarCatalogo(tipoPrecio) {
+    const botones = document.querySelectorAll('.btn-precio');
+        botones.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+        });
+
     try {
         const progressContainer = document.querySelector('.progress-container');
         const progressBar = document.querySelector('.progress-bar');
@@ -370,6 +377,7 @@ async function generarCatalogo(tipoPrecio) {
 
         // Guardar PDF
         doc.save(`Catalogo_${tipoPrecio}_${new Date().toLocaleDateString()}.pdf`);
+        
 
     } catch (error) {
         console.error('Error al generar catálogo:', error);
@@ -377,6 +385,14 @@ async function generarCatalogo(tipoPrecio) {
             message: 'Error al generar el catálogo',
             type: 'error',
             duration: 3500
+        });
+    }finally {
+        // Reactivar los botones al terminar
+        const botones = document.querySelectorAll('.btn-precio');
+        botones.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
         });
     }
 }

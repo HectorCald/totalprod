@@ -2211,3 +2211,14 @@
     z-index: 5;
     text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
+
+.btn-precio:disabled {
+    background-color: var(--cero-color) !important;
+    opacity: 0.5;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+}
+
+.btn-precio:disabled i {
+    opacity: 0.5;
+}
