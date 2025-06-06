@@ -4,6 +4,13 @@ let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
 let usuarioInfo = recuperarUsuarioLocal();
+function recuperarUsuarioLocal() {
+    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
+    if (usuarioGuardado) {
+        return JSON.parse(usuarioGuardado);
+    }
+    return null;
+}
 const DB_NAME = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
 
@@ -22,7 +29,6 @@ function initDB() {
         };
     });
 }
-
 async function guardarImagenLocal(id, imageUrl) {
     try {
         console.log(`⌛ Guardando imagen ${id}...`);
@@ -31,15 +37,15 @@ async function guardarImagenLocal(id, imageUrl) {
         // Primero verificar si existe
         const tx1 = db.transaction(STORE_NAME, 'readonly');
         const store1 = tx1.objectStore(STORE_NAME);
-        
+
         const existente = await new Promise((resolve) => {
             const request = store1.get(id);
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => resolve(null);
         });
 
-        if (existente && 
-            existente.url === imageUrl && 
+        if (existente &&
+            existente.url === imageUrl &&
             Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
             console.log(`📦 Imagen ya en caché: ${id}`);
             return existente;
@@ -62,18 +68,18 @@ async function guardarImagenLocal(id, imageUrl) {
 
         return new Promise((resolve, reject) => {
             const request = store2.put(imagenCache);
-            
+
             // Esperar a que complete la transacción
             tx2.oncomplete = () => {
                 console.log(`✅ Imagen ${id} guardada exitosamente`);
                 resolve(imagenCache);
             };
-            
+
             tx2.onerror = () => {
                 console.error(`Error en transacción para ${id}:`, tx2.error);
                 reject(tx2.error);
             };
-            
+
             tx2.onabort = () => {
                 console.error(`Transacción abortada para ${id}`);
                 reject(new Error('Transacción abortada'));
@@ -85,7 +91,6 @@ async function guardarImagenLocal(id, imageUrl) {
         return null;
     }
 }
-
 async function obtenerImagenLocal(id) {
     try {
         const db = await initDB();
@@ -102,7 +107,6 @@ async function obtenerImagenLocal(id) {
         return null;
     }
 }
-
 async function limpiarCacheImagenes() {
     try {
         const db = await initDB();
@@ -114,13 +118,12 @@ async function limpiarCacheImagenes() {
         console.error('Error limpiando cache:', error);
     }
 }
-
 async function limpiarImagenesAntiguas() {
     try {
         const db = await initDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
-        
+
         const unDia = 24 * 60 * 60 * 1000;
         const ahora = Date.now();
 
@@ -138,8 +141,6 @@ async function limpiarImagenesAntiguas() {
         console.error('Error limpiando imágenes antiguas:', error);
     }
 }
-
-
 async function urlToBlob(url) {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -153,16 +154,17 @@ function blobToBase64(blob) {
         reader.readAsDataURL(blob);
     });
 }
+function necesitaActualizacion(imagenCache, nuevaUrl) {
+    if (!imagenCache) return true;
+    if (imagenCache.url !== nuevaUrl) return true;
 
+    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
+    const unDia = 24 * 60 * 60 * 1000;
+    if (Date.now() - imagenCache.timestamp > unDia) return true;
 
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
+    return false;
 }
+
 
 
 async function obtenerEtiquetas() {
@@ -266,6 +268,17 @@ async function obtenerAlmacenGeneral() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA; // Orden descendente por número de ID
             });
+
+            // Procesar y guardar todas las imágenes antes de retornar
+            await Promise.all(productos.map(async producto => {
+                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+                    const imagenCache = await obtenerImagenLocal(producto.id);
+                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
+                        await guardarImagenLocal(producto.id, producto.imagen);
+                    }
+                }
+            }));
+
             return true;
         } else {
             mostrarNotificacion({
@@ -283,21 +296,9 @@ async function obtenerAlmacenGeneral() {
             duration: 3500
         });
         return false;
-    } finally {
-        ocultarCarga();
     }
 }
 
-function necesitaActualizacion(imagenCache, nuevaUrl) {
-    if (!imagenCache) return true;
-    if (imagenCache.url !== nuevaUrl) return true;
-
-    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
-    const unDia = 24 * 60 * 60 * 1000;
-    if (Date.now() - imagenCache.timestamp > unDia) return true;
-
-    return false;
-}
 
 
 export async function mostrarAlmacenGeneral() {
@@ -315,7 +316,7 @@ export async function mostrarAlmacenGeneral() {
         obtenerAlmacenAcopio()
     ]);
 
-    await updateHTMLWithData(); 
+    await updateHTMLWithData();
     eventosAlmacenGeneral();
 }
 function renderInitialHTML() {
@@ -399,32 +400,20 @@ async function updateHTMLWithData() {
     // Update precios select
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = await Promise.all(productos.map(async producto => {
-        let imagenUrl = producto.imagen;
-        let imagenMostrar = imagenUrl;
+        let imagenMostrar = '<i class=\'bx bx-package\'></i>';
 
-        if (imagenUrl && imagenUrl.includes('https://res.cloudinary.com')) {
+        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
             const imagenCache = await obtenerImagenLocal(producto.id);
-            console.log(`Producto ${producto.id}: ${imagenCache ? 'Encontrado en caché' : 'No está en caché'}`);
-
-            if (imagenCache && !necesitaActualizacion(imagenCache, imagenUrl)) {
-                imagenMostrar = imagenCache.data;
-            } else {
-                // Usar la URL original mientras se guarda en caché
-                imagenMostrar = imagenUrl;
-                // Guardar en segundo plano
-                guardarImagenLocal(producto.id, imagenUrl).then(() => {
-                    console.log(`Cache actualizado para: ${producto.id}`);
-                });
+            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
+                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
+                                onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
             }
         }
 
         return `
             <div class="registro-item" data-id="${producto.id}">
                 <div class="header">
-                    ${imagenMostrar && imagenMostrar.includes('data:image/') ? 
-                        `<img class="imagen" src="${imagenMostrar}" alt="${producto.producto}" 
-                         onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">` :
-                        `<i class='bx bx-package'></i>`}
+                    ${imagenMostrar}
                     <div class="info-header">
                         <div class="id">${producto.id}
                             <div class="precio-cantidad">
@@ -440,9 +429,10 @@ async function updateHTMLWithData() {
         `;
     }));
 
-    // Renderizar HTML inmediatamente sin esperar promises
+    // Renderizar HTML
     productosContainer.innerHTML = productosHTML.join('');
 }
+
 
 
 function eventosAlmacenGeneral() {
@@ -676,9 +666,19 @@ function eventosAlmacenGeneral() {
     }
 
 
-    window.info = function (registroId) {
+    window.info = async function (registroId) {
         const producto = productos.find(r => r.id === registroId);
         if (!producto) return;
+
+
+        let imagenMostrar = '<i class=\'bx bx-package\'></i>';
+        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+            const imagenCache = await obtenerImagenLocal(producto.id);
+            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
+                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
+                            onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
+            }
+        }
 
         // Procesar los precios
         const preciosFormateados = producto.precios.split(';')
@@ -704,9 +704,7 @@ function eventosAlmacenGeneral() {
         <div class="relleno">
             <p class="normal">Imagen del producto</p>
             <div class="imagen-producto-registro">
-                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                `<i class='bx bx-package'></i>`}
+                ${imagenMostrar}
             </div>
             <p class="normal">Información general</p>
             <div class="campo-vertical">
@@ -764,18 +762,11 @@ function eventosAlmacenGeneral() {
             </div>
             <div class="relleno">
                 <p class="normal">Información general</p>
-                <div class="campo-horizontal">
-                    <div class="campo-vertical">
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
-                        <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
-                        <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
-                        <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
-                    </div>
-                    <div class="imagen-producto">
-                    ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                    `<i class='bx bx-package'></i>`}
-                    </div>
+                <div class="campo-vertical">
+                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
+                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
+                    <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
+                    <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
                 </div>
                 <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">

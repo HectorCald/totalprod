@@ -2,6 +2,126 @@ let registrosProduccion = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let productosGlobal = [];
 
+const DB_NAME = 'damabrava_db';
+const STORE_NAME = 'imagenes_cache';
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+async function guardarImagenLocal(id, imageUrl) {
+    try {
+        console.log(`⌛ Guardando imagen ${id}...`);
+        const db = await initDB();
+
+        // Primero verificar si existe
+        const tx1 = db.transaction(STORE_NAME, 'readonly');
+        const store1 = tx1.objectStore(STORE_NAME);
+
+        const existente = await new Promise((resolve) => {
+            const request = store1.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+        });
+
+        if (existente &&
+            existente.url === imageUrl &&
+            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
+            console.log(`📦 Imagen ya en caché: ${id}`);
+            return existente;
+        }
+
+        // Si necesita actualizarse, procesar y guardar en una nueva transacción
+        const blob = await urlToBlob(imageUrl);
+        const base64 = await blobToBase64(blob);
+
+        const imagenCache = {
+            id,
+            url: imageUrl,
+            data: base64,
+            timestamp: Date.now()
+        };
+
+        // Nueva transacción para guardar
+        const tx2 = db.transaction(STORE_NAME, 'readwrite');
+        const store2 = tx2.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store2.put(imagenCache);
+
+            // Esperar a que complete la transacción
+            tx2.oncomplete = () => {
+                console.log(`✅ Imagen ${id} guardada exitosamente`);
+                resolve(imagenCache);
+            };
+
+            tx2.onerror = () => {
+                console.error(`Error en transacción para ${id}:`, tx2.error);
+                reject(tx2.error);
+            };
+
+            tx2.onabort = () => {
+                console.error(`Transacción abortada para ${id}`);
+                reject(new Error('Transacción abortada'));
+            };
+        });
+
+    } catch (error) {
+        console.error(`❌ Error guardando imagen ${id}:`, error);
+        return null;
+    }
+}
+async function obtenerImagenLocal(id) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo imagen del cache:', error);
+        return null;
+    }
+}
+async function urlToBlob(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return blob;
+}
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+function necesitaActualizacion(imagenCache, nuevaUrl) {
+    if (!imagenCache) return true;
+    if (imagenCache.url !== nuevaUrl) return true;
+
+    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
+    const unDia = 24 * 60 * 60 * 1000;
+    if (Date.now() - imagenCache.timestamp > unDia) return true;
+
+    return false;
+}
+
 
 async function obtenerMisRegistros() {
     try {
@@ -39,11 +159,27 @@ async function obtenerProductos() {
         const data = await response.json();
 
         if (data.success) {
-            productosGlobal = data.productos;
+            // Guardar los productos en la variable global y ordenarlos por ID
+            productosGlobal = data.productos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA; // Orden descendente por número de ID
+            });
+
+            // Procesar y guardar todas las imágenes antes de retornar
+            await Promise.all(productosGlobal.map(async producto => {
+                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+                    const imagenCache = await obtenerImagenLocal(producto.id);
+                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
+                        await guardarImagenLocal(producto.id, producto.imagen);
+                    }
+                }
+            }));
+
             return true;
         } else {
             mostrarNotificacion({
-                message: 'Error al obtener productos',
+                message: 'Error al obtener productos del almacén',
                 type: 'error',
                 duration: 3500
             });
@@ -52,7 +188,7 @@ async function obtenerProductos() {
     } catch (error) {
         console.error('Error al obtener productos:', error);
         mostrarNotificacion({
-            message: 'Error al obtener productos',
+            message: 'Error al obtener productos del almacén',
             type: 'error',
             duration: 3500
         });
@@ -348,7 +484,7 @@ function eventosMisRegistros() {
         });
     }
 
-    window.info = function (registroId) {
+    window.info = async function (registroId) {
         const registro = registrosProduccion.find(r => r.id === registroId);
         if (!registro) return;
 
@@ -360,6 +496,16 @@ function eventosMisRegistros() {
         const unidadesSueltas = numeroADividir % cantidadPorGrupo;
         const unidadesTira = producto ? (cantidadPorGrupo <= 1 ? `${tirasCompletas} und.` : `${tirasCompletas} tiras`) : 'N/A';
 
+
+        let imagenMostrar = '<i class=\'bx bx-package\'></i>';
+        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+            const imagenCache = await obtenerImagenLocal(producto.id);
+            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
+                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
+                            onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
+            }
+        }
+
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
@@ -367,19 +513,16 @@ function eventosMisRegistros() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
+        <p class="normal">Imagen del producto</p>
+            <div class="imagen-producto-registro">
+                ${imagenMostrar}
+            </div>
             <p class="normal">Información del producto</p>
-            <div class="campo-horizontal">
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
-                </div>
-                <div class="imagen-producto">
-                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                `<i class='bx bx-package'></i>`}
-                </div>
+            <div class="campo-vertical">
+                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
+                <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
             </div>
 
             <p class="normal">Información básica</p>
@@ -456,8 +599,8 @@ function eventosMisRegistros() {
                             </div>
                             <div class="imagen-producto">
                             ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                            `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                            `<i class='bx bx-package'></i>`}
+                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
+                    `<i class='bx bx-package'></i>`}
                             </div>
                         </div>
                         <p class="normal">Motivo de la eliminación</p>

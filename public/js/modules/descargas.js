@@ -1,11 +1,11 @@
-
 let productos = [];
 let precios = [];
-
+const DB_NAME = 'damabrava_db';
+const STORE_NAME = 'imagenes_cache';
 
 async function obtenerDatos() {
     try {
-        mostrarCarga()
+        mostrarCarga();
         const [productosResponse, preciosResponse] = await Promise.all([
             fetch('/obtener-productos'),
             fetch('/obtener-precios')
@@ -15,7 +15,23 @@ async function obtenerDatos() {
         const preciosData = await preciosResponse.json();
 
         if (productosData.success && preciosData.success) {
-            productos = productosData.productos;
+            // Guardar los productos y ordenarlos
+            productos = productosData.productos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+            // Procesar y guardar todas las imágenes antes de continuar
+            await Promise.all(productos.map(async producto => {
+                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+                    const imagenCache = await obtenerImagenLocal(producto.id);
+                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
+                        await guardarImagenLocal(producto.id, producto.imagen);
+                    }
+                }
+            }));
+
             precios = preciosData.precios;
             return true;
         }
@@ -27,6 +43,125 @@ async function obtenerDatos() {
         ocultarCarga();
     }
 }
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+async function guardarImagenLocal(id, imageUrl) {
+    try {
+        console.log(`⌛ Guardando imagen ${id}...`);
+        const db = await initDB();
+
+        // Primero verificar si existe
+        const tx1 = db.transaction(STORE_NAME, 'readonly');
+        const store1 = tx1.objectStore(STORE_NAME);
+
+        const existente = await new Promise((resolve) => {
+            const request = store1.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+        });
+
+        if (existente &&
+            existente.url === imageUrl &&
+            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
+            console.log(`📦 Imagen ya en caché: ${id}`);
+            return existente;
+        }
+
+        // Si necesita actualizarse, procesar y guardar en una nueva transacción
+        const blob = await urlToBlob(imageUrl);
+        const base64 = await blobToBase64(blob);
+
+        const imagenCache = {
+            id,
+            url: imageUrl,
+            data: base64,
+            timestamp: Date.now()
+        };
+
+        // Nueva transacción para guardar
+        const tx2 = db.transaction(STORE_NAME, 'readwrite');
+        const store2 = tx2.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store2.put(imagenCache);
+
+            // Esperar a que complete la transacción
+            tx2.oncomplete = () => {
+                console.log(`✅ Imagen ${id} guardada exitosamente`);
+                resolve(imagenCache);
+            };
+
+            tx2.onerror = () => {
+                console.error(`Error en transacción para ${id}:`, tx2.error);
+                reject(tx2.error);
+            };
+
+            tx2.onabort = () => {
+                console.error(`Transacción abortada para ${id}`);
+                reject(new Error('Transacción abortada'));
+            };
+        });
+
+    } catch (error) {
+        console.error(`❌ Error guardando imagen ${id}:`, error);
+        return null;
+    }
+}
+async function obtenerImagenLocal(id) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo imagen del cache:', error);
+        return null;
+    }
+}
+async function urlToBlob(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return blob;
+}
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+function necesitaActualizacion(imagenCache, nuevaUrl) {
+    if (!imagenCache) return true;
+    if (imagenCache.url !== nuevaUrl) return true;
+
+    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
+    const unDia = 24 * 60 * 60 * 1000;
+    if (Date.now() - imagenCache.timestamp > unDia) return true;
+
+    return false;
+}
+
+
 
 function filtrarProductos() {
     // Función auxiliar para verificar etiquetas
@@ -94,7 +229,6 @@ export async function mostrarDescargaCatalogo() {
     const btnCatalogo = contenido.querySelector('.btn-catalogo');
     btnCatalogo.addEventListener('click', mostrarOpcionesCatalogo);
 }
-
 async function mostrarOpcionesCatalogo() {
     await obtenerDatos();
 
@@ -122,16 +256,13 @@ async function mostrarOpcionesCatalogo() {
         boton.addEventListener('click', () => generarCatalogo(boton.dataset.precio));
     });
 }
-
 async function generarCatalogo(tipoPrecio) {
     try {
         mostrarCarga();
         const { normales, botes, items } = filtrarProductos();
-        const imagenesCargadas = await precargarImagenes([...normales, ...botes, ...items]);
 
-        // Variables para control de páginas y productos
-        const pageWidth = 297; // Ancho A4 landscape en mm
-        const pageHeight = 210 - 20; // Alto A4 landscape en mm - 20mm de reducción
+        const pageWidth = 297;
+        const pageHeight = 210 - 20;
 
         const doc = new window.jsPDF({
             orientation: 'landscape',
@@ -140,12 +271,8 @@ async function generarCatalogo(tipoPrecio) {
         });
 
         // Primera página (cabecera)
-        try {
-            const cabecera = await loadImage('/img/cabecera-catalogo-trans.webp');
-            doc.addImage(cabecera, 'PNG', 0, 0, pageWidth, pageHeight);
-        } catch (error) {
-            console.error('Error al cargar cabecera:', error);
-        }
+        const cabecera = '/img/cabecera-catalogo-trans.webp';
+        doc.addImage(cabecera, 'PNG', 0, 0, pageWidth, pageHeight);
 
         const margin = 15;
         const productosPerPage = 6;
@@ -156,15 +283,18 @@ async function generarCatalogo(tipoPrecio) {
         const procesarProducto = async (producto, xPos, yPos) => {
             try {
                 const imgSize = 60;
-                const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
-                const img = imagenesCargadas.get(imageUrl) || imagenesCargadas.get('/img/logotipo-damabrava-1x1.png');
+                let imagenData = '/img/logotipo-damabrava-1x1.png'; // imagen por defecto
 
-                if (!img) {
-                    throw new Error('Imagen no encontrada en caché');
+                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+                    const imagenCache = await obtenerImagenLocal(producto.id);
+                    if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
+                        imagenData = imagenCache.data; // Usar directamente el base64 del caché
+                    }
                 }
 
+                // Agregar al PDF
                 doc.addImage(
-                    img,
+                    imagenData,
                     'WEBP',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
@@ -174,7 +304,7 @@ async function generarCatalogo(tipoPrecio) {
                     'FAST'
                 );
 
-                // Nombre del producto (Lobster y naranja)
+
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(18);
                 doc.setTextColor('#f39c12');
@@ -220,7 +350,7 @@ async function generarCatalogo(tipoPrecio) {
             doc.addPage([pageWidth, pageHeight]);
 
             try {
-                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                const fondo = '/img/fondo-catalogo-trans.webp';
                 doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
@@ -240,7 +370,7 @@ async function generarCatalogo(tipoPrecio) {
         if (botes.length > 0) {
             doc.addPage([pageWidth, pageHeight]);
             try {
-                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                const fondo = '/img/fondo-catalogo-trans.webp';
                 doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
@@ -256,7 +386,7 @@ async function generarCatalogo(tipoPrecio) {
                 if (i > 0) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
-                        const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                        const fondo = '/img/fondo-catalogo-trans.webp';
                         doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
@@ -278,7 +408,7 @@ async function generarCatalogo(tipoPrecio) {
         if (items.length > 0) {
             doc.addPage([pageWidth, pageHeight]);
             try {
-                const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                const fondo = '/img/fondo-catalogo-trans.webp';
                 doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
             } catch (error) {
                 console.error('Error al cargar fondo:', error);
@@ -294,7 +424,7 @@ async function generarCatalogo(tipoPrecio) {
                 if (i > 0) {
                     doc.addPage([pageWidth, pageHeight]);
                     try {
-                        const fondo = await loadImage('/img/fondo-catalogo-trans.webp');
+                        const fondo = '/img/fondo-catalogo-trans.webp';
                         doc.addImage(fondo, 'WEBP', 0, 0, pageWidth, pageHeight);
                     } catch (error) {
                         console.error('Error al cargar fondo:', error);
@@ -326,17 +456,14 @@ async function generarCatalogo(tipoPrecio) {
         ocultarCarga();
     }
 }
-
 const loadImage = async (url) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        img.crossOrigin = 'Anonymous'; // Esto puede causar retrasos
         img.onload = () => resolve(img);
         img.onerror = reject;
         img.src = url;
     });
 };
-
 function obtenerPrecio(preciosString, tipoPrecio) {
     const precios = preciosString.split(';');
     const precioEncontrado = precios.find(p => p.startsWith(tipoPrecio + ','));
@@ -346,40 +473,5 @@ function obtenerPrecio(preciosString, tipoPrecio) {
     }
     return null;
 }
-// Agregar esta función después de filtrarProductos()
-async function precargarImagenes(productos) {
-    const imagenesUnicas = new Set();
-    const imagenesCargadas = new Map();
 
-    // Recolectar todas las URLs únicas de imágenes
-    productos.forEach(producto => {
-        const imageUrl = producto.imagen || '/img/logotipo-damabrava-1x1.png';
-        imagenesUnicas.add(imageUrl);
-    });
-
-    // También precargar imágenes del catálogo
-    imagenesUnicas.add('/img/cabecera-catalogo-trans.webp');
-    imagenesUnicas.add('/img/fondo-catalogo-trans.webp');
-
-    // Cargar todas las imágenes en paralelo
-    const promesasImagenes = Array.from(imagenesUnicas).map(async url => {
-        try {
-            const img = await loadImage(url);
-            imagenesCargadas.set(url, img);
-        } catch (error) {
-            console.warn(`Error precargando imagen ${url}:`, error);
-            // Si falla, intentar cargar la imagen por defecto
-            try {
-                const defaultImg = await loadImage('/img/logotipo-damabrava-1x1.png');
-                imagenesCargadas.set(url, defaultImg);
-            } catch (defaultError) {
-                console.error('Error cargando imagen por defecto:', defaultError);
-            }
-        }
-    });
-
-    // Esperar a que todas las imágenes se carguen
-    await Promise.allSettled(promesasImagenes);
-    return imagenesCargadas;
-}
 
