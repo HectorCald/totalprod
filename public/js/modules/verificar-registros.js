@@ -620,11 +620,11 @@ function eventosVerificacion() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">${registro.producto}</h1>
+            <h1 class="titulo">Información del registro</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal">Imagen del producto</p>
+            <p class="normal-center">${registro.producto}</p>
             <div class="imagen-producto-registro">
                 ${imagenMostrar}
             </div>
@@ -638,7 +638,6 @@ function eventosVerificacion() {
 
             <p class="normal">Información básica</p>
             <div class="campo-vertical">
-                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
                 <span class="nombre"><strong><i class='bx bx-user'></i> Operador: </strong>${registro.nombre}</span>
                 <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
             </div>

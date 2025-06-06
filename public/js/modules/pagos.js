@@ -80,9 +80,9 @@ function renderInitialHTML() {
                 <button class="btn-filtro">Anulados</button>
                 <select class="tipo">
                     <option value="todos" selected>Todos</option>
-                    <option value="genericos" selected>Genericos</option>
-                    <option value="produccion" selected>Producción</option>
-                    <option value="almacen" selected>Almacen</option>
+                    <option value="genericos">Genericos</option>
+                    <option value="produccion">Producción</option>
+                    <option value="almacen">Almacen</option>
                 </select>
             </div>
             <div class="productos-container">

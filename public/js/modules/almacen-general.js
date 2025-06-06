@@ -698,11 +698,11 @@ function eventosAlmacenGeneral() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">${producto.producto}</h1>
+            <h1 class="titulo">Información del producto</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal">Imagen del producto</p>
+            <p class="normal-center">${producto.producto}</p>
             <div class="imagen-producto-registro">
                 ${imagenMostrar}
             </div>
