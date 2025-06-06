@@ -128,17 +128,18 @@ async function mostrarOpcionesCatalogo() {
         </div>
         <div class="relleno">
             <p class="normal">Selecciona un catalogo para generar el PDF</p>
-            ${botonesPrecios}
-            <div class="info-sistema">
-                <i class='bx bx-info-circle'></i>
-                <div class="detalle-info">
-                    <p>Generar un catalogo podria tardar de 1 minuto a 2 minutos segun la conexion de internet.</p>
-                </div>
-            </div>
             <div class="progress-container" style="display: none;">
                 <div class="progress-bar"></div>
                 <p class="progress-text">Generando catálogo: <span>0%</span></p>
             </div>
+            ${botonesPrecios}
+            <div class="info-sistema">
+                <i class='bx bx-info-circle'></i>
+                <div class="detalle-info">
+                    <p>Generar un catalogo podria tardar de 1 minuto a 2 minutos segun la conexion de internet, no salga de esta pantalla mientras el catalogo se esta generando.</p>
+                </div>
+            </div>
+            
         </div>
     `;
     mostrarAnuncioSecond();
@@ -156,6 +157,11 @@ async function mostrarOpcionesCatalogo() {
 }
 async function generarCatalogo(tipoPrecio) {
     try {
+        // Deshabilitar interacción táctil al inicio
+        document.body.style.pointerEvents = 'none';
+        document.body.style.touchAction = 'none';
+        document.body.style.userSelect = 'none';
+
         const progressContainer = document.querySelector('.progress-container');
         const progressBar = document.querySelector('.progress-bar');
         const progressText = document.querySelector('.progress-text span');
@@ -166,6 +172,13 @@ async function generarCatalogo(tipoPrecio) {
         const updateProgress = (percent) => {
             progressBar.style.width = `${percent}%`;
             progressText.textContent = `${percent}%`;
+            
+            // Reactivar interacción cuando llegue a 100%
+            if (percent >= 100) {
+                document.body.style.pointerEvents = 'auto';
+                document.body.style.touchAction = 'auto';
+                document.body.style.userSelect = 'auto';
+            }
         };
 
         const { normales, botes, items } = filtrarProductos();
