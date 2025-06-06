@@ -70,6 +70,26 @@ function filtrarProductos() {
         items: productosItems
     };
 }
+function ajustarBrillo(img, brillo = 50, realceRojo = 30) {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        // Aumentar el rojo más que otros colores
+        data[i] = Math.min(255, data[i] + brillo + realceRojo);     // Rojo (+realceRojo adicional)
+        data[i + 1] = Math.min(255, data[i + 1] + brillo); // Verde
+        data[i + 2] = Math.min(255, data[i + 2] + brillo); // Azul
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+}
 export async function mostrarDescargaCatalogo() {
     const contenido = document.querySelector('.anuncio .contenido');
     // Render initial interface
@@ -158,8 +178,11 @@ async function generarCatalogo(tipoPrecio) {
                     throw new Error('Imagen no encontrada en caché');
                 }
 
+                // Ajustar brillo antes de agregar al PDF
+                const imagenAclarada = ajustarBrillo(img, 20, 30); // Más brillo general (50) y realce rojo (30)
+
                 doc.addImage(
-                    img,
+                    imagenAclarada,
                     'PNG',
                     xPos + (productoWidth - imgSize) / 2,
                     yPos,
