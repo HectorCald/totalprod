@@ -10,6 +10,8 @@
 
 
         .detalles {
+            line-height: 1.2;
+
             .nombre {
                 font-size: var(--text-xl) !important;
                 font-weight: 500;
@@ -17,8 +19,13 @@
             }
 
             .correo-usuario {
-                font-size: var(--text-subtitulo);
+                font-size: var(--text-detalle);
                 color: gray;
+
+            }
+            .perfil-rol {
+                font-size: var(--text-detalle);
+                color: var(--cuarto-color);
 
             }
         }

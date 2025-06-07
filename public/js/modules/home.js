@@ -382,18 +382,18 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-cog',
-            texto: 'Ajustes',
-            detalle: 'Ajustes del sistema',
-            onclick: 'onclick="mostrarConfiguracionesSistema()"'
+            icono: 'fa-file-pdf',
+            texto: 'Catalogos',
+            detalle: 'Genera catalagos',
+            onclick: 'onclick="mostrarDescargaCatalogo()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-download',
-            texto: 'Descargas',
-            detalle: 'Descarga archivos',
-            onclick: 'onclick="mostrarDescargaCatalogo()"'
+            icono: 'fa-cog',
+            texto: 'Ajustes',
+            detalle: 'Ajustes del sistema',
+            onclick: 'onclick="mostrarConfiguracionesSistema()"'
         },
 
     ]

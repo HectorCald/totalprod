@@ -91,25 +91,7 @@ function ajustarBrillo(img, brillo = 0, saturacion = 1.5) {
     return canvas;
 }
 export async function mostrarDescargaCatalogo() {
-    const contenido = document.querySelector('.anuncio .contenido');
-    // Render initial interface
-    contenido.innerHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Descargas</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            <div class="btn-container">
-                <button class="btn blue btn-catalogo">
-                    <i class='bx bx-book-open' style="color: white !important;"></i>Catálogo
-                </button>
-            </div>
-        </div>
-    `;
-    mostrarAnuncio();
-
-    const btnCatalogo = contenido.querySelector('.btn-catalogo');
-    btnCatalogo.addEventListener('click', mostrarOpcionesCatalogo);
+    mostrarOpcionesCatalogo();
 }
 async function mostrarOpcionesCatalogo() {
     await obtenerDatos();
@@ -157,11 +139,11 @@ async function mostrarOpcionesCatalogo() {
 }
 async function generarCatalogo(tipoPrecio) {
     const botones = document.querySelectorAll('.btn-precio');
-        botones.forEach(btn => {
-            btn.disabled = true;
-            btn.style.opacity = '0.2';
-            btn.style.cursor = 'not-allowed';
-        });
+    botones.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.2';
+        btn.style.cursor = 'not-allowed';
+    });
 
     try {
         const progressContainer = document.querySelector('.progress-container');
@@ -267,7 +249,7 @@ async function generarCatalogo(tipoPrecio) {
                         nombreY + 12
                     );
                 }
-                
+
                 // Actualizar progreso después de cada producto
                 productosCompletados++;
                 const porcentaje = Math.round((productosCompletados / totalProductos) * 100);
@@ -377,7 +359,7 @@ async function generarCatalogo(tipoPrecio) {
 
         // Guardar PDF
         doc.save(`Catalogo_${tipoPrecio}_${new Date().toLocaleDateString()}.pdf`);
-        
+
 
     } catch (error) {
         console.error('Error al generar catálogo:', error);
@@ -386,7 +368,7 @@ async function generarCatalogo(tipoPrecio) {
             type: 'error',
             duration: 3500
         });
-    }finally {
+    } finally {
         // Reactivar los botones al terminar
         const botones = document.querySelectorAll('.btn-precio');
         botones.forEach(btn => {

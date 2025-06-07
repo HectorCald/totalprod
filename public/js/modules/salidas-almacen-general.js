@@ -291,13 +291,21 @@ export async function mostrarSalidas() {
 
     // Actualizar carrito con datos actuales
     carritoSalidas = new Map();
+    const selectPrecios = document.querySelector('.precios-select');
+    const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+
     carritoBasico.forEach((item, id) => {
         const productoActual = productos.find(p => p.id === id);
         if (productoActual) {
+            // Obtener el precio según la ciudad seleccionada
+            const preciosProducto = productoActual.precios.split(';');
+            const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+            const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+
             carritoSalidas.set(id, {
                 ...productoActual,
                 cantidad: item.cantidad,
-                subtotal: parseFloat(productoActual.precios.split(';')[0].split(',')[1])
+                subtotal: precioActual // Usar el precio según la ciudad seleccionada
             });
 
             // Actualizar UI
@@ -624,7 +632,7 @@ function eventosSalidas() {
     function agregarAlCarrito(productoId) {
         const producto = productos.find(p => p.id === productoId);
         if (!producto) return;
-        if (producto.stock <= 0 ){
+        if (producto.stock <= 0) {
             mostrarNotificacion({
                 message: 'Este producto no tiene stock disponible en este momento.',
                 type: 'warning',
@@ -632,6 +640,13 @@ function eventosSalidas() {
             });
             return;
         }
+
+        // Obtener el precio según la ciudad seleccionada actualmente
+        const selectPrecios = document.querySelector('.precios-select');
+        const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+        const preciosProducto = producto.precios.split(';');
+        const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+        const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
 
         // Vibrar el dispositivo si es compatible
         if (navigator.vibrate) {
@@ -651,7 +666,8 @@ function eventosSalidas() {
             const itemCarrito = carritoSalidas.get(productoId);
             if (itemCarrito.cantidad < producto.stock) {
                 itemCarrito.cantidad += 1;
-                // Actualizar el contador y stock en el header
+                itemCarrito.subtotal = precioActual; // Actualizar el precio al actual
+
                 if (item) {
                     const cantidadSpan = item.querySelector('.carrito-cantidad');
                     const stockSpan = item.querySelector('.stock');
@@ -663,9 +679,9 @@ function eventosSalidas() {
             carritoSalidas.set(productoId, {
                 ...producto,
                 cantidad: 1,
-                subtotal: parseFloat(producto.precios.split(';')[0].split(',')[1])
+                subtotal: precioActual // Usar el precio actual
             });
-            // Actualizar el contador y stock en el header
+
             if (item) {
                 const cantidadSpan = item.querySelector('.carrito-cantidad');
                 const stockSpan = item.querySelector('.stock');
@@ -854,10 +870,10 @@ function eventosSalidas() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-procesar-salida btn orange" onclick="registrarSalida()"><i class='bx bx-export'></i> Procesar Salida</button>
+                <button class="btn-procesar-salida btn green" onclick="registrarSalida()"><i class='bx bx-export'></i> Procesar Salida</button>
             </div>
         `;
-
+        anuncioSecond.style.paddingBottom='80px'                            
         mostrarAnuncioSecond();
 
         const inputDescuento = anuncioSecond.querySelector('.descuento');
@@ -869,7 +885,7 @@ function eventosSalidas() {
             const aumentoValor = parseFloat(inputAumento.value) || 0;
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
 
-            totalFinal.innerHTML = `<strong>Total Final: </strong>Bs/.${totalCalculado.toFixed(2)}`;
+            totalFinal.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
         }
 
         inputDescuento.addEventListener('input', actualizarTotal);
@@ -954,7 +970,7 @@ function eventosSalidas() {
 
                 cantidadInput.value = producto.cantidad;
                 stockDisponible.textContent = `${producto.stock - producto.cantidad} Und.`;
-                subtotalElement.textContent = `Bs/.${(producto.cantidad * producto.subtotal).toFixed(2)}`;
+                subtotalElement.textContent = `Bs. ${(producto.cantidad * producto.subtotal).toFixed(2)}`;
             }
         });
 
@@ -963,8 +979,8 @@ function eventosSalidas() {
         const totalElement = document.querySelector('.total-final');
         const subtotalElement = document.querySelector('.campo-vertical span:first-child');
 
-        subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs/.${subtotal.toFixed(2)}`;
-        totalElement.innerHTML = `<strong>Total Final: </strong>Bs/.${subtotal.toFixed(2)}`;
+        subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}`;
+        totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}`;
 
         // Mantener los valores de descuento y aumento
         const descuentoInput = document.querySelector('.descuento');
@@ -973,7 +989,7 @@ function eventosSalidas() {
             const descuentoValor = parseFloat(descuentoInput.value) || 0;
             const aumentoValor = parseFloat(aumentoInput.value) || 0;
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
-            totalElement.innerHTML = `<strong>Total Final: </strong>Bs/.${totalCalculado.toFixed(2)}`;
+            totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
         }
     }
     function actualizarCarritoLocal() {

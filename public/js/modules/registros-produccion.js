@@ -559,6 +559,7 @@ function eventosMisRegistros() {
 
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '10px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')) {
             contenido.style.paddingBottom = '80px';
         }

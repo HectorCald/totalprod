@@ -381,6 +381,7 @@ function renderInitialHTML() {
         ` : ''}
     `;
     contenido.innerHTML = initialHTML;
+    contenido.style.paddingBottom = '10px';
     if (tienePermiso('creacion')) {
         contenido.style.paddingBottom = '80px';
     }
@@ -396,6 +397,13 @@ async function updateHTMLWithData() {
         <button class="btn-filtro activado">Todos</button>
         ${etiquetasHTML}
     `;
+
+    const preciosSelect = document.querySelector('.precios-select');
+    const preciosOpciones = precios.map((precio, index) => {
+        const primerPrecio = precio.precio.split(';')[0].split(',')[0];
+        return `<option value="${precio.id}" ${index === 1 ? 'selected' : ''}>${primerPrecio}</option>`;
+    }).join('');
+    preciosSelect.innerHTML = preciosOpciones;
 
     // Update precios select
     const productosContainer = document.querySelector('.productos-container');
@@ -738,8 +746,11 @@ function eventosAlmacenGeneral() {
             ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
         </div>` : ''}
     `;
+
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '10px';
         mostrarAnuncioSecond();
+
         if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
             contenido.style.paddingBottom = '80px';
         }
@@ -1007,7 +1018,7 @@ function eventosAlmacenGeneral() {
                     <div class="info-sistema">
                         <i class='bx bx-info-circle'></i>
                         <div class="detalle-info">
-                            <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                            <p>Estás por editar un producto del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
                         </div>
                     </div>
 

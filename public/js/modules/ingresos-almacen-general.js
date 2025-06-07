@@ -289,22 +289,52 @@ export async function mostrarIngresos(producto = '') {
 
 
     carritoSalidas = new Map();
+    const selectPrecios = document.querySelector('.precios-select');
+    const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+
     carritoBasico.forEach((item, id) => {
         const productoActual = productos.find(p => p.id === id);
         if (productoActual) {
+            // Obtener el precio según la ciudad seleccionada
+            const preciosProducto = productoActual.precios.split(';');
+            const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+            const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+
             carritoSalidas.set(id, {
                 ...productoActual,
                 cantidad: item.cantidad,
-                subtotal: parseFloat(productoActual.precios.split(';')[0].split(',')[1])
+                subtotal: precioActual // Usar el precio según la ciudad seleccionada
             });
         }
-        const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
-        if (headerItem) {
-            const stockSpan = headerItem.querySelector('.stock');
-            if (stockSpan) stockSpan.textContent = `${parseInt(productoActual.stock) + parseInt(item.cantidad)} Und.`;
-            const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
-            if (cantidadSpan) cantidadSpan.textContent = item.cantidad;
-        }
+    });
+    selectPrecios.addEventListener('change', () => {
+        const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+
+        // Actualizar TODOS los precios en el carrito
+        carritoSalidas.forEach((item, id) => {
+            const preciosProducto = item.precios.split(';');
+            const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+            item.subtotal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+        });
+
+        // Actualizar precios mostrados en los items
+        document.querySelectorAll('.registro-item').forEach(registro => {
+            const id = registro.dataset.id;
+            const producto = productos.find(p => p.id === id);
+            if (producto) {
+                const preciosProducto = producto.precios.split(';');
+                const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+                const precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                const precioSpan = registro.querySelector('.precio');
+                if (precioSpan) {
+                    precioSpan.textContent = `Bs ${precio.toFixed(2)}`;
+                }
+            }
+        });
+
+        // Actualizar UI y localStorage
+        actualizarCarritoUI();
+        actualizarCarritoLocalIngresos();
     });
     localStorage.setItem('damabrava_carrito_ingresos', JSON.stringify(Array.from(carritoSalidas.entries())));
 
@@ -431,6 +461,7 @@ async function updateHTMLWithData() {
     // Renderizar HTML
     productosContainer.innerHTML = productosHTML.join('');
 }
+
 
 function eventosIngresos() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
@@ -629,6 +660,12 @@ function eventosIngresos() {
         const producto = productos.find(p => p.id === productoId);
         if (!producto) return;
 
+        // Obtener el precio según la ciudad seleccionada actualmente
+        const selectPrecios = document.querySelector('.precios-select');
+        const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+        const preciosProducto = producto.precios.split(';');
+        const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+        const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
 
         // Vibrar el dispositivo si es compatible
         if (navigator.vibrate) {
@@ -647,29 +684,29 @@ function eventosIngresos() {
         if (carritoSalidas.has(productoId)) {
             const itemCarrito = carritoSalidas.get(productoId);
             itemCarrito.cantidad += 1;
-            // Actualizar el contador y stock en el header
+            itemCarrito.subtotal = precioActual; // Actualizar el precio
+
             if (item) {
                 const cantidadSpan = item.querySelector('.carrito-cantidad');
                 const stockSpan = item.querySelector('.stock');
                 if (cantidadSpan) cantidadSpan.textContent = itemCarrito.cantidad;
-                // Mostrar el stock actual + cantidad a ingresar
                 if (stockSpan) stockSpan.textContent = `${parseInt(producto.stock) + itemCarrito.cantidad} Und.`;
             }
         } else {
             carritoSalidas.set(productoId, {
                 ...producto,
                 cantidad: 1,
-                subtotal: parseFloat(producto.precios.split(';')[0].split(',')[1])
+                subtotal: precioActual // Usar el precio actual
             });
-            // Actualizar el contador y stock en el header
+
             if (item) {
                 const cantidadSpan = item.querySelector('.carrito-cantidad');
                 const stockSpan = item.querySelector('.stock');
                 if (cantidadSpan) cantidadSpan.textContent = '1';
-                // Mostrar el stock actual + 1
                 if (stockSpan) stockSpan.textContent = `${parseInt(producto.stock) + 1} Und.`;
             }
         }
+
         actualizarCarritoLocalIngresos();
         actualizarBotonFlotante();
         actualizarCarritoUI();
@@ -839,10 +876,10 @@ function eventosIngresos() {
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-procesar-salida btn orange" onclick="registrarIngreso()"><i class='bx bx-import'></i> Procesar Ingresos</button>
+                <button class="btn-procesar-salida btn green" onclick="registrarIngreso()"><i class='bx bx-import'></i> Procesar Ingresos</button>
             </div>
         `;
-
+        anuncioSecond.style.paddingBottom = '80px'
         mostrarAnuncioSecond();
 
         const inputDescuento = anuncioSecond.querySelector('.descuento');
@@ -854,7 +891,7 @@ function eventosIngresos() {
             const aumentoValor = parseFloat(inputAumento.value) || 0;
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
 
-            totalFinal.innerHTML = `<strong>Total Final: </strong>Bs/.${totalCalculado.toFixed(2)}`;
+            totalFinal.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
         }
 
         inputDescuento.addEventListener('input', actualizarTotal);
@@ -939,7 +976,7 @@ function eventosIngresos() {
                 cantidadInput.value = producto.cantidad;
                 // Mostrar el stock final (actual + cantidad a ingresar)
                 stockDisponible.textContent = `${parseInt(producto.stock) + producto.cantidad} Und.`;
-                subtotalElement.textContent = `Bs/.${(producto.cantidad * producto.subtotal).toFixed(2)}`;
+                subtotalElement.textContent = `Bs. ${(producto.cantidad * producto.subtotal).toFixed(2)}`;
             }
         });
 
@@ -948,8 +985,8 @@ function eventosIngresos() {
         const totalElement = document.querySelector('.total-final');
         const subtotalElement = document.querySelector('.campo-vertical span:first-child');
 
-        subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs/.${subtotal.toFixed(2)}`;
-        totalElement.innerHTML = `<strong>Total Final: </strong>Bs/.${subtotal.toFixed(2)}`;
+        subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}`;
+        totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}`;
 
         // Mantener los valores de descuento y aumento
         const descuentoInput = document.querySelector('.descuento');
@@ -958,7 +995,7 @@ function eventosIngresos() {
             const descuentoValor = parseFloat(descuentoInput.value) || 0;
             const aumentoValor = parseFloat(aumentoInput.value) || 0;
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
-            totalElement.innerHTML = `<strong>Total Final: </strong>Bs/.${totalCalculado.toFixed(2)}`;
+            totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
         }
     }
     function actualizarCarritoLocalIngresos() {

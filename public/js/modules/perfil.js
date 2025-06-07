@@ -89,6 +89,7 @@ function mostrarPerfil(view) {
                 <p class="subtitulo">Hola!</p>
                 <p class="titulo nombre">${usuarioInfo.nombre} ${usuarioInfo.apellido}</p>
                 <p class="correo-usuario">${usuarioInfo.email}</p>
+                <p class="perfil-rol">${usuarioInfo.rol}</p>
             </div>
             <div class="foto">
                 <img src="${usuarioInfo.foto}" alt="Foto de perfil" class="foto-perfil-img" onerror="this.src='./icons/icon.png'">
