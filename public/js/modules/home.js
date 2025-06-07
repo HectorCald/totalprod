@@ -781,7 +781,9 @@ export function mostrarHome(view) {
     } else if (usuarioInfo.rol === 'Acopio') {
         crearGraficoAcopio();
     } else if (usuarioInfo.rol === 'Administración') {
+        crearGraficoVelas();
         crearGraficoAlmacen();
+        crearGraficoAcopio();
     }
     ocultarCarga();
 }

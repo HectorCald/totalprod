@@ -533,7 +533,7 @@ function eventosConteo() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal"><i class='bx bx-chevron-right'></i>Resumen del conteo</p>
+            <p class="normal">Resumen del conteo</p>
             ${productos.map(producto => {
             const stockActual = parseInt(producto.stock);
             const stockContado = parseInt(stockFisico[producto.id] || producto.stock);
