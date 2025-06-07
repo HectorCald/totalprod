@@ -29,6 +29,7 @@
     border-left: 4px solid var(--cuarto-color);
     font-weight: 600;
 }
+
 .normal-center {
     font-size: var(--text-subtitulo) !important;
     color: var(--text);
@@ -37,7 +38,8 @@
     width: 100% !important;
     text-align: center;
     text-decoration: underline;
-    text-decoration-color: var(--cuarto-color);         /* Cambia el color del subrayado */
+    text-decoration-color: var(--cuarto-color);
+    /* Cambia el color del subrayado */
     text-underline-offset: 6px;
     text-decoration-thickness: 4px;
 }
@@ -1015,7 +1017,7 @@
         justify-content: center;
         align-items: center;
 
-        i{
+        i {
             min-width: 60px;
             width: 60px;
             height: auto;
@@ -1027,6 +1029,7 @@
             align-items: center;
             font-size: var(--text-5xl);
         }
+
         .imagen {
             min-width: 60px;
             width: 60px;
@@ -1077,29 +1080,38 @@
     }
 
     .estado {
-        background: none;
         font-weight: 900 !important;
         font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px !important;
     }
 
     .estado.pendiente {
-        color: gray;
+        color: rgb(171, 171, 171);
+        background-color: rgba(128, 128, 128, 0.138);
     }
 
     .estado.recibido {
-        color: var(--tercer-color)
+        color: #2196F3;
+        background-color: #2195f322;
     }
 
     .estado.ingresado {
         color: var(--success);
+        background-color: #4caf4f24;
     }
 
     .estado.rechazado {
         color: var(--error);
+        background-color: #f4433622;
     }
 
     .estado.no-llego {
         color: orange;
+        background-color: #f39d1225;
     }
 
     .precio-cantidad {
@@ -1110,18 +1122,31 @@
         font-size: 10px !important;
 
         .stock {
+            font-weight: 900;
+            font-size: 10px;
             color: var(--success);
-            background: none;
-            border-radius: 10px;
-            font-weight: 900 !important;
-
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-inline: 5px;
+            padding-block: 3px;
+            border-radius: 5px;
+            font-size: 10px;
+            background-color: #4caf4f24;
         }
 
         .precio {
+            font-weight: 900;
+            font-size: 10px;
             color: orange;
-            background: none;
-            border-radius: 10px;
-            font-weight: 900 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-inline: 5px;
+            padding-block: 3px;
+            border-radius: 5px;
+            font-size: 10px;
+            background-color: #f39d1225;
         }
 
         .carrito-cantidad {
@@ -1161,88 +1186,146 @@
     }
 
     .Ingreso {
-        background: none;
-        border-radius: 10px;
+        font-weight: 900;
+        font-size: 10px;
         color: var(--success);
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #4caf4f24;
     }
 
     .Salida {
-        background: none;
-        border-radius: 10px;
+        font-weight: 900;
+        font-size: 10px;
         color: var(--error);
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #f4433622;
     }
 
     .verificado {
+        font-weight: 900;
+        font-size: 10px;
         color: var(--success);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #4caf4f24;
     }
 
     .pendiente {
+        font-weight: 900;
+        font-size: 10px;
         color: var(--error);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #f4433622;
     }
 
     .pagado {
+        font-weight: 900;
+        font-size: 10px;
         color: var(--success);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #4caf4f24;
     }
 
     .anulado {
+        font-weight: 900;
+        font-size: 10px;
         color: orange;
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #f39d1225;
     }
-    .Anulado{
+
+    .Anulado {
+        font-weight: 900;
+        font-size: 10px;
         color: orange;
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #f39d1225;
     }
-    .observado{
+
+    .observado {
+        font-weight: 900;
+        font-size: 10px;
         color: orange;
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #f39d1225;
     }
-    .neutro{
-        color: var(--text);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+
+    .neutro {
+        font-weight: 900;
+        font-size: 10px;
+        color: rgb(171, 171, 171);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: rgba(128, 128, 128, 0.138);
     }
 
     .rol {
-        color: var(--tercer-color);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        font-weight: 900;
+        font-size: 10px;
+        color: #2196F3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #2195f322;
     }
 
     .finalizado {
+        font-weight: 900;
+        font-size: 10px;
         color: var(--success);
-        background: none;
-        border-radius: 10px;
-        font-weight: 900 !important;
-        font-size: 10px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-inline: 5px;
+        border-radius: 5px;
+        font-size: 10px;
+        background-color: #4caf4f24;
     }
 
 
@@ -1287,7 +1370,7 @@
     justify-content: center;
     align-items: center;
 
-    .imagen{
+    .imagen {
         width: 250px;
         height: 250px;
         background-color: var(--primary-color);
@@ -1295,7 +1378,8 @@
         padding: 15px;
         filter: brightness(1.2) saturate(1.5) sepia(0.2) hue-rotate(10deg);
     }
-    i{
+
+    i {
         width: 250px;
         height: 250px;
         background-color: var(--primary-color);
@@ -1652,7 +1736,6 @@
                     width: 100%;
                     background-color: var(--primary-color);
                     color: var(--text);
-
                     border-radius: 10px;
                     padding: 10px;
                     border: none;
@@ -1679,11 +1762,29 @@
                 }
 
                 p.subtotal {
+                    font-weight: 900;
+                    font-size: 13px;
                     color: var(--success);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-inline: 10px;
+                    border-radius: 5px;
+                    font-size: 10px;
+                    background-color: #4caf4f24;
                 }
 
                 p.stock-disponible {
+                    font-weight: 900;
+                    font-size: 13px;
                     color: orange;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-inline: 10px;
+                    border-radius: 5px;
+                    font-size: 10px;
+                    background-color: #f39d1228;
                 }
             }
 
@@ -2174,25 +2275,26 @@
 .progress-bar {
     width: 0;
     height: 20px;
-    background: linear-gradient(
-        45deg,
-        #4CAF50,
-        #2196F3,
-        #f39c12,
-        #4CAF50
-    );
+    background: linear-gradient(45deg,
+            #4CAF50,
+            #2196F3,
+            #f39c12,
+            #4CAF50);
     background-size: 300% 100%;
     animation: progressGradient 2s linear infinite;
     transition: width 0.5s ease;
     border: none;
 }
+
 @keyframes progressGradient {
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
