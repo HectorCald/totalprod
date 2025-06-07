@@ -711,7 +711,7 @@ function eventosVerificacion() {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }
-        if (tienePermiso('anulacion')) {
+        if (tienePermiso('anulacion') && registro.fecha_verificacion) {
             const btnAnular = contenido.querySelector('.btn-anular');
             btnAnular.addEventListener('click', () => anular(registro));
         }
