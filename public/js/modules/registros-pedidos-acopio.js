@@ -435,7 +435,7 @@ function eventosPedidos() {
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
-                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs./' + registro.precio || 'No registrado'}</span>` : ''}
+                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs. ' + registro.precio || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones compras: </strong>${registro.observacionesCompras || 'Sin observaciones'}</span>
             </div>
@@ -461,7 +461,7 @@ function eventosPedidos() {
             ${registro.estado === 'No llego' && usuarioInfo.rol === 'Administración' ? `
                 <button class="btn-llego btn yellow" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Llego</button>
             ` : ''}
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('edicion') && registro.estado !== 'Recibido'? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
             ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
         </div>
         `;
@@ -484,7 +484,7 @@ function eventosPedidos() {
         const btnLlego = contenido.querySelector('.btn-llego');
 
 
-        if (tienePermiso('edicion')) {
+        if (tienePermiso('edicion')&& registro.estado !== 'Recibido') {
             const btnEditar = contenido.querySelector('.btn-editar');
             btnEditar.addEventListener('click', () => editar(registro));
         }

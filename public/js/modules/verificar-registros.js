@@ -1,3 +1,4 @@
+
 let registrosProduccion = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let productosGlobal = [];
@@ -680,7 +681,7 @@ function eventosVerificacion() {
             ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             ${tienePermiso('anulacion') && registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
             ${!registro.fecha_verificacion ? `<button class="btn-verificar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Verificar</button>` : ''}
-            ${registro.observaciones !== 'Sin observaciones' && registro.observaciones !== '' ? `<button class="btn-arreglado btn orange" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Arreglado</button>` : ''}
+            ${registro.observaciones !== 'Sin observaciones' && registro.observaciones !== '' && registro.fecha_verificacion ? `<button class="btn-arreglado btn orange" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Arreglado</button>` : ''}
         </div>
         `;
 
@@ -699,11 +700,10 @@ function eventosVerificacion() {
         mostrarAnuncioSecond();
 
         const btnVerificar = contenido.querySelector('.btn-verificar');
-        const btnAnular = contenido.querySelector('.btn-anular');
         const btnArreglado = contenido.querySelector('.btn-arreglado');
 
 
-        if (tienePermiso('edicion')) {
+        if (tienePermiso('edicion') && !registro.fecha_verificacion) {
             const btnEditar = contenido.querySelector('.btn-editar');
             btnEditar.addEventListener('click', () => editar(registro));
         }
@@ -711,7 +711,8 @@ function eventosVerificacion() {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
         }
-        if (btnAnular) {
+        if (tienePermiso('anulacion')) {
+            const btnAnular = contenido.querySelector('.btn-anular');
             btnAnular.addEventListener('click', () => anular(registro));
         }
         if (btnVerificar) {
