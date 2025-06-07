@@ -257,64 +257,82 @@ app.post('/check-email', async (req, res) => {
     }
 });
 app.post('/register', async (req, res) => {
-    const { nombre, telefono, email, password, empresa } = req.body;
-
-    // Predefined list of companies and their spreadsheet IDs
-    const companies = {
-        '12345': process.env.SPREADSHEET_ID_1,
-        '6789': process.env.SPREADSHEET_ID_2
-    };
-
-    // Validate if the company exists
-    const spreadsheetId = companies[empresa];
-    if (!spreadsheetId) {
-        return res.json({
-            success: false,
-            error: 'El ID de la empresa es incorrecto o no existe'
-        });
-    }
-
     try {
-        const sheets = google.sheets({ version: 'v4', auth });
+        const { nombre, telefono, email, password, tipoApp, empresa } = req.body;
 
-        // Fetch all user IDs from all spreadsheets to ensure uniqueness
-        const allSpreadsheetIds = Object.values(companies);
-        let allUserIds = [];
-
-        for (const id of allSpreadsheetIds) {
-            const response = await sheets.spreadsheets.values.get({
-                spreadsheetId: id,
-                range: 'Usuarios!A2:A'
+        // Validate required fields
+        if (!nombre || !telefono || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Todos los campos son requeridos'
             });
-            const ids = response.data.values || [];
-            allUserIds = allUserIds.concat(ids.map(row => row[0]));
         }
 
-        // Generate a unique ID with the format USERTP-001
-        let newId;
-        let counter = 1;
-        do {
-            newId = `USERTP-${counter.toString().padStart(3, '0')}`;
-            counter++;
-        } while (allUserIds.includes(newId));
+        // Determine spreadsheetId based on empresa
+        let spreadsheetId;
+        if (tipoApp === 'personalizado' && empresa) {
+            // For custom company ID
+            const companies = {
+                '12345': process.env.SPREADSHEET_ID_1,
+                '6789': process.env.SPREADSHEET_ID_2
+            };
+            spreadsheetId = companies[empresa];
+        } else {
+            // Default to first spreadsheet for regular users
+            spreadsheetId = process.env.SPREADSHEET_ID_1;
+        }
 
-        // Prepare the new user data
+        if (!spreadsheetId) {
+            return res.status(400).json({
+                success: false,
+                error: 'ID de empresa inválido'
+            });
+        }
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Check if email already exists
+        const emailCheck = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!H2:H' // Email column
+        });
+
+        const existingEmails = emailCheck.data.values || [];
+        if (existingEmails.some(row => row[0]?.toLowerCase() === email.toLowerCase())) {
+            return res.status(400).json({
+                success: false,
+                error: 'El email ya está registrado'
+            });
+        }
+
+        // Get last user ID
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!A2:A'
+        });
+
+        const rows = response.data.values || [];
+        const lastId = rows.length > 0 ?
+            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
+        const newId = `USERTP-${(lastId + 1).toString().padStart(3, '0')}`;
+
+        // Create new user row
         const nuevoUsuario = [
-            newId,              // Unique ID
-            `${nombre}`,        // Nombre - Apellido
-            telefono,           // Teléfono
-            'Pendiente',        // Estado
-            'Sin rol',          // Rol
+            newId,              // ID
+            nombre,            // Nombre
+            telefono,          // Teléfono
+            'Pendiente',       // Estado
+            'Sin rol',         // Rol
             './icons/default-user.png', // Foto
-            '',                 // Plugins
-            email,              // Email
-            password            // Contraseña
+            '',               // Plugins
+            email,            // Email
+            password          // Contraseña
         ];
 
-        // Add the user to the spreadsheet
+        // Add user to spreadsheet
         await sheets.spreadsheets.values.append({
-            spreadsheetId: spreadsheetId, // Use the ID based on the company
-            range: 'Usuarios!A:I',
+            spreadsheetId,
+            range: 'Usuarios!A2:I',
             valueInputOption: 'USER_ENTERED',
             insertDataOption: 'INSERT_ROWS',
             resource: {
@@ -322,10 +340,18 @@ app.post('/register', async (req, res) => {
             }
         });
 
-        return res.json({ success: true, message: 'Solicitud realizada exitosamente' });
+        res.json({ 
+            success: true, 
+            message: 'Usuario registrado exitosamente',
+            redirect: '/'
+        });
+
     } catch (error) {
         console.error('Error en el registro:', error);
-        return res.status(500).json({ error: 'Error al registrar el usuario' });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error al registrar el usuario: ' + error.message 
+        });
     }
 });
 app.post('/cerrar-sesion', (req, res) => {
