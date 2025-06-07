@@ -110,20 +110,7 @@ function requireAuth(req, res, next) {
 }
 /* ==================== RUTAS DE VISTAS ==================== */
 app.get('/', (req, res) => {
-    const token = req.cookies.token;
 
-    if (token) {
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            // Determine dashboard URL based on spreadsheet ID from token
-            const dashboardUrl = decoded.spreadsheetId === process.env.SPREADSHEET_ID_1
-                ? '/dashboard'
-                : '/dashboard_otro';
-            return res.redirect(dashboardUrl);
-        } catch (error) {
-            // Token inválido, continuar al login
-        }
-    }
 
     res.render('login');
 });
@@ -769,6 +756,41 @@ app.get('/obtener-mis-registros-produccion', requireAuth, async (req, res) => {
         });
     }
 });
+app.get('/obtener-productos-form', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId,
+            range: 'Almacen general!A2:E' // Ahora incluye la columna L para la imagen
+        });
+
+        const rows = response.data.values || [];
+
+        // Mapear los datos al formato especificado
+        const productos = rows.map(row => ({
+            id: row[0] || '',
+            producto: row[1] || '',
+            gramos: row[2] || '',
+            stock: row[3] || '',
+            cantidadxgrupo: row[4] || '',
+        }));
+
+        res.json({
+            success: true,
+            productos
+        });
+
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los productos'
+        });
+    }
+});
 
 /* ==================== RUTAS DE AlMACEN ==================== */
 app.delete('/eliminar-registro-produccion/:id', requireAuth, async (req, res) => {
@@ -1168,41 +1190,6 @@ app.get('/obtener-productos', requireAuth, async (req, res) => {
             alm_acopio_producto: row[10] || '',
             imagen: row[11] || './icons/default-product.png', // Valor por defecto si no hay imagen
             uSueltas: row[12] || ''
-        }));
-
-        res.json({
-            success: true,
-            productos
-        });
-
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Error al obtener los productos'
-        });
-    }
-});
-app.get('/obtener-productos-form', requireAuth, async (req, res) => {
-    const { spreadsheetId } = req.user;
-
-    try {
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        const response = await sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetId,
-            range: 'Almacen general!A2:E' // Ahora incluye la columna L para la imagen
-        });
-
-        const rows = response.data.values || [];
-
-        // Mapear los datos al formato especificado
-        const productos = rows.map(row => ({
-            id: row[0] || '',
-            producto: row[1] || '',
-            gramos: row[2] || '',
-            stock: row[3] || '',
-            cantidadxgrupo: row[4] || '',
         }));
 
         res.json({
