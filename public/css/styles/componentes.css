@@ -122,7 +122,11 @@
 .btn.especial {
     background: none;
     border: 1px solid var(--tercer-color);
-    color: var(--tercer-color);
+    color: var(--tercer-color) !important;
+
+    i{
+        color: var(--tercer-color) !important;
+    }
 }
 
 .btn.close {
@@ -138,7 +142,6 @@
 
     i {
         font-size: var(--text-2xl) !important;
-        color: white !important;
         transform: scale(1);
         width: auto !important;
         opacity:1 !important;
