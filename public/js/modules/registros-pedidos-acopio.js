@@ -1135,7 +1135,7 @@ function eventosPedidos() {
                     <span class="estado ${registro.estado.toLowerCase()}"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${registro.estado}</span>
                 </div>
             </div>
-            <p class="normal">Motivo de la eliminación</p>
+            <p class="normal">Motivo del rechazo</p>
                 <div class="entrada">
                     <i class='bx bx-comment-detail'></i>
                     <div class="input">
