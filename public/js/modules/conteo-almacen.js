@@ -10,6 +10,163 @@ function recuperarUsuarioLocal() {
     return null;
 }
 
+
+const DB_NAME = 'damabrava_db';
+const STORE_NAME = 'imagenes_cache';
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+async function guardarImagenLocal(id, imageUrl) {
+    try {
+        console.log(`⌛ Guardando imagen ${id}...`);
+        const db = await initDB();
+
+        // Primero verificar si existe
+        const tx1 = db.transaction(STORE_NAME, 'readonly');
+        const store1 = tx1.objectStore(STORE_NAME);
+
+        const existente = await new Promise((resolve) => {
+            const request = store1.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => resolve(null);
+        });
+
+        if (existente &&
+            existente.url === imageUrl &&
+            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
+            console.log(`📦 Imagen ya en caché: ${id}`);
+            return existente;
+        }
+
+        // Si necesita actualizarse, procesar y guardar en una nueva transacción
+        const blob = await urlToBlob(imageUrl);
+        const base64 = await blobToBase64(blob);
+
+        const imagenCache = {
+            id,
+            url: imageUrl,
+            data: base64,
+            timestamp: Date.now()
+        };
+
+        // Nueva transacción para guardar
+        const tx2 = db.transaction(STORE_NAME, 'readwrite');
+        const store2 = tx2.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store2.put(imagenCache);
+
+            // Esperar a que complete la transacción
+            tx2.oncomplete = () => {
+                console.log(`✅ Imagen ${id} guardada exitosamente`);
+                resolve(imagenCache);
+            };
+
+            tx2.onerror = () => {
+                console.error(`Error en transacción para ${id}:`, tx2.error);
+                reject(tx2.error);
+            };
+
+            tx2.onabort = () => {
+                console.error(`Transacción abortada para ${id}`);
+                reject(new Error('Transacción abortada'));
+            };
+        });
+
+    } catch (error) {
+        console.error(`❌ Error guardando imagen ${id}:`, error);
+        return null;
+    }
+}
+async function obtenerImagenLocal(id) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+
+        return new Promise((resolve, reject) => {
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo imagen del cache:', error);
+        return null;
+    }
+}
+async function limpiarCacheImagenes() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.clear();
+        console.log('🧹 Cache limpiado completamente');
+    } catch (error) {
+        console.error('Error limpiando cache:', error);
+    }
+}
+async function limpiarImagenesAntiguas() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+
+        const unDia = 24 * 60 * 60 * 1000;
+        const ahora = Date.now();
+
+        store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (ahora - cursor.value.timestamp > unDia) {
+                    store.delete(cursor.key);
+                    console.log(`🗑️ Eliminada imagen antigua: ${cursor.key}`);
+                }
+                cursor.continue();
+            }
+        };
+    } catch (error) {
+        console.error('Error limpiando imágenes antiguas:', error);
+    }
+}
+async function urlToBlob(url) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return blob;
+}
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+function necesitaActualizacion(imagenCache, nuevaUrl) {
+    if (!imagenCache) return true;
+    if (imagenCache.url !== nuevaUrl) return true;
+
+    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
+    const unDia = 24 * 60 * 60 * 1000;
+    if (Date.now() - imagenCache.timestamp > unDia) return true;
+
+    return false;
+}
+
+
+
 async function obtenerEtiquetas() {
     try {
         const response = await fetch('/obtener-etiquetas');
@@ -46,11 +203,23 @@ async function obtenerAlmacenGeneral() {
         const data = await response.json();
 
         if (data.success) {
+            // Guardar los productos en la variable global y ordenarlos por ID
             productos = data.productos.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
+                return idB - idA; // Orden descendente por número de ID
             });
+
+            // Procesar y guardar todas las imágenes antes de retornar
+            await Promise.all(productos.map(async producto => {
+                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+                    const imagenCache = await obtenerImagenLocal(producto.id);
+                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
+                        await guardarImagenLocal(producto.id, producto.imagen);
+                    }
+                }
+            }));
+
             return true;
         } else {
             mostrarNotificacion({
@@ -71,7 +240,6 @@ async function obtenerAlmacenGeneral() {
     }
 }
 
-
 export async function mostrarConteo() {
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
@@ -85,7 +253,7 @@ export async function mostrarConteo() {
         obtenerEtiquetas(),
     ]);
 
-    updateHTMLWithData(); // Update HTML once data is loaded
+    await updateHTMLWithData(); // Update HTML once data is loaded
     eventosConteo();
 
 }
@@ -142,7 +310,7 @@ function renderInitialHTML() {
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '80px';
 }
-function updateHTMLWithData() {
+async function updateHTMLWithData() {
     // Update etiquetas filter
     const etiquetasUnicas = [...new Set(etiquetas.map(etiqueta => etiqueta.etiqueta))];
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
@@ -156,24 +324,36 @@ function updateHTMLWithData() {
 
     // Update productos
     const productosContainer = document.querySelector('.productos-container');
-    const productosHTML = productos.map(producto => `
-        <div class="registro-item" data-id="${producto.id}">
-            <div class="header">
-                <i class='bx bx-package'></i>
-                <div class="info-header">
-                    <span class="id">${producto.id}
-                        <div class="precio-cantidad">
-                            <span class="valor stock" style="display:none">${producto.stock} Und.</span>
-                            <input type="number" class="stock-fisico" value="${producto.stock}" min="0">
-                        </div>
-                    </span>
-                    <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
-                    <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+    const productosHTML = await Promise.all(productos.map(async producto => {
+        let imagenMostrar = '<i class=\'bx bx-package\'></i>';
+
+        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
+            const imagenCache = await obtenerImagenLocal(producto.id);
+            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
+                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
+                                onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
+            }
+        }
+        return `
+            <div class="registro-item" data-id="${producto.id}">
+                <div class="header">
+                    ${imagenMostrar}
+                    <div class="info-header">
+                        <span class="id">${producto.id}
+                            <div class="precio-cantidad">
+                                <span class="valor stock" style="display:none">${producto.stock} Und.</span>
+                                <input type="number" class="stock-fisico" value="${producto.stock}" min="0">
+                            </div>
+                        </span>
+                        <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                        <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
-    productosContainer.innerHTML = productosHTML;
+        `;
+    }));
+    
+    productosContainer.innerHTML = productosHTML.join('');
 }
 
 
@@ -338,6 +518,7 @@ function eventosConteo() {
             botonesCantidad.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
             aplicarFiltros();
+            scrollToCenter(boton, boton.parentElement);
         });
     });
 
@@ -443,7 +624,7 @@ function eventosConteo() {
                     registrarNotificacion(
                         'Administración',
                         'Creación',
-                        usuarioInfo.nombre + ' hizo un nuevo registro de conteo fisico con el nombre de '+nombre+' observaciones: '+observaciones)
+                        usuarioInfo.nombre + ' hizo un nuevo registro de conteo fisico con el nombre de ' + nombre + ' observaciones: ' + observaciones)
 
                     // Limpiar el localStorage y cerrar la vista previa
                     localStorage.removeItem('damabrava_stock_fisico');
