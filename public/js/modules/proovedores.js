@@ -106,9 +106,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${proovedor.id}<span class="valor">${proovedor.direccion}</span></span>
+                    <span class="id">${proovedor.id}<span class="neutro">${proovedor.zona ? proovedor.zona: 'No tiene zona'}</span></span>
                     <span class="nombre"><strong>${proovedor.nombre}</strong></span>
-                    <span class="fecha">${proovedor.telefono}-${proovedor.zona}</span>
+                    <span class="fecha">${proovedor.telefono}-${proovedor.direccion ? proovedor.direccion: 'No tiene dirección'}</span>
                 </div>
             </div>
         </div>
