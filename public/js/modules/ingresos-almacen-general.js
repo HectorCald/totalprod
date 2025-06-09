@@ -1022,9 +1022,11 @@ function eventosIngresos() {
             });
             return;
         }
-
+        const fecha = new Date().toLocaleString('es-ES', {
+            timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+        });
         const registroIngreso = {
-            fechaHora: new Date().toLocaleString(),
+            fechaHora: fecha,
             tipo: 'Ingreso',
             idProductos: Array.from(carritoSalidas.values()).map(item => item.id).join(';'),  // Nuevo
             productos: Array.from(carritoSalidas.values()).map(item => `${item.producto} - ${item.gramos}gr`).join(';'),

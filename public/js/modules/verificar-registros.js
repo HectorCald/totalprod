@@ -1529,7 +1529,7 @@ function eventosVerificacion() {
                     <i class='bx bx-user-check'></i>
                     <div class="input">
                         <p class="detalle">Pagado por</p>
-                        <input type="text" name="pagado_por" value="${usuarioInfo.nombre}" readonly>
+                        <input type="text" name="pagado_por" value="${usuarioInfo.nombre +' '+ usuarioInfo.apellido}" readonly>
                     </div>
                 </div>
                 <div class="entrada">

@@ -568,13 +568,15 @@ function eventosPedidos(producto, pedido) {
 
                 // Preparar datos para la actualización
                 const caracteristicas = `Olor:${olor}; Color:${color}; Sabor:${sabor}; Textura:${textura}`;
-
+                const fecha = new Date().toLocaleString('es-ES', {
+                    timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+                });
 
                 const movimientoResponse = await fetch('/registrar-movimiento-acopio', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        fecha_hora: new Date().toLocaleString(),
+                        fecha_hora: fecha,
                         idProducto: id,
                         nombreProducto: item.producto,
                         peso: pesoKg,

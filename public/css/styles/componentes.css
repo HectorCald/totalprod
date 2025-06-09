@@ -161,8 +161,12 @@
     align-items: center;
 
     i {
+        font-size: var(--text-2xl) !important;
+        transform: scale(1);
+        width: auto !important;
+        opacity:1 !important;
         margin: 0;
-        font-size: var(--text-xl) !important;
+        overflow: hidden;
     }
 }
 

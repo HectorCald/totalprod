@@ -22,7 +22,7 @@ const JWT_SECRET = 'secret-totalprod-hcco';
 const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.includes('spreadsheet') || 
+        if (file.mimetype.includes('spreadsheet') ||
             file.mimetype.includes('excel')) {
             cb(null, true);
         } else {
@@ -56,7 +56,7 @@ const cloudinaryStorage = new CloudinaryStorage({
     }
 });
 
-const uploadImage = multer({ 
+const uploadImage = multer({
     storage: cloudinaryStorage,
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
@@ -340,17 +340,17 @@ app.post('/register', async (req, res) => {
             }
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Usuario registrado exitosamente',
             redirect: '/'
         });
 
     } catch (error) {
         console.error('Error en el registro:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Error al registrar el usuario: ' + error.message 
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar el usuario: ' + error.message
         });
     }
 });
@@ -424,12 +424,19 @@ app.post('/registrar-notificacion', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        const lastId = rows.length > 0 ? 
+        const lastId = rows.length > 0 ?
             Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
         const newId = `HI-${(lastId + 1).toString().padStart(3, '0')}`;
 
         // Fecha actual en formato dd/mm/yyyy
-        const fecha = new Date().toLocaleString('es-ES');
+        const fecha = new Date().toLocaleString('es-ES', {
+            timeZone: 'America/La_Paz',
+            hour: '2-digit',
+            minute: '2-digit',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+        });
 
         // Crear nuevo registro
         await sheets.spreadsheets.values.append({
@@ -1366,10 +1373,10 @@ app.put('/actualizar-producto/:id', requireAuth, uploadImage.single('imagen'), a
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
-        const { 
-            producto, gramos, stock, cantidadxgrupo, lista, 
-            codigo_barras, etiquetas, precios, uSueltas, 
-            alm_acopio_id, alm_acopio_producto, motivo 
+        const {
+            producto, gramos, stock, cantidadxgrupo, lista,
+            codigo_barras, etiquetas, precios, uSueltas,
+            alm_acopio_id, alm_acopio_producto, motivo
         } = req.body;
 
         const sheets = google.sheets({ version: 'v4', auth });
@@ -1393,7 +1400,7 @@ app.put('/actualizar-producto/:id', requireAuth, uploadImage.single('imagen'), a
         if (req.file) {
             // Si hay una nueva imagen, subir a Cloudinary
             imagenUrl = req.file.path; // Cloudinary ya nos da la URL
-            
+
             // Si había una imagen anterior y es de Cloudinary, eliminarla
             const oldImageUrl = productos[rowIndex][6];
             if (oldImageUrl && oldImageUrl.includes('cloudinary')) {
@@ -1428,8 +1435,8 @@ app.put('/actualizar-producto/:id', requireAuth, uploadImage.single('imagen'), a
             resource: { values: updatedValues }
         });
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Producto actualizado correctamente',
             imagenUrl: imagenUrl
         });
@@ -1531,7 +1538,7 @@ app.put('/actualizar-observaciones-registro/:id', requireAuth, async (req, res) 
     } catch (error) {
         console.error('Error al actualizar observaciones:', error);
         res.status(500).json({
-            success: false, 
+            success: false,
             error: 'Error al actualizar las observaciones'
         });
     }
@@ -1558,7 +1565,9 @@ app.post('/registrar-conteo', requireAuth, async (req, res) => {
         }
 
         const newId = `CONT-${lastId + 1}`;
-        const fecha = new Date().toLocaleString('es-ES');
+        const fecha = new Date().toLocaleString('es-ES', {
+            timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+        });
         const { nombre, productos, sistema, fisico, diferencia, observaciones, idProductos } = req.body;
 
         const values = [[
@@ -2021,8 +2030,8 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
 
             if (productoIndex !== -1) {
                 const stockActual = parseInt(productos[productoIndex][3]);
-                const nuevoStock = tipo.toLowerCase() === 'ingreso' ? 
-                    stockActual - cantidad : 
+                const nuevoStock = tipo.toLowerCase() === 'ingreso' ?
+                    stockActual - cantidad :
                     stockActual + cantidad;
 
                 // Actualizar stock en la hoja
@@ -2062,9 +2071,9 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error al anular movimiento:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Error al anular el movimiento' 
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Error al anular el movimiento'
         });
     }
 });
@@ -2339,7 +2348,7 @@ app.post('/actualizar-precios-planilla', requireAuth, upload.single('file'), asy
         const { spreadsheetId, nombre } = req.user;
         const { motivo } = req.body;
         const excelBuffer = req.file.buffer;
-        
+
         // Leer el archivo Excel
         const workbook = xlsx.read(excelBuffer);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -4284,6 +4293,7 @@ app.get('/obtener-pagos', requireAuth, async (req, res) => {
 });
 app.put('/anular-pago/:id', requireAuth, async (req, res) => {
     try {
+        
         const { spreadsheetId } = req.user;
         const { id } = req.params;
         const { motivo } = req.body;
@@ -4298,6 +4308,7 @@ app.put('/anular-pago/:id', requireAuth, async (req, res) => {
 
         const rows = response.data.values || [];
         const rowIndex = rows.findIndex(row => row[0] === id);
+        const pago = rows[rowIndex];
 
         if (rowIndex === -1) {
             return res.status(404).json({
@@ -4313,6 +4324,17 @@ app.put('/anular-pago/:id', requireAuth, async (req, res) => {
             valueInputOption: 'RAW',
             resource: {
                 values: [['Anulado']]
+            }
+        });
+
+        const observacionesActuales = pago[12] || '';
+        const nuevasObservaciones = `${observacionesActuales} [ANULADO: ${motivo}]`;
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Pagos!M${rowIndex + 2}`,
+            valueInputOption: 'RAW',
+            resource: {
+                values: [[nuevasObservaciones]]
             }
         });
 
@@ -4369,7 +4391,7 @@ app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
 
         if (pagoPrincipal) {
             const totalAPagar = parseFloat(pagoPrincipal[11]); // Total del pago principal
-            
+
             // Si el total pagado iguala o supera el total a pagar, actualizar estado
             if (totalPagado >= totalAPagar) {
                 const rowIndex = pagoPrincipalResponse.data.values.findIndex(row => row[0] === id);
@@ -4694,13 +4716,13 @@ app.put('/editar-calculo-mp/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
-        const { 
-            productos, 
-            peso_inicial, 
-            peso_final, 
-            peso_merma, 
-            observaciones, 
-            motivo 
+        const {
+            productos,
+            peso_inicial,
+            peso_final,
+            peso_merma,
+            observaciones,
+            motivo
         } = req.body;
 
         const sheets = google.sheets({ version: 'v4', auth });
@@ -4829,7 +4851,7 @@ app.delete('/eliminar-calculo-mp/:id', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar cálculo:', error);
         res.status(500).json({
-            success: false, 
+            success: false,
             error: 'Error al eliminar el cálculo'
         });
     }
@@ -4866,11 +4888,11 @@ app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
 app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
-        const { 
-            nombre_operador, 
-            responsable, 
-            peso_inicial, 
-            productos 
+        const {
+            nombre_operador,
+            responsable,
+            peso_inicial,
+            productos
         } = req.body;
 
         const sheets = google.sheets({ version: 'v4', auth });
@@ -4882,7 +4904,7 @@ app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        const lastId = rows.length > 0 ? 
+        const lastId = rows.length > 0 ?
             Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
         const newId = `RMP-${(lastId + 1).toString().padStart(3, '0')}`;
 
@@ -5002,7 +5024,7 @@ app.put('/finalizar-tarea/:id', requireAuth, async (req, res) => {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
         const { hora_fin, procedimientos, observaciones } = req.body;
-        
+
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener fecha actual
@@ -5062,7 +5084,7 @@ app.delete('/eliminar-tarea/:id', requireAuth, async (req, res) => {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
         const { motivo } = req.body;
-        
+
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Get spreadsheet info
@@ -5132,7 +5154,7 @@ app.put('/editar-tarea/:id', requireAuth, async (req, res) => {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
         const { procedimientos, observaciones, motivo } = req.body;
-        
+
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener datos actuales
@@ -5186,7 +5208,7 @@ app.post('/registrar-tarea', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { producto, hora_inicio, operador } = req.body;
-        
+
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener último ID
@@ -5196,7 +5218,7 @@ app.post('/registrar-tarea', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        const lastId = rows.length > 0 ? 
+        const lastId = rows.length > 0 ?
             Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
         const newId = `TA-${(lastId + 1).toString().padStart(3, '0')}`;
 
@@ -5360,7 +5382,7 @@ app.get('/obtener-configuraciones', requireAuth, async (req, res) => {
         });
 
         const rows = response.data.values || [];
-        
+
         // Obtener configuraciones de horario y estado
         const configuraciones = {
             horario: {

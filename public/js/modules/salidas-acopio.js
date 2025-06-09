@@ -536,12 +536,14 @@ function eventosPedidos() {
 
             if (!updateResponse.ok) throw new Error('Error al actualizar producto');
 
-            // Registrar el movimiento
+            const fecha = new Date().toLocaleString('es-ES', {
+                timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+            });
             const movimientoResponse = await fetch('/registrar-movimiento-acopio', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    fecha_hora: new Date().toLocaleString(),
+                    fecha_hora: fecha,
                     idProducto: id,
                     nombreProducto: item.producto,
                     peso: pesoKg,
@@ -562,7 +564,7 @@ function eventosPedidos() {
             registrarNotificacion(
                 'Administración',
                 'Creación',
-                usuarioInfo.nombre + 'registro una salida de almacen acopio de: '+nombreProducto)
+                usuarioInfo.nombre + 'registro una salida de almacen acopio de: ' + nombreProducto)
 
             carritoIngresosAcopio.clear();
             localStorage.setItem('damabrava_ingreso_acopio', '[]');

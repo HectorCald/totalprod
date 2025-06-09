@@ -1,4 +1,3 @@
-
 let registrosProduccion = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let productosGlobal = [];
@@ -422,7 +421,7 @@ function eventosPagos() {
                     <p class="normal">Información administrativa</p>
                     <div class="campo-vertical">
                         <span class="valor"><strong><i class='bx bx-user-check'></i> Registrado por: </strong>${pago.pagado_por}</span>
-                        <span class="estado"><strong><i class='bx bx-check-circle'></i> Estado: </strong><span class="valor ${pago.estado === 'Pendiente' ? 'pendiente' : pago.estado === 'Pagado' ? 'pagado' : 'anulado'}">${pago.estado}</span></span>
+                        <span class="estado"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${pago.estado}</span>
                     </div>
                 </div>
                     <div class="anuncio-botones">

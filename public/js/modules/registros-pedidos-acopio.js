@@ -1025,7 +1025,7 @@ function eventosPedidos() {
                             nombre_pago: `Materia prima (${registro.producto})`,
                             id_beneficiario: proveedorInfo?.id || 'No registrado',
                             beneficiario: proovedor,
-                            pagado_por: usuarioInfo.nombre,
+                            pagado_por: usuarioInfo.nombre + ' ' + usuarioInfo.apellido,
                             justificativos_id: registro.id,
                             justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + precio + ')Transporte: (Bs./' + transporteOtros + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
                             subtotal: totalPago,
