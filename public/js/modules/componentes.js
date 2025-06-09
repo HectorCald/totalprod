@@ -31,9 +31,9 @@ function ocultarAnuncioFisico() {
 }
 function ocultarAnuncioSecondFisico() {
     const anuncio = document.querySelector('.anuncio-second');
-
     if (anuncio) {
         anuncio.classList.remove('mostrar');
+        pantallagrande('ocultar');
     }
 }
 function ocultarAnuncioTercerFisico() {
@@ -46,6 +46,8 @@ function ocultarAnuncioTercerFisico() {
 
 export async function mostrarAnuncio() {
     const anuncio = document.querySelector('.anuncio');
+    ocultarAnuncioSecondFisico();
+    ocultarAnuncioTercerFisico();
 
     if (anuncio) {
         anuncio.classList.add('mostrar');
@@ -56,12 +58,41 @@ export async function mostrarAnuncio() {
         }
     }
 }
+function pantallagrande(proceso) {
+    const esPantallaGrande = window.innerWidth > 768;
+    if (esPantallaGrande) {
+        const principal = document.querySelector('.anuncio .contenido');
+        const pEncabezado = document.querySelector('.anuncio .contenido .encabezado');
+        const nav = document.querySelector('.nav-container');
+        const views = document.querySelectorAll('.view');
 
+
+        if (proceso === 'ocultar') {
+            principal.style.paddingRight = '15px';
+            pEncabezado.style.paddingRight = '15px';
+            views.forEach(view => {
+                view.style.paddingRight = '15px';
+            });
+            nav.style.paddingRight = '15px';
+        } else {
+            principal.style.paddingRight = '450px';
+            pEncabezado.style.paddingRight = '450px';
+            views.forEach(view => {
+                view.style.paddingRight = '450px';
+            });
+            nav.style.paddingRight = '450px';
+        }
+    }
+
+
+}
 export async function mostrarAnuncioSecond() {
     const anuncio = document.querySelector('.anuncio-second');
 
+
     if (anuncio) {
         anuncio.classList.add('mostrar');
+        pantallagrande('mostrar');
         actualizarEstadoInterno();
 
         if (estadoAnuncios.nivelActual === 2 && (history.state?.nivel || 0) < 2) {
@@ -749,7 +780,7 @@ export async function registrarNotificacion(destino, suceso, detalle) {
             },
             body: JSON.stringify({
                 destino,
-                suceso, 
+                suceso,
                 detalle
             })
         });

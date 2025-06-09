@@ -51,6 +51,7 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
+        <div class="busqueda">
             <div class="entrada">
                 <i class='bx bx-search'></i>
                 <div class="input">
@@ -58,6 +59,11 @@ function renderInitialHTML() {
                     <input type="text" class="buscar-proovedor" placeholder="">
                 </div>
             </div>
+            <div class="acciones-grande">
+                <button class="btn-crear-proovedor btn orange"> <i class='bx bx-plus'></i> <span>Crear nuevo proovedor</span></button>
+            </div>
+        </div>
+            
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
                     <div class="skeleton-producto">

@@ -128,13 +128,20 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-verificacion" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                    </div>
+                </div>
+                <div class="acciones-grande">
+                    <button id="nueva-regla" class="btn orange"><i class='bx bx-plus'></i> <span>Nueva regla</span></button>
+            <button id="precios-base" class="btn especial"><i class='bx bx-money'></i> <span>Precios base</span></button>
                 </div>
             </div>
+            
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
                     <div class="skeleton-producto">
@@ -148,6 +155,7 @@ function renderInitialHTML() {
                         </div>
                     </div>
                 `).join('')}
+            </div>
             </div>
             <div class="no-encontrado" style="display: none; text-align: center; color: #555; font-size: 1.1rem;padding:20px">
                 <i class='bx bx-file-blank' style="font-size: 50px;opacity:0.5"></i>
@@ -184,10 +192,10 @@ function updateHTMLWithData() {
     const productosHTML = reglasProduccion.map(regla => `
         <div class="registro-item" data-id="${regla.id}">
             <div class="header">
-                <i class='bx bx-book'></i> 
+                <i class='bx bx-book'></i>
                 <div class="info-header">
                     <span class="id">${regla.id}</span>
-                    <span class="nombre"><strong>${regla.producto}</span>
+                    <span class="nombre">${regla.producto}</span>
                     <span class="etiquetas">${regla.etiq !=1 ? 'Etiquetado: x'+regla.etiq : ''}${regla.sell !=1 ? ' - Sellado: x'+regla.sell : ''}${regla.envs !=1 ? ' - Envasado: x'+regla.envs : ''}${regla.cern != preciosBase.cernido? ' - Cernido: '+regla.cern : ''}</span>
                 </div>
             </div>

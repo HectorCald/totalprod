@@ -136,11 +136,11 @@ function mostrarPerfil(view) {
 
 
 function mostrarCuenta(nombre, apellido, email, foto, telefono) {
-    const contenido = document.querySelector('.anuncio .contenido');
+    const contenido = document.querySelector('.anuncio-second .contenido');
     const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Tu cuenta</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
             <div class="foto-perfil">
@@ -217,7 +217,7 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
 
     contenido.innerHTML = registrationHTML;
     contenido.style.paddingBottom = '80px'; // Ajustar el padding para evitar que el botón quede oculto
-    mostrarAnuncio();
+    mostrarAnuncioSecond();
     evetosCuenta();
     configuracionesEntrada();
 }
@@ -421,13 +421,13 @@ function evetosCuenta() {
 
 
 function mostrarConfiguraciones() {
-    const contenido = document.querySelector('.anuncio .contenido');
+    const contenido = document.querySelector('.anuncio-second .contenido');
     const currentTheme = localStorage.getItem('theme') || 'system';
 
     const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Tus configuraciones</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
         <p class="normal">Tema de la aplicación</p>
@@ -446,7 +446,7 @@ function mostrarConfiguraciones() {
     `;
 
     contenido.innerHTML = registrationHTML;
-    mostrarAnuncio();
+    mostrarAnuncioSecond();
     eventosConfiguraciones();
 }
 function eventosConfiguraciones() {

@@ -29,7 +29,6 @@ export function flotante() {
         btnNotificacion.style.color = 'var(--text)';
         btnHome.style.color = 'var(--tercer-color)';
     });
-
     btnPefil.addEventListener('click', () => {
         // Limpiar clases anteriores
         perfil.classList.remove('slide-out-flotante');
@@ -49,8 +48,6 @@ export function flotante() {
         btnNotificacion.style.color = 'var(--text)';
         btnPefil.style.color = 'var(--tercer-color)';
     });
-
-
     btnNotificacion.addEventListener('click', () => {
         notificacion.classList.remove('slide-out-flotante');
         home.classList.remove('slide-in-flotante');

@@ -248,12 +248,12 @@ function obtenerOpcionesMenu() {
 
     return atajosUsuario;
 }
-
-
-function mostrarMenu() {
+function renderMenu() {
     const contenido = document.querySelector('.anuncio .contenido');
+    const menuLateral = document.querySelector('.panel-lateral .contenido');
     const opcionesUsuario = obtenerOpcionesMenu();
     let opcionesHTML = '';
+    
 
     if (usuarioInfo.rol === 'Administración') {
         // Agrupar por roles
@@ -306,10 +306,134 @@ function mostrarMenu() {
             ${opcionesHTML}
         </div>
     `;
+    const menuL = `
+        <div class="encabezado-lateral">
+            <h1 class="titulo"><i class="fas fa-bars"></i> Menú</h1>
+            <span class="ocultar-menu">❮</span>
+        </div>
+        <div class="relleno">
+            <div class="opcion opcion-activa" onclick="homeGr('home')">
+                <i class="fas fa-home"></i>
+                <div class="info">
+                    <p class="texto">Inicio</p>
+                    <p class="detalle">Pantalla de inicio</p>
+                </div>
+            </div>
+            <div class="opcion" onclick="homeGr('perfil')">
+                <i class="fas fa-user"></i>
+                <div class="info">
+                    <p class="texto">Perfil</p>
+                    <p class="detalle">Pantalla de inicio</p>
+                </div>
+            </div>
+            <div class="opcion" onclick="homeGr('notificacion')">
+                <i class="fas fa-bell"></i>
+                <div class="info">
+                    <p class="texto">Notificaciones</p>
+                    <p class="detalle">Pantalla de inicio</p>
+                </div>
+            </div>
+            ${opcionesHTML}
+        </div>
+    `;
+    function homeGr(vista) {
+        const home = document.querySelector('.home-view');
+        const perfil = document.querySelector('.perfil-view');
+        const notificacion = document.querySelector('.notificacion-view');
 
+        if (vista === 'perfil') {
+            ocultarAnuncios();
+            perfil.classList.remove('slide-out-flotante');
+            home.classList.remove('slide-in-flotante');
+            notificacion.classList.remove('slide-in-flotante');
+
+            home.classList.add('slide-out-flotante');
+            notificacion.classList.add('slide-out-flotante');
+            setTimeout(() => {
+                home.style.display = 'none';
+                notificacion.style.display = 'none';
+                perfil.style.display = 'flex';
+                perfil.classList.remove('slide-out-flotante');
+                perfil.classList.add('slide-in-flotante');
+            }, 300);
+        } else if (vista === 'home') {
+            ocultarAnuncios();
+            home.classList.remove('slide-out-flotante');
+            perfil.classList.remove('slide-in-flotante');
+            notificacion.classList.remove('slide-in-flotante');
+
+            perfil.classList.add('slide-out-flotante');
+            notificacion.classList.add('slide-out-flotante');
+            setTimeout(() => {
+                perfil.style.display = 'none';
+                notificacion.style.display = 'none';
+                home.style.display = 'flex';
+                home.classList.remove('slide-out-flotante');
+                home.classList.add('slide-in-flotante');
+
+                setTimeout(() => {
+                    home.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+            }, 300);
+        } else {
+            ocultarAnuncios();
+            notificacion.classList.remove('slide-out-flotante');
+            home.classList.remove('slide-in-flotante');
+            perfil.classList.remove('slide-in-flotante');
+
+            home.classList.add('slide-out-flotante');
+            perfil.classList.add('slide-out-flotante');
+
+            setTimeout(() => {
+                home.style.display = 'none';
+                perfil.style.display = 'none';
+                notificacion.style.display = 'flex';
+                notificacion.classList.remove('slide-out-flotante');
+                notificacion.classList.add('slide-in-flotante');
+
+                // Quitar indicador inmediatamente
+                const indicador = btnNotificacion.querySelector('.indicador');
+                if (indicador) indicador.remove();
+
+                // Quitar animaciones después de 3 segundos
+                setTimeout(() => {
+                    const notificacionesNuevas = notificacion.querySelectorAll('.notificacion.nueva-notificacion');
+                    notificacionesNuevas.forEach(element => {
+                        element.classList.remove('nueva-notificacion');
+                    });
+                    localStorage.setItem('cantidad_notificaciones', historialNotificaciones.length.toString());
+                }, 3000);
+            }, 300);
+        }
+    }
+    window.homeGr = homeGr;
+    function ocultarAnuncios(){
+        const anuncio = document.querySelector('.anuncio');
+        const anuncioSecond = document.querySelector('.anuncio-second');
+        const anuncioTercer = document.querySelector('.anuncio-tercer');
+        if(anuncio.classList.contains('mostrar')){
+            cerrarAnuncioManual('anuncio');
+        }
+        if(anuncioSecond.classList.contains('mostrar')){
+            cerrarAnuncioManual('anuncioSecond');
+        }
+        if(anuncioTercer.classList.contains('mostrar')){
+            cerrarAnuncioManual('anuncioTercer');
+        }
+    }
+
+    menuLateral.innerHTML = menuL;
     contenido.innerHTML = menuHTML;
     contenido.style.paddingBottom = '10px';
+}
+function mostrarMenu() {
     mostrarAnuncio();
+    const opciones = document.querySelectorAll('.opcion');
+    opciones.forEach(opcion => {
+        opcion.addEventListener('click', () => {
+            opcion.add.classList('opcion-activa');
+        });
+    });
 }
 export async function crearNav(usuario) {
 
@@ -336,14 +460,16 @@ function mostrarNav() {
     eventosNav();
 }
 function eventosNav() {
+    renderMenu();
     const refreshButton = document.querySelector('.nav-container .refresh');
-    const menu = document.querySelector('.nav-container .menu');
+    const menu = document.querySelector('.menu');
 
     refreshButton.addEventListener('click', () => {
         mostrarCarga();
         location.reload();
     });
     menu.addEventListener('click', () => {
+        renderMenu();
         mostrarMenu();
     });
 }

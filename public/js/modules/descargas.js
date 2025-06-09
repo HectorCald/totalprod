@@ -96,9 +96,9 @@ export async function mostrarDescargaCatalogo() {
 async function mostrarOpcionesCatalogo() {
     await obtenerDatos();
 
-    const contenido = document.querySelector('.anuncio-second .contenido');
+    const contenido = document.querySelector('.anuncio .contenido');
     const botonesPrecios = precios.map(precio => `
-        <button class="btn red btn-precio" data-precio="${precio.precio}">
+        <button class="btn red btn-precio" style="max-width: 100% !important" data-precio="${precio.precio}">
             <i class='bx bxs-file-pdf' style="color:white !important;"></i> Catálogo ${precio.precio}
         </button>
     `).join('');
@@ -106,7 +106,7 @@ async function mostrarOpcionesCatalogo() {
     contenido.innerHTML = `
         <div class="encabezado">
             <h1 class="titulo">Catálogos</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
             <p class="normal">Selecciona un catalogo para generar el PDF</p>
@@ -114,7 +114,9 @@ async function mostrarOpcionesCatalogo() {
                 <div class="progress-bar"></div>
                 <p class="progress-text">Generando catálogo: <span>0%</span></p>
             </div>
+            <div class="productos-container">
             ${botonesPrecios}
+            </div>
             <div class="info-sistema">
                 <i class='bx bx-info-circle'></i>
                 <div class="detalle-info">
@@ -124,7 +126,7 @@ async function mostrarOpcionesCatalogo() {
             
         </div>
     `;
-    mostrarAnuncioSecond();
+    mostrarAnuncio();
 
     // Agregar eventos a los botones
     const botones = contenido.querySelectorAll('.btn-precio');

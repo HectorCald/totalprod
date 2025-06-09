@@ -1,4 +1,3 @@
-
 let productos = [];
 let productosAcopio = [];
 let etiquetas = [];
@@ -329,12 +328,21 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-producto" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-producto" placeholder="">
+                    </div>
                 </div>
+                ${tienePermiso('creacion') ? `
+                <div class="acciones-grande">
+                    <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Crear</span></button>
+                    <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  <span>Etiquetas</span></button>
+                    <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> <span>Precios</span></button>
+                </div>
+                ` : ''}
             </div>
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro activado">Todos</button>
@@ -348,7 +356,7 @@ function renderInitialHTML() {
                 <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
                 <button class="btn-filtro">Sueltas</button>
-                <select class="precios-select" style="width:100%">
+                <select class="precios-select" style="width:auto">
                     <option value="">Precios</option>
                 </select>
             </div>
@@ -375,7 +383,7 @@ function renderInitialHTML() {
         ${tienePermiso('creacion') ? `
         <div class="anuncio-botones">
             <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
-            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
+            <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> Etiquetas</button>
             <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> Precios</button>
         </div>
         ` : ''}
@@ -448,9 +456,9 @@ function eventosAlmacenGeneral() {
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
     const selectPrecios = document.querySelector('.precios-select');
 
-    const btnCrearProducto = document.querySelector('.btn-crear-producto');
-    const btnEtiquetas = document.querySelector('.btn-etiquetas');
-    const btnPrecios = document.querySelector('.btn-precios');
+    const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
+    const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
+    const btnPrecios = document.querySelectorAll('.btn-precios');
 
     const items = document.querySelectorAll('.registro-item');
 
@@ -668,9 +676,15 @@ function eventosAlmacenGeneral() {
     });
 
     if (tienePermiso('creacion')) {
-        btnCrearProducto.addEventListener('click', crearProducto);
-        btnEtiquetas.addEventListener('click', gestionarEtiquetas);
-        btnPrecios.addEventListener('click', gestionarPrecios);
+        btnCrearProducto.forEach(btn => {
+            btn.addEventListener('click', crearProducto);
+        });
+        btnEtiquetas.forEach(btn => {
+            btn.addEventListener('click', gestionarEtiquetas);
+        });
+        btnPrecios.forEach(btn => {
+            btn.addEventListener('click', gestionarPrecios);
+        });
     }
 
 

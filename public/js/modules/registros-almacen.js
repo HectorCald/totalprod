@@ -111,14 +111,20 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-almacen" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-almacen" placeholder="">
+                    </div>
+                    <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
-                <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
+                <div class="acciones-grande">
+                    <button id="exportar-excel" class="btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                </div>
             </div>
+            
             <div class="filtros-opciones tipo">
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Ingresos</button>

@@ -475,7 +475,7 @@ function obtenerFunciones() {
 }
 
 function editarAtajos() {
-    const contenido = document.querySelector('.anuncio .contenido');
+    const contenido = document.querySelector('.anuncio-second .contenido');
     const rol = usuarioInfo.rol;
     const atajosActuales = obtenerAtajosGuardados() || 
         atajosPorRol[rol].slice(0, 3).map(a => a.texto);
@@ -542,7 +542,7 @@ function editarAtajos() {
     const html = `
         <div class="encabezado">
             <h1 class="titulo">Editar atajos</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')">
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
                 <i class="fas fa-arrow-right"></i>
             </button>
         </div>
@@ -559,7 +559,7 @@ function editarAtajos() {
 
     contenido.innerHTML = html;
     contenido.style.paddingBottom = '80px';
-    mostrarAnuncio();
+    mostrarAnuncioSecond();
 }
 
 

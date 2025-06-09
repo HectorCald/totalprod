@@ -64,14 +64,21 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno pagos">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-verificacion" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                    </div>
+                    <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
-                <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
+                <div class="acciones-grande">
+                    <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
+            <button id="nuevo-pago-generico" class="btn especial"><i class='bx bx-dollar-circle'></i> <span>Nuevo pago</span></button>
+                </div>
             </div>
+            
             <div class="filtros-opciones estado">
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Pagados</button>

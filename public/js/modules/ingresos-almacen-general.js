@@ -358,11 +358,22 @@ function renderInitialHTML(producto) {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" value="${producto} "class="buscar-producto" placeholder="">
+            <div class="buscador-filtros">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" value="${producto} "class="buscar-producto" placeholder="">
+                    </div>
+                </div>
+                <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+                    <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
+                    <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
+                    <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
+                    <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
+                    <select class="precios-select" style="width:auto">
+                        <option class="skeleton skeleton-etiqueta" value="">Precios</option>
+                    </select>
                 </div>
             </div>
             <div class="filtros-opciones etiquetas-filter">
@@ -370,15 +381,6 @@ function renderInitialHTML(producto) {
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
-            </div>
-            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
-                <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
-                <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
-                <select class="precios-select" style="width:100%">
-                    <option class="skeleton skeleton-etiqueta" value="">Precios</option>
-                </select>
             </div>
             <div class="productos-container">
                 ${Array(10).fill().map(() => `

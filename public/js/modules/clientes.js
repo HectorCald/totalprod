@@ -52,6 +52,7 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
+        <div class="busqueda">
             <div class="entrada">
                 <i class='bx bx-search'></i>
                 <div class="input">
@@ -59,6 +60,11 @@ function renderInitialHTML() {
                     <input type="text" class="buscar-cliente" placeholder="">
                 </div>
             </div>
+            <div class="acciones-grande">
+                <button class="btn-crear-cliente btn orange"> <i class='bx bx-plus'></i> <span>Crear nuevo cliente</span></button>
+            </div>
+        </div>
+            
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
                     <div class="skeleton-producto">
@@ -214,7 +220,7 @@ function eventosClientes() {
         const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">${cliente.nombre}</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncio');"><i class="fas fa-arrow-right"></i></button>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
                 <p class="normal">Información del cliente</p>
