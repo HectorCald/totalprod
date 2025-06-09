@@ -83,6 +83,7 @@ function renderInitialHTML() {
                     <option value="genericos">Genericos</option>
                     <option value="produccion">Producción</option>
                     <option value="almacen">Almacen</option>
+                    <option value="Acopio">Acopio</option>
                 </select>
             </div>
             <div class="productos-container">
@@ -235,6 +236,9 @@ function eventosPagos() {
                         break;
                     case 'almacen':
                         mostrar = registroData.tipo === 'almacen';
+                        break;
+                    case 'Acopio':
+                        mostrar = registroData.tipo === 'Acopio';
                         break;
                 }
             }

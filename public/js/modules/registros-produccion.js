@@ -590,18 +590,12 @@ function eventosMisRegistros() {
                     </div>
                     <div class="relleno">
                         <p class="normal">Información básica</p>
-                        <div class="campo-horizontal">
-                            <div class="campo-vertical">
-                               <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                        <div class="campo-vertical">
+                            <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                            <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>
                             <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
                             <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
                             <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
-                            </div>
-                            <div class="imagen-producto">
-                            ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                    `<i class='bx bx-package'></i>`}
-                            </div>
                         </div>
                         <p class="normal">Motivo de la eliminación</p>
                         <div class="entrada">
@@ -677,7 +671,7 @@ function eventosMisRegistros() {
                             usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
-                        await mostrarVerificacion();
+                        await mostrarMisRegistros();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
@@ -915,7 +909,7 @@ function eventosMisRegistros() {
                             usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
-                        await mostrarVerificacion();
+                        await mostrarMisRegistros();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
@@ -940,18 +934,12 @@ function eventosMisRegistros() {
         </div>
         <div class="relleno verificar-registro">
             <p class="normal">Información del registro</p>
-            <div class="campo-horizontal">
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Verificado: </strong>${registro.c_real} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-calendar-check'></i> Fecha: </strong>${registro.fecha_verificacion}</span>
-                </div>
-                <div class="imagen-producto">
-                ${producto.imagen && producto.imagen.includes('https://res.cloudinary.com') ?
-                    `<img class="imagen" src="${producto.imagen}" alt="Imagen del producto">` :
-                    `<i class='bx bx-package'></i>`}
-                </div>
+            <div class="campo-vertical">
+                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>
+                <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
+                <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
             </div>
 
             <p class="normal">Motivo de la anulación</p>

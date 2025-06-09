@@ -837,7 +837,7 @@ function eventosPedidos() {
                         registrarNotificacion(
                             'Administración',
                             'Edición',
-                            usuarioInfo.nombre + ' edito el registro pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
+                            usuarioInfo.nombre + ' edito el registro pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + datosActualizados.motivo)
 
                         ocultarAnuncioSecond();
                         await mostrarPedidos();
