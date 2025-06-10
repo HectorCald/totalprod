@@ -205,7 +205,7 @@ function eventosPedidos() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
     const inputBusqueda = document.querySelector('.buscar-producto-acopio');
-    const contenedor = document.querySelector('.relleno');
+    const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -214,7 +214,7 @@ function eventosPedidos() {
                 const boton = document.createElement('button');
                 boton.className = 'scroll-top';
                 boton.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                boton.onclick = () => scrollToTop('.relleno');
+                boton.onclick = () => scrollToTop('.anuncio .relleno');
                 contenedor.appendChild(boton);
             }
         } else {
@@ -568,7 +568,7 @@ function eventosPedidos() {
             registrarNotificacion(
                 'Administración',
                 'Creación',
-                usuarioInfo.nombre + 'registro una salida de almacen acopio de: ' + nombreProducto)
+                usuarioInfo.nombre + 'registro una salida de almacen acopio de: ' + item.producto)
 
             carritoIngresosAcopio.clear();
             localStorage.setItem('damabrava_ingreso_acopio', '[]');

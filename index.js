@@ -4863,14 +4863,15 @@ app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Usuarios!A2:E' // Solo ID y NOMBRE
+            range: 'Usuarios!A2:H' // Solo ID y NOMBRE
         });
 
         const rows = response.data.values || [];
         const nombres = rows.map(row => ({
             id: row[0] || '',
             nombre: row[1] || '',
-            rol: row[4] || ''
+            rol: row[4] || '',
+            user: row[7] || ''
         }));
 
         res.json({

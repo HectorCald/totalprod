@@ -209,22 +209,30 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
             <div class="plugins-container">
                 ${usuarioInfo.plugins.includes('tareasAc') ? '<label class="plugin"><span>Calculadora de tiempo en tareas</span></label>' : '<label class="nulo"><span>Calculadora de tiempo en tareas</span></label>'}
             </div>`: ''}
+            <div class="busqueda">
+                <div class="acciones-grande" style="min-width:100%">
+                    <button class="btn-guardar btn orange" style="min-width:100%"><i class="bx bx-save"></i> Guardar cambios</button>
+                </div>
+            </div>
         </div>
+        
         <div class="anuncio-botones">
-            <button id="btn-guardar" class="btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
+            <button class="btn-guardar btn orange"><i class="bx bx-save"></i> Guardar cambios</button>
         </div>
     `;
 
     contenido.innerHTML = registrationHTML;
-    contenido.style.paddingBottom = '80px'; // Ajustar el padding para evitar que el botón quede oculto
+    contenido.style.paddingBottom = '80px';
+    // Ajustar el padding para evitar que el botón quede oculto
     mostrarAnuncio();
+    contenido.style.maxWidth = '500px';
     evetosCuenta();
     configuracionesEntrada();
 }
 function evetosCuenta() {
     const inputFoto = document.querySelector('#input-foto');
     const previewFoto = document.querySelector('#preview-foto');
-    const btnGuardar = document.querySelector('#btn-guardar');
+    const btnGuardar = document.querySelectorAll('.btn-guardar');
     const telefonoInput = document.querySelector('.telefono');
     let fotoBase64 = null;
     let fotoModificada = false;
@@ -325,98 +333,98 @@ function evetosCuenta() {
             }
         }
     });
-
-    btnGuardar.addEventListener('click', async () => {
-        const nombre = document.querySelector('input.nombre').value.trim();
-        const telefono = document.querySelector('input.telefono').value.trim();
-        const apellido = document.querySelectorAll('input.nombre')[1].value.trim();
-        const passwordActual = document.querySelector('input.password-actual')?.value;
-        const passwordNueva = document.querySelector('input.password-nueva')?.value;
-
-        // Validaciones básicas
-        if (!nombre || !apellido || !telefono) {
-            mostrarNotificacion({
-                message: 'Nombre, apellido son requeridos y telefono son requeridos',
-                type: 'error',
-                duration: 3500
-            });
-            return;
-        }
-        
-        if (!/^[67]\d{7}$/.test(telefono)) {
-            mostrarNotificacion({
-                message: 'Ingrese un número válido de 8 dígitos (ej: 67644705)',
-                type: 'warning',
-                duration: 4000
-            });
-            return;
-        }
-
-
-        // Validación de contraseña nueva
-        if (passwordNueva && passwordNueva.length < 8) {
-            mostrarNotificacion({
-                message: 'La nueva contraseña debe tener al menos 8 caracteres',
-                type: 'error',
-                duration: 3500
-            });
-            return;
-        }
-
-        // Validar que ambas contraseñas estén presentes si se está cambiando
-        if ((passwordActual && !passwordNueva) || (!passwordActual && passwordNueva)) {
-            mostrarNotificacion({
-                message: 'Debe ingresar ambas contraseñas para cambiarla',
-                type: 'error',
-                duration: 3500
-            });
-            return;
-        }
-
-        try {
-            mostrarCarga();
-            const response = await fetch('/actualizar-usuario', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nombre,
-                    apellido,
-                    foto: fotoModificada ? fotoBase64 : undefined,
-                    passwordActual: passwordActual || undefined,
-                    passwordNueva: passwordNueva || undefined,
-                    telefono
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Error al actualizar el perfil');
+    btnGuardar.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const nombre = document.querySelector('input.nombre').value.trim();
+            const telefono = document.querySelector('input.telefono').value.trim();
+            const apellido = document.querySelectorAll('input.nombre')[1].value.trim();
+            const passwordActual = document.querySelector('input.password-actual')?.value;
+            const passwordNueva = document.querySelector('input.password-nueva')?.value;
+    
+            // Validaciones básicas
+            if (!nombre || !apellido || !telefono) {
+                mostrarNotificacion({
+                    message: 'Nombre, apellido son requeridos y telefono son requeridos',
+                    type: 'error',
+                    duration: 3500
+                });
+                return;
             }
-
-            await obtenerUsuario();
-            mostrarPerfil(document.querySelector('.perfil-view'));
-            ocultarAnuncio();
-            mostrarNotificacion({
-                message: 'Perfil actualizado con éxito',
-                type: 'success',
-                duration: 3500
-            });
-
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarNotificacion({
-                message: error.message || 'Error al actualizar el perfil',
-                type: 'error',
-                duration: 3500
-            });
-        } finally {
-            ocultarCarga();
-        }
-    });
-
+            
+            if (!/^[67]\d{7}$/.test(telefono)) {
+                mostrarNotificacion({
+                    message: 'Ingrese un número válido de 8 dígitos (ej: 67644705)',
+                    type: 'warning',
+                    duration: 4000
+                });
+                return;
+            }
+    
+    
+            // Validación de contraseña nueva
+            if (passwordNueva && passwordNueva.length < 8) {
+                mostrarNotificacion({
+                    message: 'La nueva contraseña debe tener al menos 8 caracteres',
+                    type: 'error',
+                    duration: 3500
+                });
+                return;
+            }
+    
+            // Validar que ambas contraseñas estén presentes si se está cambiando
+            if ((passwordActual && !passwordNueva) || (!passwordActual && passwordNueva)) {
+                mostrarNotificacion({
+                    message: 'Debe ingresar ambas contraseñas para cambiarla',
+                    type: 'error',
+                    duration: 3500
+                });
+                return;
+            }
+    
+            try {
+                mostrarCarga();
+                const response = await fetch('/actualizar-usuario', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        apellido,
+                        foto: fotoModificada ? fotoBase64 : undefined,
+                        passwordActual: passwordActual || undefined,
+                        passwordNueva: passwordNueva || undefined,
+                        telefono
+                    })
+                });
+    
+                const data = await response.json();
+    
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al actualizar el perfil');
+                }
+    
+                await obtenerUsuario();
+                mostrarPerfil(document.querySelector('.perfil-view'));
+                ocultarAnuncio();
+                mostrarNotificacion({
+                    message: 'Perfil actualizado con éxito',
+                    type: 'success',
+                    duration: 3500
+                });
+    
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion({
+                    message: error.message || 'Error al actualizar el perfil',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                ocultarCarga();
+            }
+        });
+    })
 }
 
 
@@ -447,6 +455,7 @@ function mostrarConfiguraciones() {
 
     contenido.innerHTML = registrationHTML;
     mostrarAnuncio();
+    contenido.style.maxWidth = '500px';
     eventosConfiguraciones();
 }
 function eventosConfiguraciones() {

@@ -208,10 +208,9 @@ function updateHTMLWithData() {
 function eventosReglas() {
     const items = document.querySelectorAll('.registro-item');
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
-    const contenedor = document.querySelector('.relleno');
     const nuevaRegla = document.querySelectorAll('.nueva-regla');
     const btnPreciosBase = document.querySelectorAll('.precios-base');
-
+    const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -220,7 +219,7 @@ function eventosReglas() {
                 const boton = document.createElement('button');
                 boton.className = 'scroll-top';
                 boton.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                boton.onclick = () => scrollToTop('.relleno');
+                boton.onclick = () => scrollToTop('.anuncio .relleno');
                 contenedor.appendChild(boton);
             }
         } else {

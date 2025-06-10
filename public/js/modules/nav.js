@@ -93,7 +93,7 @@ const atajosPorRol = {
             vista: 'regAcopio-view',
             icono: 'fa-history',
             texto: 'Pedidos',
-            detalle: 'Gestiona pedidos todos los pedidos.',
+            detalle: 'Gestiona todos los pedidos.',
             onclick: 'onclick="mostrarPedidos();"'
         },
         {
@@ -273,7 +273,7 @@ class TooltipManager {
 
         const div = document.querySelector('.panel-lateral');
         // Solo mostrar tooltip si el panel está contraído
-        if (div && div.style.width === "110px") {
+        if (div && div.style.width === "92px") {
             const tooltipText = element.getAttribute('data-tooltip');
             if (tooltipText) {
                 this.showTooltip(element, tooltipText);
@@ -310,7 +310,7 @@ class TooltipManager {
         const tooltipRect = this.tooltip.getBoundingClientRect();
 
         // Posicionar tooltip a la derecha del elemento
-        let left = rect.right + 10;
+        let left = rect.right + 5;
         let top = rect.top + (rect.height / 2);
 
         // Verificar si el tooltip se sale de la pantalla por la derecha
@@ -441,14 +441,14 @@ function renderMenu() {
                 <i class="fas fa-user"></i>
                 <div class="info">
                     <p class="texto">Perfil</p>
-                    <p class="detalle">Pantalla de inicio</p>
+                    <p class="detalle">Gestiona tu perfil</p>
                 </div>
             </div>
             <div class="opcion" onclick="homeGr('notificacion')" data-tooltip="Notificaciones">
                 <i class="fas fa-bell"></i>
                 <div class="info">
                     <p class="texto">Notificaciones</p>
-                    <p class="detalle">Pantalla de inicio</p>
+                    <p class="detalle">Todas las notificaciones</p>
                 </div>
             </div>
             ${opcionesHTML}
@@ -615,11 +615,11 @@ function eventosNav() {
     function achicarDiv() {
         if(window.innerWidth >= 768){
             if (achicar.style.transform === 'rotate(180deg)') {
-                div.style.width = "350px"; // Se fija el ancho a 100px
+                div.style.width = "310px"; // Se fija el ancho a 100px
                 pantallagrande();
             }
             else {
-                div.style.width = "110px"; // Se fija el ancho a 100px
+                div.style.width = "92px"; // Se fija el ancho a 100px
                 pantallagrande();
             }
         }
@@ -631,18 +631,18 @@ function eventosNav() {
         const views = document.querySelectorAll('.view');
 
         if (achicar.style.transform === 'rotate(180deg)') {
-            anuncio.style.paddingLeft = '350px';
+            anuncio.style.paddingLeft = '310px';
             views.forEach(view => {
-                view.style.paddingLeft = '365px';
+                view.style.paddingLeft = '325px';
             });
-            nav.style.paddingLeft = '350px';
+            nav.style.paddingLeft = '310px';
             achicar.style.transform = 'none';
         } else {
-            anuncio.style.paddingLeft = '110px';
+            anuncio.style.paddingLeft = '93px';
             views.forEach(view => {
-                view.style.paddingLeft = '125px';
+                view.style.paddingLeft = '107px';
             });
-            nav.style.paddingLeft = '120px';
+            nav.style.paddingLeft = '103px';
             achicar.style.transform = 'rotate(180deg)';
         }
     }

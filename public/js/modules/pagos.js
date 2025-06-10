@@ -398,7 +398,7 @@ function eventosPagos() {
             // Template para pagos genéricos
             registrationHTML = `
                 <div class="encabezado">
-                    <h1 class="titulo">${pago.nombre_pago}</h1>
+                    <h1 class="titulo">Información</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
                         <i class="fas fa-arrow-right"></i>
                     </button>
@@ -407,6 +407,7 @@ function eventosPagos() {
                     <p class="normal">Información del pago</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
+                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${pago.nombre_pago}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
                         <span class="nombre"><strong><i class='bx bx-envelope'></i> Email: </strong>${pago.id_beneficiario}</span>
                         <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${pago.fecha}</span>
@@ -462,75 +463,76 @@ function eventosPagos() {
 
             // Template para pagos normales (mantener el existente)
             registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">${pago.nombre_pago}</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno verificar-registro">
-            <p class="normal">Información del pago</p>
-            <div class="campo-vertical">
-                <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
-                <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
-                <span class="nombre"><strong><i class='bx bx-envelope'></i> Email: </strong>${pago.id_beneficiario}</span>
-                <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${pago.fecha}</span>
+            <div class="encabezado">
+                <h1 class="titulo">Información</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
+            <div class="relleno verificar-registro">
+                <p class="normal">Información del pago</p>
+                <div class="campo-vertical">
+                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
+                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${pago.nombre_pago}</span>
+                    <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
+                    <span class="nombre"><strong><i class='bx bx-envelope'></i> Email: </strong>${pago.id_beneficiario}</span>
+                    <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${pago.fecha}</span>
+                </div>
 
-            <p class="normal">Detalles del pago</p>
-            <div class="campo-vertical">
-                <span class="valor"><strong><i class='bx bx-package'></i> Total Envasado: </strong>Bs. ${totales.envasado.toFixed(2)}</span>
-                <span class="valor"><strong><i class='bx bx-tag'></i> Total Etiquetado: </strong>Bs. ${totales.etiquetado.toFixed(2)}</span>
-                <span class="valor"><strong><i class='bx bx-purchase-tag'></i> Total Sellado: </strong>Bs. ${totales.sellado.toFixed(2)}</span>
-                <span class="valor"><strong><i class='bx bx-filter'></i> Total Cernido: </strong>Bs. ${totales.cernido.toFixed(2)}</span>
-                <hr style="margin: 10px 0; opacity: 0.2;">
-                <span class="valor"><strong><i class='bx bx-dollar'></i> Subtotal: </strong>Bs. ${pago.subtotal}</span>
-                <span class="valor"><strong><i class='bx bx-minus-circle'></i> Descuento: </strong>Bs. ${pago.descuento}</span>
-                <span class="valor"><strong><i class='bx bx-plus-circle'></i> Aumento: </strong>Bs. ${pago.aumento}</span>
-                <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total: </strong>Bs. ${pago.total}</span>
-                ${pago.observaciones ? `<span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong></span>
-                    <span style="padding-left:20px;width: 100%;">${pago.observaciones}</span>
-                    ` : ''}
-                
-            </div>
+                <p class="normal">Detalles del pago</p>
+                <div class="campo-vertical">
+                    <span class="valor"><strong><i class='bx bx-package'></i> Total Envasado: </strong>Bs. ${totales.envasado.toFixed(2)}</span>
+                    <span class="valor"><strong><i class='bx bx-tag'></i> Total Etiquetado: </strong>Bs. ${totales.etiquetado.toFixed(2)}</span>
+                    <span class="valor"><strong><i class='bx bx-purchase-tag'></i> Total Sellado: </strong>Bs. ${totales.sellado.toFixed(2)}</span>
+                    <span class="valor"><strong><i class='bx bx-filter'></i> Total Cernido: </strong>Bs. ${totales.cernido.toFixed(2)}</span>
+                    <hr style="margin: 10px 0; opacity: 0.2;">
+                    <span class="valor"><strong><i class='bx bx-dollar'></i> Subtotal: </strong>Bs. ${pago.subtotal}</span>
+                    <span class="valor"><strong><i class='bx bx-minus-circle'></i> Descuento: </strong>Bs. ${pago.descuento}</span>
+                    <span class="valor"><strong><i class='bx bx-plus-circle'></i> Aumento: </strong>Bs. ${pago.aumento}</span>
+                    <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total: </strong>Bs. ${pago.total}</span>
+                    ${pago.observaciones ? `<span class="valor"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong></span>
+                        <span style="padding-left:20px;width: 100%;">${pago.observaciones}</span>
+                        ` : ''}
+                    
+                </div>
 
-            <p class="normal">Detalle de justificativos</p>
-            <div class="tabla-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Envasado</th>
-                            <th>Etiquetado</th>
-                            <th>Sellado</th>
-                            <th>Cernido</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${justificativosFormateados.map(j => `
+                <p class="normal">Detalle de justificativos</p>
+                <div class="tabla-responsive">
+                    <table>
+                        <thead>
                             <tr>
-                                <td>${j.producto}</td>
-                                <td>${j.producto}</td>
-                                <td>Bs. ${j.envasado.toFixed(2)}</td>
-                                <td>Bs. ${j.etiquetado.toFixed(2)}</td>
-                                <td>Bs. ${j.sellado.toFixed(2)}</td>
-                                <td>Bs. ${j.cernido.toFixed(2)}</td>
-                                <td><strong>Bs. ${j.total.toFixed(2)}</strong></td>
+                                <th>Producto</th>
+                                <th>Envasado</th>
+                                <th>Etiquetado</th>
+                                <th>Sellado</th>
+                                <th>Cernido</th>
+                                <th>Total</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            ${justificativosFormateados.map(j => `
+                                <tr>
+                                    <td>${j.producto}</td>
+                                    <td>${j.producto}</td>
+                                    <td>Bs. ${j.envasado.toFixed(2)}</td>
+                                    <td>Bs. ${j.etiquetado.toFixed(2)}</td>
+                                    <td>Bs. ${j.sellado.toFixed(2)}</td>
+                                    <td>Bs. ${j.cernido.toFixed(2)}</td>
+                                    <td><strong>Bs. ${j.total.toFixed(2)}</strong></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
 
-            <p class="normal">Información administrativa</p>
-            <div class="campo-vertical">
-                <span class="valor"><strong><i class='bx bx-user-check'></i> Registrado por: </strong>${pago.pagado_por}</span>
+                <p class="normal">Información administrativa</p>
+                <div class="campo-vertical">
+                    <span class="valor"><strong><i class='bx bx-user-check'></i> Registrado por: </strong>${pago.pagado_por}</span>
+                </div>
             </div>
-        </div>
-        <div class="anuncio-botones">
-            ${pago.estado !== 'Anulado' ? ` <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>` : ''}
-            ${pago.estado === 'Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
-        </div>
-    `;
+            <div class="anuncio-botones">
+                ${pago.estado !== 'Anulado' ? ` <button class="btn-anular btn yellow"><i class='bx bx-x-circle'></i> Anular</button>` : ''}
+                ${pago.estado === 'Pendiente' ? ` <button class="btn-pagar btn green"><i class='bx bx-dollar'></i> Pagar</button>` : ` <button class="btn-pagar btn blue"><i class='bx bx-show'></i> Ver pagos</button>`}
+            </div>
+        `;
         }
 
         contenido.innerHTML = registrationHTML;

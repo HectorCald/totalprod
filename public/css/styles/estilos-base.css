@@ -35,7 +35,7 @@ body {
 :root {
     --text: black;
     --fondo: rgba(149, 149, 149, 0.064);
-    --fondo2: #4fd0b617;
+    --fondo2: #4fd0b623;
     --fondo3: #ffffff;
     --fondo4: rgba(149, 149, 149, 0.064);
     --fondo5: #f3f3f3;
@@ -71,26 +71,41 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--fondo4);
+    background: transparent; /* Fondo transparente para mejor overlay */
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--cero-color);
+    background: rgba(128, 128, 128, 0.7); /* Semi-transparente para mejor overlay */
     border-radius: 10px;
+    border: 1px solid transparent; /* Espacio adicional para que no toque el contenido */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--cero-color);
+    background: rgba(128, 128, 128, 0.9);
 }
 
-/* For Firefox */
+/* Para Firefox - scrollbar overlay nativo */
 * {
+    scrollbar-color: rgba(128, 128, 128, 0) transparent;
     scrollbar-width: thin;
-    scrollbar-color: gray var(--cero-color);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    
+
+    &:hover {
+        scrollbar-color: rgba(128, 128, 128, 0.7) transparent;
+    }
 }
+
+/* Opcional: Hacer el scrollbar más sutil cuando no está en uso */
+::-webkit-scrollbar-thumb {
+    opacity: 0.5;
+    transition: all  0.1s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    opacity: 1;
+}
+
 
 
 [data-theme="dark"] {
@@ -99,7 +114,7 @@ body {
     --fondo3: #2d2d2d;
     --fondo4: #252525;
     --fondo5: #1c1c1c;
-    --fondo2: #323232;
+    --fondo2: #3c3c3c;
     --primary-color: #2a2a2a;
     --second-color: #ffffff;
     --nov-color: #111111;

@@ -463,7 +463,7 @@ function eventosAlmacenGeneral() {
     const items = document.querySelectorAll('.registro-item');
 
     const inputBusqueda = document.querySelector('.buscar-producto');
-    const contenedor = document.querySelector('.relleno');
+    const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -472,7 +472,7 @@ function eventosAlmacenGeneral() {
                 const boton = document.createElement('button');
                 boton.className = 'scroll-top';
                 boton.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                boton.onclick = () => scrollToTop('.relleno');
+                boton.onclick = () => scrollToTop('.anuncio .relleno');
                 contenedor.appendChild(boton);
             }
         } else {
@@ -720,11 +720,10 @@ function eventosAlmacenGeneral() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">Información del producto</h1>
+            <h1 class="titulo">${producto.producto}</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal-center">${producto.producto}</p>
             <div class="imagen-producto-registro">
                 ${imagenMostrar}
             </div>
@@ -789,6 +788,7 @@ function eventosAlmacenGeneral() {
                 <p class="normal">Información general</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
+                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${producto.producto}</span>
                     <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
                     <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
                     <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>

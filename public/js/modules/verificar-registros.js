@@ -10,6 +10,26 @@ let preciosBase = {
     sellado: 0.006,
     cernido: 0.08
 };
+let nombresUsuariosGlobal = [];
+async function obtenerNombresUsuarios() {
+    try {
+        const response = await fetch('/obtener-nombres-usuarios');
+        const data = await response.json();
+        if (data.success) {
+            nombresUsuariosGlobal = data.nombres;
+            return true;
+        }
+        throw new Error('Error al obtener nombres de usuarios');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion({
+            message: 'Error al obtener nombres de usuarios',
+            type: 'error',
+            duration: 3500
+        });
+        return false;
+    }
+}
 const DB_NAME = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
 
@@ -360,10 +380,11 @@ export async function mostrarVerificacion() {
         configuracionesEntrada();
     }, 100);
 
-    const [registrosProduccion, productos, reglas] = await Promise.all([
+    const [registrosProduccion, productos, reglas,usuarios] = await Promise.all([
         obtenerRegistrosProduccion(),
         obtenerProductos(),
-        obtenerReglas()
+        obtenerReglas(),
+        obtenerNombresUsuarios()
     ]);
 
     updateHTMLWithData();
@@ -371,16 +392,25 @@ export async function mostrarVerificacion() {
 
 }
 function updateHTMLWithData() {
-    // Update etiquetas filter
-    const nombresUnicos = [...new Set(registrosProduccion.map(registro => registro.nombre))];
+
+    // 2. Obtener usuarios únicos de los registros
+    const usuariosUnicos = [...new Set(registrosProduccion.map(registro => registro.user))];
+
+    // 3. Mapear cada user a su nombre correspondiente
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
-    const etiquetasHTML = nombresUnicos.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta}</button>
-    `).join('');
+    const etiquetasHTML = usuariosUnicos.map(user => {
+        // Buscar el usuario en nombresUsuariosGlobal
+        const usuario = nombresUsuariosGlobal.find(u => u.user === user);
+        // Extraer solo la primera palabra del nombre
+        const primerNombre = usuario?.nombre.split(' ')[0] || 'Sin nombre';
+        return `<button class="btn-filtro" data-user="${user}">${primerNombre}</button>`;
+    }).join('');
+
+    // 4. Insertar en el DOM
     etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
+    <button class="btn-filtro activado">Todos</button>
+    ${etiquetasHTML}
+  `;
 
     // Update productos
     const productosContainer = document.querySelector('.productos-container');
@@ -413,7 +443,7 @@ function eventosVerificacion() {
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const botonCalendario = document.querySelector('.btn-calendario');
 
-    const contenedor = document.querySelector('.relleno');
+    const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -422,7 +452,7 @@ function eventosVerificacion() {
                 const boton = document.createElement('button');
                 boton.className = 'scroll-top';
                 boton.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                boton.onclick = () => scrollToTop('.relleno');
+                boton.onclick = () => scrollToTop('.anuncio .relleno');
                 contenedor.appendChild(boton);
             }
         } else {
@@ -475,11 +505,10 @@ function eventosVerificacion() {
                     mostrar = registroData.fecha_verificacion && registroData.observaciones !== 'Sin observaciones';
                 }
             }
-
+            
             if (mostrar && filtroNombreActual && filtroNombreActual !== 'Todos') {
-                mostrar = registroData.nombre === filtroNombreActual;
+                mostrar = registroData.user === filtroNombreActual;
             }
-
             if (mostrar && fechasSeleccionadas.length === 2) {
                 const [dia, mes, anio] = registroData.fecha.split('/');
                 const fechaRegistro = new Date(anio, mes - 1, dia);
@@ -549,7 +578,7 @@ function eventosVerificacion() {
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
-            filtroNombreActual = boton.textContent.trim();
+            filtroNombreActual = boton.dataset.user;
             scrollToCenter(boton, boton.parentElement);
             aplicarFiltros();
         });
@@ -628,11 +657,10 @@ function eventosVerificacion() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">Información del registro</h1>
+            <h1 class="titulo">${registro.producto}</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <p class="normal-center">${registro.producto}</p>
             <div class="imagen-producto-registro">
                 ${imagenMostrar}
             </div>
@@ -1343,7 +1371,7 @@ function eventosVerificacion() {
         btn.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
     })
     btnNuevoPagoGenerico.forEach(btn => {
-        btn.addEventListener('click',  mostrarFormularioNuevoPago);
+        btn.addEventListener('click', mostrarFormularioNuevoPago);
     })
 
     function calcularTotal(registro) {
@@ -1536,7 +1564,7 @@ function eventosVerificacion() {
                     <i class='bx bx-user-check'></i>
                     <div class="input">
                         <p class="detalle">Pagado por</p>
-                        <input type="text" name="pagado_por" value="${usuarioInfo.nombre +' '+ usuarioInfo.apellido}" readonly>
+                        <input type="text" name="pagado_por" value="${usuarioInfo.nombre + ' ' + usuarioInfo.apellido}" readonly>
                     </div>
                 </div>
                 <div class="entrada">

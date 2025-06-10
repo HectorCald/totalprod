@@ -130,7 +130,7 @@ function eventosRegistrosConteo() {
     const inputBusqueda = document.querySelector('.buscar-registro');
     const botonCalendario = document.querySelector('.btn-calendario');
 
-    const contenedor = document.querySelector('.relleno');
+    const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -139,7 +139,7 @@ function eventosRegistrosConteo() {
                 const boton = document.createElement('button');
                 boton.className = 'scroll-top';
                 boton.innerHTML = '<i class="fas fa-arrow-up"></i>';
-                boton.onclick = () => scrollToTop('.relleno');
+                boton.onclick = () => scrollToTop('.anuncio .relleno');
                 contenedor.appendChild(boton);
             }
         } else {

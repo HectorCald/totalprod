@@ -46,11 +46,13 @@ function ocultarAnuncioTercerFisico() {
 
 export async function mostrarAnuncio() {
     const anuncio = document.querySelector('.anuncio');
+    const contenido = document.querySelector('.anuncio .contenido');
     ocultarAnuncioSecondFisico();
     ocultarAnuncioTercerFisico();
 
     if (anuncio) {
         anuncio.classList.add('mostrar');
+        contenido.style.maxWidth = '100%';
         actualizarEstadoInterno();
 
         if (estadoAnuncios.nivelActual === 1 && (history.state?.nivel || 0) < 1) {
@@ -59,16 +61,16 @@ export async function mostrarAnuncio() {
     }
 }
 function pantallagrande(proceso) {
+    const principal = document.querySelector('.anuncio .contenido');
+    const pEncabezado = document.querySelector('.anuncio .contenido .encabezado');
+    const nav = document.querySelector('.nav-container');
+    const views = document.querySelectorAll('.view');
+
     const esPantallaGrande = window.innerWidth > 768;
     if (esPantallaGrande) {
-        const principal = document.querySelector('.anuncio .contenido');
-        const pEncabezado = document.querySelector('.anuncio .contenido .encabezado');
-        const nav = document.querySelector('.nav-container');
-        const views = document.querySelectorAll('.view');
-
 
         if (proceso === 'ocultar') {
-            principal.style.paddingRight = '15px';
+            principal.style.paddingRight = '0px';
             pEncabezado.style.paddingRight = '15px';
             views.forEach(view => {
                 view.style.paddingRight = '15px';
@@ -357,7 +359,7 @@ export function configuracionesEntrada() {
         input.addEventListener('blur', () => {
             if (!input.value.trim()) {
                 label.style.transform = 'translateY(-50%)';
-                label.style.color = 'var(--cero-color)';
+                label.style.color = 'gray';
                 label.style.fontWeight = '400';
             }
         });
@@ -372,7 +374,7 @@ export function configuracionesEntrada() {
                     label.style.zIndex = '5';
                 } else {
                     label.style.transform = 'translateY(-50%)';
-                    label.style.color = 'var(--cero-color)';
+                    label.style.color = 'gray';
                     label.style.fontWeight = '400';
                 }
             });
@@ -391,7 +393,7 @@ export function configuracionesEntrada() {
             // Forzar la actualización del label
             label.style.top = '50%';
             label.style.fontSize = 'var(--text-subtitulo)';
-            label.style.color = 'var(--cero-color)';
+            label.style.color = 'gray';
             label.style.fontWeight = '400';
 
             // Disparar evento blur manualmente

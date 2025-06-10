@@ -51,7 +51,7 @@
 
     .titulo {
         font-size: var(--text-titulo);
-        color: var(--cero-color);
+        color: gray;
         font-weight: 400;
         margin-bottom: 10px;
     }
@@ -84,7 +84,7 @@
             }
 
             p {
-                color: var(--cero-color);
+                color: gray;
             }
         }
 
@@ -96,7 +96,7 @@
 
     .sin-cuenta {
         font-size: var(--text-detalle);
-        color: var(--cero-color);
+        color: gray;
 
         span {
             color: var(--tercer-color);
