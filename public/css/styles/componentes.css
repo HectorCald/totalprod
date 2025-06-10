@@ -1086,7 +1086,7 @@
 
 
         .detalle {
-            color: gray !important;
+            color: gray;
             font-size: var(--text-subtitulo);
             padding-block: 5px;
             position: absolute;
