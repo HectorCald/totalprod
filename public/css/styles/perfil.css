@@ -88,7 +88,7 @@
     }
 
     .version {
-        color: var(--cero-color);
+        color: gray;
         font-size: var(--text-subtitulo);
     }
 }
