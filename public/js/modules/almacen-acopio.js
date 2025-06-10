@@ -96,13 +96,22 @@ function renderInitialHTML() {
             <button class="btn close" onclick="ocultarAnuncio();"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-producto-acopio" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-producto-acopio" placeholder="">
+                    </div>
                 </div>
+                ${tienePermiso('creacion') ? `
+                <div class="acciones-grande">
+                    <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Crear</span></button>
+                    <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> <span>Etiquetas</span></button>
+                </div>
+                ` : ''}
             </div>
+            
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro activado">Todos</button>
                 ${Array(5).fill().map(() => `
@@ -201,12 +210,16 @@ function eventosAlmacenAcopio() {
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
     const inputBusqueda = document.querySelector('.buscar-producto-acopio');
 
-    const btnCrearProducto = document.querySelector('.btn-crear-producto');
-    const btnEtiquetas = document.querySelector('.btn-etiquetas');
+    const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
+    const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
 
     if (tienePermiso('creacion')) {
-        btnCrearProducto.addEventListener('click', crearProducto);
-        btnEtiquetas.addEventListener('click', gestionarEtiquetas);
+        btnCrearProducto.forEach(btn => {
+            btn.addEventListener('click', crearProducto);
+        })
+        btnEtiquetas.forEach(btn => {
+            btn.addEventListener('click', gestionarEtiquetas);
+        }) 
     }
     const contenedor = document.querySelector('.relleno');
     contenedor.addEventListener('scroll', () => {

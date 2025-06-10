@@ -108,27 +108,31 @@ function renderInitialHTML() {
             <button class="btn filtros" onclick="mostrarFormatoIngresos()"><i class='bx bx-comment-detail'></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-producto-acopio" placeholder="">
+            <div class="buscador-filtros">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-producto-acopio" placeholder="">
+                    </div>
+                </div>
+                <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+                    <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
+                    <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
+                    <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
+                    <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
+                    <button class="btn-filtro" title="Bruto">Bruto</button>
+                    <button class="btn-filtro" title="Prima">Prima</button>
                 </div>
             </div>
+            
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro activado">Todos</button>
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
             </div>
-            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
-                <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
-                <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
-                <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
-                <button class="btn-filtro" title="Bruto">Bruto</button>
-                <button class="btn-filtro" title="Prima">Prima</button>
-            </div>
+            
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
                     <div class="skeleton-producto">

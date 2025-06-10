@@ -7,6 +7,7 @@
     top: 0;
     background-color: var(--sep-color);
     z-index: 1;
+    transition: all 0.5s ease;
     
 
     .menu{
@@ -76,7 +77,7 @@
 }
 @media screen and (min-width: 768px) {
     .nav-container {
-        padding-left: 350px;
+        padding-left: 110px;
 
         .refresh{
             display: none;

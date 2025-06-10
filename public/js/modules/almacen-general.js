@@ -350,7 +350,7 @@ function renderInitialHTML() {
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
             </div>
-            <div class="filtros-opciones cantidad-filter">
+            <div class="filtros-opciones cantidad-filter2">
                 <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
                 <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
@@ -453,7 +453,7 @@ async function updateHTMLWithData() {
 
 function eventosAlmacenGeneral() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
-    const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
+    const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter2 .btn-filtro');
     const selectPrecios = document.querySelector('.precios-select');
 
     const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
@@ -502,8 +502,8 @@ function eventosAlmacenGeneral() {
         const registros = document.querySelectorAll('.registro-item');
         const busqueda = normalizarTexto(inputBusqueda.value);
         const precioSeleccionado = selectPrecios.options[selectPrecios.selectedIndex].text;
-        const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter .btn-filtro.activado');
-        const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter .btn-filtro:nth-child(5)');
+        const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro.activado');
+        const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro:nth-child(5)');
         const mostrarSueltas = botonSueltas.classList.contains('activado');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 

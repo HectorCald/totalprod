@@ -223,7 +223,7 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
                 </div>
             </div>
             
@@ -253,7 +253,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -295,7 +295,7 @@ function updateHTMLWithData() {
 
 
 function eventosMisRegistros() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = registrosProduccion;
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
     const items = document.querySelectorAll('.registro-item');
@@ -1036,7 +1036,8 @@ function eventosMisRegistros() {
             }
         }
     }
-
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+    });
     aplicarFiltros();
 }

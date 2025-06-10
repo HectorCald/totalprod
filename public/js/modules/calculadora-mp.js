@@ -99,14 +99,22 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-verificacion" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                    </div>
+                    <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
-                <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
+
+                <div class="acciones-grande">
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
+                    <button class="nuevo-registro btn especial"><i class='bx bx-file'></i> <span>Nuevo registro</span></button>
+                </div>
             </div>
+            
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro activado">Todos</button>
                 ${Array(5).fill().map(() => `
@@ -138,8 +146,8 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i>Descargar registros</button>
-            <button id="nuevo-registro" class="btn especial"><i class='bx bx-file'></i>Nuevo registro</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i>Descargar registros</button>
+            <button class="nuevo-registro btn especial"><i class='bx bx-file'></i>Nuevo registro</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -192,7 +200,8 @@ function updateHTMLWithData() {
 
 
 function eventosVerificacion() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnNuevo = document.querySelectorAll('.nuevo-registro');
     const registrosAExportar = calculosMP;
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
@@ -946,12 +955,10 @@ function eventosVerificacion() {
     }
 
 
+    btnNuevo.forEach(btn => {
+        btn.addEventListener('click',  mostrarFormularioNuevoRegistro);
+    })
 
-    document.addEventListener('click', async function (e) {
-        if (e.target.closest('#nuevo-registro')) {
-            mostrarFormularioNuevoRegistro();
-        }
-    });
 
     function mostrarFormularioNuevoRegistro() {
         const contenido = document.querySelector('.anuncio-tercer .contenido');
@@ -1187,7 +1194,9 @@ function eventosVerificacion() {
             }
         });
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('calcularmp', registrosAExportar));
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('calcularmp', registrosAExportar));
+    })
     aplicarFiltros();
 
 }

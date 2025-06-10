@@ -28,6 +28,11 @@
     padding-left: 7px;
     border-left: 4px solid var(--cuarto-color);
     font-weight: 600;
+    width: 100%;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-height: 25px;
 }
 
 .normal-center {
@@ -69,9 +74,11 @@
         color: white !important;
     }
 }
+
 .btn span {
     transition: opacity 0.3s ease;
 }
+
 /* Ocultar ícono cuando el botón es muy pequeño */
 @container (max-width: 100px) {
     .btn span {
@@ -264,22 +271,20 @@
 }
 
 @media screen and (min-width: 768px) {
-    .btn{
+    .btn {
         max-width: 200px;
-        .bx{
+
+        .bx {
             color: white !important;
         }
     }
 
     .btn:hover {
-        background-color: rgba(233, 233, 233, 0.197);
+        background-color: rgba(0, 191, 255, 0.197);
         border: none;
         color: white !important;
     }
 }
-
-
-
 
 
 
@@ -537,10 +542,11 @@
 @media screen and (min-width: 768px) {
 
     .anuncio {
-        background-color: rgba(0, 0, 0, 0.352);
-        padding-left: 350px;
+        background-color: var(--fondo5);
+        padding-left: 115px;
         backdrop-filter: none;
         pointer-events: auto;
+        transition: all 0.5s ease !important;
 
         .encabezado button {
             display: none;
@@ -552,11 +558,13 @@
         justify-content: flex-end;
         right: 0;
         width: 450px;
+        border-left: 3px solid var(--cero-color);
 
         .encabezado {
             background-color: var(--fondo5);
         }
-        .btn{
+
+        .btn {
             max-width: 100%;
         }
     }
@@ -582,14 +590,19 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 350px;
+    width: 110px;
     height: 100vh;
     z-index: 5;
+    transition: width 0.5s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-right: 3px solid var(--cero-color);
 }
 
 @media screen and (min-width: 768px) {
     .panel-lateral {
         display: flex;
+        /* No es necesario repetir las propiedades de overflow y scrollbar */
     }
 }
 
@@ -633,10 +646,106 @@
     }
 }
 
+
+
 @media screen and (min-width: 768px) {
-    .opcion:hover {
-        background-color: rgba(233, 233, 233, 0.197);
+    .opcion {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+        background-color: var(--primary-color);
+        position: relative;
+
+        i {
+            font-size: 1.5rem;
+            color: var(--tercer-color) !important;
+            background-color: var(--fondo2);
+            padding: 10px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            color: var(--text);
+
+            .texto {
+                font-weight: 600;
+            }
+
+            .detalle {
+                font-size: var(--text-detalle);
+                color: gray;
+            }
+        }
     }
+
+    @container (max-width: 250px) {
+        .opcion {
+            i {
+                margin-left: 3px;
+            }
+
+            .info {
+                display: none;
+            }
+        }
+
+    }
+
+    .opcion {
+        container-type: inline-size;
+    }
+
+    .opcion:where([style*="width"] [style*="max-width"]) {
+        .info {
+            transform: scale(0);
+            width: 0;
+            opacity: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+    }
+
+
+    .opcion:hover {
+        background-color: #28b4983a;
+
+        i {
+            background-color: rgba(255, 255, 255, 0.13);
+            color: #28b4983a;
+        }
+    }
+}
+
+.tooltip-container {
+    position: fixed;
+    background-color: var(--cuarto-color);
+    color: white;
+    font-weight: 900;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: var(--text-subtitulo);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translateY(-50%);
+}
+
+.tooltip-container.show {
+    opacity: 1;
 }
 
 .opcion-activa {
@@ -664,9 +773,11 @@
 
 .ocultar-menu {
     color: var(--dec-color);
-    padding-right: 15px;
+    padding-inline: 15px;
     font-weight: 900;
     font-size: 20px;
+    cursor: pointer;
+    transform: rotate(180deg);
 }
 
 .busqueda {
@@ -696,6 +807,7 @@
         }
     }
 }
+
 .buscador-filtros {
     display: flex;
     justify-content: space-between;
@@ -704,11 +816,12 @@
     gap: 10px;
     flex-wrap: wrap;
 
-    .filtros-opciones.cantidad-filter{
-        .btn-filtro{
+    .filtros-opciones.cantidad-filter {
+        .btn-filtro {
             width: 100%;
         }
-        .precios-select{
+
+        .precios-select {
             width: 100%;
         }
     }
@@ -717,6 +830,7 @@
         max-width: 450px;
         min-width: 250px;
     }
+
     .acciones-grande {
         display: none;
         gap: 10px;
@@ -753,6 +867,7 @@
     min-height: 50px;
     height: 50px;
     background-color: var(--fondo5);
+    transition: all 0.5s ease;
 
     i {
         color: white;
@@ -819,7 +934,7 @@
 @media screen and (min-width: 768px) {
     .productos-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 10px;
     }
 }
@@ -969,7 +1084,7 @@
 
 
         .detalle {
-            color: var(--cero-color);
+            color: gray !important;
             font-size: var(--text-subtitulo);
             padding-block: 5px;
             position: absolute;

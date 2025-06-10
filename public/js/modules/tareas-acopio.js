@@ -105,14 +105,23 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-verificacion" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                    </div>
+                    <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
-                <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
+
+                <div class="acciones-grande">
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i><span>Descargar</span></button>
+                    <button class="nuevo-registro btn especial"><i class='bx bx-file'></i><span>Iniciar</span></button>
+                    <button class="btn-lista-tareas btn especial"><i class='bx bx-task'></i><span>Lista</span></button>
+                </div>
             </div>
+            
             <div class="filtros-opciones estado">
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Pendientes</button>
@@ -138,9 +147,9 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i>Descargar</button>
-            <button id="nuevo-registro" class="btn especial"><i class='bx bx-file'></i>Nueva</button>
-            <button id="btn-lista-tareas" class="btn especial"><i class='bx bx-task'></i>Lista</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i>Descargar</button>
+            <button class="nuevo-registro btn especial"><i class='bx bx-file'></i>Nueva</button>
+            <button class="btn-lista-tareas btn especial"><i class='bx bx-task'></i>Lista</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -198,7 +207,9 @@ function updateHTMLWithData() {
 
 
 function eventosTareas() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnNuevaTarea = document.querySelectorAll('.nuevo-registro');
+    const btnListaTareas = document.querySelectorAll('.btn-lista-tareas');
     const registrosAExportar = tareasGlobal;
 
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
@@ -1038,13 +1049,12 @@ function eventosTareas() {
         }
 
     }
-
-    document.addEventListener('click', async function (e) {
-        if (e.target.closest('#nuevo-registro')) {
-            mostrarFormularioNuevoRegistro();
-        }
-    });
-    document.getElementById('btn-lista-tareas').addEventListener('click', mostrarListaTareas);
+    btnNuevaTarea.forEach(btn => {
+        btn.addEventListener('click',  mostrarFormularioNuevoRegistro);
+    })
+    btnListaTareas.forEach(btn => {
+        btn.addEventListener('click',  mostrarListaTareas);
+    })
 
     async function mostrarListaTareas() {
         const contenido = document.querySelector('.anuncio-tercer .contenido');
@@ -1304,8 +1314,9 @@ function eventosTareas() {
             }
         });
     }
-
-    btnExcel.addEventListener('click', () => exportarArchivos('tareas', registrosAExportar));
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('tareas', registrosAExportar));
+    })
     aplicarFiltros();
 
 }

@@ -19,9 +19,10 @@
     padding: 15px;
     overflow-y: auto !important;
     padding-bottom: 90px;
+    transition: all 0.5s ease;
 }
 @media screen and (min-width: 768px) {
     .view{
-        padding-left: 365px;
+        padding-left: 125px;
     }
 }

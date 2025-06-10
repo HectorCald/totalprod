@@ -76,14 +76,21 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
-            <div class="entrada">
-                <i class='bx bx-search'></i>
-                <div class="input">
-                    <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-registro-almacen" placeholder="">
+            <div class="busqueda">
+                <div class="entrada">
+                    <i class='bx bx-search'></i>
+                    <div class="input">
+                        <p class="detalle">Buscar</p>
+                        <input type="text" class="buscar-registro-almacen" placeholder="">
+                    </div>
+                    <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
-                <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
+
+                <div class="acciones-grande">
+                    <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                </div>
             </div>
+            
             <div class="filtros-opciones tipo">
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Ingresos</button>
@@ -111,7 +118,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -137,7 +144,7 @@ function updateHTMLWithData() {
 
 
 function eventosRegistrosAcopio() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = movimientosAcopio;
 
     const botonesTipo = document.querySelectorAll('.filtros-opciones.tipo .btn-filtro');
@@ -658,7 +665,8 @@ function eventosRegistrosAcopio() {
         }
     }
 
-
-    btnExcel.addEventListener('click', () => exportarArchivos('acopio', registrosAExportar));
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('acopio', registrosAExportar));
+    })
     aplicarFiltros();
 }

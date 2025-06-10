@@ -274,7 +274,7 @@ function renderInitialHTML() {
                     </div>
                 </div>
                 <div class="acciones-grande">
-                    <button id="vista-previa" class="btn orange"><i class='bx bx-show'></i> <span>Vista previa</span></button>
+                    <button class="vista-previa btn orange"><i class='bx bx-show'></i> <span>Vista previa</span></button>
                 </div>
             </div>
             
@@ -310,7 +310,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="vista-previa" class="btn orange"><i class='bx bx-show'></i> Vista previa</button>
+            <button class="vista-previa btn orange"><i class='bx bx-show'></i> Vista previa</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -369,7 +369,7 @@ function eventosConteo() {
 
     const inputBusqueda = document.querySelector('.buscar-producto');
 
-    const vistaPrevia = document.getElementById('vista-previa');
+    const vistaPrevia = document.querySelectorAll('.vista-previa');
 
     const contenedor = document.querySelector('.relleno');
     contenedor.addEventListener('scroll', () => {
@@ -527,8 +527,10 @@ function eventosConteo() {
             scrollToCenter(boton, boton.parentElement);
         });
     });
-
-    vistaPrevia.addEventListener('click', vistaPreviaConteo);
+    vistaPrevia.forEach(btn => {
+        btn.addEventListener('click', vistaPreviaConteo);
+    })
+    
     function vistaPreviaConteo() {
         const stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
         const contenido = document.querySelector('.anuncio-second .contenido');
@@ -579,6 +581,7 @@ function eventosConteo() {
     `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
         mostrarAnuncioSecond();
 
         // Agregar evento al botón de registrar

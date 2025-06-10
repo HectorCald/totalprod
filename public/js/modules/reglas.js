@@ -137,8 +137,8 @@ function renderInitialHTML() {
                     </div>
                 </div>
                 <div class="acciones-grande">
-                    <button id="nueva-regla" class="btn orange"><i class='bx bx-plus'></i> <span>Nueva regla</span></button>
-            <button id="precios-base" class="btn especial"><i class='bx bx-money'></i> <span>Precios base</span></button>
+                    <button class="nueva-regla btn orange"><i class='bx bx-plus'></i> <span>Nueva regla</span></button>
+                    <button class="precios-base btn especial"><i class='bx bx-money'></i> <span>Precios base</span></button>
                 </div>
             </div>
             
@@ -163,8 +163,8 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="nueva-regla" class="btn orange"><i class='bx bx-plus'></i> Nueva regla</button>
-            <button id="precios-base" class="btn especial"><i class='bx bx-money'></i> Precios base</button>
+            <button class="nueva-regla btn orange"><i class='bx bx-plus'></i> Nueva regla</button>
+            <button class="precios-base btn especial"><i class='bx bx-money'></i> Precios base</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -209,8 +209,8 @@ function eventosReglas() {
     const items = document.querySelectorAll('.registro-item');
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const contenedor = document.querySelector('.relleno');
-    const nuevaRegla = document.querySelector('#nueva-regla');
-    const btnPreciosBase = document.querySelector('#precios-base');
+    const nuevaRegla = document.querySelectorAll('.nueva-regla');
+    const btnPreciosBase = document.querySelectorAll('.precios-base');
 
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
@@ -457,8 +457,14 @@ function eventosReglas() {
         }
 
     }
-    nuevaRegla.addEventListener('click', crearNuevaRegla);
-    btnPreciosBase.addEventListener('click', verPreciosBase);
+
+    nuevaRegla.forEach(btn => {
+        btn.addEventListener('click', crearNuevaRegla);
+    })
+    btnPreciosBase.forEach(btn => {
+        btn.addEventListener('click', verPreciosBase);
+    })
+
 
     function crearNuevaRegla() {
         const contenido = document.querySelector('.anuncio-second .contenido');

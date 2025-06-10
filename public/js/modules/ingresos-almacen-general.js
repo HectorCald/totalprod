@@ -4,6 +4,7 @@ let precios = [];
 let proovedores = [];
 let usuarioInfo = recuperarUsuarioLocal();
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
+let nombresUsuariosGlobal = [];
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
     if (usuarioGuardado) {
@@ -265,6 +266,25 @@ async function obtenerAlmacenGeneral() {
         return false;
     }
 }
+async function obtenerNombresUsuarios() {
+    try {
+        const response = await fetch('/obtener-nombres-usuarios');
+        const data = await response.json();
+        if (data.success) {
+            nombresUsuariosGlobal = data.nombres;
+            return true;
+        }
+        throw new Error('Error al obtener nombres de usuarios');
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion({
+            message: 'Error al obtener nombres de usuarios',
+            type: 'error',
+            duration: 3500
+        });
+        return false;
+    }
+}
 
 
 export async function mostrarIngresos(producto = '') {
@@ -275,11 +295,12 @@ export async function mostrarIngresos(producto = '') {
     }, 100);
 
     // Load data in parallel
-    const [almacenGeneral, etiquetas, precios, proovedores] = await Promise.all([
+    const [almacenGeneral, etiquetas, precios, proovedores, usuarios] = await Promise.all([
         obtenerAlmacenGeneral(),
         obtenerEtiquetas(),
         obtenerPrecios(),
         obtenerProovedores(),
+        obtenerNombresUsuarios()
     ]);
 
     const carritoBasico = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
@@ -857,6 +878,12 @@ function eventosIngresos() {
                                 ${proovedores.map(proovedor => `
                                     <option value="${proovedor.nombre}(${proovedor.id})">${proovedor.nombre}</option>
                                 `).join('')}
+                                ${nombresUsuariosGlobal
+                                    .filter(proveedor => proveedor.rol === 'Producción')
+                                    .map(proveedor => `
+                                      <option value="${proveedor.nombre}(${proveedor.id})">${proveedor.nombre}</option>
+                                    `).join('')
+                                  }
                             </select>
                         </div>
                     </div>

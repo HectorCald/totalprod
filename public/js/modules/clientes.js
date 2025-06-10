@@ -127,7 +127,7 @@ function updateHTMLWithData() {
 
 function eventosClientes() {
     const inputBusqueda = document.querySelector('.buscar-cliente');
-    const btnNuevoCliente = document.querySelector('.btn-crear-cliente');
+    const btnNuevoCliente = document.querySelectorAll('.btn-crear-cliente');
     const items = document.querySelectorAll('.registro-item');
     const contenedor = document.querySelector('.relleno');
     contenedor.addEventListener('scroll', () => {
@@ -462,7 +462,9 @@ function eventosClientes() {
             mostrarMovimientosAlmacen(cliente.nombre);
         }
     }
-    btnNuevoCliente.addEventListener('click', crearCliente);
+    btnNuevoCliente.forEach(btn => {
+        btn.addEventListener('click',  crearCliente);
+    })
     async function crearCliente() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `

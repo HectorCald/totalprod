@@ -93,7 +93,7 @@ const atajosPorRol = {
             vista: 'regAcopio-view',
             icono: 'fa-history',
             texto: 'Pedidos',
-            detalle: 'Gestiona pedidos de materia prima.',
+            detalle: 'Gestiona pedidos todos los pedidos.',
             onclick: 'onclick="mostrarPedidos();"'
         },
         {
@@ -135,7 +135,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-clipboard-list',
             texto: 'Conteo fisico',
-            detalle: 'Realiza conteos fisicos del almacen.',
+            detalle: 'Realiza conteos del almacen',
             onclick: 'onclick="mostrarConteo()"'
         },
         {
@@ -193,7 +193,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-credit-card',
             texto: 'Pagos',
-            detalle: 'Realiza y registra pagos en general.',
+            detalle: 'Registra pagos en general.',
             onclick: 'onclick="mostrarPagos()"'
         },
         {
@@ -201,7 +201,7 @@ const atajosPorRol = {
             vista: 'almacen-view',
             icono: 'fa-file-invoice',
             texto: 'Reportes',
-            detalle: 'Genera reportes de toda la empresa.',
+            detalle: 'Genera todos los reportes.',
             onclick: 'onclick="mostrarProovedores()"'
         },
         {
@@ -223,6 +223,124 @@ const atajosPorRol = {
 
     ]
 };
+let tooltipInstance = null;
+
+function initTooltips() {
+    // Si ya existe una instancia, limpiarla
+    if (tooltipInstance) {
+        tooltipInstance.destroy();
+    }
+
+    // Crear nueva instancia
+    tooltipInstance = new TooltipManager();
+}
+
+class TooltipManager {
+    constructor() {
+        this.tooltip = null;
+        this.init();
+    }
+
+    init() {
+        // Crear el elemento tooltip si no existe
+        if (!document.querySelector('.tooltip-container')) {
+            this.tooltip = document.createElement('div');
+            this.tooltip.className = 'tooltip-container';
+            document.body.appendChild(this.tooltip);
+        } else {
+            this.tooltip = document.querySelector('.tooltip-container');
+        }
+
+        // Usar delegación de eventos para manejar elementos dinámicos
+        this.attachEventListeners();
+    }
+
+    attachEventListeners() {
+        // Remover listeners anteriores si existen
+        document.removeEventListener('mouseenter', this.handleMouseEnter, true);
+        document.removeEventListener('mouseleave', this.handleMouseLeave, true);
+        document.removeEventListener('mousemove', this.handleMouseMove, true);
+
+        // Usar delegación de eventos para elementos dinámicos
+        document.addEventListener('mouseenter', this.handleMouseEnter.bind(this), true);
+        document.addEventListener('mouseleave', this.handleMouseLeave.bind(this), true);
+        document.addEventListener('mousemove', this.handleMouseMove.bind(this), true);
+    }
+
+    handleMouseEnter(event) {
+        const element = event.target.closest('.opcion[data-tooltip]');
+        if (!element) return;
+
+        const div = document.querySelector('.panel-lateral');
+        // Solo mostrar tooltip si el panel está contraído
+        if (div && div.style.width === "110px") {
+            const tooltipText = element.getAttribute('data-tooltip');
+            if (tooltipText) {
+                this.showTooltip(element, tooltipText);
+            }
+        }
+    }
+
+    handleMouseLeave(event) {
+        const element = event.target.closest('.opcion[data-tooltip]');
+        if (element) {
+            this.hideTooltip();
+        }
+    }
+
+    handleMouseMove(event) {
+        const element = event.target.closest('.opcion[data-tooltip]');
+        if (element && this.tooltip.classList.contains('show')) {
+            this.updateTooltipPosition(element);
+        }
+    }
+
+    showTooltip(element, text) {
+        this.tooltip.textContent = text;
+        this.updateTooltipPosition(element);
+        this.tooltip.classList.add('show');
+    }
+
+    hideTooltip() {
+        this.tooltip.classList.remove('show');
+    }
+
+    updateTooltipPosition(element) {
+        const rect = element.getBoundingClientRect();
+        const tooltipRect = this.tooltip.getBoundingClientRect();
+
+        // Posicionar tooltip a la derecha del elemento
+        let left = rect.right + 10;
+        let top = rect.top + (rect.height / 2);
+
+        // Verificar si el tooltip se sale de la pantalla por la derecha
+        if (left + tooltipRect.width > window.innerWidth) {
+            left = rect.left - tooltipRect.width - 10;
+        }
+
+        // Verificar límites verticales
+        if (top - (tooltipRect.height / 2) < 0) {
+            top = tooltipRect.height / 2;
+        } else if (top + (tooltipRect.height / 2) > window.innerHeight) {
+            top = window.innerHeight - (tooltipRect.height / 2);
+        }
+
+        this.tooltip.style.left = `${left}px`;
+        this.tooltip.style.top = `${top}px`;
+    }
+
+    destroy() {
+        // Remover event listeners
+        document.removeEventListener('mouseenter', this.handleMouseEnter, true);
+        document.removeEventListener('mouseleave', this.handleMouseLeave, true);
+        document.removeEventListener('mousemove', this.handleMouseMove, true);
+
+        // Remover tooltip del DOM
+        if (this.tooltip && this.tooltip.parentNode) {
+            this.tooltip.parentNode.removeChild(this.tooltip);
+        }
+    }
+}
 
 function obtenerOpcionesMenu() {
     const rol = usuarioInfo.rol;
@@ -252,8 +370,8 @@ function renderMenu() {
     const contenido = document.querySelector('.anuncio .contenido');
     const menuLateral = document.querySelector('.panel-lateral .contenido');
     const opcionesUsuario = obtenerOpcionesMenu();
+
     let opcionesHTML = '';
-    
 
     if (usuarioInfo.rol === 'Administración') {
         // Agrupar por roles
@@ -262,17 +380,16 @@ function renderMenu() {
             'Producción': atajosPorRol['Producción'],
             'Almacen': atajosPorRol['Almacen'],
             'Acopio': atajosPorRol['Acopio'],
-            // Agregar todos los plugins disponibles para administración
             'Plugins': Object.values(pluginsMenu)
         };
 
-        // Generar HTML para cada grupo
+        // Generar HTML para cada grupo - AGREGAR data-tooltip aquí también
         opcionesHTML = Object.entries(grupos).map(([titulo, opciones]) => {
             if (opciones && opciones.length > 0) {
                 return `
                     <h2 class="normal">${titulo}</h2>
                     ${opciones.map(opcion => `
-                        <div class="opcion" ${opcion.onclick}>
+                        <div class="opcion" ${opcion.onclick} data-tooltip="${opcion.texto}">
                             <i class="fas ${opcion.icono}"></i>
                             <div class="info">
                                 <p class="texto">${opcion.texto}</p>
@@ -287,7 +404,7 @@ function renderMenu() {
     } else {
         // Para otros roles, mostrar solo sus opciones y plugins activados
         opcionesHTML = opcionesUsuario.map(opcion => `
-            <div class="opcion" ${opcion.onclick}>
+            <div class="opcion" ${opcion.onclick} data-tooltip="${opcion.texto}">
                 <i class="fas ${opcion.icono}"></i>
                 <div class="info">
                     <p class="texto">${opcion.texto}</p>
@@ -306,27 +423,28 @@ function renderMenu() {
             ${opcionesHTML}
         </div>
     `;
+
     const menuL = `
         <div class="encabezado-lateral">
-            <h1 class="titulo"><i class="fas fa-bars"></i> Menú</h1>
+            <h1 class="titulo">Menú</h1>
             <span class="ocultar-menu">❮</span>
         </div>
         <div class="relleno">
-            <div class="opcion opcion-activa" onclick="homeGr('home')">
+            <div class="opcion opcion-activa" onclick="homeGr('home')" data-tooltip="Inicio">
                 <i class="fas fa-home"></i>
                 <div class="info">
                     <p class="texto">Inicio</p>
                     <p class="detalle">Pantalla de inicio</p>
                 </div>
             </div>
-            <div class="opcion" onclick="homeGr('perfil')">
+            <div class="opcion" onclick="homeGr('perfil')" data-tooltip="Perfil">
                 <i class="fas fa-user"></i>
                 <div class="info">
                     <p class="texto">Perfil</p>
                     <p class="detalle">Pantalla de inicio</p>
                 </div>
             </div>
-            <div class="opcion" onclick="homeGr('notificacion')">
+            <div class="opcion" onclick="homeGr('notificacion')" data-tooltip="Notificaciones">
                 <i class="fas fa-bell"></i>
                 <div class="info">
                     <p class="texto">Notificaciones</p>
@@ -391,9 +509,10 @@ function renderMenu() {
                 notificacion.classList.remove('slide-out-flotante');
                 notificacion.classList.add('slide-in-flotante');
 
-                // Quitar indicador inmediatamente
+                /* Quitar indicador inmediatamente
                 const indicador = btnNotificacion.querySelector('.indicador');
                 if (indicador) indicador.remove();
+                */
 
                 // Quitar animaciones después de 3 segundos
                 setTimeout(() => {
@@ -407,24 +526,29 @@ function renderMenu() {
         }
     }
     window.homeGr = homeGr;
-    function ocultarAnuncios(){
+    function ocultarAnuncios() {
         const anuncio = document.querySelector('.anuncio');
         const anuncioSecond = document.querySelector('.anuncio-second');
         const anuncioTercer = document.querySelector('.anuncio-tercer');
-        if(anuncio.classList.contains('mostrar')){
+        if (anuncio.classList.contains('mostrar')) {
             cerrarAnuncioManual('anuncio');
         }
-        if(anuncioSecond.classList.contains('mostrar')){
+        if (anuncioSecond.classList.contains('mostrar')) {
             cerrarAnuncioManual('anuncioSecond');
         }
-        if(anuncioTercer.classList.contains('mostrar')){
+        if (anuncioTercer.classList.contains('mostrar')) {
             cerrarAnuncioManual('anuncioTercer');
         }
     }
-
+    // Actualizar el DOM
     menuLateral.innerHTML = menuL;
     contenido.innerHTML = menuHTML;
     contenido.style.paddingBottom = '10px';
+
+    // IMPORTANTE: Re-inicializar tooltips después de renderizar
+    setTimeout(() => {
+        initTooltips();
+    }, 100);
 }
 function mostrarMenu() {
     mostrarAnuncio();
@@ -463,6 +587,16 @@ function eventosNav() {
     renderMenu();
     const refreshButton = document.querySelector('.nav-container .refresh');
     const menu = document.querySelector('.menu');
+    const achicar = document.querySelector('.ocultar-menu');
+    const div = document.querySelector('.panel-lateral');
+    const opciones = document.querySelectorAll('.opcion');
+
+    opciones.forEach(opcion => {
+        opcion.addEventListener('click', () => {
+            opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
+            opcion.classList.add('opcion-activa');
+        });
+    })
 
     refreshButton.addEventListener('click', () => {
         mostrarCarga();
@@ -472,4 +606,42 @@ function eventosNav() {
         renderMenu();
         mostrarMenu();
     });
+    achicarDiv();
+    achicar.addEventListener('click', achicarDiv);
+
+    setTimeout(() => {
+        initTooltips();
+    }, 100);
+    function achicarDiv() {
+        if (achicar.style.transform === 'rotate(180deg)') {
+            div.style.width = "350px"; // Se fija el ancho a 100px
+            pantallagrande();
+        }
+        else {
+            div.style.width = "110px"; // Se fija el ancho a 100px
+            pantallagrande();
+        }
+    }
+    function pantallagrande() {
+        const anuncio = document.querySelector('.anuncio');
+        const nav = document.querySelector('.nav-container');
+        const views = document.querySelectorAll('.view');
+
+        if (achicar.style.transform === 'rotate(180deg)') {
+            anuncio.style.paddingLeft = '350px';
+            views.forEach(view => {
+                view.style.paddingLeft = '365px';
+            });
+            nav.style.paddingLeft = '350px';
+            achicar.style.transform = 'none';
+        } else {
+            anuncio.style.paddingLeft = '110px';
+            views.forEach(view => {
+                view.style.paddingLeft = '125px';
+            });
+            nav.style.paddingLeft = '120px';
+            achicar.style.transform = 'rotate(180deg)';
+        }
+    }
 }
+

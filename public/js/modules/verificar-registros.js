@@ -310,8 +310,8 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
-            ${usuarioInfo.rol === 'Administración' ? `<button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> <span>Nuevo pago</span></button>` : ''} 
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
+                    ${usuarioInfo.rol === 'Administración' ? `<button class="nuevo-pago btn especial"><i class='bx bx-dollar-circle'></i> <span>Nuevo pago</span></button>` : ''} 
                 </div>
             </div>
             <div class="filtros-opciones etiquetas-filter">
@@ -346,8 +346,8 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
-            ${usuarioInfo.rol === 'Administración' ? `<button id="nuevo-pago" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>` : ''} 
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            ${usuarioInfo.rol === 'Administración' ? `<button class="nuevo-pago btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>` : ''} 
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -401,7 +401,8 @@ function updateHTMLWithData() {
 
 
 function eventosVerificacion() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnNuevoPagoGenerico = document.querySelectorAll('.nuevo-pago');
     const registrosAExportar = registrosProduccion;
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
@@ -1337,14 +1338,14 @@ function eventosVerificacion() {
         }
 
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
-    aplicarFiltros();
 
-    document.addEventListener('click', async function (e) {
-        if (e.target.closest('#nuevo-pago')) {
-            mostrarFormularioNuevoPago();
-        }
-    });
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('produccion', registrosAExportar));
+    })
+    btnNuevoPagoGenerico.forEach(btn => {
+        btn.addEventListener('click',  mostrarFormularioNuevoPago);
+    })
+
     function calcularTotal(registro) {
         // Declarar todas las variables necesarias
         const normalizedNombre = normalizarTexto(registro.producto);
@@ -1727,4 +1728,6 @@ function eventosVerificacion() {
             }
         }
     }
+
+    aplicarFiltros();
 }

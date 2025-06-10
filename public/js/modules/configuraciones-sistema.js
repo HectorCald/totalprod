@@ -58,6 +58,9 @@ export async function mostrarConfiguracionesSistema() {
                         <input type="time" class="hora-fin" value="${configuracionesGlobal?.horario?.horaFin || ''}">
                     </div>
                 </div>
+                <button class="btn-guardar-config btn blue">
+                    <i class='bx bx-save'></i> Guardar Cambios
+                </button>
             </div>
 
             <p class="normal">Estado del Sistema</p>

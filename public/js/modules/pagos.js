@@ -74,8 +74,8 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
-            <button id="nuevo-pago-generico" class="btn especial"><i class='bx bx-dollar-circle'></i> <span>Nuevo pago</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
+                    <button class="nuevo-pago-generico btn especial"><i class='bx bx-dollar-circle'></i> <span>Nuevo pago</span></button>
                 </div>
             </div>
             
@@ -112,8 +112,8 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button id="exportar-excel" class="btn orange"><i class='bx bx-download'></i> Descargar registros</button>
-            <button id="nuevo-pago-generico" class="btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="nuevo-pago-generico btn especial"><i class='bx bx-dollar-circle'></i> Nuevo pago</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -153,9 +153,9 @@ function updateHTMLWithData() {
 
 
 function eventosPagos() {
-    const btnExcel = document.getElementById('exportar-excel');
+    const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = pagosGlobal;
-    const btnNuevoPago = document.getElementById('nuevo-pago-generico');
+    const btnNuevoPago = document.querySelectorAll('.nuevo-pago-generico');
 
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
@@ -792,7 +792,12 @@ function eventosPagos() {
             });
         }
     };
-    btnNuevoPago.addEventListener('click', nuevoPagoGenerico);
+    btnNuevoPago.forEach(btn => {
+        btn.addEventListener('click',  nuevoPagoGenerico);
+    })
+    btnExcel.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivos('pagos', registrosAExportar));
+    })
 
     function nuevoPagoGenerico() {
         const contenido = document.querySelector('.anuncio-second .contenido');
@@ -964,7 +969,6 @@ function eventosPagos() {
             }
         });
     }
-    btnExcel.addEventListener('click', () => exportarArchivos('pagos', registrosAExportar));
 
     aplicarFiltros();
 }

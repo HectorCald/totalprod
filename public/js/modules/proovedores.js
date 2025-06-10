@@ -126,7 +126,7 @@ function updateHTMLWithData() {
 function eventosProovedores() {
     const inputBusqueda = document.querySelector('.buscar-proovedor');
 
-    const btnNuevoCliente = document.querySelector('.btn-crear-proovedor');
+    const btnNuevoCliente = document.querySelectorAll('.btn-crear-proovedor');
     const items = document.querySelectorAll('.registro-item');
     const contenedor = document.querySelector('.relleno');
     contenedor.addEventListener('scroll', () => {
@@ -148,9 +148,10 @@ function eventosProovedores() {
         }
     });
 
-    btnNuevoCliente.addEventListener('click', crearCliente);
 
-
+    btnNuevoCliente.forEach(btn => {
+        btn.addEventListener('click',  crearCliente);
+    })
 
     items.forEach(item => {
         item.addEventListener('click', function () {
