@@ -613,14 +613,17 @@ function eventosNav() {
         initTooltips();
     }, 100);
     function achicarDiv() {
-        if (achicar.style.transform === 'rotate(180deg)') {
-            div.style.width = "350px"; // Se fija el ancho a 100px
-            pantallagrande();
+        if(window.innerWidth >= 768){
+            if (achicar.style.transform === 'rotate(180deg)') {
+                div.style.width = "350px"; // Se fija el ancho a 100px
+                pantallagrande();
+            }
+            else {
+                div.style.width = "110px"; // Se fija el ancho a 100px
+                pantallagrande();
+            }
         }
-        else {
-            div.style.width = "110px"; // Se fija el ancho a 100px
-            pantallagrande();
-        }
+        
     }
     function pantallagrande() {
         const anuncio = document.querySelector('.anuncio');
