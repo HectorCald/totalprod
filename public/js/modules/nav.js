@@ -640,9 +640,9 @@ function eventosNav() {
         } else {
             anuncio.style.paddingLeft = '93px';
             views.forEach(view => {
-                view.style.paddingLeft = '107px';
+                view.style.paddingLeft = '110px';
             });
-            nav.style.paddingLeft = '103px';
+            nav.style.paddingLeft = '93px';
             achicar.style.transform = 'rotate(180deg)';
         }
     }

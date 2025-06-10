@@ -644,6 +644,7 @@
         flex-direction: column;
         gap: 0;
         color: var(--text);
+        line-height: 1.2;
 
         .texto {
             font-weight: 600;
@@ -679,7 +680,7 @@
 
             .texto {
                 font-weight: 600;
-                font-size: 15px;
+                font-size: 14px;
             }
 
             .detalle {

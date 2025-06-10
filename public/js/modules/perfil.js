@@ -225,7 +225,7 @@ function mostrarCuenta(nombre, apellido, email, foto, telefono) {
     contenido.style.paddingBottom = '80px';
     // Ajustar el padding para evitar que el botón quede oculto
     mostrarAnuncio();
-    contenido.style.maxWidth = '500px';
+    contenido.style.maxWidth = '450px';
     evetosCuenta();
     configuracionesEntrada();
 }
@@ -455,7 +455,7 @@ function mostrarConfiguraciones() {
 
     contenido.innerHTML = registrationHTML;
     mostrarAnuncio();
-    contenido.style.maxWidth = '500px';
+    contenido.style.maxWidth = '450px';
     eventosConfiguraciones();
 }
 function eventosConfiguraciones() {

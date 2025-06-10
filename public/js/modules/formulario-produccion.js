@@ -200,7 +200,7 @@ export async function mostrarFormularioProduccion() {
 
     contenido.innerHTML = registrationHTML;
     contenido.style.paddingBottom = '80px';
-    contenido.style.maxWidth = '500px';
+    contenido.style.maxWidth = '450px';
     await obtenerProductos();
     evetosFormularioProduccion();
     configuracionesEntrada();
