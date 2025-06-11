@@ -953,6 +953,8 @@ function eventosIngresos() {
 
     }
 
+    // Reemplaza las funciones existentes window.ajustarCantidad y window.actualizarCantidad
+
     window.ajustarCantidad = (id, delta) => {
         const item = carritoSalidas.get(id);
         if (!item) return;
@@ -978,6 +980,12 @@ function eventosIngresos() {
                 if (cantidadSpan) cantidadSpan.textContent = nuevaCantidad;
                 if (stockSpan) stockSpan.textContent = `${parseInt(item.stock) + nuevaCantidad} Und.`;
             }
+            // Actualizar subtotal inmediatamente en el item actual
+            const subtotalElement = document.querySelector(`.carrito-item[data-id="${id}"] .subtotal`);
+            if (subtotalElement) {
+                subtotalElement.textContent = `Bs. ${(nuevaCantidad * item.subtotal).toFixed(2)}`;
+            }
+
             actualizarCarritoLocalIngresos();
             actualizarCarritoUI();
         }
@@ -999,7 +1007,13 @@ function eventosIngresos() {
                 if (cantidadSpan) cantidadSpan.textContent = cantidad;
                 if (stockSpan) stockSpan.textContent = `${parseInt(item.stock) + cantidad} Und.`;
             }
-            actualizarCarriotoLocalIngresos();
+            // Actualizar subtotal inmediatamente en el item actual
+            const subtotalElement = document.querySelector(`.carrito-item[data-id="${id}"] .subtotal`);
+            if (subtotalElement) {
+                subtotalElement.textContent = `Bs. ${(cantidad * item.subtotal).toFixed(2)}`;
+            }
+
+            actualizarCarritoLocalIngresos();
             actualizarCarritoUI();
         }
     };
