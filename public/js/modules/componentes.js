@@ -68,7 +68,6 @@ function pantallagrande(proceso) {
 
     const esPantallaGrande = window.innerWidth > 768;
     if (esPantallaGrande) {
-
         if (proceso === 'ocultar') {
             principal.style.paddingRight = '0px';
             pEncabezado.style.paddingRight = '15px';
@@ -90,7 +89,7 @@ function pantallagrande(proceso) {
 }
 export async function mostrarAnuncioSecond() {
     const anuncio = document.querySelector('.anuncio-second');
-
+    ocultarAnuncioTercer();
 
     if (anuncio) {
         anuncio.classList.add('mostrar');
