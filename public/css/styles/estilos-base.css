@@ -87,6 +87,7 @@ body {
 
 /* Para Firefox - scrollbar overlay nativo */
 * {
+    user-select: none;
     scrollbar-color: rgba(128, 128, 128, 0) transparent;
     scrollbar-width: thin;
     

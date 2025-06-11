@@ -426,7 +426,7 @@ function renderMenu() {
 
     const menuL = `
         <div class="encabezado-lateral">
-            <h1 class="titulo">Menú</h1>
+            <h1 class="titulo" id="estatico">Menú</h1>
             <span class="ocultar-menu">❮</span>
         </div>
         <div class="relleno">
@@ -590,12 +590,14 @@ function eventosNav() {
     const achicar = document.querySelector('.ocultar-menu');
     const div = document.querySelector('.panel-lateral');
     const opciones = document.querySelectorAll('.opcion');
+    const estatico = document.querySelector('#estatico');
+    let estatic = false;
 
     opciones.forEach(opcion => {
         opcion.addEventListener('click', () => {
             opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
             opcion.classList.add('opcion-activa');
-            if (div.style.width !== '92px') {
+            if (div.style.width !== '92px' && estatic === false) {
                 achicarDiv();
             }
         });
@@ -611,6 +613,7 @@ function eventosNav() {
     });
     achicarDiv();
     achicar.addEventListener('click', achicarDiv);
+    estatico.addEventListener('dblclick',barraEstatica);
 
     setTimeout(() => {
         initTooltips();
@@ -625,10 +628,42 @@ function eventosNav() {
             else {
                 div.style.width = "92px"; // Se fija el ancho a 100px
                 pantallagrande();
+                if(estatic === true){
+                    barraEstatica();
+                }
             }
         }
 
     }
+    function barraEstatica(){
+        const anuncio = document.querySelector('.anuncio');
+        const nav = document.querySelector('.nav-container');
+        const views = document.querySelectorAll('.view');
+
+        if (achicar.style.transform !== 'rotate(180deg)') {
+            anuncio.style.paddingLeft = '310px';
+            views.forEach(view => {
+                view.style.paddingLeft = '335px';
+            });
+            nav.style.paddingLeft = '310px';
+            achicar.style.transform = 'none';
+            estatic = true;
+        } else if(estatic === true){
+            anuncio.style.paddingLeft = '93px';
+            views.forEach(view => {
+                view.style.paddingLeft = '115px';
+            });
+            nav.style.paddingLeft = '115px';
+            achicar.style.transform = 'rotate(180deg)';
+            estatic = false;
+        } else if(achicar.style.transform === 'rotate(180deg)') {
+            achicarDiv();
+            barraEstatica();
+            estatic = true;
+        }
+
+    }
+    window.barraEstatica = barraEstatica;
     window.achicarDiv = achicarDiv;
     function pantallagrande() {
         const miDiv = document.querySelector(".panel-lateral .relleno");

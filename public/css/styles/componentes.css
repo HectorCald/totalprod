@@ -924,6 +924,7 @@
 
     h1 {
         color: var(--dec-color);
+        cursor: pointer;
     }
 }
 
