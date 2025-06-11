@@ -802,9 +802,11 @@
     width: 100%;
     gap: 10px;
 
-    .entrada {
-        max-width: 400px;
-        min-width: 250px;
+    @media screen and (min-width: 768px) {
+        .entrada {
+            max-width: 400px;
+            min-width: 250px;
+        }
     }
 
     .acciones-grande {
@@ -841,9 +843,11 @@
         }
     }
 
-    .entrada {
-        max-width: 450px;
-        min-width: 250px;
+    @media screen and (min-width: 768px) {
+        .entrada {
+            max-width: 400px;
+            min-width: 250px;
+        }
     }
 
     .acciones-grande {
