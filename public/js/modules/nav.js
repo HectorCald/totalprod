@@ -595,6 +595,9 @@ function eventosNav() {
         opcion.addEventListener('click', () => {
             opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
             opcion.classList.add('opcion-activa');
+            if(div.style.width!=='92px'){
+                achicarDiv();
+            }
         });
     })
 
@@ -612,8 +615,9 @@ function eventosNav() {
     setTimeout(() => {
         initTooltips();
     }, 100);
+    
     function achicarDiv() {
-        if(window.innerWidth >= 768){
+        if(div.style.display !=='none'){
             if (achicar.style.transform === 'rotate(180deg)') {
                 div.style.width = "310px"; // Se fija el ancho a 100px
                 pantallagrande();
@@ -625,24 +629,15 @@ function eventosNav() {
         }
         
     }
+    window.achicarDiv = achicarDiv;
     function pantallagrande() {
         const anuncio = document.querySelector('.anuncio');
         const nav = document.querySelector('.nav-container');
         const views = document.querySelectorAll('.view');
 
         if (achicar.style.transform === 'rotate(180deg)') {
-            anuncio.style.paddingLeft = '310px';
-            views.forEach(view => {
-                view.style.paddingLeft = '325px';
-            });
-            nav.style.paddingLeft = '310px';
             achicar.style.transform = 'none';
         } else {
-            anuncio.style.paddingLeft = '93px';
-            views.forEach(view => {
-                view.style.paddingLeft = '110px';
-            });
-            nav.style.paddingLeft = '93px';
             achicar.style.transform = 'rotate(180deg)';
         }
     }
