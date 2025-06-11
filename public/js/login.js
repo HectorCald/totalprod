@@ -214,7 +214,7 @@ function inicializarApp() {
             input.addEventListener('blur', () => {
                 if (!input.value.trim()) {
                     label.style.transform = 'translateY(-50%)';
-                    label.style.color = 'var(--cero-color)';
+                    label.style.color = 'gray';
                     label.style.fontWeight = '400';
                 }
             });
@@ -228,7 +228,7 @@ function inicializarApp() {
                         label.style.zIndex = '5';
                     } else {
                         label.style.transform = 'translateY(-50%)';
-                        label.style.color = 'var(--cero-color)';
+                        label.style.color = 'gray';
                         label.style.fontWeight = '400';
                     }
                 });

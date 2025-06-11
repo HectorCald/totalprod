@@ -202,7 +202,7 @@ function updateHTMLWithData() {
                         `<span class="cantidad-pedida">(${pedido.cantidadEntregadaUnd || 'No registrado'}) </span>` : ''
         }
                     </span>
-                    <span class="fecha">${pedido.fecha}</span>
+                    <span class="fecha" data-fecha="${pedido.estado==='Pendiente' ? pedido.fecha : pedido.estado==='Recibido' ? pedido.fechaEntrega : pedido.estado==='Ingresado'? pedido.fechaIngreso : ''}">${pedido.estado==='Pendiente' ? pedido.fecha : pedido.estado==='Recibido' ? pedido.fechaEntrega : pedido.estado==='Ingresado'? pedido.fechaIngreso : ''}</span>
                 </div>
             </div>
         </div>
@@ -286,9 +286,17 @@ function eventosPedidos() {
                     mostrar = registroData.estado === 'No llego';
                 }
             }
+            let fechaFiltrar = '';
+            if(registroData.estado === 'Pendiente') {
+                fechaFiltrar = registroData.fecha;
+            }else if(registroData.estado === 'Recibido') {
+                fechaFiltrar = registroData.fechaEntrega;
+            }else if(registroData.estado === 'Ingresado') {
+                fechaFiltrar = registroData.fechaIngreso;
+            }
 
             if (mostrar && fechasSeleccionadas.length === 2) {
-                const [dia, mes, anio] = registroData.fecha.split('/');
+                const [dia, mes, anio] = fechaFiltrar.split('/');
                 const fechaRegistro = new Date(anio, mes - 1, dia);
                 const fechaInicio = fechasSeleccionadas[0];
                 const fechaFin = fechasSeleccionadas[1];
