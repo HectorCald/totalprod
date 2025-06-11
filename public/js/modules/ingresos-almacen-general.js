@@ -880,11 +880,11 @@ function eventosIngresos() {
                                     <option value="${proovedor.nombre}(${proovedor.id})">${proovedor.nombre}</option>
                                 `).join('')}
                                 ${nombresUsuariosGlobal
-                                    .filter(proveedor => proveedor.rol === 'Producción')
-                                    .map(proveedor => `
+                .filter(proveedor => proveedor.rol === 'Producción')
+                .map(proveedor => `
                                       <option value="${proveedor.nombre}(${proveedor.id})">${proveedor.nombre}</option>
                                     `).join('')
-                                  }
+            }
                             </select>
                         </div>
                     </div>
@@ -952,13 +952,24 @@ function eventosIngresos() {
         });
 
     }
+
     window.ajustarCantidad = (id, delta) => {
         const item = carritoSalidas.get(id);
         if (!item) return;
 
-        const nuevaCantidad = item.cantidad + delta;
+        // CAMBIO: Obtener la cantidad actual del input en lugar del objeto
+        const inputCantidad = document.querySelector(`.carrito-item[data-id="${id}"] input[type="number"]`);
+        const cantidadActual = inputCantidad ? parseInt(inputCantidad.value) || 1 : item.cantidad;
+
+        const nuevaCantidad = cantidadActual + delta;
         if (nuevaCantidad > 0) { // Removemos el límite superior ya que es un ingreso
             item.cantidad = nuevaCantidad;
+
+            // Actualizar el input inmediatamente
+            if (inputCantidad) {
+                inputCantidad.value = nuevaCantidad;
+            }
+
             // Actualizar contador y stock en el header
             const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
             if (headerItem) {
@@ -971,19 +982,24 @@ function eventosIngresos() {
             actualizarCarritoUI();
         }
     };
+
     window.actualizarCantidad = (id, valor) => {
         const item = carritoSalidas.get(id);
         if (!item) return;
 
-        const cantidad = parseInt(valor);
-        if (cantidad > 0 && cantidad <= item.stock) {
+        const cantidad = parseInt(valor) || 1; // CAMBIO: Si el valor es 0 o NaN, usar 1
+        if (cantidad > 0) { // CAMBIO: Remover la limitación del stock ya que es ingreso
             item.cantidad = cantidad;
-            // Actualizar contador en el header
-            const headerCounter = document.querySelector(`.registro-item[data-id="${id}"] .carrito-cantidad`);
-            if (headerCounter) {
-                headerCounter.textContent = cantidad;
+
+            // Actualizar contador y stock en el header
+            const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
+            if (headerItem) {
+                const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
+                const stockSpan = headerItem.querySelector('.stock');
+                if (cantidadSpan) cantidadSpan.textContent = cantidad;
+                if (stockSpan) stockSpan.textContent = `${parseInt(item.stock) + cantidad} Und.`;
             }
-            actualizarCarritoLocalIngresos();
+            actualizarCarriotoLocalIngresos();
             actualizarCarritoUI();
         }
     };
