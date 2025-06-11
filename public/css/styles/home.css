@@ -51,6 +51,8 @@
                 padding: 15px 10px !important;
                 gap: 5px;
                 cursor: pointer;
+                transition: all 0.3s ease;
+                
 
                 i {
                     min-width: 50px;
@@ -75,6 +77,11 @@
                     font-size: var(--text-detalle);
                     color: gray;
                     text-align: center;
+                }
+            }
+            @media screen and (min-width: 768px) {
+                .funcion:hover {
+                    background-color: var(--fondo2);
                 }
             }
         }

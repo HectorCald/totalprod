@@ -91,24 +91,24 @@ async function obtenerMisRegistros() {
         const data = await response.json();
 
         if (data.success) {
-            if(usuarioInfo.rol === 'Producción') {
-            registrosProduccion = data.registros
-                .filter(registro => registro.user === usuarioInfo.email)
-                .sort((a, b) => {
-                    const idA = parseInt(a.id.split('-')[1]);
-                    const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA;
-                });
-            return true;
+            if (usuarioInfo.rol === 'Producción') {
+                registrosProduccion = data.registros
+                    .filter(registro => registro.user === usuarioInfo.email)
+                    .sort((a, b) => {
+                        const idA = parseInt(a.id.split('-')[1]);
+                        const idB = parseInt(b.id.split('-')[1]);
+                        return idB - idA;
+                    });
+                return true;
             }
-            else if(usuarioInfo.rol === 'Administración') {
-            registrosProduccion = data.registros
-                .sort((a, b) => {
-                    const idA = parseInt(a.id.split('-')[1]);
-                    const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA;
-                });
-            return true;
+            else if (usuarioInfo.rol === 'Administración') {
+                registrosProduccion = data.registros
+                    .sort((a, b) => {
+                        const idA = parseInt(a.id.split('-')[1]);
+                        const idB = parseInt(b.id.split('-')[1]);
+                        return idB - idA;
+                    });
+                return true;
             }
 
         } else {
@@ -377,7 +377,7 @@ const atajosPorRol = {
             icono: 'fa-file-invoice',
             texto: 'Reportes',
             detalle: 'Genera reportes.',
-            onclick: 'onclick="mostrarProovedores()"'
+            onclick: 'onclick="mostrarReportes()"'
         },
         {
             clase: 'opcion-btn',
@@ -417,9 +417,16 @@ const pluginsMenu = {
     }
 };
 
+function esPantallaGrande() {
+    return window.innerWidth >= 1024; // Ajusta este valor según tus necesidades
+}
+function getMaxAtatjos() {
+    return esPantallaGrande() ? 5: 3;
+}
 function obtenerFunciones() {
     const rol = usuarioInfo.rol;
     const atajosGuardados = obtenerAtajosGuardados();
+    const maxAtatjos = getMaxAtatjos();
 
     if (atajosGuardados) {
         if (rol === 'Administración') {
@@ -433,13 +440,13 @@ function obtenerFunciones() {
                 // Luego buscar en los plugins
                 const plugin = Object.values(pluginsMenu).find(p => p.texto === id);
                 if (plugin) return plugin;
-                
+
                 return null;
             }).filter(Boolean);
         } else {
             // Para otros roles, buscar en su rol específico y sus plugins activos
             let atajosDisponibles = [...(atajosPorRol[rol] || [])];
-            
+
             // Agregar plugins si están activos para este usuario
             if (usuarioInfo.plugins) {
                 Object.keys(pluginsMenu).forEach(plugin => {
@@ -455,9 +462,9 @@ function obtenerFunciones() {
         }
     }
 
-    // Si no hay atajos guardados, usar los 3 primeros del rol y plugins
+    // Si no hay atajos guardados, usar los primeros según el tamaño de pantalla
     let atajosDisponibles = [...(atajosPorRol[rol] || [])];
-    
+
     // Agregar plugins disponibles para el usuario
     if (rol === 'Administración') {
         // Para administración, agregar todos los plugins
@@ -471,14 +478,15 @@ function obtenerFunciones() {
         });
     }
 
-    return atajosDisponibles.slice(0, 3);
+    return atajosDisponibles.slice(0, maxAtatjos); // CAMBIO AQUÍ: usar maxAtatjos en lugar de 3
 }
 
 function editarAtajos() {
-    const contenido = document.querySelector('.anuncio-second .contenido');
+    const contenido = document.querySelector('.anuncio .contenido');
     const rol = usuarioInfo.rol;
-    const atajosActuales = obtenerAtajosGuardados() || 
-        atajosPorRol[rol].slice(0, 3).map(a => a.texto);
+    const maxAtatjos = getMaxAtatjos();
+    const atajosActuales = obtenerAtajosGuardados() ||
+        atajosPorRol[rol].slice(0, maxAtatjos).map(a => a.texto); // CAMBIO AQUÍ
 
     let atajosHTML = '';
 
@@ -513,7 +521,7 @@ function editarAtajos() {
     } else {
         // Para otros roles, mostrar sus opciones y plugins activos
         const atajosDisponibles = [...(atajosPorRol[rol] || [])];
-        
+
         // Agregar plugins si están activos
         if (usuarioInfo.plugins) {
             Object.keys(pluginsMenu).forEach(plugin => {
@@ -542,13 +550,18 @@ function editarAtajos() {
     const html = `
         <div class="encabezado">
             <h1 class="titulo">Editar atajos</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncio')">
                 <i class="fas fa-arrow-right"></i>
             </button>
         </div>
         <div class="relleno">
-            <p class="normal">Selecciona 3 atajos para mostrar en inicio</p>
+            <p class="normal">Selecciona ${maxAtatjos} atajos para mostrar en inicio</p>
             ${atajosHTML}
+            <div class="busqueda">
+                <div class="acciones-grande" style="min-width:100%">
+                    <button class="btn-guardar btn blue" onclick="guardarAtajos()" style="min-width:100%;"><i class="fas fa-save" style="color:white !important"></i> Guardar cambios</button>
+                </div>
+            </div>
         </div>
         <div class="anuncio-botones">
             <button class="btn-guardar btn blue" onclick="guardarAtajos()">
@@ -559,7 +572,8 @@ function editarAtajos() {
 
     contenido.innerHTML = html;
     contenido.style.paddingBottom = '80px';
-    mostrarAnuncioSecond();
+    mostrarAnuncio();
+    contenido.style.maxWidth = '450px';
 }
 
 
@@ -568,11 +582,12 @@ window.editarAtajos = editarAtajos;
 window.actualizarSeleccion = function (checkbox) {
     const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]');
     const seleccionados = [...checkboxes].filter(cb => cb.checked);
+    const maxAtatjos = getMaxAtatjos();
 
-    if (seleccionados.length > 3) {
+    if (seleccionados.length > maxAtatjos) {
         checkbox.checked = false;
         mostrarNotificacion({
-            message: 'Solo puedes seleccionar 3 atajos',
+            message: `Solo puedes seleccionar ${maxAtatjos} atajos`,
             type: 'warning',
             duration: 3000
         });
@@ -581,10 +596,11 @@ window.actualizarSeleccion = function (checkbox) {
 window.guardarAtajos = function () {
     const checkboxes = document.querySelectorAll('.atajos-lista input[type="checkbox"]:checked');
     const seleccionados = [...checkboxes].map(cb => cb.value);
+    const maxAtatjos = getMaxAtatjos();
 
-    if (seleccionados.length !== 3) {
+    if (seleccionados.length !== maxAtatjos) {
         mostrarNotificacion({
-            message: 'Debes seleccionar exactamente 3 atajos',
+            message: `Debes seleccionar exactamente ${maxAtatjos} atajos`,
             type: 'warning',
             duration: 3000
         });
@@ -601,6 +617,13 @@ window.guardarAtajos = function () {
         duration: 3000
     });
 };
+window.addEventListener('resize', () => {
+    // Recargar atajos si cambió el tamaño de pantalla
+    const view = document.querySelector('.home-view');
+    if (view && view.style.display !== 'none') {
+        mostrarHome(view);
+    }
+});
 
 
 
@@ -634,6 +657,7 @@ export async function crearHome() {
 }
 export function mostrarHome(view) {
     const funcionesUsuario = obtenerFunciones();
+    const diasAMostrar = getDiasGrafico();
     const funcionesHTML = `
         <div class="funciones-rol">
             ${funcionesUsuario.map(funcion => `
@@ -645,6 +669,7 @@ export function mostrarHome(view) {
             `).join('')}
         </div>
     `;
+
 
     // Determinar qué registros mostrar según el rol
     let registrosFiltrados = [];
@@ -767,7 +792,7 @@ export function mostrarHome(view) {
             </div>
         </div>
         <div class="seccion2">
-            <h2 class="normal nota">Actividad de los últimos 7 días</h2>
+            <h2 class="normal nota">Actividad de los últimos ${diasAMostrar} días</h2>
             <canvas id="graficoVelas"></canvas>
         </div>
     `;
@@ -786,6 +811,41 @@ export function mostrarHome(view) {
         crearGraficoAcopio();
     }
     ocultarCarga();
+    const funciones = document.querySelectorAll('.funcion');
+    const opciones = document.querySelectorAll('.opcion');
+
+    funciones.forEach(funcion => {
+        funcion.addEventListener('click', () => {
+            // 1. Quitar clase activa de todas las opciones
+            opciones.forEach(op => op.classList.remove('opcion-activa'));
+
+            // 2. Obtener el icono de la función
+            const iconoFuncion = funcion.querySelector('i');
+            const clasesIconoFuncion = Array.from(iconoFuncion.classList); // ['fas', 'fa-home']
+
+            // 3. Buscar opción con el mismo ícono
+            opciones.forEach(opcion => {
+                const iconoOpcion = opcion.querySelector('i');
+                const clasesIconoOpcion = Array.from(iconoOpcion.classList);
+
+                // 4. Verificamos si ambas tienen la misma clase de ícono (ej: 'fa-home')
+                const coincide = clasesIconoFuncion.some(clase =>
+                    clase.startsWith('fa-') && clasesIconoOpcion.includes(clase)
+                );
+
+                if (coincide) {
+                    opcion.classList.add('opcion-activa');
+                }
+            });
+        });
+    });
+}
+function getDiasGrafico() {
+    const width = window.innerWidth;
+    if (width >= 1920) return 30;      // Pantalla muy grande: 30 días
+    if (width >= 1440) return 21;      // Pantalla grande: 21 días  
+    if (width >= 1024) return 14;      // Pantalla mediana: 14 días
+    return 7;                          // Pantalla pequeña: 7 días
 }
 function crearGraficoVelas() {
     if (!registrosProduccion || registrosProduccion.length === 0) {
@@ -793,15 +853,17 @@ function crearGraficoVelas() {
         return;
     }
 
-    // Procesar datos para los últimos 7 días
-    const ultimos7Dias = Array(7).fill().map((_, i) => {
+    const diasAMostrar = getDiasGrafico();
+    
+    // Procesar datos para los últimos N días
+    const ultimosDias = Array(diasAMostrar).fill().map((_, i) => {
         const fecha = new Date();
         fecha.setDate(fecha.getDate() - i);
         return fecha.toLocaleDateString('es-ES'); // Formato DD/MM/YYYY
     }).reverse();
 
     // Contar registros por día
-    const datosPorDia = ultimos7Dias.map(fecha => {
+    const datosPorDia = ultimosDias.map(fecha => {
         const registrosDia = registrosProduccion.filter(registro => {
             if (!registro.fecha) {
                 console.warn('Registro sin fecha:', registro);
@@ -843,10 +905,10 @@ function crearGraficoVelas() {
             colorFondo: 'none',
             colorGrid: 'rgba(0, 0, 0, 0.03)',
             colores: {
-                aumento: '#4CAF50', // Verde moderno
-                disminucion: '#F44336', // Rojo moderno
-                igual: '#FFC107', // Amarillo moderno
-                neutro: '#2196F3' // Azul moderno
+                aumento: '#4CAF50',
+                disminucion: '#F44336',
+                igual: '#FFC107',
+                neutro: '#2196F3'
             }
         };
 
@@ -858,10 +920,27 @@ function crearGraficoVelas() {
             return estilos.colores.neutro;
         });
 
+        // Configurar labels según número de días
+        let labels;
+        if (diasAMostrar <= 7) {
+            // Mostrar DD/MM para 7 días o menos
+            labels = ultimosDias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]);
+        } else if (diasAMostrar <= 14) {
+            // Mostrar cada 2 días para 14 días
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 2 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        } else {
+            // Mostrar cada 3 días para más de 14 días
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 3 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        }
+
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ultimos7Dias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]),
+                labels: labels,
                 datasets: [{
                     label: '',
                     data: datosPorDia,
@@ -874,8 +953,8 @@ function crearGraficoVelas() {
                         bottomLeft: 0,
                         bottomRight: 0
                     },
-                    barThickness: 20,
-                    maxBarThickness: 30
+                    barThickness: diasAMostrar > 14 ? 8 : diasAMostrar > 7 ? 15 : 20,
+                    maxBarThickness: diasAMostrar > 14 ? 12 : diasAMostrar > 7 ? 20 : 30
                 }]
             },
             options: {
@@ -917,7 +996,8 @@ function crearGraficoVelas() {
                                 return `${context.raw} registros`;
                             },
                             title: function (context) {
-                                return `Día ${context[0].label}`;
+                                const fechaCompleta = ultimosDias[context[0].dataIndex];
+                                return `Día ${fechaCompleta}`;
                             }
                         }
                     }
@@ -948,15 +1028,15 @@ function crearGraficoVelas() {
                             color: estilos.colorTexto,
                             font: {
                                 family: estilos.fuente,
-                                size: 12
-                            }
+                                size: diasAMostrar > 14 ? 10 : 12
+                            },
+                            maxRotation: diasAMostrar > 14 ? 45 : 0
                         }
                     }
                 }
             }
         });
 
-        // Aplicar estilo al canvas
         canvas.style.background = estilos.colorFondo;
         canvas.style.borderRadius = '12px';
         canvas.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
@@ -965,31 +1045,30 @@ function crearGraficoVelas() {
     }
 }
 function crearGraficoAlmacen() {
-
     if (!registrosMovimientos || registrosMovimientos.length === 0) {
         console.warn('No hay registros de movimientos para mostrar en el gráfico');
         return;
     }
 
-    // Procesar datos para los últimos 7 días
-    const ultimos7Dias = Array(7).fill().map((_, i) => {
+    const diasAMostrar = getDiasGrafico();
+
+    // Procesar datos para los últimos N días
+    const ultimosDias = Array(diasAMostrar).fill().map((_, i) => {
         const fecha = new Date();
         fecha.setDate(fecha.getDate() - i);
-        return fecha.toLocaleDateString('es-ES'); // Formato DD/MM/YYYY
+        return fecha.toLocaleDateString('es-ES');
     }).reverse();
 
     // Sumar totales por día y contar movimientos
-    const datosPorDia = ultimos7Dias.map(fecha => {
+    const datosPorDia = ultimosDias.map(fecha => {
         const registrosDia = registrosMovimientos.filter(registro => {
             if (!registro.fecha_hora) {
                 return false;
             }
-            // Extraer solo la parte de la fecha (DD/MM/YYYY)
             const registroFecha = registro.fecha_hora.split(',')[0].trim();
             return registroFecha === fecha;
         });
 
-        // Sumar los totales de todos los registros del día
         const totalDia = registrosDia.reduce((sum, registro) => {
             return sum + (parseFloat(registro.total) || 0);
         }, 0);
@@ -999,15 +1078,14 @@ function crearGraficoAlmacen() {
 
     // Determinar colores según comparación con día anterior
     const colores = datosPorDia.map((total, index) => {
-        if (index === 0) return '#2196F3'; // Azul para el primer día
-
+        if (index === 0) return '#2196F3';
         const totalAyer = datosPorDia[index - 1];
         if (total > totalAyer) {
-            return '#4CAF50'; // Verde si hay más ingresos
+            return '#4CAF50';
         } else if (total < totalAyer) {
-            return '#F44336'; // Rojo si hay menos ingresos
+            return '#F44336';
         } else {
-            return '#FFC107'; // Amarillo si es igual
+            return '#FFC107';
         }
     });
 
@@ -1018,10 +1096,25 @@ function crearGraficoAlmacen() {
 
     try {
         const ctx = canvas.getContext('2d');
+
+        // Configurar labels según número de días
+        let labels;
+        if (diasAMostrar <= 7) {
+            labels = ultimosDias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]);
+        } else if (diasAMostrar <= 14) {
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 2 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        } else {
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 3 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        }
+
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ultimos7Dias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]),
+                labels: labels,
                 datasets: [{
                     label: 'Total movimientos $',
                     data: datosPorDia,
@@ -1034,8 +1127,8 @@ function crearGraficoAlmacen() {
                         bottomLeft: 0,
                         bottomRight: 0
                     },
-                    barThickness: 20,
-                    maxBarThickness: 30
+                    barThickness: diasAMostrar > 14 ? 8 : diasAMostrar > 7 ? 15 : 20,
+                    maxBarThickness: diasAMostrar > 14 ? 12 : diasAMostrar > 7 ? 20 : 30
                 }]
             },
             options: {
@@ -1077,7 +1170,8 @@ function crearGraficoAlmacen() {
                                 return `Total: $${context.raw.toFixed(2)}`;
                             },
                             title: function (context) {
-                                return `Día ${context[0].label}`;
+                                const fechaCompleta = ultimosDias[context[0].dataIndex];
+                                return `Día ${fechaCompleta}`;
                             }
                         }
                     }
@@ -1111,15 +1205,15 @@ function crearGraficoAlmacen() {
                             color: '#666',
                             font: {
                                 family: "'Inter', -apple-system, sans-serif",
-                                size: 12
-                            }
+                                size: diasAMostrar > 14 ? 10 : 12
+                            },
+                            maxRotation: diasAMostrar > 14 ? 45 : 0
                         }
                     }
                 }
             }
         });
 
-        // Aplicar estilo al canvas
         canvas.style.background = 'none';
         canvas.style.borderRadius = '12px';
         canvas.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
@@ -1134,19 +1228,17 @@ function crearGraficoAcopio() {
         return;
     }
 
-    // Add debug logging
-    console.log('Movimientos Acopio:', movimientosAcopio);
+    const diasAMostrar = getDiasGrafico();
 
-    const ultimos7Dias = Array(7).fill().map((_, i) => {
+    const ultimosDias = Array(diasAMostrar).fill().map((_, i) => {
         const fecha = new Date();
         fecha.setDate(fecha.getDate() - i);
         return fecha.toLocaleDateString('es-ES');
     }).reverse();
 
-    // Process data for each day with debug logging
-    const datos = ultimos7Dias.map(fecha => {
+    // Process data for each day
+    const datos = ultimosDias.map(fecha => {
         const movimientosDia = movimientosAcopio.filter(mov => {
-            // Extract only the date part from the movement's fecha_hora
             const movFecha = mov.fecha.split(',')[0].trim();
             return movFecha === fecha;
         });
@@ -1175,16 +1267,30 @@ function crearGraficoAcopio() {
         };
     });
 
-
     const canvas = document.getElementById('graficoVelas');
     if (!canvas) return;
 
     try {
         const ctx = canvas.getContext('2d');
+
+        // Configurar labels según número de días
+        let labels;
+        if (diasAMostrar <= 7) {
+            labels = ultimosDias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]);
+        } else if (diasAMostrar <= 14) {
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 2 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        } else {
+            labels = ultimosDias.map((fecha, index) => {
+                return index % 3 === 0 ? fecha.split('/')[0] + '/' + fecha.split('/')[1] : '';
+            });
+        }
+
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ultimos7Dias.map(fecha => fecha.split('/')[0] + '/' + fecha.split('/')[1]),
+                labels: labels,
                 datasets: [
                     {
                         label: 'Ingresos Bruto',
@@ -1192,7 +1298,8 @@ function crearGraficoAcopio() {
                         borderColor: '#4CAF50',
                         backgroundColor: 'rgba(76, 175, 80, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: diasAMostrar > 14 ? 2 : 3
                     },
                     {
                         label: 'Ingresos Prima',
@@ -1200,7 +1307,8 @@ function crearGraficoAcopio() {
                         borderColor: '#2196F3',
                         backgroundColor: 'rgba(33, 150, 243, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: diasAMostrar > 14 ? 2 : 3
                     },
                     {
                         label: 'Salidas Bruto',
@@ -1208,7 +1316,8 @@ function crearGraficoAcopio() {
                         borderColor: '#F44336',
                         backgroundColor: 'rgba(244, 67, 54, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: diasAMostrar > 14 ? 2 : 3
                     },
                     {
                         label: 'Salidas Prima',
@@ -1216,7 +1325,8 @@ function crearGraficoAcopio() {
                         borderColor: '#FFC107',
                         backgroundColor: 'rgba(255, 193, 7, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        pointRadius: diasAMostrar > 14 ? 2 : 3
                     }
                 ]
             },
@@ -1234,7 +1344,7 @@ function crearGraficoAcopio() {
                             padding: 20,
                             font: {
                                 family: "'Inter', sans-serif",
-                                size: 12
+                                size: diasAMostrar > 14 ? 10 : 12
                             }
                         }
                     },
@@ -1252,6 +1362,10 @@ function crearGraficoAcopio() {
                         callbacks: {
                             label: function (context) {
                                 return `${context.dataset.label}: ${context.raw.toFixed(2)} Kg`;
+                            },
+                            title: function (context) {
+                                const fechaCompleta = ultimosDias[context[0].dataIndex];
+                                return `Día ${fechaCompleta}`;
                             }
                         }
                     }
@@ -1277,8 +1391,9 @@ function crearGraficoAcopio() {
                         ticks: {
                             font: {
                                 family: "'Inter', sans-serif",
-                                size: 12
-                            }
+                                size: diasAMostrar > 14 ? 10 : 12
+                            },
+                            maxRotation: diasAMostrar > 14 ? 45 : 0
                         }
                     }
                 }
@@ -1292,3 +1407,4 @@ function crearGraficoAcopio() {
         console.error('Error al crear el gráfico de acopio:', error);
     }
 }
+

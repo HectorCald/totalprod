@@ -43,6 +43,7 @@ import { mostrarCalcularMp } from './modules/calculadora-mp.js';
 import { mostrarTareas } from './modules/tareas-acopio.js';
 import { mostrarConfiguracionesSistema} from './modules/configuraciones-sistema.js';
 import { mostrarDescargaCatalogo} from './modules/descargas.js';
+import { mostrarReportes} from './modules/reportes.js';
 
 window.crearHome = crearHome
 window.mostrarHome = mostrarHome
@@ -93,6 +94,7 @@ window.mostrarPagos = mostrarPagos
 window.mostrarPersonal = mostrarPersonal
 window.mostrarConfiguracionesSistema = mostrarConfiguracionesSistema
 window.mostrarDescargaCatalogo = mostrarDescargaCatalogo
+window.mostrarReportes = mostrarReportes
 
 window.mostrarCalcularMp = mostrarCalcularMp
 window.mostrarTareas = mostrarTareas

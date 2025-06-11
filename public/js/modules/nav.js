@@ -202,7 +202,7 @@ const atajosPorRol = {
             icono: 'fa-file-invoice',
             texto: 'Reportes',
             detalle: 'Genera todos los reportes.',
-            onclick: 'onclick="mostrarProovedores()"'
+            onclick: 'onclick="mostrarReportes()"'
         },
         {
             clase: 'opcion-btn',
