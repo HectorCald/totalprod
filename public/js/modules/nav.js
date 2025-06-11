@@ -631,24 +631,13 @@ function eventosNav() {
     }
     window.achicarDiv = achicarDiv;
     function pantallagrande() {
-        const anuncio = document.querySelector('.anuncio');
-        const nav = document.querySelector('.nav-container');
-        const views = document.querySelectorAll('.view');
-
         const miDiv = document.querySelector(".panel-lateral .relleno");
-        const miI = document.querySelectorAll(".panel-lateral .opcion i");
 
         if (miDiv.scrollHeight > miDiv.clientHeight || miDiv.scrollWidth > miDiv.clientWidth) {
-            miDiv.style.paddingRight = "8px";
-            miI.forEach((element) => {
-                element.style.marginLeft = "0px";
-            })
+            miDiv.style.paddingRight = "6px";
         } else {
             // No tiene scroll
             miDiv.style.paddingRight = "15px";
-            miI.forEach((element) => {
-                element.style.marginLeft = "2px";
-            })
         }
 
         if (achicar.style.transform === 'rotate(180deg)') {
