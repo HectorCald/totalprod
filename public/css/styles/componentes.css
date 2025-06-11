@@ -285,8 +285,8 @@
         border: none;
         color: white !important;
 
-        i{
-            color: white!important;
+        i {
+            color: white !important;
         }
     }
 }
@@ -723,6 +723,26 @@
             color: #28b4983a;
         }
     }
+
+    .tooltip-container {
+        position: fixed;
+        background-color: var(--cuarto-color);
+        color: white;
+        font-weight: 900;
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: var(--text-detalle) !important;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translateY(-50%);
+    }
+
+    .tooltip-container.show {
+        opacity: 1;
+    }
 }
 
 .tooltip-container {
@@ -730,9 +750,9 @@
     background-color: var(--cuarto-color);
     color: white;
     font-weight: 900;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 10px;
-    font-size: var(--text-subtitulo);
+    font-size: var(--text-detalle) !important;
     white-space: nowrap;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -741,9 +761,7 @@
     transform: translateY(-50%);
 }
 
-.tooltip-container.show {
-    opacity: 1;
-}
+
 
 .opcion-activa {
     background-color: var(--cuarto-color);
