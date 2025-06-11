@@ -1,6 +1,6 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 
 function recuperarUsuarioLocal() {
@@ -82,6 +82,7 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarSalidasAcopio() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {

@@ -1,6 +1,6 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -72,6 +72,7 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarAlmacenAcopio() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {

@@ -1,5 +1,5 @@
 let registrosAlmacen = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let proovedores = [];
 let clientes = [];
 async function obtenerProovedores() {
@@ -161,6 +161,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarMovimientosAlmacen() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

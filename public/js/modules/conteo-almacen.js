@@ -1,6 +1,6 @@
 let productos = [];
 let etiquetas = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -241,6 +241,7 @@ async function obtenerAlmacenGeneral() {
 }
 
 export async function mostrarConteo() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {

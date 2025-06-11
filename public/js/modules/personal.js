@@ -1,6 +1,6 @@
 
 let personal = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -44,6 +44,7 @@ async function obtenerPersonal() {
 
 
 export async function mostrarPersonal() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

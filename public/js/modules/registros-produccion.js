@@ -1,5 +1,5 @@
 let registrosProduccion = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let productosGlobal = [];
 
 const DB_NAME = 'damabrava_db';
@@ -260,6 +260,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarMisRegistros() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

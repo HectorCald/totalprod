@@ -2,7 +2,7 @@ let productos = [];
 let etiquetas = [];
 let precios = [];
 let clientes = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -272,6 +272,7 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarSalidas() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

@@ -1,5 +1,5 @@
 let registrosConteos = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -91,6 +91,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function registrosConteoAlmacen() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

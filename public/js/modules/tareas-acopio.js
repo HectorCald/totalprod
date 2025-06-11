@@ -1,5 +1,5 @@
 
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let productosGlobal = [];
 let tareasGlobal = [];
 let listaTareasGlobal = [];
@@ -156,6 +156,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarTareas() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

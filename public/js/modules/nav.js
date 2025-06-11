@@ -595,7 +595,7 @@ function eventosNav() {
         opcion.addEventListener('click', () => {
             opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
             opcion.classList.add('opcion-activa');
-            if(div.style.width!=='92px'){
+            if (div.style.width !== '92px') {
                 achicarDiv();
             }
         });
@@ -615,9 +615,9 @@ function eventosNav() {
     setTimeout(() => {
         initTooltips();
     }, 100);
-    
+
     function achicarDiv() {
-        if(div.style.display !=='none'){
+        if (div.style.display !== 'none') {
             if (achicar.style.transform === 'rotate(180deg)') {
                 div.style.width = "310px"; // Se fija el ancho a 100px
                 pantallagrande();
@@ -627,13 +627,29 @@ function eventosNav() {
                 pantallagrande();
             }
         }
-        
+
     }
     window.achicarDiv = achicarDiv;
     function pantallagrande() {
         const anuncio = document.querySelector('.anuncio');
         const nav = document.querySelector('.nav-container');
         const views = document.querySelectorAll('.view');
+
+        const miDiv = document.querySelector(".panel-lateral .relleno");
+        const miI = document.querySelectorAll(".panel-lateral .opcion i");
+
+        if (miDiv.scrollHeight > miDiv.clientHeight || miDiv.scrollWidth > miDiv.clientWidth) {
+            miDiv.style.paddingRight = "8px";
+            miI.forEach((element) => {
+                element.style.marginLeft = "0px";
+            })
+        } else {
+            // No tiene scroll
+            miDiv.style.paddingRight = "15px";
+            miI.forEach((element) => {
+                element.style.marginLeft = "2px";
+            })
+        }
 
         if (achicar.style.transform === 'rotate(180deg)') {
             achicar.style.transform = 'none';

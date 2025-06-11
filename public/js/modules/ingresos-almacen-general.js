@@ -2,7 +2,7 @@ let productos = [];
 let etiquetas = [];
 let precios = [];
 let proovedores = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 let nombresUsuariosGlobal = [];
 function recuperarUsuarioLocal() {
@@ -288,6 +288,7 @@ async function obtenerNombresUsuarios() {
 
 
 export async function mostrarIngresos(producto = '') {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(producto); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {

@@ -1,6 +1,6 @@
 
 let registrosProduccion = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let productosGlobal = [];
 let reglasProduccion = [];
 let reglasBase = [];
@@ -374,6 +374,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarVerificacion() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

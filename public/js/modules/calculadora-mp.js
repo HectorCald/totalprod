@@ -1,5 +1,5 @@
 let registrosProduccion = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let productosGlobal = [];
 let calculosMP = [];
 let nombresUsuariosGlobal = [];
@@ -154,6 +154,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarCalcularMp() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

@@ -1,5 +1,5 @@
 let movimientosAcopio = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -54,6 +54,7 @@ async function obtenerMovimientosAcopio() {
 
 
 export async function mostrarRegistrosAcopio() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

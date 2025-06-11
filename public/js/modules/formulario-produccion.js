@@ -4,7 +4,7 @@ let configuracionHorario = {
     horaFin: '',
     estado: ''
 };
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 
 function recuperarUsuarioLocal() {
     const usuarioGuardado = localStorage.getItem('damabrava_usuario');
@@ -93,6 +93,7 @@ async function obtenerProductos() {
     }
 }
 export async function mostrarFormularioProduccion() {
+    usuarioInfo = recuperarUsuarioLocal();
     const horarioValido = await verificarHorarioProduccion();
     if (!horarioValido.permitido) {
         let mensaje = configuracionHorario.estado !== 'Activo'

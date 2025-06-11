@@ -1,5 +1,5 @@
 let registrosProduccion = [];
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let productosGlobal = [];
 let pagosGlobal = [];
 
@@ -120,6 +120,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarPagos() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {

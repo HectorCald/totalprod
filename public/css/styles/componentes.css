@@ -606,9 +606,7 @@
     overflow-x: hidden;
     border-right: 3px solid var(--cero-color);
 }
-.panel-lateral .relleno{
-    padding-right: 8px;
-}
+
 
 @media screen and (min-width: 768px) {
     .panel-lateral {
@@ -637,6 +635,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        margin-left: 2px;
     }
 
     .info {
@@ -693,7 +692,6 @@
     @container (max-width: 255px) {
         .opcion {
             max-width: 100px;
-            min-width: 100px;
             max-height: 100px;
 
             .info {

@@ -1,4 +1,4 @@
-let usuarioInfo = recuperarUsuarioLocal();
+let usuarioInfo;
 let pedidosGlobal = [];
 let productos = [];
 let proovedoresAcopioGlobal = [];
@@ -167,6 +167,7 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarPedidos() {
+    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
