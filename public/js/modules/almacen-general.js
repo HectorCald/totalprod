@@ -862,7 +862,6 @@ function eventosAlmacenGeneral() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
-                        ocultarAnuncioSecond();
                         await mostrarAlmacenGeneral();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el producto');
@@ -1220,9 +1219,6 @@ function eventosAlmacenGeneral() {
                             'Edición',
                             usuarioInfo.nombre + ' editó el producto ' + producto + ' su motivo fue: ' + motivo
                         );
-
-                        ocultarAnuncioTercer();
-                        ocultarAnuncioSecond();
                         await mostrarAlmacenGeneral();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el producto');
@@ -1467,7 +1463,6 @@ function eventosAlmacenGeneral() {
                         'Administración',
                         'Creación',
                         usuarioInfo.nombre + ' creo un nuevo producto: ' + producto + ' ' + gramos + 'gr.')
-                    ocultarAnuncioSecond();
                     await mostrarAlmacenGeneral();
                 } else {
                     throw new Error(data.error || 'Error al crear el producto');
@@ -1542,16 +1537,15 @@ function eventosAlmacenGeneral() {
 
                     const data = await response.json();
                     if (data.success) {
-                        await obtenerEtiquetas();
-                        await mostrarAlmacenGeneral();
                         document.querySelector('.nueva-etiqueta').value = '';
                         mostrarNotificacion({
                             message: 'Etiqueta agregada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        gestionarEtiquetas(); // Refresh the view
-
+                        await mostrarAlmacenGeneral();
+                        await obtenerEtiquetas();
+                        gestionarEtiquetas();
                     }
                 } catch (error) {
                     mostrarNotificacion({
@@ -1800,7 +1794,6 @@ function eventosAlmacenGeneral() {
                             'Edición',
                             `${usuarioInfo.nombre} actualizó los precios mediante planilla. Motivo: ${motivo}`
                         );
-                        ocultarAnuncioSecond();
                         await mostrarAlmacenGeneral();
                     } else {
                         throw new Error(data.error || 'Error al procesar la planilla');

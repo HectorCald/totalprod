@@ -3020,8 +3020,6 @@ app.put('/editar-producto-acopio/:id', requireAuth, async (req, res) => {
             resource: { values: [updatedRow] }
         });
 
-        console.log(`Producto ${id} actualizado con motivo: ${motivo}`);
-
         res.json({
             success: true,
             message: 'Producto actualizado correctamente'

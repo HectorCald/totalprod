@@ -1,7 +1,7 @@
 /* ==================== COMPONENTES ==================== */
 import { crearNotificacion, mostrarNotificacion } from './modules/componentes.js'
 import { mostrarAnuncio, ocultarAnuncio, configuracionesEntrada, mostrarAnuncioSecond,mostrarAnuncioTercer, cerrarAnuncioManual } from './modules/componentes.js'
-import { mostrarCarga, ocultarCarga } from './modules/componentes.js'
+import { mostrarCarga, ocultarCarga, inicializarDashboard } from './modules/componentes.js'
 
 window.cerrarAnuncioManual = cerrarAnuncioManual
 window.crearNotificacion = crearNotificacion
@@ -73,6 +73,7 @@ function iniciarSesion() {
                     });
 
                     setTimeout(() => {
+                        inicializarDashboard();
                         window.location.href = data.redirect;
                     }, 1000);
                 } else {

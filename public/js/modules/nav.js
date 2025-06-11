@@ -460,7 +460,7 @@ function renderMenu() {
         const notificacion = document.querySelector('.notificacion-view');
 
         if (vista === 'perfil') {
-            ocultarAnuncios();
+            cerrarAnuncioManual('anuncio');
             perfil.classList.remove('slide-out-flotante');
             home.classList.remove('slide-in-flotante');
             notificacion.classList.remove('slide-in-flotante');
@@ -475,7 +475,7 @@ function renderMenu() {
                 perfil.classList.add('slide-in-flotante');
             }, 300);
         } else if (vista === 'home') {
-            ocultarAnuncios();
+            cerrarAnuncioManual('anuncio');
             home.classList.remove('slide-out-flotante');
             perfil.classList.remove('slide-in-flotante');
             notificacion.classList.remove('slide-in-flotante');
@@ -494,7 +494,7 @@ function renderMenu() {
                 }, 100);
             }, 300);
         } else {
-            ocultarAnuncios();
+            cerrarAnuncioManual('anuncio');
             notificacion.classList.remove('slide-out-flotante');
             home.classList.remove('slide-in-flotante');
             perfil.classList.remove('slide-in-flotante');
@@ -526,20 +526,6 @@ function renderMenu() {
         }
     }
     window.homeGr = homeGr;
-    function ocultarAnuncios() {
-        const anuncio = document.querySelector('.anuncio');
-        const anuncioSecond = document.querySelector('.anuncio-second');
-        const anuncioTercer = document.querySelector('.anuncio-tercer');
-        if (anuncio.classList.contains('mostrar')) {
-            cerrarAnuncioManual('anuncio');
-        }
-        if (anuncioSecond.classList.contains('mostrar')) {
-            cerrarAnuncioManual('anuncioSecond');
-        }
-        if (anuncioTercer.classList.contains('mostrar')) {
-            cerrarAnuncioManual('anuncioTercer');
-        }
-    }
     // Actualizar el DOM
     menuLateral.innerHTML = menuL;
     contenido.innerHTML = menuHTML;
@@ -591,7 +577,7 @@ function eventosNav() {
     const div = document.querySelector('.panel-lateral');
     const opciones = document.querySelectorAll('.opcion');
     const estatico = document.querySelector('#estatico');
-    const encabezado= document.querySelector('.encabezado-lateral');
+    const encabezado = document.querySelector('.encabezado-lateral');
     let estatic = false;
 
     opciones.forEach(opcion => {
@@ -615,7 +601,7 @@ function eventosNav() {
     achicarDiv();
     achicar.addEventListener('click', achicarDiv);
     estatico.addEventListener('click', achicarDiv);
-    encabezado.addEventListener('dblclick',barraEstatica);
+    encabezado.addEventListener('dblclick', barraEstatica);
     setTimeout(() => {
         initTooltips();
     }, 100);
@@ -629,14 +615,14 @@ function eventosNav() {
             else {
                 div.style.width = "92px"; // Se fija el ancho a 100px
                 pantallagrande();
-                if(estatic === true){
+                if (estatic === true) {
                     barraEstatica();
                 }
             }
         }
 
     }
-    function barraEstatica(){
+    function barraEstatica() {
         const anuncio = document.querySelector('.anuncio');
         const nav = document.querySelector('.nav-container');
         const views = document.querySelectorAll('.view');
@@ -649,7 +635,7 @@ function eventosNav() {
             nav.style.paddingLeft = '310px';
             achicar.style.transform = 'none';
             estatic = true;
-        } else if(estatic === true){
+        } else if (estatic === true) {
             anuncio.style.paddingLeft = '93px';
             views.forEach(view => {
                 view.style.paddingLeft = '115px';
@@ -657,7 +643,7 @@ function eventosNav() {
             nav.style.paddingLeft = '115px';
             achicar.style.transform = 'rotate(180deg)';
             estatic = false;
-        } else if(achicar.style.transform === 'rotate(180deg)') {
+        } else if (achicar.style.transform === 'rotate(180deg)') {
             achicarDiv();
             barraEstatica();
             estatic = true;

@@ -12,7 +12,9 @@ import { crearNotificacion,
     mostrarAnuncioTercer, 
     ocultarAnuncioTercer, 
     scrollToTop, tienePermiso, 
-    actualizarPermisos, 
+    actualizarPermisos,
+    inicializarDashboard,
+    limpiarProteccionNavegacion, 
     registrarNotificacion } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
@@ -68,6 +70,8 @@ window.ocultarCarga = ocultarCarga
 window.configuracionesEntrada = configuracionesEntrada
 window.exportarArchivos = exportarArchivos
 window.registrarNotificacion = registrarNotificacion
+window.inicializarDashboard = inicializarDashboard
+window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarVerificacion = mostrarVerificacion
@@ -101,6 +105,7 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    inicializarDashboard();
     mostrarCarga();
     flotante();
     await crearHome();

@@ -1,11 +1,24 @@
-// Anuncios
+let paginaProtegida = false;
+
+export function activarProteccionNavegacion() {
+    paginaProtegida = true;
+    // Reemplazar el estado actual para bloquear el retroceso
+    history.replaceState({ protegida: true, nivel: 0 }, '', window.location.href);
+    
+    // Agregar una entrada adicional al historial para crear una "barrera"
+    history.pushState({ protegida: true, nivel: 0 }, '', window.location.href);
+}
+export function desactivarProteccionNavegacion() {
+    paginaProtegida = false;
+}
 const estadoAnuncios = {
     anuncioVisible: false,
     anuncioSecondVisible: false,
     anuncioTercerVisible: false,
     nivelActual: 0,
-    ignorarProximoPopstate: false,
-    sincronizandoHistorial: false
+    bloqueado: false,
+    // Nuevo: contador de entradas de historial
+    entradasHistorial: 0
 };
 function obtenerEstadoRealDOM() {
     return {
@@ -14,7 +27,19 @@ function obtenerEstadoRealDOM() {
         tercer: document.querySelector('.anuncio-tercer')?.classList.contains('mostrar') || false
     };
 }
-
+function calcularNivelReal(estadoDOM) {
+    if (estadoDOM.tercer) return 3;
+    if (estadoDOM.second) return 2;
+    if (estadoDOM.normal) return 1;
+    return 0;
+}
+function actualizarEstadoInterno() {
+    const estadoDOM = obtenerEstadoRealDOM();
+    estadoAnuncios.anuncioVisible = estadoDOM.normal;
+    estadoAnuncios.anuncioSecondVisible = estadoDOM.second;
+    estadoAnuncios.anuncioTercerVisible = estadoDOM.tercer;
+    estadoAnuncios.nivelActual = calcularNivelReal(estadoDOM);
+}
 function ocultarAnuncioFisico() {
     const anuncio = document.querySelector('.anuncio');
     const btni = document.querySelector('.btn-flotante-salidas');
@@ -38,27 +63,162 @@ function ocultarAnuncioSecondFisico() {
 }
 function ocultarAnuncioTercerFisico() {
     const anuncio = document.querySelector('.anuncio-tercer');
-
     if (anuncio) {
         anuncio.classList.remove('mostrar');
     }
 }
+export function cerrarAnuncioManual(tipo) {
+    if (estadoAnuncios.bloqueado) return;
+    estadoAnuncios.bloqueado = true;
+    
+    try {
+        const estadoDOM = obtenerEstadoRealDOM();
+        const nivelActual = calcularNivelReal(estadoDOM);
+        let nivelDestino = 0;
 
+        switch (tipo) {
+            case 'anuncioTercer':
+                if (estadoDOM.tercer) {
+                    ocultarAnuncioTercerFisico();
+                    nivelDestino = estadoDOM.second ? 2 : (estadoDOM.normal ? 1 : 0);
+                }
+                break;
+
+            case 'anuncioSecond':
+                // Cerrar anuncios superiores primero
+                if (estadoDOM.tercer) {
+                    ocultarAnuncioTercerFisico();
+                }
+                if (estadoDOM.second) {
+                    ocultarAnuncioSecondFisico();
+                    nivelDestino = estadoDOM.normal ? 1 : 0;
+                }
+                break;
+
+            case 'anuncio':
+                ocultarAnuncioTercerFisico();
+                ocultarAnuncioSecondFisico();
+                ocultarAnuncioFisico();
+                nivelDestino = 0;
+                break;
+        }
+
+        actualizarEstadoInterno();
+        
+        // NUEVO: Limpiar entradas de historial fantasma
+        const entradasAEliminar = nivelActual - nivelDestino;
+        if (entradasAEliminar > 0) {
+            // Retroceder en el historial para eliminar las entradas fantasma
+            for (let i = 0; i < entradasAEliminar; i++) {
+                history.back();
+            }
+            // Actualizar el contador
+            estadoAnuncios.entradasHistorial = Math.max(0, estadoAnuncios.entradasHistorial - entradasAEliminar);
+        }
+        
+        // Actualizar el estado actual
+        if (paginaProtegida) {
+            history.replaceState({ 
+                protegida: true, 
+                nivel: nivelDestino 
+            }, '', window.location.href);
+        } else {
+            history.replaceState({ 
+                nivel: nivelDestino 
+            }, '', window.location.href);
+        }
+        
+    } finally {
+        setTimeout(() => {
+            estadoAnuncios.bloqueado = false;
+        }, 150); // Aumentar el tiempo para dar margen al history.back()
+    }
+}
 export async function mostrarAnuncio() {
     const anuncio = document.querySelector('.anuncio');
     const contenido = document.querySelector('.anuncio .contenido');
-    ocultarAnuncioSecondFisico();
-    ocultarAnuncioTercerFisico();
 
-    if (anuncio) {
+    cerrarAnuncioManual('anuncioSecond');
+
+    if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
         contenido.style.maxWidth = '100%';
         actualizarEstadoInterno();
 
-        if (estadoAnuncios.nivelActual === 1 && (history.state?.nivel || 0) < 1) {
-            history.pushState({ nivel: 1, tipo: 'anuncio' }, '');
+        // Agregar al historial
+        if (paginaProtegida) {
+            history.pushState({ 
+                protegida: true, 
+                nivel: 1, 
+                tipo: 'anuncio' 
+            }, '', window.location.href);
+        } else {
+            history.pushState({ 
+                nivel: 1, 
+                tipo: 'anuncio' 
+            }, '', window.location.href);
         }
+        
+        // Actualizar contador de entradas
+        estadoAnuncios.entradasHistorial++;
     }
+}
+export async function mostrarAnuncioSecond() {
+    const anuncio = document.querySelector('.anuncio-second');
+    
+    // Cerrar anuncio tercer si está abierto
+    const anuncioTercer = document.querySelector('.anuncio-tercer');
+    if (anuncioTercer?.classList.contains('mostrar')) {
+        ocultarAnuncioTercerFisico();
+    }
+
+    if (anuncio && !anuncio.classList.contains('mostrar')) {
+        anuncio.classList.add('mostrar');
+        pantallagrande('mostrar');
+        actualizarEstadoInterno();
+
+        if (paginaProtegida) {
+            history.pushState({ 
+                protegida: true, 
+                nivel: 2, 
+                tipo: 'anuncioSecond' 
+            }, '', window.location.href);
+        } else {
+            history.pushState({ 
+                nivel: 2, 
+                tipo: 'anuncioSecond' 
+            }, '', window.location.href);
+        }
+        
+        // Actualizar contador de entradas
+        estadoAnuncios.entradasHistorial++;
+    }
+    configuracionesEntrada();
+}
+export async function mostrarAnuncioTercer() {
+    const anuncio = document.querySelector('.anuncio-tercer');
+
+    if (anuncio && !anuncio.classList.contains('mostrar')) {
+        anuncio.classList.add('mostrar');
+        actualizarEstadoInterno();
+
+        if (paginaProtegida) {
+            history.pushState({ 
+                protegida: true, 
+                nivel: 3, 
+                tipo: 'anuncioTercer' 
+            }, '', window.location.href);
+        } else {
+            history.pushState({ 
+                nivel: 3, 
+                tipo: 'anuncioTercer' 
+            }, '', window.location.href);
+        }
+        
+        // Actualizar contador de entradas
+        estadoAnuncios.entradasHistorial++;
+    }
+    configuracionesEntrada();
 }
 function pantallagrande(proceso) {
     const principal = document.querySelector('.anuncio .contenido');
@@ -84,48 +244,36 @@ function pantallagrande(proceso) {
             nav.style.paddingRight = '450px';
         }
     }
-
-
 }
-export async function mostrarAnuncioSecond() {
-    const anuncio = document.querySelector('.anuncio-second');
-    ocultarAnuncioTercer();
+window.addEventListener('popstate', (event) => {
+    if (estadoAnuncios.bloqueado) return;
 
-    if (anuncio) {
-        anuncio.classList.add('mostrar');
-        pantallagrande('mostrar');
-        actualizarEstadoInterno();
-
-        if (estadoAnuncios.nivelActual === 2 && (history.state?.nivel || 0) < 2) {
-            history.pushState({ nivel: 2, tipo: 'anuncioSecond' }, '');
-        }
+    const state = event.state;
+    
+    // Si es una página protegida y no tiene el flag de protección, bloquear
+    if (paginaProtegida && (!state || !state.protegida)) {
+        // Restaurar el estado protegido
+        history.pushState({ 
+            protegida: true, 
+            nivel: estadoAnuncios.nivelActual 
+        }, '', window.location.href);
+        return;
     }
-    configuracionesEntrada();
-}
 
-export async function mostrarAnuncioTercer() {
-    const anuncio = document.querySelector('.anuncio-tercer');
+    const nivelDestino = state?.nivel || 0;
+    const estadoDOM = obtenerEstadoRealDOM();
+    const nivelActualDOM = calcularNivelReal(estadoDOM);
 
-    if (anuncio) {
-        anuncio.classList.add('mostrar');
-        actualizarEstadoInterno();
-
-        if (estadoAnuncios.nivelActual === 3 && (history.state?.nivel || 0) < 3) {
-            history.pushState({ nivel: 3, tipo: 'anuncioTercer' }, '');
-        }
+    // Solo cerrar si necesitamos ir a un nivel menor
+    if (nivelActualDOM > nivelDestino) {
+        cerrarAnunciosPorNivel(nivelDestino);
+        // Actualizar contador de entradas
+        estadoAnuncios.entradasHistorial = Math.max(0, nivelDestino);
     }
-    configuracionesEntrada();
-}
-function calcularNivelReal(estadoDOM) {
-    if (estadoDOM.tercer) return 3;
-    if (estadoDOM.second) return 2;
-    if (estadoDOM.normal) return 1;
-    return 0;
-}
+});
 function cerrarAnunciosPorNivel(nivelObjetivo) {
     const estadoDOM = obtenerEstadoRealDOM();
 
-    // Cerrar anuncios según el nivel objetivo
     if (estadoDOM.tercer && nivelObjetivo < 3) {
         ocultarAnuncioTercerFisico();
     }
@@ -136,131 +284,39 @@ function cerrarAnunciosPorNivel(nivelObjetivo) {
         ocultarAnuncioFisico();
     }
 
-    // Actualizar estado interno
     actualizarEstadoInterno();
 }
-
-
-
-function actualizarEstadoInterno() {
-    const estadoDOM = obtenerEstadoRealDOM();
-
-    estadoAnuncios.anuncioVisible = estadoDOM.normal;
-    estadoAnuncios.anuncioSecondVisible = estadoDOM.second;
-    estadoAnuncios.anuncioTercerVisible = estadoDOM.tercer;
-    estadoAnuncios.nivelActual = calcularNivelReal(estadoDOM);
-}
-function sincronizarHistorial(nivelDestino, forzarReemplazo = false) {
-    if (estadoAnuncios.sincronizandoHistorial) return;
-
-    estadoAnuncios.sincronizandoHistorial = true;
-
-    try {
-        const estadoHistorial = history.state?.nivel || 0;
-
-        if (estadoHistorial !== nivelDestino || forzarReemplazo) {
-            // Si el nivel del historial es mayor, necesitamos ir hacia atrás
-            const diferencia = estadoHistorial - nivelDestino;
-
-            if (diferencia > 0) {
-                estadoAnuncios.ignorarProximoPopstate = true;
-                history.go(-diferencia);
-            } else if (diferencia < 0) {
-                // Si necesitamos ir hacia adelante, mejor reemplazamos
-                history.replaceState({ nivel: nivelDestino }, '');
-            } else if (forzarReemplazo) {
-                history.replaceState({ nivel: nivelDestino }, '');
-            }
-        }
-    } finally {
-        // Usar setTimeout para asegurar que se resetee después del popstate
-        setTimeout(() => {
-            estadoAnuncios.sincronizandoHistorial = false;
-        }, 50);
-    }
-}
-window.addEventListener('popstate', (event) => {
-    // Si acabamos de ignorar un popstate, salir
-    if (estadoAnuncios.ignorarProximoPopstate) {
-        estadoAnuncios.ignorarProximoPopstate = false;
-        return;
-    }
-
-    // Si estamos sincronizando, salir
-    if (estadoAnuncios.sincronizandoHistorial) {
-        return;
-    }
-
-    const nivelDestino = event.state?.nivel || 0;
-    const estadoDOM = obtenerEstadoRealDOM();
-    const nivelActualDOM = calcularNivelReal(estadoDOM);
-
-    // Solo proceder si realmente necesitamos cerrar algo
-    if (nivelActualDOM > nivelDestino) {
-        cerrarAnunciosPorNivel(nivelDestino);
-    }
-});
-
-
-
-
 export async function ocultarAnuncio() {
-    cerrarAnunciosPorNivel(0);
-    sincronizarHistorial(0, true);
+    cerrarAnuncioManual('anuncio');
 }
 export async function ocultarAnuncioSecond() {
-    const estadoDOM = obtenerEstadoRealDOM();
-    const nivelDestino = estadoDOM.normal ? 1 : 0;
-    cerrarAnunciosPorNivel(nivelDestino);
-    sincronizarHistorial(nivelDestino, true);
+    cerrarAnuncioManual('anuncioSecond');
 }
 export async function ocultarAnuncioTercer() {
-    const estadoDOM = obtenerEstadoRealDOM();
-    let nivelDestino = 0;
-    if (estadoDOM.second) nivelDestino = 2;
-    else if (estadoDOM.normal) nivelDestino = 1;
-
-    cerrarAnunciosPorNivel(nivelDestino);
-    sincronizarHistorial(nivelDestino, true);
-}
-export function cerrarAnuncioManual(tipo) {
-    const estadoDOM = obtenerEstadoRealDOM();
-    let nivelDestino = 0;
-
-    switch (tipo) {
-        case 'anuncioTercer':
-            if (estadoDOM.tercer) {
-                nivelDestino = estadoDOM.second ? 2 : (estadoDOM.normal ? 1 : 0);
-                ocultarAnuncioTercerFisico();
-            }
-            break;
-
-        case 'anuncioSecond':
-            if (estadoDOM.second) {
-                nivelDestino = estadoDOM.normal ? 1 : 0;
-                ocultarAnuncioSecondFisico();
-            }
-            break;
-
-        case 'anuncio':
-            // Cerrar todos
-            ocultarAnuncioTercerFisico();
-            ocultarAnuncioSecondFisico();
-            ocultarAnuncioFisico();
-            nivelDestino = 0;
-            break;
-    }
-
-    actualizarEstadoInterno();
-    sincronizarHistorial(nivelDestino, true);
+    cerrarAnuncioManual('anuncioTercer');
 }
 export function resetearEstadoAnuncios() {
     cerrarAnunciosPorNivel(0);
-    estadoAnuncios.ignorarProximoPopstate = false;
-    estadoAnuncios.sincronizandoHistorial = false;
-    history.replaceState({ nivel: 0 }, '');
+    estadoAnuncios.bloqueado = false;
+    estadoAnuncios.entradasHistorial = 0; // Resetear contador
+    
+    if (paginaProtegida) {
+        history.replaceState({ 
+            protegida: true, 
+            nivel: 0 
+        }, '', window.location.href);
+    } else {
+        history.replaceState({ nivel: 0 }, '', window.location.href);
+    }
 }
-
+export function inicializarDashboard() {
+    activarProteccionNavegacion();
+    resetearEstadoAnuncios();
+}
+export function limpiarProteccionNavegacion() {
+    desactivarProteccionNavegacion();
+    resetearEstadoAnuncios();
+}
 
 
 export function mostrarCarga() {

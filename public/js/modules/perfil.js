@@ -1,3 +1,5 @@
+
+
 let usuarioInfo = recuperarUsuarioLocal();
 
 function recuperarUsuarioLocal() {
@@ -121,6 +123,7 @@ function mostrarPerfil(view) {
             mostrarCarga();
             const response = await fetch('/cerrar-sesion', { method: 'POST' });
             if (response.ok) {
+                limpiarProteccionNavegacion();
                 window.location.href = '/';
             }
         } catch (error) {

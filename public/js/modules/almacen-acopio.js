@@ -220,7 +220,7 @@ function eventosAlmacenAcopio() {
         })
         btnEtiquetas.forEach(btn => {
             btn.addEventListener('click', gestionarEtiquetas);
-        }) 
+        })
     }
     const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
@@ -613,6 +613,9 @@ function eventosAlmacenAcopio() {
                             usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
 
                         ocultarAnuncioSecond();
+                        setTimeout(() => {
+                            ocultarAnuncioTercer();
+                        }, 100)
                         await mostrarAlmacenAcopio();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el producto');
@@ -859,8 +862,11 @@ function eventosAlmacenAcopio() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
-                        
+
                         ocultarAnuncioSecond();
+                        setTimeout(() => {
+                            ocultarAnuncioTercer();
+                        }, 100)
                         await mostrarAlmacenAcopio();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el producto');

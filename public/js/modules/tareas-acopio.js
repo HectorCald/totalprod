@@ -567,13 +567,12 @@ function eventosTareas() {
                     const data = await response.json();
 
                     if (data.success) {
+                        
                         mostrarNotificacion({
                             message: 'Tarea eliminada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
                         await mostrarTareas();
                     }
 
@@ -814,11 +813,8 @@ function eventosTareas() {
                             type: 'success',
                             duration: 3000
                         });
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
                         await mostrarTareas();
                     }
-
                 } catch (error) {
                     console.error('Error:', error);
                     mostrarNotificacion({
@@ -1031,8 +1027,6 @@ function eventosTareas() {
                             type: 'success',
                             duration: 3000
                         });
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
                         await mostrarTareas();
                     }
 
@@ -1058,11 +1052,11 @@ function eventosTareas() {
     })
 
     async function mostrarListaTareas() {
-        const contenido = document.querySelector('.anuncio-tercer .contenido');
+        const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Lista de Tareas</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')">
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -1092,7 +1086,7 @@ function eventosTareas() {
 
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '10px';
-        mostrarAnuncioTercer();
+        mostrarAnuncioSecond();
 
         // Evento para agregar nueva tarea
         const btnAgregar = contenido.querySelector('.btn-agregar-tarea');
@@ -1189,14 +1183,14 @@ function eventosTareas() {
     }
 
     function mostrarFormularioNuevoRegistro() {
-        const contenido = document.querySelector('.anuncio-tercer .contenido');
+        const contenido = document.querySelector('.anuncio-second .contenido');
         const ahora = new Date();
         const horaActual = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
 
         const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Nueva Tarea</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')">
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -1220,7 +1214,7 @@ function eventosTareas() {
 
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '80px';
-        mostrarAnuncioTercer();
+        mostrarAnuncioSecond();
 
         const productoInput = document.querySelector('.entrada .producto');
         const sugerenciasList = document.querySelector('#productos-list');
@@ -1297,7 +1291,6 @@ function eventosTareas() {
                         type: 'success',
                         duration: 3000
                     });
-                    cerrarAnuncioManual('anuncioTercer');
                     await mostrarTareas();
                 } else {
                     throw new Error(data.error);
