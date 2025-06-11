@@ -3550,7 +3550,7 @@ app.put('/llego-pedido/:id', requireAuth, async (req, res) => {
     }
 });
 
-/* ==================== RUTAS DE ACOPIO INGRESO ALMACEN ACOPIO ==================== */
+/* ==================== RUTAS DE ALMACEN ACOPIO ==================== */
 app.post('/registrar-movimiento-acopio', requireAuth, async (req, res) => {
     const { spreadsheetId, nombre } = req.user;
     const { pedidoId, ...movimientoData } = req.body;
@@ -3595,7 +3595,7 @@ app.post('/registrar-movimiento-acopio', requireAuth, async (req, res) => {
         if (pedidoId) {
             const pedidosResponse = await sheets.spreadsheets.values.get({
                 spreadsheetId: spreadsheetId,
-                range: 'Pedidos!A2:Q'
+                range: 'Pedidos!A2:R'
             });
 
             const pedidosRows = pedidosResponse.data.values || [];
@@ -3613,15 +3613,15 @@ app.post('/registrar-movimiento-acopio', requireAuth, async (req, res) => {
                                 values: [['Ingresado']]
                             },
                             {
-                                range: `Pedidos!O${pedidoIndex + 2}`,
+                                range: `Pedidos!P${pedidoIndex + 2}`,
                                 values: [[fechaActual]]
                             },
                             {
-                                range: `Pedidos!P${pedidoIndex + 2}`,
+                                range: `Pedidos!Q${pedidoIndex + 2}`,
                                 values: [[movimientoData.peso]]
                             },
                             {
-                                range: `Pedidos!Q${pedidoIndex + 2}`,
+                                range: `Pedidos!R${pedidoIndex + 2}`,
                                 values: [[movimientoData.observaciones]]
                             }
                         ],
@@ -3857,7 +3857,7 @@ app.put('/anular-movimiento-acopio/:id', requireAuth, async (req, res) => {
     }
 });
 
-
+/* ==================== RUTAS DE INGRESO Y SALIDAS DE ACOPIO  ==================== */
 app.put('/actualizar-producto-acopio/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
@@ -5036,7 +5036,12 @@ app.put('/finalizar-tarea/:id', requireAuth, async (req, res) => {
 
         // Obtener fecha actual
         const ahora = new Date();
-        const hora_fin_actual = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
+        const hora_fin_actual = ahora.toLocaleTimeString('es-BO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'America/La_Paz'
+        });
 
         // Obtener datos actuales
         const response = await sheets.spreadsheets.values.get({
