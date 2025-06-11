@@ -426,7 +426,7 @@ function renderMenu() {
 
     const menuL = `
         <div class="encabezado-lateral">
-            <h1 class="titulo" id="estatico">Menú</h1>
+            <button class="btn" id="estatico" style="background: none;font-size: 16px; justify-content:flex-start; padding-left:10px; min-width:40px !important"><i class="fas fa-bars"></i><span>Menu</span></button>
             <span class="ocultar-menu">❮</span>
         </div>
         <div class="relleno">

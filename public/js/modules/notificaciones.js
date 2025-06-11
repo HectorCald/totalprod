@@ -14,8 +14,7 @@ async function obtenerMisNotificaciones() {
                 const emailActual = usuarioInfo.email;
                 const rolActual = usuarioInfo.rol;
 
-                if (rolActual === 'Administración') return true;
-                return notif.destino === emailActual || notif.destino === rolActual;
+                return notif.destino === emailActual || notif.destino === rolActual || notif.destino === 'Almacen';
             });
 
             // Si la cantidad es diferente, mostrar indicador
@@ -46,8 +45,6 @@ async function obtenerMisNotificaciones() {
 }
 
 
-
-
 export async function crearNotificaciones(user) {
     usuarioInfo = user;
     const view = document.querySelector('.notificacion-view');
@@ -55,7 +52,6 @@ export async function crearNotificaciones(user) {
     await obtenerMisNotificaciones();
     mostrarNotificaciones(view);
 }
-
 function obtenerIcono(suceso) {
     const iconos = {
         'Edición': 'edit',
@@ -67,7 +63,6 @@ function obtenerIcono(suceso) {
     };
     return iconos[suceso] || 'bell';
 }
-
 function formatearFecha(fechaCompleta) {
     // Convertir el formato "DD/MM/YYYY, HH:mm:ss" a Date
     const [fecha, hora] = fechaCompleta.split(',');
@@ -103,7 +98,6 @@ function formatearFecha(fechaCompleta) {
         };
     }
 }
-
 function mostrarNotificaciones(view) {
     // Agrupar notificaciones por fecha
     const notificacionesAgrupadas = {};

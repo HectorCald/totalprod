@@ -3215,7 +3215,7 @@ app.get('/obtener-pedidos', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Pedidos!A2:Q' // A to O columns for all fields
+            range: 'Pedidos!A2:R' // A to O columns for all fields
         });
 
         const rows = response.data.values || [];
@@ -3227,16 +3227,17 @@ app.get('/obtener-pedidos', requireAuth, async (req, res) => {
             cantidadPedida: row[4] || '',
             observacionesPedido: row[5] || '',
             estado: row[6] || 'Pendiente',
-            cantidadEntregadaKg: row[7] || '',
-            proovedor: row[8] || '',
-            precio: row[9] || '',
-            observacionesCompras: row[10] || '',
-            cantidadEntregadaUnd: row[11] || '',
-            transporteOtros: row[12] || '',
-            estadoCompra: row[13] || '',
-            fechaIngreso: row[14] || '',
-            cantidadIngresada: row[15] || '',
-            observacionesIngresado: row[16] || ''
+            fechaEntrega: row[7] || '',
+            cantidadEntregadaKg: row[8] || '',
+            proovedor: row[9] || '',
+            precio: row[10] || '',
+            observacionesCompras: row[11] || '',
+            cantidadEntregadaUnd: row[12] || '',
+            transporteOtros: row[13] || '',
+            estadoCompra: row[14] || '',
+            fechaIngreso: row[15] || '',
+            cantidadIngresada: row[16] || '',
+            observacionesIngresado: row[17] || ''
         }));
 
 
@@ -3348,7 +3349,7 @@ app.put('/editar-pedido/:id', requireAuth, async (req, res) => {
         // Get current pedidos
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Pedidos!A2:Q'
+            range: 'Pedidos!A2:R'
         });
 
         const rows = response.data.values || [];
@@ -3372,6 +3373,7 @@ app.put('/editar-pedido/:id', requireAuth, async (req, res) => {
             cantidadPedida,     // CANT-PED
             observacionesPedido, // OBS-PEDIDO
             estado,     // ESTADO
+            currentRow[7],                             // FECHA-ENTR
             cantidadEntregadaKg, // CANT-ENTR-KG
             proovedor,           // PROOVEDOR
             precio,              // PRECIO
@@ -3379,7 +3381,7 @@ app.put('/editar-pedido/:id', requireAuth, async (req, res) => {
             cantidadEntregadaUnd,// CANT-ENTRG-UND
             transporteOtros,     // TRASP-OTROS
             estadoCompra,        // ESTADO-COMPRA
-            currentRow[14],                        // FECHA-INGRESO
+            currentRow[15],                        // FECHA-INGRESO
             cantidadIngresada,   // CANT-INGRE
             observacionesIngresado // OBS-INGRE
         ];
@@ -3387,7 +3389,7 @@ app.put('/editar-pedido/:id', requireAuth, async (req, res) => {
         // Actualizar en Google Sheets
         await sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: `Pedidos!A${rowIndex + 2}:Q${rowIndex + 2}`,
+            range: `Pedidos!A${rowIndex + 2}:R${rowIndex + 2}`,
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [updatedRow]
@@ -3426,7 +3428,7 @@ app.put('/entregar-pedido/:id', requireAuth, async (req, res) => {
         // Obtener todos los pedidos
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Pedidos!A2:P'
+            range: 'Pedidos!A2:R'
         });
 
         const rows = response.data.values || [];
@@ -3436,13 +3438,16 @@ app.put('/entregar-pedido/:id', requireAuth, async (req, res) => {
             return res.status(404).json({ success: false, error: 'Pedido no encontrado' });
         }
 
-        // Actualizar las columnas H a N
+        const fecha = new Date().toLocaleString('es-ES', {
+            timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+        });
         await sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: `Pedidos!H${rowIndex + 2}:N${rowIndex + 2}`,
+            range: `Pedidos!H${rowIndex + 2}:O${rowIndex + 2}`,
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [[
+                    fecha,                         // FECHA-COMPRA
                     cantidadKg,                    // CANT-ENTR-KG
                     proovedor,                     // PROOVEDOR
                     precio,                        // PRECIO
@@ -3481,7 +3486,7 @@ app.put('/rechazar-pedido/:id', requireAuth, async (req, res) => {
         // Obtener todos los pedidos
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Pedidos!A2:Q'
+            range: 'Pedidos!A2:R'
         });
 
         const rows = response.data.values || [];

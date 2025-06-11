@@ -438,6 +438,7 @@ function eventosPedidos() {
             ${registro.estado !== 'Pendiente' ? `
             <p class="normal">Información de recepción</p>
             <div class="campo-vertical">
+                <span class="valor"><strong><i class='bx bx-package'></i> Fecha de compra: </strong>${registro.fechaEntrega || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (KG): </strong>${registro.cantidadEntregadaKg || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
