@@ -636,7 +636,6 @@ function eventosNav() {
         if (miDiv.scrollHeight > miDiv.clientHeight || miDiv.scrollWidth > miDiv.clientWidth) {
             miDiv.style.paddingRight = "6px";
         } else {
-            // No tiene scroll
             miDiv.style.paddingRight = "15px";
         }
 
