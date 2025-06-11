@@ -591,6 +591,7 @@ function eventosNav() {
     const div = document.querySelector('.panel-lateral');
     const opciones = document.querySelectorAll('.opcion');
     const estatico = document.querySelector('#estatico');
+    const encabezado= document.querySelector('.encabezado-lateral');
     let estatic = false;
 
     opciones.forEach(opcion => {
@@ -613,8 +614,8 @@ function eventosNav() {
     });
     achicarDiv();
     achicar.addEventListener('click', achicarDiv);
-    estatico.addEventListener('dblclick',barraEstatica);
-
+    estatico.addEventListener('click', achicarDiv);
+    encabezado.addEventListener('dblclick',barraEstatica);
     setTimeout(() => {
         initTooltips();
     }, 100);
