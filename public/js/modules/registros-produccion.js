@@ -1,5 +1,4 @@
 let registrosProduccion = [];
-let usuarioInfo;
 let productosGlobal = [];
 
 const DB_NAME = 'damabrava_db';
@@ -195,13 +194,6 @@ async function obtenerProductos() {
         return false;
     }
 }
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 
 
 function renderInitialHTML() {
@@ -224,6 +216,7 @@ function renderInitialHTML() {
                 </div>
                 <div class="acciones-grande">
                     <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                    <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> <span>Nuevo registro</span></button>
                 </div>
             </div>
             
@@ -253,14 +246,14 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> Nuevo registro</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarMisRegistros() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -273,8 +266,6 @@ export async function mostrarMisRegistros() {
     ]);
 
     updateHTMLWithData();
-    eventosMisRegistros();
-
 }
 function updateHTMLWithData() {
     // Update productos
@@ -292,11 +283,13 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosMisRegistros();
 }
 
 
 function eventosMisRegistros() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnNueva = document.querySelectorAll('.nueva-produccion');
     const registrosAExportar = registrosProduccion;
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
     const items = document.querySelectorAll('.registro-item');
@@ -360,6 +353,10 @@ function eventosMisRegistros() {
         filtroFechaInstance.open();
     });
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroNombreActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', async () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -490,7 +487,9 @@ function eventosMisRegistros() {
             behavior: 'smooth'
         });
     }
-
+    btnNueva.forEach(btn => {
+        btn.addEventListener('click', mostrarFormularioProduccion);
+    });
     window.info = async function (registroId) {
         const registro = registrosProduccion.find(r => r.id === registroId);
         if (!registro) return;
@@ -662,7 +661,10 @@ function eventosMisRegistros() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerMisRegistros();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -676,9 +678,6 @@ function eventosMisRegistros() {
                             registro.user,
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarMisRegistros();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
@@ -900,7 +899,10 @@ function eventosMisRegistros() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerMisRegistros();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
@@ -914,9 +916,6 @@ function eventosMisRegistros() {
                             registro.user,
                             'Edición',
                             usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarMisRegistros();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
@@ -1005,7 +1004,10 @@ function eventosMisRegistros() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerMisRegistros();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Verificación anulada correctamente',
                             type: 'success',
@@ -1019,8 +1021,6 @@ function eventosMisRegistros() {
                             registro.user,
                             'Información',
                             usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        ocultarAnuncioSecond();
-                        await mostrarMisRegistros();
                     } else {
                         throw new Error(data.error || 'Error al anular la verificación');
                     }

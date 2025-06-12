@@ -1,5 +1,3 @@
-
-let usuarioInfo;
 let productosGlobal = [];
 let reglasProduccion = [];
 let reglasBase = [];
@@ -48,13 +46,6 @@ async function obtenerReglasBase() {
         });
         return false;
     } 
-}
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
 }
 async function obtenerProductos() {
     try {
@@ -171,7 +162,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarReglas() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -184,8 +174,6 @@ export async function mostrarReglas() {
     ]);
 
     updateHTMLWithData();
-    eventosReglas();
-
 }
 function updateHTMLWithData() {
     // Update productos
@@ -203,6 +191,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosReglas();
 }
 
 
@@ -431,15 +420,15 @@ function eventosReglas() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerReglas();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Regla eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-
-                        ocultarAnuncioSecond();
-                        await mostrarReglas();
                     } else {
                         throw new Error(data.error || 'Error al eliminar la regla');
                     }
@@ -722,7 +711,7 @@ function eventosReglas() {
                         gramajeMax: gramajeMax ? parseInt(gramajeMax) : null
                     })
                 });
-
+                
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Error en la petición al servidor');
@@ -730,13 +719,15 @@ function eventosReglas() {
 
                 const result = await response.json();
                 if (result.success) {
+                    await obtenerReglas();
+                    ocultarCarga();
+                    info(result.id);
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Regla creada correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarAnuncioSecond();
-                    await mostrarReglas();
                 } else {
                     throw new Error(result.error || 'Error al guardar la regla');
                 }
@@ -849,15 +840,15 @@ function eventosReglas() {
                 const data = await response.json();
 
                 if (data.success) {
+                    await obtenerReglas();
                     ocultarCarga();
+                    updateHTMLWithData();
+                    verPreciosBase();
                     mostrarNotificacion({
                         message: 'Precios base actualizados correctamente',
                         type: 'success',
                         duration: 3000
                     });
-
-                    ocultarAnuncioSecond();
-                    await mostrarReglas();
                 } else {
                     throw new Error(data.error || 'Error al actualizar los precios base');
                 }

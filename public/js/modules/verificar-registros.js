@@ -1,6 +1,4 @@
-
 let registrosProduccion = [];
-let usuarioInfo;
 let productosGlobal = [];
 let reglasProduccion = [];
 let reglasBase = [];
@@ -227,13 +225,6 @@ async function obtenerReglas() {
         return false;
     }
 }
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerRegistrosProduccion() {
     try {
         const response = await fetch('/obtener-registros-produccion');
@@ -374,7 +365,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarVerificacion() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -389,8 +379,6 @@ export async function mostrarVerificacion() {
     ]);
 
     updateHTMLWithData();
-    eventosVerificacion();
-
 }
 function updateHTMLWithData() {
 
@@ -428,6 +416,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosVerificacion();
 }
 
 
@@ -466,7 +455,7 @@ function eventosVerificacion() {
 
 
     let filtroFechaInstance = null;
-    let filtroNombreActual = 'Todos';
+    let filtroNombreActual = localStorage.getItem('filtroNombresProduccion') || 'Todos';
     let filtroEstadoActual = 'Todos';
 
     function normalizarTexto(texto) {
@@ -574,18 +563,26 @@ function eventosVerificacion() {
             }
         }, 100);
     }
-
+    
     botonesNombre.forEach(boton => {
+        boton.classList.remove('activado');
+        if (boton.dataset.user === filtroNombreActual) {
+            boton.classList.add('activado');
+        }
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
             filtroNombreActual = boton.dataset.user;
-            scrollToCenter(boton, boton.parentElement);
             aplicarFiltros();
+            scrollToCenter(boton, boton.parentElement);
+            localStorage.setItem('filtroNombresProduccion', filtroNombreActual);
         });
     });
-
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroEstadoActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -834,7 +831,10 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosProduccion();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -848,9 +848,6 @@ function eventosVerificacion() {
                             registro.user,
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarVerificacion();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
@@ -1054,7 +1051,10 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosProduccion();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
@@ -1068,9 +1068,6 @@ function eventosVerificacion() {
                             registro.user,
                             'Edición',
                             usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarVerificacion();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
@@ -1185,7 +1182,10 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosProduccion();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro verificado correctamente',
                             type: 'success',
@@ -1199,9 +1199,6 @@ function eventosVerificacion() {
                             registro.user,
                             'Verificación',
                             usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
-
-                        ocultarAnuncioSecond();
-                        await mostrarIngresos(registro.idProducto);
                     } else {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
@@ -1290,7 +1287,10 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosProduccion();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Verificación anulada correctamente',
                             type: 'success',
@@ -1305,8 +1305,6 @@ function eventosVerificacion() {
                             'Información',
                             usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
 
-                        ocultarAnuncioSecond();
-                        await mostrarVerificacion();
                     } else {
                         throw new Error(data.error || 'Error al anular la verificación');
                     }
@@ -1343,14 +1341,15 @@ function eventosVerificacion() {
                 const data = await response.json();
 
                 if (data.success) {
+                    await obtenerRegistrosProduccion();
+                    ocultarCarga();
+                    info(registroId);
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Se marcó como arreglado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-
-                    ocultarAnuncioSecond();
-                    await mostrarVerificacion();
                 } else {
                     throw new Error(data.error || 'Error al marcar como arreglado');
                 }
@@ -1732,6 +1731,7 @@ function eventosVerificacion() {
 
                 if (data.success) {
                     ocultarCarga();
+                    cerrarAnuncioManual('anuncioSecond');
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
                         type: 'success',
@@ -1741,7 +1741,6 @@ function eventosVerificacion() {
                         'Administración',
                         'Información',
                         usuarioInfo.nombre + ' registro un nuevo pago pendiente de producción')
-                    cerrarAnuncioManual('anuncioSecond');
                 } else {
                     throw new Error(data.error || 'Error al registrar el pago');
                 }

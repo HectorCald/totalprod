@@ -2,16 +2,9 @@ let productos = [];
 let etiquetas = [];
 let precios = [];
 let proovedores = [];
-let usuarioInfo;
+
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 let nombresUsuariosGlobal = [];
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 
 const DB_NAME = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
@@ -288,7 +281,6 @@ async function obtenerNombresUsuarios() {
 
 
 export async function mostrarIngresos(producto = '') {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(producto); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -1165,8 +1157,6 @@ function eventosIngresos() {
                 'Administración',
                 'Creación',
                 usuarioInfo.nombre + 'registro un ingreso al almacen' + ' de: ' + proovedorSelect.value)
-
-            ocultarAnuncioSecond();
             await mostrarIngresos();
         } catch (error) {
             console.error('Error al procesar el ingreso:', error);

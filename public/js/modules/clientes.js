@@ -1,13 +1,4 @@
 let clientes = [];
-let usuarioInfo;
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerClientes() {
     try {
         const response = await fetch('/obtener-clientes');
@@ -92,7 +83,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarClientes() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -104,8 +94,6 @@ export async function mostrarClientes() {
     ]);
 
     updateHTMLWithData();
-    eventosClientes();
-    ;
 }
 function updateHTMLWithData() {
 
@@ -123,6 +111,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosClientes();
 }
 
 
@@ -310,9 +299,12 @@ function eventosClientes() {
                     const response = await fetch(`/eliminar-cliente/${clienteId}`, {
                         method: 'DELETE'
                     });
-    
-                    if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        await obtenerClientes();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Cliente eliminado correctamente',
                             type: 'success',
@@ -322,9 +314,6 @@ function eventosClientes() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino al cliente: '+cliente.nombre+' con el id: '+cliente.id+' por el motivo de: '+motivo)
-                        
-                        ocultarAnuncioSecond();
-                        await mostrarClientes();
                     } else {
                         throw new Error('Error al eliminar el cliente');
                     }
@@ -428,9 +417,12 @@ function eventosClientes() {
                         },
                         body: JSON.stringify({ nombre, telefono, direccion, zona, motivo })
                     });
-    
-                    if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        await obtenerClientes();
                         ocultarCarga();
+                        info(clienteId)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Cliente actualizado correctamente',
                             type: 'success',
@@ -440,9 +432,6 @@ function eventosClientes() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito al cliente: '+cliente.nombre+' con el id: '+cliente.id+' por el motivo de: '+motivo)
-                        
-                        ocultarAnuncioSecond();
-                        await mostrarClientes();
                     } else {
                         throw new Error('Error al actualizar el cliente');
                     }
@@ -538,8 +527,13 @@ function eventosClientes() {
                     body: JSON.stringify({ nombre, telefono, direccion, zona })
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (data.success) {
+                    await obtenerClientes();
                     ocultarCarga();
+                    updateHTMLWithData();
+                    info(data.id);
                     mostrarNotificacion({
                         message: 'Cliente creado correctamente',
                         type: 'success',
@@ -549,9 +543,6 @@ function eventosClientes() {
                         'Administración',
                         'Creación',
                         usuarioInfo.nombre + ' creo un nuevo cliente: '+nombre)
-                    
-                    ocultarAnuncioSecond();
-                    await mostrarClientes();
                 } else {
                     throw new Error('Error al crear el cliente');
                 }

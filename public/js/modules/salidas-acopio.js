@@ -1,15 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo;
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerEtiquetasAcopio() {
     try {
         const response = await fetch('/obtener-etiquetas-acopio');
@@ -82,7 +74,6 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarSalidasAcopio() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -573,8 +564,6 @@ function eventosPedidos() {
 
             carritoIngresosAcopio.clear();
             localStorage.setItem('damabrava_ingreso_acopio', '[]');
-
-            ocultarAnuncioSecond();
             await mostrarSalidasAcopio();
 
         } catch (error) {

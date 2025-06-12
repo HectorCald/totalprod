@@ -1,15 +1,5 @@
-let registrosProduccion = [];
-let usuarioInfo;
-let productosGlobal = [];
 let pagosGlobal = [];
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerPagos() {
     try {
         const response = await fetch('/obtener-pagos');
@@ -120,7 +110,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarPagos() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -132,8 +121,6 @@ export async function mostrarPagos() {
     ]);
 
     updateHTMLWithData();
-    eventosPagos();
-
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -150,6 +137,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosPagos();
 }
 
 
@@ -330,6 +318,10 @@ function eventosPagos() {
     }
 
     botonesNombre.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroNombreActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -338,8 +330,11 @@ function eventosPagos() {
             aplicarFiltros();
         });
     });
-
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroEstadoActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -348,6 +343,7 @@ function eventosPagos() {
             aplicarFiltros();
         });
     });
+
     botonCalendario.addEventListener('click', async () => {
         if (!filtroFechaInstance) {
             filtroFechaInstance = flatpickr(botonCalendario, {
@@ -546,8 +542,6 @@ function eventosPagos() {
         pagarBtn.addEventListener('click', () => realizarPago(pago));
         btnAnular.addEventListener('click', () => anular(pago));
 
-
-
         function anular(pago) {
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
@@ -609,7 +603,10 @@ function eventosPagos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerPagos();
                         ocultarCarga();
+                        info(pagoId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pago anulado correctamente',
                             type: 'success',
@@ -619,9 +616,6 @@ function eventosPagos() {
                             'Administración',
                             'Información',
                             usuarioInfo.nombre + ' anulo el registro de pago con el nombre de: ' + pago.nombre_pago + ' con el id: ' + pago.id + ' por el motivo de: ' + motivo)
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarPagos(); // Recargar la lista de pagos
                     } else {
                         throw new Error(data.error || 'Error al anular el pago');
                     }
@@ -712,7 +706,7 @@ function eventosPagos() {
                     </button>
                 </div>
             ` : ''}
-        `;
+                `;
 
                 contenido.innerHTML = registrationHTML;
                 contenido.style.paddingBottom = '10px';
@@ -765,7 +759,11 @@ function eventosPagos() {
                             const data = await response.json();
 
                             if (data.success) {
+                                await obtenerPagos();
                                 ocultarCarga();
+                                info(pagoId);
+                                cargarPagosParciales(pago.id);
+                                updateHTMLWithData();
                                 mostrarNotificacion({
                                     message: 'Pago registrado correctamente',
                                     type: 'success',
@@ -775,8 +773,6 @@ function eventosPagos() {
                                     'Administración',
                                     'Información',
                                     usuarioInfo.nombre + ' realizo el pago de: ' + cantidad + ' a ' + pago.beneficiario)
-                                cerrarAnuncioManual('anuncioTercer');
-                                mostrarPagos();
                             } else {
                                 throw new Error(data.error);
                             }
@@ -841,7 +837,7 @@ function eventosPagos() {
                         <i class='bx bx-user-check'></i>
                         <div class="input">
                             <p class="detalle">Registrado por</p>
-                            <input type="text" name="pagado_por" value="${usuarioInfo.nombre}" readonly>
+                            <input type="text" name="pagado_por" value="${usuarioInfo.nombre}+' '+${usuarioInfo.apellido}" readonly>
                         </div>
                     </div>
     
@@ -945,7 +941,9 @@ function eventosPagos() {
                 const result = await response.json();
 
                 if (result.success) {
+                    await obtenerPagos();
                     ocultarCarga();
+                    info(result.id);
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
                         type: 'success',
@@ -955,8 +953,6 @@ function eventosPagos() {
                         'Administración',
                         'Información',
                         usuarioInfo.nombre + ' registro un nuevo pago pendiente generico')
-                    cerrarAnuncioManual('anuncioSecond');
-                    await mostrarPagos();
                 } else {
                     throw new Error(result.error);
                 }

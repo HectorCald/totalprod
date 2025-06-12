@@ -2,17 +2,7 @@ let productos = [];
 let etiquetas = [];
 let precios = [];
 let clientes = [];
-let usuarioInfo;
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
-
-
 const DB_NAME = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
 
@@ -272,7 +262,6 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarSalidas() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -1105,7 +1094,6 @@ function eventosSalidas() {
                 'Creación',
                 usuarioInfo.nombre + 'registro una salida de almacen' + ' para: ' + clienteSelect.value)
 
-            ocultarAnuncioSecond();
             await mostrarSalidas();
         } catch (error) {
             console.error('Error al procesar la salida:', error);

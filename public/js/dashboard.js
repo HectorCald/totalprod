@@ -14,7 +14,8 @@ import { crearNotificacion,
     scrollToTop, tienePermiso, 
     actualizarPermisos,
     inicializarDashboard,
-    limpiarProteccionNavegacion, 
+    limpiarProteccionNavegacion,
+    usuarioInfo, 
     registrarNotificacion } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
@@ -46,6 +47,8 @@ import { mostrarTareas } from './modules/tareas-acopio.js';
 import { mostrarConfiguracionesSistema} from './modules/configuraciones-sistema.js';
 import { mostrarDescargaCatalogo} from './modules/descargas.js';
 import { mostrarReportes} from './modules/reportes.js';
+
+window.usuarioInfo = usuarioInfo
 
 window.crearHome = crearHome
 window.mostrarHome = mostrarHome

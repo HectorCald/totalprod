@@ -1,16 +1,3 @@
-
-let usuarioInfo = {
-    id: '',
-    nombre: '',
-    apellido: '',
-    telefono: '',
-    email: '',
-    foto: '',
-    rol: '',
-    estado: '',
-    plugins: '',
-    permisos: ''
-};
 let registrosProduccion = [];
 let registrosMovimientos = [];
 let movimientosAcopio = [];
@@ -85,9 +72,10 @@ async function obtenerUsuario() {
         return false;
     }
 }
+
 async function obtenerMisRegistros() {
     try {
-        const response = await fetch('/obtener-registros-produccion');
+        const response = await fetch('/obtener-registros-acopio');
         const data = await response.json();
 
         if (data.success) {

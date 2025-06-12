@@ -1,5 +1,4 @@
 let paginaProtegida = false;
-
 export function activarProteccionNavegacion() {
     paginaProtegida = true;
     // Reemplazar el estado actual para bloquear el retroceso
@@ -136,9 +135,10 @@ export function cerrarAnuncioManual(tipo) {
 }
 export async function mostrarAnuncio() {
     const anuncio = document.querySelector('.anuncio');
+    const anuncioSecond = document.querySelector('.anuncio-second');
     const contenido = document.querySelector('.anuncio .contenido');
+    contenido.style.maxWidth='100%'
 
-    cerrarAnuncioManual('anuncioSecond');
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
@@ -158,19 +158,14 @@ export async function mostrarAnuncio() {
                 tipo: 'anuncio' 
             }, '', window.location.href);
         }
-        
-        // Actualizar contador de entradas
         estadoAnuncios.entradasHistorial++;
+    }else if(anuncioSecond && anuncioSecond.classList.contains('mostrar')){
+        cerrarAnuncioManual('anuncioSecond');
     }
 }
 export async function mostrarAnuncioSecond() {
     const anuncio = document.querySelector('.anuncio-second');
-    
-    // Cerrar anuncio tercer si está abierto
     const anuncioTercer = document.querySelector('.anuncio-tercer');
-    if (anuncioTercer?.classList.contains('mostrar')) {
-        ocultarAnuncioTercerFisico();
-    }
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
@@ -192,6 +187,9 @@ export async function mostrarAnuncioSecond() {
         
         // Actualizar contador de entradas
         estadoAnuncios.entradasHistorial++;
+
+    } else if(anuncioTercer && anuncioTercer.classList.contains('mostrar')){
+        cerrarAnuncioManual('anuncioTercer');
     }
     configuracionesEntrada();
 }
@@ -859,3 +857,17 @@ export async function registrarNotificacion(destino, suceso, detalle) {
         return false;
     }
 }
+
+
+export let usuarioInfo = {
+    id: '',
+    nombre: '',
+    apellido: '',
+    telefono: '',
+    email: '',
+    foto: '',
+    rol: '',
+    estado: '',
+    plugins: '',
+    permisos: ''
+};

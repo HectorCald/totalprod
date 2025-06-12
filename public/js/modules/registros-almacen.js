@@ -1,5 +1,4 @@
 let registrosAlmacen = [];
-let usuarioInfo;
 let proovedores = [];
 let clientes = [];
 async function obtenerProovedores() {
@@ -62,13 +61,6 @@ async function obtenerClientes() {
         });
         return false;
     }
-}
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
 }
 async function obtenerRegistrosAlmacen() {
     try {
@@ -161,7 +153,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarMovimientosAlmacen() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -175,8 +166,6 @@ export async function mostrarMovimientosAlmacen() {
     ]);
 
     updateHTMLWithData();
-    eventosRegistrosAlmacen();
-
 }
 function updateHTMLWithData() {
 
@@ -194,6 +183,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosRegistrosAlmacen();
 }
 
 
@@ -265,6 +255,10 @@ function eventosRegistrosAlmacen() {
         filtroFechaInstance.open();
     });
     botonesTipo.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroNombreActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', async () => {
             botonesTipo.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -583,7 +577,10 @@ function eventosRegistrosAlmacen() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosAlmacen();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -593,10 +590,6 @@ function eventosRegistrosAlmacen() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro de almacen llamado: ' + registro.nombre_movimiento + ' con el id: ' + registro.id + ' tipo: ' + registro.tipo + ' por el motivo de: ' + motivo)
-
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarMovimientosAlmacen();
 
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
@@ -686,7 +679,10 @@ function eventosRegistrosAlmacen() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosAlmacen();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
@@ -696,9 +692,6 @@ function eventosRegistrosAlmacen() {
                             'Administración',
                             'Información',
                             usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + registro.nombre_movimiento + ' con el id: ' + registro.id + 'tipo ' + registro.tipo + ' por el motivo de: ' + motivo)
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarMovimientosAlmacen();
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -737,11 +730,6 @@ function eventosRegistrosAlmacen() {
                     type: 'success',
                     duration: 3000
                 });
-
-                // Cerrar modal actual y abrir el correspondiente
-                ocultarAnuncioSecond();
-                ocultarAnuncio();
-
                 if (registro.tipo.toLowerCase() === 'ingreso') {
                     mostrarIngresos();
                 } else {

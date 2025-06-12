@@ -1,14 +1,6 @@
-
 let personal = [];
-let usuarioInfo;
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
+
 async function obtenerPersonal() {
     try {
         const response = await fetch('/obtener-personal');
@@ -44,7 +36,6 @@ async function obtenerPersonal() {
 
 
 export async function mostrarPersonal() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -58,8 +49,6 @@ export async function mostrarPersonal() {
     updateHTMLWithData();
     eventosPersonal();
 }
-
-
 function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
     const initialHTML = `  
@@ -326,7 +315,10 @@ function eventosPersonal() {
                 });
 
                 if (response.ok) {
+                    await obtenerPersonal();
                     ocultarCarga();
+                    info(userId);
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Usuario actualizado correctamente',
                         type: 'success',
@@ -336,9 +328,6 @@ function eventosPersonal() {
                         'Administración',
                         'Edición',
                         usuarioInfo.nombre + ' realizo cambios en el perfil de: '+usuario.nombre+' que es parte del personal de la empresa')
-
-                    ocultarAnuncioSecond();
-                    await mostrarPersonal();
                 } else {
                     throw new Error('Error al actualizar el usuario');
                 }

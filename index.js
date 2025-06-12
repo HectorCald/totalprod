@@ -1292,6 +1292,7 @@ app.post('/crear-producto', requireAuth, async (req, res) => {
             './icons/default-product.png'  // Imagen por defecto
         ];
 
+
         // Append the new row at the end
         await sheets.spreadsheets.values.append({
             spreadsheetId,
@@ -1304,6 +1305,7 @@ app.post('/crear-producto', requireAuth, async (req, res) => {
         res.json({
             success: true,
             message: 'Producto creado correctamente',
+            id: newId,
         });
 
     } catch (error) {
@@ -2508,13 +2510,7 @@ app.post('/agregar-cliente', requireAuth, async (req, res) => {
 
         res.json({
             success: true,
-            cliente: {
-                id: newClient[0],
-                nombre,
-                telefono,
-                direccion,
-                zona
-            }
+            id: newClient[0],
         });
     } catch (error) {
         console.error('Error al agregar cliente:', error);
@@ -2627,8 +2623,6 @@ app.put('/editar-cliente/:id', requireAuth, async (req, res) => {
             }
         });
 
-        console.log(`Cliente ${id} actualizado con motivo: ${motivo}`);
-
         res.json({
             success: true,
             message: 'Cliente actualizado correctamente'
@@ -2711,13 +2705,8 @@ app.post('/agregar-proovedor', requireAuth, async (req, res) => {
 
         res.json({
             success: true,
-            cliente: {
-                id: newProv[0],
-                nombre,
-                telefono,
-                direccion,
-                zona
-            }
+            id: newProv[0],
+
         });
     } catch (error) {
         console.error('Error al agregar proovedor:', error);
@@ -3932,7 +3921,7 @@ app.put('/actualizar-producto-acopio-salida/:id', requireAuth, async (req, res) 
     }
 });
 
-
+/* ==================== RUTAS DE REGLAS DE PRODUCCION ==================== */
 app.get('/obtener-reglas', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
 
@@ -4296,7 +4285,7 @@ app.get('/obtener-pagos', requireAuth, async (req, res) => {
 });
 app.put('/anular-pago/:id', requireAuth, async (req, res) => {
     try {
-        
+
         const { spreadsheetId } = req.user;
         const { id } = req.params;
         const { motivo } = req.body;
@@ -4945,7 +4934,8 @@ app.post('/registrar-calculo-mp', requireAuth, async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Cálculo registrado correctamente'
+            message: 'Cálculo registrado correctamente',
+            id: newId,
         });
 
     } catch (error) {

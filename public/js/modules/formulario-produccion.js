@@ -4,15 +4,7 @@ let configuracionHorario = {
     horaFin: '',
     estado: ''
 };
-let usuarioInfo;
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function verificarHorarioProduccion() {
     try {
         mostrarCarga();
@@ -93,7 +85,6 @@ async function obtenerProductos() {
     }
 }
 export async function mostrarFormularioProduccion() {
-    usuarioInfo = recuperarUsuarioLocal();
     const horarioValido = await verificarHorarioProduccion();
     if (!horarioValido.permitido) {
         let mensaje = configuracionHorario.estado !== 'Activo'
@@ -386,7 +377,6 @@ function evetosFormularioProduccion() {
                 const data = await response.json();
     
                 if (data.success) {
-                    ocultarAnuncio();
                     mostrarNotificacion({
                         message: 'Producción registrada correctamente',
                         type: 'success',
@@ -396,6 +386,7 @@ function evetosFormularioProduccion() {
                         'Almacen',
                         'Creación',
                         usuarioInfo.nombre + ' registro una nueva producción de ' + producto)
+                    await mostrarMisRegistros();
                 } else {
                     throw new Error(data.error || 'Error al registrar la producción');
                 }

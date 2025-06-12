@@ -1,13 +1,6 @@
 let movimientosAcopio = [];
-let usuarioInfo;
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
+
 async function obtenerMovimientosAcopio() {
     try {
         const response = await fetch('/obtener-movimientos-acopio');
@@ -54,7 +47,7 @@ async function obtenerMovimientosAcopio() {
 
 
 export async function mostrarRegistrosAcopio() {
-    usuarioInfo = recuperarUsuarioLocal();
+
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -66,7 +59,6 @@ export async function mostrarRegistrosAcopio() {
     ]);
 
     updateHTMLWithData();
-    eventosRegistrosAcopio();
 }
 function renderInitialHTML() {
 
@@ -96,6 +88,7 @@ function renderInitialHTML() {
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Ingresos</button>
                 <button class="btn-filtro">Salidas</button>
+                <button class="btn-filtro">Anulados</button>
                 <button class="btn-filtro">Bruto</button>
                 <button class="btn-filtro">Prima</button>
             </div>
@@ -126,7 +119,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 function updateHTMLWithData() {
-
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = movimientosAcopio.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
@@ -141,6 +133,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosRegistrosAcopio();
 }
 
 
@@ -213,19 +206,25 @@ function eventosRegistrosAcopio() {
         filtroFechaInstance.open();
     });
     botonesTipo.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            const tipoFiltro2 = boton.textContent.trim().toLowerCase();
+            filtroNombreActual = tipoFiltro2 === 'todos' ? 'todos' :
+                    tipoFiltro2 === 'ingresos' ? 'ingreso' : tipoFiltro2==='anulados'?'anulado':'salida';
+            aplicarFiltros();
+        }
         boton.addEventListener('click', async () => {
             const tipoFiltro = boton.textContent.trim().toLowerCase();
 
             // Manejar botones de tipo de movimiento (todos, ingresos, salidas)
-            if (['todos', 'ingresos', 'salidas'].includes(tipoFiltro)) {
+            if (['todos', 'ingresos', 'salidas', 'anulados'].includes(tipoFiltro)) {
                 botonesTipo.forEach(b => {
-                    if (['todos', 'ingresos', 'salidas'].includes(b.textContent.trim().toLowerCase())) {
+                    if (['todos', 'ingresos', 'salidas', 'anulados'].includes(b.textContent.trim().toLowerCase())) {
                         b.classList.remove('activado');
                     }
                 });
                 boton.classList.add('activado');
                 filtroNombreActual = tipoFiltro === 'todos' ? 'todos' :
-                    tipoFiltro === 'ingresos' ? 'ingreso' : 'salida';
+                    tipoFiltro === 'ingresos' ? 'ingreso' : tipoFiltro==='anulados'?'anulado':'salida';
             }
             // Manejar botones de tipo de materia (bruto, prima)
             else if (['bruto', 'prima'].includes(tipoFiltro)) {
@@ -531,7 +530,10 @@ function eventosRegistrosAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerMovimientosAcopio();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -541,10 +543,6 @@ function eventosRegistrosAcopio() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro con el nombre de: ' + registro.nombreMovimiento + ' y el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarRegistrosAcopio();
                     } else {
                         throw new Error(data.error);
                     }
@@ -634,7 +632,10 @@ function eventosRegistrosAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerMovimientosAcopio();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
@@ -643,12 +644,7 @@ function eventosRegistrosAcopio() {
                         registrarNotificacion(
                             'Administración',
                             'Información',
-                            usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + nombreMovimiento + ' y el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarRegistrosAcopio();
+                            usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + registro.nombreMovimiento + ' y el id: ' + registro.id + ' por el motivo de: ' + motivo)
                     } else {
                         throw new Error(data.error);
                     }

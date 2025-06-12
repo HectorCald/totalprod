@@ -584,10 +584,12 @@ function eventosNav() {
         opcion.addEventListener('click', () => {
             opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
             opcion.classList.add('opcion-activa');
+        
             if (div.style.width !== '92px' && estatic === false) {
                 achicarDiv();
             }
         });
+        
     })
 
     refreshButton.addEventListener('click', () => {

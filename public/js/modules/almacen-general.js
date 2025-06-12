@@ -2,14 +2,6 @@ let productos = [];
 let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
-let usuarioInfo;
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 const DB_NAME = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
 
@@ -301,7 +293,6 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarAlmacenGeneral() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -317,7 +308,6 @@ export async function mostrarAlmacenGeneral() {
     ]);
 
     await updateHTMLWithData();
-    eventosAlmacenGeneral();
 }
 function renderInitialHTML() {
 
@@ -346,7 +336,7 @@ function renderInitialHTML() {
                 ` : ''}
             </div>
             <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
+                <button class="btn-filtro todos activado">Todos</button>
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
@@ -396,16 +386,19 @@ function renderInitialHTML() {
     }
 }
 async function updateHTMLWithData() {
-    // Update etiquetas filter
-    const etiquetasUnicas = [...new Set(etiquetas.map(etiqueta => etiqueta.etiqueta))];
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
-    const etiquetasHTML = etiquetasUnicas.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta}</button>
+    const skeletons = etiquetasFilter.querySelectorAll('.skeleton');
+    skeletons.forEach(s => s.remove());
+
+    // ✅ AGREGAR ESTA LÍNEA - Eliminar etiquetas existentes
+    const etiquetasExistentes = etiquetasFilter.querySelectorAll('.btn-filtro:not(.todos)');
+    etiquetasExistentes.forEach(e => e.remove());
+
+    const etiquetasHTML = etiquetas.map(etiqueta => `
+    <button class="btn-filtro">${etiqueta.etiqueta}</button>
     `).join('');
-    etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
+
+    etiquetasFilter.insertAdjacentHTML('beforeend', etiquetasHTML);
 
     const preciosSelect = document.querySelector('.precios-select');
     const preciosOpciones = precios.map((precio, index) => {
@@ -448,8 +441,9 @@ async function updateHTMLWithData() {
 
     // Renderizar HTML
     productosContainer.innerHTML = productosHTML.join('');
-}
 
+    eventosAlmacenGeneral();
+}
 
 
 function eventosAlmacenGeneral() {
@@ -484,7 +478,6 @@ function eventosAlmacenGeneral() {
         }
     });
 
-    let filtroNombreActual = 'Todos';
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({
@@ -548,7 +541,9 @@ function eventosAlmacenGeneral() {
                     mostrar = mostrar && (
                         normalizarTexto(producto.producto).includes(busqueda) ||
                         normalizarTexto(producto.gramos.toString()).includes(busqueda) ||
-                        normalizarTexto(producto.codigo_barras).includes(busqueda)
+                        normalizarTexto(producto.codigo_barras).includes(busqueda) ||
+                        normalizarTexto(producto.id).includes(busqueda)
+
                     );
                 }
 
@@ -631,19 +626,24 @@ function eventosAlmacenGeneral() {
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
+    let filtroNombreActual = localStorage.getItem('filtroEtiquetaAlmacen') || 'Todos';
     botonesEtiquetas.forEach(boton => {
+        boton.classList.remove('activado');
+        if (boton.textContent.trim() === filtroNombreActual) {
+            boton.classList.add('activado');
+        }
         boton.addEventListener('click', () => {
             botonesEtiquetas.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
             filtroNombreActual = boton.textContent.trim();
             aplicarFiltros();
             scrollToCenter(boton, boton.parentElement);
+            localStorage.setItem('filtroEtiquetaAlmacen', filtroNombreActual);
         });
     });
     botonesCantidad.forEach(boton => {
         boton.addEventListener('click', () => {
             if (boton.textContent.trim() === 'Sueltas') {
-                // Toggle para el botón de Sueltas
                 boton.classList.toggle('activado');
             } else {
                 // Comportamiento normal para otros botones
@@ -852,7 +852,10 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerAlmacenGeneral();
                         ocultarCarga();
+                        updateHTMLWithData();
+                        cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
                             message: 'Producto eliminado correctamente',
                             type: 'success',
@@ -862,7 +865,6 @@ function eventosAlmacenGeneral() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
-                        await mostrarAlmacenGeneral();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el producto');
                     }
@@ -1208,7 +1210,10 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerAlmacenGeneral();
                         ocultarCarga();
+                        info(registroId)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Producto actualizado correctamente',
                             type: 'success',
@@ -1219,7 +1224,6 @@ function eventosAlmacenGeneral() {
                             'Edición',
                             usuarioInfo.nombre + ' editó el producto ' + producto + ' su motivo fue: ' + motivo
                         );
-                        await mostrarAlmacenGeneral();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }
@@ -1453,7 +1457,10 @@ function eventosAlmacenGeneral() {
                 const data = await response.json();
 
                 if (data.success) {
+                    await obtenerAlmacenGeneral();
                     ocultarCarga();
+                    updateHTMLWithData();
+                    info(data.id)
                     mostrarNotificacion({
                         message: 'Producto creado correctamente',
                         type: 'success',
@@ -1463,7 +1470,6 @@ function eventosAlmacenGeneral() {
                         'Administración',
                         'Creación',
                         usuarioInfo.nombre + ' creo un nuevo producto: ' + producto + ' ' + gramos + 'gr.')
-                    await mostrarAlmacenGeneral();
                 } else {
                     throw new Error(data.error || 'Error al crear el producto');
                 }
@@ -1537,15 +1543,16 @@ function eventosAlmacenGeneral() {
 
                     const data = await response.json();
                     if (data.success) {
+                        await obtenerEtiquetas();
+                        ocultarCarga();
+                        await updateHTMLWithData();
+                        gestionarEtiquetas();
                         document.querySelector('.nueva-etiqueta').value = '';
                         mostrarNotificacion({
                             message: 'Etiqueta agregada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        await mostrarAlmacenGeneral();
-                        await obtenerEtiquetas();
-                        gestionarEtiquetas();
                     }
                 } catch (error) {
                     mostrarNotificacion({
@@ -1573,15 +1580,15 @@ function eventosAlmacenGeneral() {
 
                     const data = await response.json();
                     if (data.success) {
-                        await mostrarAlmacenGeneral();
                         await obtenerEtiquetas();
+                        ocultarCarga();
+                        await updateHTMLWithData();
+                        gestionarEtiquetas();
                         mostrarNotificacion({
                             message: 'Etiqueta eliminada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        gestionarEtiquetas(); // Refresh the view
-
                     }
                 } catch (error) {
                     mostrarNotificacion({
@@ -1664,17 +1671,11 @@ function eventosAlmacenGeneral() {
                 const data = await response.json();
 
                 if (data.success) {
-                    await mostrarAlmacenGeneral();
                     await obtenerPrecios();
+                    ocultarCarga();
+                    updateHTMLWithData();
+                    gestionarPrecios();
                     nuevoPrecioInput.value = '';
-                    const preciosActualesDiv = document.querySelector('.precios-actuales');
-                    preciosActualesDiv.innerHTML = precios.map(precio => `
-                    <div class="precio-item" data-id="${precio.id}">
-                        <i class='bx bx-tag'></i>
-                        <span>${precio.precio}</span>
-                        <button class="btn-eliminar-precio"><i class='bx bx-x'></i></button>
-                    </div>
-                `).join('');
 
                     mostrarNotificacion({
                         message: 'Precio agregado correctamente',
@@ -1828,8 +1829,10 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
-                        await mostrarAlmacenGeneral();
                         await obtenerPrecios();
+                        ocultarCarga();
+                        updateHTMLWithData();
+                        gestionarPrecios();
                         precioItem.remove();
                         mostrarNotificacion({
                             message: 'Precio eliminado correctamente',

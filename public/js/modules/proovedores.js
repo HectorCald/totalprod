@@ -1,13 +1,5 @@
 let proovedores = [];
-let usuarioInfo;
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerProovedores() {
     try {
         const response = await fetch('/obtener-proovedores');
@@ -91,7 +83,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarProovedores() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -103,7 +94,6 @@ export async function mostrarProovedores() {
     ]);
 
     updateHTMLWithData();
-    eventosProovedores();
 }
 function updateHTMLWithData() {
 
@@ -121,6 +111,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosProovedores();
 }
 
 
@@ -313,9 +304,12 @@ function eventosProovedores() {
                     const response = await fetch(`/eliminar-proovedor/${proovedorId}`, {
                         method: 'DELETE'
                     });
-
-                    if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        await obtenerProovedores();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Proovedor eliminado correctamente',
                             type: 'success',
@@ -325,9 +319,6 @@ function eventosProovedores() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo de: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarProovedores();
                     } else {
                         throw new Error('Error al eliminar el proovedor');
                     }
@@ -431,9 +422,12 @@ function eventosProovedores() {
                         },
                         body: JSON.stringify({ nombre, telefono, direccion, zona, motivo })
                     });
-
-                    if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        await obtenerProovedores();
                         ocultarCarga();
+                        info(proovedorId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Proovedor actualizado correctamente',
                             type: 'success',
@@ -443,9 +437,6 @@ function eventosProovedores() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarProovedores();
                     } else {
                         throw new Error('Error al actualizar el proovedor');
                     }
@@ -539,9 +530,12 @@ function eventosProovedores() {
                     },
                     body: JSON.stringify({ nombre, telefono, direccion, zona })
                 });
-
-                if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    await obtenerProovedores();
                     ocultarCarga();
+                    info(data.id);
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Proovedor creado correctamente',
                         type: 'success',
@@ -551,9 +545,6 @@ function eventosProovedores() {
                         'Administración',
                         'Creación',
                         usuarioInfo.nombre + ' creo un nuevo proovedor: '+nombre)
-
-                    ocultarAnuncioSecond();
-                    await mostrarProovedores();
                 } else {
                     throw new Error('Error al crear el proovedor');
                 }

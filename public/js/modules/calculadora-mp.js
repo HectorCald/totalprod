@@ -1,5 +1,4 @@
 let registrosProduccion = [];
-let usuarioInfo;
 let productosGlobal = [];
 let calculosMP = [];
 let nombresUsuariosGlobal = [];
@@ -55,13 +54,6 @@ async function obtenerNombresUsuarios() {
         return false;
     }
 }
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerProductos() {
     try {
         const response = await fetch('/obtener-productos');
@@ -114,13 +106,6 @@ function renderInitialHTML() {
                     <button class="nuevo-registro btn especial"><i class='bx bx-file'></i> <span>Nuevo registro</span></button>
                 </div>
             </div>
-            
-            <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
-                ${Array(5).fill().map(() => `
-                    <div class="skeleton skeleton-etiqueta"></div>
-                `).join('')}
-            </div>
             <div class="filtros-opciones estado">
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Pendientes</button>
@@ -154,7 +139,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarCalcularMp() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -168,19 +152,8 @@ export async function mostrarCalcularMp() {
     ]);
 
     updateHTMLWithData();
-    eventosVerificacion();
 }
 function updateHTMLWithData() {
-    // Update etiquetas filter
-    const nombresUnicos = [...new Set(calculosMP.map(registro => registro.nombre))];
-    const etiquetasFilter = document.querySelector('.etiquetas-filter');
-    const etiquetasHTML = nombresUnicos.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta}</button>
-    `).join('');
-    etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
 
     // Update productos
     const productosContainer = document.querySelector('.productos-container');
@@ -197,6 +170,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosVerificacion();
 }
 
 
@@ -204,8 +178,6 @@ function eventosVerificacion() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const btnNuevo = document.querySelectorAll('.nuevo-registro');
     const registrosAExportar = calculosMP;
-
-    const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
 
 
@@ -343,17 +315,12 @@ function eventosVerificacion() {
         }, 100);
     }
 
-    botonesNombre.forEach(boton => {
-        boton.addEventListener('click', () => {
-            botonesNombre.forEach(b => b.classList.remove('activado'));
-            boton.classList.add('activado');
-            filtroNombreActual = boton.textContent.trim();
-            scrollToCenter(boton, boton.parentElement);
-            aplicarFiltros();
-        });
-    });
 
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroEstadoActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -653,14 +620,15 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerCalculosMP();
+                        ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Cálculo eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarCalcularMp();
                     }
 
                 } catch (error) {
@@ -836,16 +804,15 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerCalculosMP();
+                        ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        ocultarCarga();
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarCalcularMp();
-
                     }
 
                 } catch (error) {
@@ -928,16 +895,15 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerCalculosMP();
+                        ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Peso final agregado correctamente',
                             type: 'success',
                             duration: 3000
                         });
-
-                        // Actualizar la vista
-                        await obtenerCalculosMP();
-                        cerrarAnuncioManual('anuncioTercer');
-                        window.info(registro.id); // Recargar detalles
                     }
 
                 } catch (error) {
@@ -962,12 +928,12 @@ function eventosVerificacion() {
 
 
     function mostrarFormularioNuevoRegistro() {
-        const contenido = document.querySelector('.anuncio-tercer .contenido');
+        const contenido = document.querySelector('.anuncio-second .contenido');
 
         const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Nuevo Registro de Materia Prima</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')">
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')">
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -1027,7 +993,7 @@ function eventosVerificacion() {
 
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '80px';
-        mostrarAnuncioTercer();
+        mostrarAnuncioSecond();
 
         const productoInput = document.querySelector('.entrada .producto');
         const sugerenciasList = document.querySelector('#productos-list');
@@ -1172,13 +1138,15 @@ function eventosVerificacion() {
                 const data = await response.json();
 
                 if (data.success) {
+                    await obtenerCalculosMP();
+                    ocultarCarga();
+                    info(data.id);
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Registro creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    cerrarAnuncioManual('anuncioTercer');
-                    await mostrarCalcularMp();
                 } else {
                     throw new Error(data.error);
                 }

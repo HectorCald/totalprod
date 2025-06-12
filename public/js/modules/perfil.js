@@ -1,14 +1,3 @@
-
-
-let usuarioInfo = recuperarUsuarioLocal();
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerUsuario() {
     try {
         mostrarCarga();
@@ -80,7 +69,6 @@ async function obtenerUsuario() {
 
 export async function crearPerfil(usuario) {
     const view = document.querySelector('.perfil-view');
-    usuarioInfo=usuario;
     mostrarPerfil(view);
 }
 function mostrarPerfil(view) {

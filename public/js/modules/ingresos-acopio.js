@@ -1,16 +1,9 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo;
+
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 let mensajeIngresos = localStorage.getItem('damabrava_mensaje_ingresos') || 'Se ingreso:\n• Sin ingresos registrados';
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerEtiquetasAcopio() {
     try {
         const response = await fetch('/obtener-etiquetas-acopio');
@@ -83,7 +76,6 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarIngresosAcopio(producto = '', pedido = '') {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -622,7 +614,7 @@ function eventosPedidos(producto, pedido) {
                 localStorage.setItem('damabrava_mensaje_ingresos', mensajeIngresos);
                 carritoIngresosAcopio.clear();
                 localStorage.setItem('damabrava_ingreso_acopio', '[]');
-
+                ocultarCarga();
                 mostrarNotificacion({
                     message: 'Ingreso registrado correctamente',
                     type: 'success',
@@ -633,13 +625,9 @@ function eventosPedidos(producto, pedido) {
                     'Creación',
                     usuarioInfo.nombre + 'registro un ingreso al almacen de acopio de: ' + item.producto)
                 if (pedido) {
-                    ocultarCarga();
-                    ocultarAnuncioSecond();
                     await mostrarPedidos();
                 }
                 else {
-                    ocultarCarga();
-                    ocultarAnuncioSecond();
                     await mostrarIngresosAcopio();
                 }
             } catch (error) {

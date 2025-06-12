@@ -1,5 +1,3 @@
-
-let usuarioInfo;
 let productosGlobal = [];
 let tareasGlobal = [];
 let listaTareasGlobal = [];
@@ -60,13 +58,6 @@ async function obtenerTareas() {
         });
         return false;
     }
-}
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
 }
 async function obtenerProductos() {
     try {
@@ -156,7 +147,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarTareas() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -170,7 +160,6 @@ export async function mostrarTareas() {
     ]);
 
     updateHTMLWithData();
-    eventosTareas();
 }
 function updateHTMLWithData() {
     function convertirHoraAMinutos(hora) {
@@ -204,6 +193,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosTareas();
 }
 
 
@@ -274,9 +264,9 @@ function eventosTareas() {
             // Lógica de filtrado existente
             if (filtroEstadoActual && filtroEstadoActual !== 'Todos') {
                 if (filtroEstadoActual === 'Pendientes') {
-                    mostrar = registroData.peso_final === null || registroData.peso_final === '';
+                    mostrar = registroData.hora_fin === null || registroData.hora_fin === '';
                 } else if (filtroEstadoActual === 'Finalizados') {
-                    mostrar = registroData.peso_final !== null && registroData.peso_final !== '';
+                    mostrar = registroData.hora_fin !== '';
                 }
             }
 
@@ -297,11 +287,7 @@ function eventosTareas() {
                 const textoRegistro = [
                     registroData.id,
                     registroData.producto,
-                    registroData.gramos?.toString(),
-                    registroData.lote?.toString(),
                     registroData.fecha,
-                    registroData.nombre,
-                    registroData.proceso
                 ].filter(Boolean).join(' ').toLowerCase();
 
                 mostrar = normalizarTexto(textoRegistro).includes(busqueda);
@@ -344,8 +330,11 @@ function eventosTareas() {
             }
         }, 100);
     }
-
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroEstadoActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -567,13 +556,15 @@ function eventosTareas() {
                     const data = await response.json();
 
                     if (data.success) {
-                        
+                        await obtenerTareas();
+                        ocultarCarga();
+                        updateHTMLWithData();
+                        cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
                             message: 'Tarea eliminada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        await mostrarTareas();
                     }
 
                 } catch (error) {
@@ -808,12 +799,15 @@ function eventosTareas() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerTareas();
+                        ocultarCarga();
+                        info(registro.id)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Tarea actualizada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        await mostrarTareas();
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -1022,12 +1016,15 @@ function eventosTareas() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerTareas();
+                        ocultarCarga();
+                        info(registro.id)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Tarea finalizada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        await mostrarTareas();
                     }
 
                 } catch (error) {
@@ -1045,10 +1042,10 @@ function eventosTareas() {
 
     }
     btnNuevaTarea.forEach(btn => {
-        btn.addEventListener('click',  mostrarFormularioNuevoRegistro);
+        btn.addEventListener('click', mostrarFormularioNuevoRegistro);
     })
     btnListaTareas.forEach(btn => {
-        btn.addEventListener('click',  mostrarListaTareas);
+        btn.addEventListener('click', mostrarListaTareas);
     })
 
     async function mostrarListaTareas() {
@@ -1286,12 +1283,15 @@ function eventosTareas() {
                 const data = await response.json();
 
                 if (data.success) {
+                    await obtenerTareas();
+                    ocultarCarga();
+                    cerrarAnuncioManual('anuncioSecond');
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Tarea iniciada correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    await mostrarTareas();
                 } else {
                     throw new Error(data.error);
                 }
@@ -1312,5 +1312,4 @@ function eventosTareas() {
         btn.addEventListener('click', () => exportarArchivos('tareas', registrosAExportar));
     })
     aplicarFiltros();
-
 }

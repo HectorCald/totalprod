@@ -1,14 +1,4 @@
 let registrosConteos = [];
-let usuarioInfo;
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
-
 
 async function obtenerRegistrosConteo() {
     try {
@@ -91,7 +81,6 @@ function renderInitialHTML() {
     contenido.style.paddingBottom = '80px';
 }
 export async function registrosConteoAlmacen() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -396,7 +385,10 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosConteo();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -406,9 +398,6 @@ function eventosRegistrosConteo() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro conteo con el nombre de: ' + registro.nombre + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await registrosConteoAlmacen();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
@@ -516,7 +505,10 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerRegistrosConteo();
                         ocultarCarga();
+                        info(registroId);
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
@@ -526,9 +518,6 @@ function eventosRegistrosConteo() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el registro conteo con el nombre de: ' + registro.nombre + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await registrosConteoAlmacen();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el conteo');
                     }
@@ -615,6 +604,7 @@ function eventosRegistrosConteo() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await mostrarAlmacenGeneral();
                         ocultarCarga();
                         mostrarNotificacion({
                             message: 'Inventario actualizado correctamente',
@@ -625,10 +615,6 @@ function eventosRegistrosConteo() {
                         'Administración',
                         'Información',
                         usuarioInfo.nombre + ' sobre escribio el stock del almacen general en base al registro con el nombre de: '+registro.nombre+' con el id: '+registro.id+' por el motivo de: '+motivo)
-                        
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await registrosConteoAlmacen();
                     } else {
                         throw new Error(data.error);
                     }

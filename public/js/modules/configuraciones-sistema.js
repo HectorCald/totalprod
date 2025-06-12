@@ -1,13 +1,4 @@
 let configuracionesGlobal = null;
-let usuarioInfo = recuperarUsuarioLocal();
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 
 async function obtenerConfiguraciones() {
     try {
@@ -146,7 +137,6 @@ function eventosConfiguraciones() {
                     'Administración',
                     'Información',
                     usuarioInfo.nombre + ' realizo cambios en los ajustes del sistema o aplciación')
-                cerrarAnuncioManual('anuncio');
                 await obtenerConfiguraciones();
             }
         } catch (error) {

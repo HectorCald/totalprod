@@ -1,14 +1,5 @@
 let productos = [];
 let etiquetas = [];
-let usuarioInfo;
-
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 
 
 const DB_NAME = 'damabrava_db';
@@ -241,7 +232,6 @@ async function obtenerAlmacenGeneral() {
 }
 
 export async function mostrarConteo() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -256,6 +246,7 @@ export async function mostrarConteo() {
 
     await updateHTMLWithData(); // Update HTML once data is loaded
     eventosConteo();
+    
 
 }
 function renderInitialHTML() {
@@ -635,10 +626,8 @@ function eventosConteo() {
                         'Administración',
                         'Creación',
                         usuarioInfo.nombre + ' hizo un nuevo registro de conteo fisico con el nombre de ' + nombre + ' observaciones: ' + observaciones)
-
-                    // Limpiar el localStorage y cerrar la vista previa
                     localStorage.removeItem('damabrava_stock_fisico');
-                    ocultarAnuncioSecond();
+                    cerrarAnuncioManual('anuncioSecond');
                 } else {
                     throw new Error(data.error || 'Error al registrar el conteo');
                 }
@@ -678,7 +667,7 @@ function eventosConteo() {
                 type: 'success',
                 duration: 3000
             });
-            ocultarAnuncioSecond();
+            cerrarAnuncioManual('anuncioSecond');
         }
     }
 

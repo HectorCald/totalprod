@@ -1,4 +1,3 @@
-let usuarioInfo;
 let pedidosGlobal = [];
 let productos = [];
 let proovedoresAcopioGlobal = [];
@@ -34,13 +33,6 @@ async function obtenerProovedoresAcopio() {
         });
         return false;
     }
-}
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
 }
 async function obtenerPedidos() {
     try {
@@ -128,7 +120,8 @@ function renderInitialHTML() {
                 </div>
 
                 <div class="acciones-grande">
-                    <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> <span>Descargar pedidos</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar pedidos</span></button>
+                    <button class="nuevo-pedido btn blue"><i class='bx bx-plus'></i> <span>Nuevo pedido</span></button>
                 </div>
             </div>
             
@@ -160,14 +153,14 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar pedidos</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar pedidos</button>
+            <button class="nuevo-pedido btn blue"><i class='bx bx-plus'></i> Nuevo pedido</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '80px';
 }
 export async function mostrarPedidos() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
@@ -180,7 +173,6 @@ export async function mostrarPedidos() {
     ]);
 
     updateHTMLWithData();
-    eventosPedidos();
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -202,17 +194,19 @@ function updateHTMLWithData() {
                         `<span class="cantidad-pedida">(${pedido.cantidadEntregadaUnd || 'No registrado'}) </span>` : ''
         }
                     </span>
-                    <span class="fecha" data-fecha="${pedido.estado==='Pendiente' ? pedido.fecha : pedido.estado==='Recibido' ? pedido.fechaEntrega : pedido.estado==='Ingresado'? pedido.fechaIngreso : ''}">${pedido.estado==='Pendiente' ? pedido.fecha : pedido.estado==='Recibido' ? pedido.fechaEntrega : pedido.estado==='Ingresado'? pedido.fechaIngreso : ''}</span>
+                    <span class="fecha" data-fecha="${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}">${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}</span>
                 </div>
             </div>
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosPedidos();
 }
 
 
 function eventosPedidos() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnNuevoPedido = document.querySelectorAll('.nuevo-pedido');
     const registrosAExportar = pedidosGlobal;
 
     const botonesNombre = document.querySelectorAll('.filtros-opciones.nombre .btn-filtro');
@@ -287,11 +281,11 @@ function eventosPedidos() {
                 }
             }
             let fechaFiltrar = '';
-            if(registroData.estado === 'Pendiente') {
+            if (registroData.estado === 'Pendiente') {
                 fechaFiltrar = registroData.fecha;
-            }else if(registroData.estado === 'Recibido') {
+            } else if (registroData.estado === 'Recibido') {
                 fechaFiltrar = registroData.fechaEntrega;
-            }else if(registroData.estado === 'Ingresado') {
+            } else if (registroData.estado === 'Ingresado') {
                 fechaFiltrar = registroData.fechaIngreso;
             }
 
@@ -359,6 +353,10 @@ function eventosPedidos() {
         }, 100);
     }
     botonesNombre.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroNombreActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -368,6 +366,10 @@ function eventosPedidos() {
         });
     });
     botonesEstado.forEach(boton => {
+        if(boton.classList.contains('activado')){
+            filtroEstadoActual = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
@@ -478,7 +480,7 @@ function eventosPedidos() {
             ${registro.estado === 'No llego' && usuarioInfo.rol === 'Administración' ? `
                 <button class="btn-llego btn yellow" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Llego</button>
             ` : ''}
-            ${tienePermiso('edicion') && registro.estado !== 'Recibido'? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+            ${tienePermiso('edicion') && registro.estado !== 'Recibido' ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
             ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
         </div>
         `;
@@ -501,7 +503,7 @@ function eventosPedidos() {
         const btnLlego = contenido.querySelector('.btn-llego');
 
 
-        if (tienePermiso('edicion')&& registro.estado !== 'Recibido') {
+        if (tienePermiso('edicion') && registro.estado !== 'Recibido') {
             const btnEditar = contenido.querySelector('.btn-editar');
             btnEditar.addEventListener('click', () => editar(registro));
         }
@@ -596,7 +598,10 @@ function eventosPedidos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerPedidos();
                         ocultarCarga();
+                        cerrarAnuncioManual('anuncioSecond');
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido eliminado correctamente',
                             type: 'success',
@@ -606,9 +611,6 @@ function eventosPedidos() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro de pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarPedidos();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el pedido');
                     }
@@ -845,7 +847,10 @@ function eventosPedidos() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerPedidos();
                         ocultarCarga();
+                        info(registroId)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido actualizado correctamente',
                             type: 'success',
@@ -855,9 +860,6 @@ function eventosPedidos() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el registro pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + datosActualizados.motivo)
-
-                        ocultarAnuncioSecond();
-                        await mostrarPedidos();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el pedido');
                     }
@@ -1082,11 +1084,14 @@ function eventosPedidos() {
                                 },
                                 body: JSON.stringify(pagoParcial)
                             });
+                            await obtenerPedidos();
                             ocultarCarga();
+                            info(registroId)
+                            updateHTMLWithData();
                             registrarNotificacion(
                                 'Administración',
                                 'Información',
-                                usuarioInfo.nombre + ' registro un nuevo pago pendiente generico de materia prima del monto: Bs./'+totalPago+' del producto: '+registro.producto)
+                                usuarioInfo.nombre + ' registro un nuevo pago pendiente generico de materia prima del monto: Bs./' + totalPago + ' del producto: ' + registro.producto)
 
                             // Actualizar mensaje de compras y notificar éxito
                             if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
@@ -1108,11 +1113,6 @@ function eventosPedidos() {
                                 'Administración',
                                 'Información',
                                 usuarioInfo.nombre + ' hizo la entrega/compra de materia prima del producto: ' + registro.producto + ' con el id de registro: ' + registro.id)
-
-
-                            ocultarAnuncioTercer();
-                            ocultarAnuncioSecond();
-                            await mostrarPedidos();
                         }
                     } else {
                         throw new Error(entregaData.error || 'Error al entregar el pedido');
@@ -1198,7 +1198,10 @@ function eventosPedidos() {
 
                     const data = await response.json();
                     if (data.success) {
+                        await obtenerPedidos();
                         ocultarCarga();
+                        info(registroId)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido rechazado correctamente',
                             type: 'success',
@@ -1208,10 +1211,6 @@ function eventosPedidos() {
                             'Administración',
                             'Información',
                             usuarioInfo.nombre + ' realizo el rechazo del pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
-
-                        cerrarAnuncioManual('anuncioTercer');
-                        cerrarAnuncioManual('anuncioSecond');
-                        await mostrarPedidos();
                     }
                 } catch (error) {
                     mostrarNotificacion({
@@ -1235,7 +1234,10 @@ function eventosPedidos() {
 
                 const data = await response.json();
                 if (data.success) {
+                    await obtenerPedidos();
                     ocultarCarga();
+                    info(registroId)
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Se cambio el estado a llego',
                         type: 'success',
@@ -1245,9 +1247,6 @@ function eventosPedidos() {
                         'Administración',
                         'Información',
                         usuarioInfo.nombre + ' se cambio el estado del registro: ' + registro.producto + ' con el id: ' + registro.id + ' se cambio de "no llego" a "llego" ')
-                    cerrarAnuncioManual('anuncioTercer');
-                    cerrarAnuncioManual('anuncioSecond');
-                    await mostrarPedidos();
                 }
             } catch (error) {
                 mostrarNotificacion({
@@ -1308,6 +1307,9 @@ function eventosPedidos() {
         if (!anuncioSecond) return;
         mostrarMensajeCompras();
     };
+    btnNuevoPedido.forEach(btn => {
+        btn.addEventListener('click', mostrarHacerPedido);
+    });
     btnExcel.forEach(btn => {
         btn.addEventListener('click', () => exportarArchivos('pedidos-acopio', registrosAExportar));
     });

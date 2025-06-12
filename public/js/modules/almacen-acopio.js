@@ -1,14 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo;
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
+
 async function obtenerEtiquetasAcopio() {
     try {
         const response = await fetch('/obtener-etiquetas-acopio');
@@ -72,7 +65,6 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarAlmacenAcopio() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -86,7 +78,6 @@ export async function mostrarAlmacenAcopio() {
     ]);
 
     updateHTMLWithData(); // Update HTML once data is loaded
-    eventosAlmacenAcopio();
 }
 function renderInitialHTML() {
 
@@ -114,7 +105,7 @@ function renderInitialHTML() {
             </div>
             
             <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
+                <button class="btn-filtro todos activado">Todos</button>
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
@@ -160,15 +151,20 @@ function renderInitialHTML() {
     }
 }
 function updateHTMLWithData() {
-    // Update etiquetas filter
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
+    const skeletons = etiquetasFilter.querySelectorAll('.skeleton');
+    skeletons.forEach(s => s.remove());
+
+    const etiquetasExistentes = etiquetasFilter.querySelectorAll('.btn-filtro:not(.todos)');
+    etiquetasExistentes.forEach(e => e.remove());
+
     const etiquetasHTML = etiquetasAcopio.map(etiqueta => `
-        <button class="btn-filtro">${etiqueta.etiqueta}</button>
+    <button class="btn-filtro">${etiqueta.etiqueta}</button>
     `).join('');
-    etiquetasFilter.innerHTML = `
-        <button class="btn-filtro activado">Todos</button>
-        ${etiquetasHTML}
-    `;
+
+    etiquetasFilter.insertAdjacentHTML('beforeend', etiquetasHTML);
+
+
 
     // Update productos
     const productosContainer = document.querySelector('.productos-container');
@@ -203,6 +199,7 @@ function updateHTMLWithData() {
         }).join('');
         productosContainer.innerHTML = productosHTML;
     }
+    eventosAlmacenAcopio();
 }
 
 
@@ -252,9 +249,13 @@ function eventosAlmacenAcopio() {
     });
 
     let pesoMostrado = 'bruto';
-    let filtroNombreActual = 'Todos';
+    let filtroNombreActual = localStorage.getItem('filtroEtiquetaAcopio') || 'Todos';
 
     botonesCantidad.forEach((boton, index) => {
+        if(boton.classList.contains('activado')){
+            pesoMostrado = boton.textContent.trim();
+            aplicarFiltros();
+        }
         boton.addEventListener('click', () => {
             // Si es botón de peso (Bruto/Prima)
             if (index === 4 || index === 5) {
@@ -292,14 +293,20 @@ function eventosAlmacenAcopio() {
         });
     }
     botonesEtiquetas.forEach(boton => {
+        boton.classList.remove('activado');
+        if (boton.textContent.trim() === filtroNombreActual) {
+            boton.classList.add('activado');
+        }
         boton.addEventListener('click', () => {
             botonesEtiquetas.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
             filtroNombreActual = boton.textContent.trim();
             aplicarFiltros();
             scrollToCenter(boton, boton.parentElement);
+            localStorage.setItem('filtroEtiquetaAcopio', filtroNombreActual);
         });
     });
+    
 
 
     inputBusqueda.addEventListener('focus', function () {
@@ -601,7 +608,10 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerAlmacenAcopio();
                         ocultarCarga();
+                        updateHTMLWithData();
+                        cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
                             message: 'Producto eliminado correctamente',
                             type: 'success',
@@ -611,12 +621,6 @@ function eventosAlmacenAcopio() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        setTimeout(() => {
-                            ocultarAnuncioTercer();
-                        }, 100)
-                        await mostrarAlmacenAcopio();
                     } else {
                         throw new Error(data.error || 'Error al eliminar el producto');
                     }
@@ -852,7 +856,10 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
 
                     if (data.success) {
+                        await obtenerAlmacenAcopio();
                         ocultarCarga();
+                        info(registroId)
+                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Producto actualizado correctamente',
                             type: 'success',
@@ -862,12 +869,6 @@ function eventosAlmacenAcopio() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
-
-                        ocultarAnuncioSecond();
-                        setTimeout(() => {
-                            ocultarAnuncioTercer();
-                        }, 100)
-                        await mostrarAlmacenAcopio();
                     } else {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }
@@ -963,6 +964,7 @@ function eventosAlmacenAcopio() {
     `;
 
         contenido.innerHTML = registrationHTML;
+        contenido.style.paddingBottom = '80px';
 
         // Event handlers for tags
         const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
@@ -1045,13 +1047,16 @@ function eventosAlmacenAcopio() {
                 const data = await response.json();
 
                 if (data.success) {
-                    await mostrarAlmacenAcopio();
+                    const newFila = data.id;
+                    await obtenerAlmacenAcopio();
+                    ocultarCarga();
+                    info(newFila)
+                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Producto creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    ocultarAnuncioSecond();
                 } else {
                     throw new Error(data.error || 'Error al crear el producto');
                 }
@@ -1124,14 +1129,16 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetasAcopio();
-                        await mostrarAlmacenAcopio();
+                        ocultarCarga();
+                        updateHTMLWithData();
+                        gestionarEtiquetas();
                         document.querySelector('.nueva-etiqueta').value = '';
                         mostrarNotificacion({
                             message: 'Etiqueta agregada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        gestionarEtiquetas();
+
                     }
                 } catch (error) {
                     mostrarNotificacion({
@@ -1160,14 +1167,15 @@ function eventosAlmacenAcopio() {
 
                     const data = await response.json();
                     if (data.success) {
-                        await mostrarAlmacenAcopio();
                         await obtenerEtiquetasAcopio();
+                        ocultarCarga();
+                        updateHTMLWithData();
+                        gestionarEtiquetas();
                         mostrarNotificacion({
                             message: 'Etiqueta eliminada correctamente',
                             type: 'success',
                             duration: 3000
                         });
-                        gestionarEtiquetas();
                     }
                 } catch (error) {
                     mostrarNotificacion({

@@ -1,15 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
-let usuarioInfo;
 let carritoPedidos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_pedidos') || '[]'));
 
-function recuperarUsuarioLocal() {
-    const usuarioGuardado = localStorage.getItem('damabrava_usuario');
-    if (usuarioGuardado) {
-        return JSON.parse(usuarioGuardado);
-    }
-    return null;
-}
 async function obtenerEtiquetasAcopio() {
     try {
         const response = await fetch('/obtener-etiquetas-acopio');
@@ -83,7 +75,6 @@ async function obtenerAlmacenAcopio() {
 
 
 export async function mostrarHacerPedido() {
-    usuarioInfo = recuperarUsuarioLocal();
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
     setTimeout(() => {
@@ -610,8 +601,6 @@ function eventosPedidos() {
     function actualizarCarritoLocal() {
         localStorage.setItem('damabrava_carrito_pedidos', JSON.stringify(Array.from(carritoPedidos.entries())));
     }
-
-    // Agregar al inicio del archivo junto a las otras variables globales
     let mensajePedido = localStorage.getItem('damabrava_mensaje_pedido') || 'Pedido de materia prima:\n• Sin productos en el pedido';
 
     // Modificar la función registrarPedido
@@ -679,11 +668,7 @@ function eventosPedidos() {
                     'Administración',
                     'Creación',
                     usuarioInfo.nombre + ' registro un nuevo pedido de materia prima del producto: '+nombre+' '+cantidad)
-
-                // Mostrar el formato del pedido
                 mostrarMensajePedido();
-
-
                 await mostrarHacerPedido();
             } else {
                 throw new Error(data.error || 'Error al registrar el pedido');
