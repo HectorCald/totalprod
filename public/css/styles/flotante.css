@@ -29,11 +29,11 @@
 
 /* Animation classes */
 .slide-in-flotante {
-    animation: slideInf 0.3s ease-out forwards;
+    animation: slideInf 0.4s ease-out forwards;
 }
 
 .slide-out-flotante {
-    animation: slideOutf 0.3s ease-out forwards;
+    animation: slideOutf 0.4s ease-out forwards;
 }
 
 @keyframes slideInf {
@@ -55,6 +55,7 @@
     to {
         opacity: 0;
         transform: scale(0.95);
+        display: none;
     }
 }
 .flotante .notificacion .indicador {

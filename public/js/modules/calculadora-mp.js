@@ -603,7 +603,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete')
 
                     const response = await fetch(`/eliminar-calculo-mp/${registro.id}`, {
                         method: 'DELETE',
@@ -621,7 +621,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerCalculosMP();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -632,6 +631,10 @@ function eventosVerificacion() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el cálculo',
@@ -639,7 +642,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete')
                 }
             });
         }
@@ -767,7 +770,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit')
 
                     // Obtener datos de productos
                     const productos = Array.from(document.querySelectorAll('.producto-item')).map(item => ({
@@ -805,7 +808,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerCalculosMP();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -816,6 +818,10 @@ function eventosVerificacion() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el registro',
@@ -823,7 +829,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit')
                 }
             });
         }
@@ -879,7 +885,8 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-peso')
+
                     const response = await fetch(`/agregar-peso-final-mp/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -896,7 +903,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerCalculosMP();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -907,6 +913,10 @@ function eventosVerificacion() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al agregar el peso final',
@@ -914,7 +924,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-peso')
                 }
             });
         }
@@ -1120,7 +1130,7 @@ function eventosVerificacion() {
                     };
                 });
 
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-registro')
 
                 const response = await fetch('/registrar-calculo-mp', {
                     method: 'POST',
@@ -1139,7 +1149,6 @@ function eventosVerificacion() {
 
                 if (data.success) {
                     await obtenerCalculosMP();
-                    ocultarCarga();
                     info(data.id);
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -1152,6 +1161,10 @@ function eventosVerificacion() {
                 }
 
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear el registro',
@@ -1159,7 +1172,7 @@ function eventosVerificacion() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-registro')
             }
         });
     }

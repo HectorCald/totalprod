@@ -7,7 +7,7 @@ let configuracionHorario = {
 
 async function verificarHorarioProduccion() {
     try {
-        mostrarCarga();
+        mostrarProgreso('.pro-obtner')
         const response = await fetch('/obtener-configuraciones');
         const data = await response.json();
 
@@ -46,18 +46,22 @@ async function verificarHorarioProduccion() {
         };
     } catch (error) {
         console.error('Error al verificar horario:', error);
+        if (error.message === 'cancelled') {
+            console.log('Operación cancelada por el usuario');
+            return;
+        }
         return {
             permitido: false,
             horario: 'Error al verificar horario'
         };
     } finally {
-        ocultarCarga();
+        ocultarProgreso('.pro-obtner')
     }
 }
 
 async function obtenerProductos() {
     try {
-        mostrarCarga();
+        mostrarProgreso('.pro-obtner')
         const response = await fetch('/obtener-productos-form');
         const data = await response.json();
 
@@ -79,9 +83,13 @@ async function obtenerProductos() {
             type: 'error',
             duration: 3500
         });
+        if (error.message === 'cancelled') {
+            console.log('Operación cancelada por el usuario');
+            return;
+        }
         return false;
     } finally {
-        ocultarCarga();
+        ocultarProgreso('.pro-obtner')
     }
 }
 export async function mostrarFormularioProduccion() {
@@ -355,7 +363,7 @@ function evetosFormularioProduccion() {
             }
     
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-registro')
                 const response = await fetch('/registrar-produccion', {
                     method: 'POST',
                     headers: {
@@ -391,6 +399,10 @@ function evetosFormularioProduccion() {
                     throw new Error(data.error || 'Error al registrar la producción');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error en registro:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar la producción',
@@ -398,7 +410,7 @@ function evetosFormularioProduccion() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-registro')
             }
         });
     });

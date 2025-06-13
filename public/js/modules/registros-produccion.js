@@ -215,7 +215,7 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
                     <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> <span>Nuevo registro</span></button>
                 </div>
             </div>
@@ -246,7 +246,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar</button>
             <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> Nuevo registro</button>
         </div>
     `;
@@ -354,7 +354,7 @@ function eventosMisRegistros() {
     });
     botonesEstado.forEach(boton => {
         if(boton.classList.contains('activado')){
-            filtroNombreActual = boton.textContent.trim();
+            filtroNombreActual = boton.textContent.trim().toLowerCase();
             aplicarFiltros();
         }
         boton.addEventListener('click', async () => {
@@ -644,9 +644,7 @@ function eventosMisRegistros() {
                 }
 
                 try {
-                    mostrarCarga();
-
-                    // Aseguramos que la URL sea correcta
+                    const signal = await mostrarProgreso('.pro-delete');
                     const response = await fetch(`/eliminar-registro-produccion/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -662,7 +660,6 @@ function eventosMisRegistros() {
 
                     if (data.success) {
                         await obtenerMisRegistros();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -682,6 +679,10 @@ function eventosMisRegistros() {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el registro',
@@ -689,7 +690,7 @@ function eventosMisRegistros() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             }
         }
@@ -871,8 +872,7 @@ function eventosMisRegistros() {
                 }
 
                 try {
-                    mostrarCarga();
-
+                    const signal = await mostrarProgreso('.pro-edit');
                     const response = await fetch(`/editar-registro-produccion/${registroId}`, {
                         method: 'PUT',
                         headers: {
@@ -900,7 +900,6 @@ function eventosMisRegistros() {
 
                     if (data.success) {
                         await obtenerMisRegistros();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -920,14 +919,18 @@ function eventosMisRegistros() {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message || 'Error al actualizar el registro',
+                        message: error.message || 'Error al procesar la operación',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             }
         }
@@ -988,7 +991,7 @@ function eventosMisRegistros() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-anulado');
                     const response = await fetch(`/anular-verificacion-produccion/${registroId}`, {
                         method: 'PUT',
                         headers: {
@@ -1005,7 +1008,6 @@ function eventosMisRegistros() {
 
                     if (data.success) {
                         await obtenerMisRegistros();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1025,6 +1027,10 @@ function eventosMisRegistros() {
                         throw new Error(data.error || 'Error al anular la verificación');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular la verificación',
@@ -1032,7 +1038,7 @@ function eventosMisRegistros() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-anulado');
                 }
             }
         }

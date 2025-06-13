@@ -33,15 +33,19 @@ async function obtenerPagos() {
 }
 async function cargarPagosParciales(pagoId) {
     try {
-        mostrarCarga();
+        const signal = await mostrarProgreso('.pro-obtner')
         const response = await fetch(`/obtener-pagos-parciales/${pagoId}`);
         const data = await response.json();
         return data;
     } catch (error) {
         console.error('Error:', error);
+        if (error.message === 'cancelled') {
+            console.log('Operación cancelada por el usuario');
+            return null;
+        }
         return null;
     } finally {
-        ocultarCarga();
+        ocultarProgreso('.pro-obtner')
     }
 }
 
@@ -591,7 +595,7 @@ function eventosPagos() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-anulado');
                     const response = await fetch(`/anular-pago/${pago.id}`, {
                         method: 'PUT',
                         headers: {
@@ -604,7 +608,7 @@ function eventosPagos() {
 
                     if (data.success) {
                         await obtenerPagos();
-                        ocultarCarga();
+                        ocultarProgreso('.pro-anulado');
                         info(pagoId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -620,6 +624,10 @@ function eventosPagos() {
                         throw new Error(data.error || 'Error al anular el pago');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular el pago',
@@ -627,7 +635,7 @@ function eventosPagos() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-anulado');
                 }
             }
         }
@@ -741,7 +749,7 @@ function eventosPagos() {
                         }
 
                         try {
-                            mostrarCarga();
+                            const signal = await mostrarProgreso('.pro-pago');
                             const response = await fetch('/registrar-pago-parcial', {
                                 method: 'POST',
                                 headers: {
@@ -760,7 +768,7 @@ function eventosPagos() {
 
                             if (data.success) {
                                 await obtenerPagos();
-                                ocultarCarga();
+                                ocultarProgreso('.pro-pago');
                                 info(pagoId);
                                 cargarPagosParciales(pago.id);
                                 updateHTMLWithData();
@@ -777,6 +785,10 @@ function eventosPagos() {
                                 throw new Error(data.error);
                             }
                         } catch (error) {
+                            if (error.message === 'cancelled') {
+                                console.log('Operación cancelada por el usuario');
+                                return;
+                            }
                             console.error('Error:', error);
                             mostrarNotificacion({
                                 message: error.message || 'Error al realizar el pago',
@@ -784,7 +796,7 @@ function eventosPagos() {
                                 duration: 3500
                             });
                         } finally {
-                            ocultarCarga();
+                            ocultarProgreso('.pro-pago');
                         }
                     });
                 }
@@ -914,7 +926,7 @@ function eventosPagos() {
         const btnGuardar = contenido.querySelector('.btn-guardar');
         btnGuardar.addEventListener('click', async () => {
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-pago');
                 const formData = new FormData(document.getElementById('formNuevoPago'));
                 const data = Object.fromEntries(formData.entries());
 
@@ -942,7 +954,7 @@ function eventosPagos() {
 
                 if (result.success) {
                     await obtenerPagos();
-                    ocultarCarga();
+                    ocultarProgreso('.pro-pago');
                     info(result.id);
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
@@ -957,6 +969,10 @@ function eventosPagos() {
                     throw new Error(result.error);
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar el pago',
@@ -964,7 +980,7 @@ function eventosPagos() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-pago');
             }
         });
     }

@@ -331,7 +331,7 @@ function eventosTareas() {
         }, 100);
     }
     botonesEstado.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroEstadoActual = boton.textContent.trim();
             aplicarFiltros();
         }
@@ -539,7 +539,11 @@ function eventosTareas() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
                     const response = await fetch(`/eliminar-tarea/${registro.id}`, {
                         method: 'DELETE',
@@ -557,7 +561,6 @@ function eventosTareas() {
 
                     if (data.success) {
                         await obtenerTareas();
-                        ocultarCarga();
                         updateHTMLWithData();
                         cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
@@ -568,6 +571,10 @@ function eventosTareas() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar la tarea',
@@ -575,7 +582,7 @@ function eventosTareas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             });
         }
@@ -767,9 +774,12 @@ function eventosTareas() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
-                    // Obtener procedimientos actualizados
                     const procedimientos = Array.from(
                         contenido.querySelectorAll('.etiquetas-actuales .etiqueta-item span')
                     ).map(span => span.textContent.trim());
@@ -800,7 +810,6 @@ function eventosTareas() {
 
                     if (data.success) {
                         await obtenerTareas();
-                        ocultarCarga();
                         info(registro.id)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -810,6 +819,10 @@ function eventosTareas() {
                         });
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar la tarea',
@@ -817,7 +830,7 @@ function eventosTareas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             });
         }
@@ -996,7 +1009,11 @@ function eventosTareas() {
                         return;
                     }
 
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-save');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
                     const response = await fetch(`/finalizar-tarea/${registro.id}`, {
                         method: 'PUT',
@@ -1017,7 +1034,6 @@ function eventosTareas() {
 
                     if (data.success) {
                         await obtenerTareas();
-                        ocultarCarga();
                         info(registro.id)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1028,6 +1044,10 @@ function eventosTareas() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al finalizar la tarea',
@@ -1035,7 +1055,7 @@ function eventosTareas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-save');
                 }
             });
         }
@@ -1101,7 +1121,12 @@ function eventosTareas() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-new');
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
+
                 const response = await fetch('/agregar-tarea-lista', {
                     method: 'POST',
                     headers: {
@@ -1127,6 +1152,10 @@ function eventosTareas() {
                 }
 
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al agregar la tarea',
@@ -1134,7 +1163,7 @@ function eventosTareas() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-new');
             }
         });
 
@@ -1144,7 +1173,12 @@ function eventosTareas() {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+
                     const response = await fetch(`/eliminar-tarea-lista/${id}`, {
                         method: 'DELETE'
                     });
@@ -1166,6 +1200,10 @@ function eventosTareas() {
                     }
 
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar la tarea',
@@ -1173,7 +1211,7 @@ function eventosTareas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             });
         });
@@ -1266,7 +1304,11 @@ function eventosTareas() {
                     return;
                 }
 
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-registro');
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
 
                 const response = await fetch('/registrar-tarea', {
                     method: 'POST',
@@ -1284,7 +1326,6 @@ function eventosTareas() {
 
                 if (data.success) {
                     await obtenerTareas();
-                    ocultarCarga();
                     cerrarAnuncioManual('anuncioSecond');
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -1297,6 +1338,10 @@ function eventosTareas() {
                 }
 
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear la tarea',
@@ -1304,7 +1349,7 @@ function eventosTareas() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-registro');
             }
         });
     }

@@ -547,7 +547,7 @@ function eventosPedidos(producto, pedido) {
 
         async function procesarIngreso() {
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-ingreso')
                 const [id, item] = Array.from(carritoIngresosAcopio.entries())[0];
                 const nombreMovimiento = document.querySelector('.nombre-movimiento').value;
                 const tipoMateria = document.querySelector('.tipo-materia').value;
@@ -614,7 +614,7 @@ function eventosPedidos(producto, pedido) {
                 localStorage.setItem('damabrava_mensaje_ingresos', mensajeIngresos);
                 carritoIngresosAcopio.clear();
                 localStorage.setItem('damabrava_ingreso_acopio', '[]');
-                ocultarCarga();
+                ocultarProgreso('.pro-ingreso')
                 mostrarNotificacion({
                     message: 'Ingreso registrado correctamente',
                     type: 'success',
@@ -631,14 +631,18 @@ function eventosPedidos(producto, pedido) {
                     await mostrarIngresosAcopio();
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al procesar el ingreso',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-ingreso')
             }
         }
     }

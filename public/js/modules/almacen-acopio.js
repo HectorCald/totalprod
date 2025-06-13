@@ -591,8 +591,7 @@ function eventosAlmacenAcopio() {
                 }
 
                 try {
-                    mostrarCarga();
-
+                    const signal = await mostrarProgreso('.pro-delete')
                     const response = await fetch(`/eliminar-producto-acopio/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -609,7 +608,6 @@ function eventosAlmacenAcopio() {
 
                     if (data.success) {
                         await obtenerAlmacenAcopio();
-                        ocultarCarga();
                         updateHTMLWithData();
                         cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
@@ -625,6 +623,10 @@ function eventosAlmacenAcopio() {
                         throw new Error(data.error || 'Error al eliminar el producto');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el producto',
@@ -632,7 +634,7 @@ function eventosAlmacenAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete')
                 }
             }
         }
@@ -836,8 +838,7 @@ function eventosAlmacenAcopio() {
                         });
                         return;
                     }
-
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit')
 
                     const response = await fetch(`/editar-producto-acopio/${registroId}`, {
                         method: 'PUT',
@@ -857,7 +858,6 @@ function eventosAlmacenAcopio() {
 
                     if (data.success) {
                         await obtenerAlmacenAcopio();
-                        ocultarCarga();
                         info(registroId)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -873,14 +873,18 @@ function eventosAlmacenAcopio() {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message || 'Error al actualizar el producto',
+                        message: error.message || 'Error al procesar la operación',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit')
                 }
             }
         }
@@ -1028,7 +1032,7 @@ function eventosAlmacenAcopio() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-new');
                 const response = await fetch('/crear-producto-acopio', {
                     method: 'POST',
                     headers: {
@@ -1049,7 +1053,6 @@ function eventosAlmacenAcopio() {
                 if (data.success) {
                     const newFila = data.id;
                     await obtenerAlmacenAcopio();
-                    ocultarCarga();
                     info(newFila)
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -1061,14 +1064,18 @@ function eventosAlmacenAcopio() {
                     throw new Error(data.error || 'Error al crear el producto');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al crear el producto',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-new');
             }
         }
     }
@@ -1117,7 +1124,7 @@ function eventosAlmacenAcopio() {
             const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
             if (nuevaEtiqueta) {
                 try {
-                    mostrarCarga();
+                    mostrarProgreso('.pro-tag');
                     const response = await fetch('/agregar-etiqueta-acopio', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1129,7 +1136,6 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetasAcopio();
-                        ocultarCarga();
                         updateHTMLWithData();
                         gestionarEtiquetas();
                         document.querySelector('.nueva-etiqueta').value = '';
@@ -1141,13 +1147,18 @@ function eventosAlmacenAcopio() {
 
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message,
+                        message: error.message || 'Error al procesar la operación',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-tag');
                 }
             }
         });
@@ -1158,7 +1169,7 @@ function eventosAlmacenAcopio() {
                     const etiquetaItem = e.target.closest('.etiqueta-item');
                     const etiquetaId = etiquetaItem.dataset.id;
 
-                    mostrarCarga();
+                    mostrarProgreso('.pro-tag');
                     const response = await fetch(`/eliminar-etiqueta-acopio/${etiquetaId}`, {
                         method: 'DELETE'
                     });
@@ -1168,7 +1179,6 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetasAcopio();
-                        ocultarCarga();
                         updateHTMLWithData();
                         gestionarEtiquetas();
                         mostrarNotificacion({
@@ -1178,13 +1188,18 @@ function eventosAlmacenAcopio() {
                         });
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message,
+                        message: error.message || 'Error al procesar la operación',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-tag');
                 }
             }
         });

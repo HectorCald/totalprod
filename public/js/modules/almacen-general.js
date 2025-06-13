@@ -329,7 +329,7 @@ function renderInitialHTML() {
                 </div>
                 ${tienePermiso('creacion') ? `
                 <div class="acciones-grande">
-                    <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Crear</span></button>
+                    <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Nuevo</span></button>
                     <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  <span>Etiquetas</span></button>
                     <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> <span>Precios</span></button>
                 </div>
@@ -373,7 +373,7 @@ function renderInitialHTML() {
 
         ${tienePermiso('creacion') ? `
         <div class="anuncio-botones">
-            <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
+            <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Nuevo</button>
             <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> Etiquetas</button>
             <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> Precios</button>
         </div>
@@ -765,6 +765,7 @@ function eventosAlmacenGeneral() {
         contenido.style.paddingBottom = '10px';
         mostrarAnuncioSecond();
 
+
         if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
             contenido.style.paddingBottom = '80px';
         }
@@ -835,8 +836,7 @@ function eventosAlmacenGeneral() {
                 }
 
                 try {
-                    mostrarCarga();
-
+                    const signal = await mostrarProgreso('.pro-delete')
                     const response = await fetch(`/eliminar-producto/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -853,7 +853,6 @@ function eventosAlmacenGeneral() {
 
                     if (data.success) {
                         await obtenerAlmacenGeneral();
-                        ocultarCarga();
                         updateHTMLWithData();
                         cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
@@ -869,6 +868,10 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al eliminar el producto');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el producto',
@@ -876,7 +879,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete')
                 }
             }
         }
@@ -1088,54 +1091,6 @@ function eventosAlmacenGeneral() {
             const btnEditarProducto = contenido.querySelector('.btn-editar-producto');
             btnEditarProducto.addEventListener('click', confirmarEdicionProducto);
 
-            async function procesarImagen(file) {
-                return new Promise((resolve, reject) => {
-                    if (!file || !file.type.startsWith('image/')) {
-                        reject(new Error('Solo se permiten archivos de imagen'));
-                        return;
-                    }
-
-                    const img = new Image();
-                    const reader = new FileReader();
-
-                    reader.onload = function (e) {
-                        img.src = e.target.result;
-                    };
-
-                    img.onload = function () {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        const MAX_SIZE = 500;
-                        if (width > height && width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
-                        } else if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        const calidad = /Mobile|Android|iPhone/i.test(navigator.userAgent) ? 0.5 : 0.7;
-                        const imagenBase64 = canvas.toDataURL('image/jpeg', calidad);
-
-                        if (imagenBase64.length > 2000000) {
-                            reject(new Error('La imagen es demasiado grande, intenta con una más pequeña'));
-                            return;
-                        }
-
-                        resolve(imagenBase64);
-                    };
-
-                    reader.readAsDataURL(file);
-                });
-            }
-
             async function confirmarEdicionProducto() {
                 try {
                     // Crear FormData para enviar la imagen y los datos
@@ -1196,7 +1151,7 @@ function eventosAlmacenGeneral() {
                         formData.append('imagen', imagenInput.files[0]);
                     }
 
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit')
 
                     const response = await fetch(`/actualizar-producto/${registroId}`, {
                         method: 'PUT',
@@ -1211,7 +1166,6 @@ function eventosAlmacenGeneral() {
 
                     if (data.success) {
                         await obtenerAlmacenGeneral();
-                        ocultarCarga();
                         info(registroId)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1228,6 +1182,10 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el producto',
@@ -1235,7 +1193,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit')
                 }
             }
         }
@@ -1434,7 +1392,7 @@ function eventosAlmacenGeneral() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-new')
                 const response = await fetch('/crear-producto', {
                     method: 'POST',
                     headers: {
@@ -1458,7 +1416,6 @@ function eventosAlmacenGeneral() {
 
                 if (data.success) {
                     await obtenerAlmacenGeneral();
-                    ocultarCarga();
                     updateHTMLWithData();
                     info(data.id)
                     mostrarNotificacion({
@@ -1474,6 +1431,10 @@ function eventosAlmacenGeneral() {
                     throw new Error(data.error || 'Error al crear el producto');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear el producto',
@@ -1481,7 +1442,7 @@ function eventosAlmacenGeneral() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-new')
             }
         }
     }
@@ -1532,7 +1493,7 @@ function eventosAlmacenGeneral() {
             const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
             if (nuevaEtiqueta) {
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-tag')
                     const response = await fetch('/agregar-etiqueta', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1544,8 +1505,7 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetas();
-                        ocultarCarga();
-                        await updateHTMLWithData();
+                        updateHTMLWithData();
                         gestionarEtiquetas();
                         document.querySelector('.nueva-etiqueta').value = '';
                         mostrarNotificacion({
@@ -1555,23 +1515,27 @@ function eventosAlmacenGeneral() {
                         });
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     mostrarNotificacion({
                         message: error.message,
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-tag')
                 }
             }
         });
         etiquetasActuales.addEventListener('click', async (e) => {
             if (e.target.closest('.btn-quitar-etiqueta')) {
                 try {
+                    const signal = await mostrarProgreso('.pro-tag')
                     const etiquetaItem = e.target.closest('.etiqueta-item');
                     const etiquetaId = etiquetaItem.dataset.id;
 
-                    mostrarCarga();
                     const response = await fetch(`/eliminar-etiqueta/${etiquetaId}`, {
                         method: 'DELETE'
                     });
@@ -1581,8 +1545,7 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetas();
-                        ocultarCarga();
-                        await updateHTMLWithData();
+                        updateHTMLWithData();
                         gestionarEtiquetas();
                         mostrarNotificacion({
                             message: 'Etiqueta eliminada correctamente',
@@ -1591,13 +1554,17 @@ function eventosAlmacenGeneral() {
                         });
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     mostrarNotificacion({
                         message: error.message,
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-tag')
                 }
             }
         });
@@ -1659,7 +1626,7 @@ function eventosAlmacenGeneral() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-price')
                 const response = await fetch('/agregar-precio', {
                     method: 'POST',
                     headers: {
@@ -1672,7 +1639,6 @@ function eventosAlmacenGeneral() {
 
                 if (data.success) {
                     await obtenerPrecios();
-                    ocultarCarga();
                     updateHTMLWithData();
                     gestionarPrecios();
                     nuevoPrecioInput.value = '';
@@ -1686,6 +1652,10 @@ function eventosAlmacenGeneral() {
                     throw new Error(data.error || 'Error al agregar el precio');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al agregar el precio',
@@ -1693,7 +1663,7 @@ function eventosAlmacenGeneral() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-price')
             }
         });
         const inputExcel = contenido.querySelector('#excel-precios');
@@ -1771,7 +1741,7 @@ function eventosAlmacenGeneral() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-price')
                     const formData = new FormData();
                     formData.append('file', file);
                     formData.append('motivo', motivo);
@@ -1784,7 +1754,6 @@ function eventosAlmacenGeneral() {
                     const data = await response.json();
 
                     if (data.success) {
-                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Precios actualizados correctamente',
                             type: 'success',
@@ -1800,13 +1769,17 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al procesar la planilla');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     mostrarNotificacion({
                         message: error.message,
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-price')
                 }
             });
 
@@ -1817,7 +1790,7 @@ function eventosAlmacenGeneral() {
                 const precioId = precioItem.dataset.id;
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-price')
                     const response = await fetch(`/eliminar-precio/${precioId}`, {
                         method: 'DELETE'
                     });
@@ -1830,7 +1803,6 @@ function eventosAlmacenGeneral() {
 
                     if (data.success) {
                         await obtenerPrecios();
-                        ocultarCarga();
                         updateHTMLWithData();
                         gestionarPrecios();
                         precioItem.remove();
@@ -1843,6 +1815,10 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al eliminar el precio');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el precio',
@@ -1850,7 +1826,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-price')
                 }
             }
         });

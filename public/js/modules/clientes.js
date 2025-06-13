@@ -33,7 +33,6 @@ async function obtenerClientes() {
 }
 
 
-
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -274,7 +273,7 @@ function eventosClientes() {
 
                 </div>
                 <div class="anuncio-botones">
-                    <button class="btn-eliminar-cliente-confirmar btn red"><i class="bx bx-trash"></i> Eliminar</button>
+                    <button class="btn-eliminar-cliente-confirmar btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
                 </div>
             `;
             contenido.innerHTML = registrationHTML;
@@ -295,14 +294,13 @@ function eventosClientes() {
                 }
     
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
                     const response = await fetch(`/eliminar-cliente/${clienteId}`, {
                         method: 'DELETE'
                     });
                     const data = await response.json();
                     if (data.success) {
                         await obtenerClientes();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -318,6 +316,10 @@ function eventosClientes() {
                         throw new Error('Error al eliminar el cliente');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el cliente',
@@ -325,7 +327,7 @@ function eventosClientes() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             });
         }
@@ -409,7 +411,7 @@ function eventosClientes() {
                 }
     
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
                     const response = await fetch(`/editar-cliente/${clienteId}`, {
                         method: 'PUT',
                         headers: {
@@ -420,7 +422,6 @@ function eventosClientes() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerClientes();
-                        ocultarCarga();
                         info(clienteId)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -436,6 +437,10 @@ function eventosClientes() {
                         throw new Error('Error al actualizar el cliente');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el cliente',
@@ -443,7 +448,7 @@ function eventosClientes() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             });
         }
@@ -518,7 +523,7 @@ function eventosClientes() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-user');
                 const response = await fetch('/agregar-cliente', {
                     method: 'POST',
                     headers: {
@@ -531,7 +536,6 @@ function eventosClientes() {
 
                 if (data.success) {
                     await obtenerClientes();
-                    ocultarCarga();
                     updateHTMLWithData();
                     info(data.id);
                     mostrarNotificacion({
@@ -547,6 +551,10 @@ function eventosClientes() {
                     throw new Error('Error al crear el cliente');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear el cliente',
@@ -554,7 +562,7 @@ function eventosClientes() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-user');
             }
         });
     }

@@ -518,7 +518,7 @@ function eventosRegistrosAcopio() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete')
                     const response = await fetch(`/eliminar-movimiento-acopio/${registro.id}`, {
                         method: 'DELETE',
                         headers: {
@@ -531,7 +531,6 @@ function eventosRegistrosAcopio() {
 
                     if (data.success) {
                         await obtenerMovimientosAcopio();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -547,6 +546,10 @@ function eventosRegistrosAcopio() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: 'Error al eliminar el registro',
@@ -554,7 +557,7 @@ function eventosRegistrosAcopio() {
                         duration: 3000
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete')
                 }
             });
         }
@@ -620,7 +623,7 @@ function eventosRegistrosAcopio() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-anulado')
                     const response = await fetch(`/anular-movimiento-acopio/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -633,7 +636,6 @@ function eventosRegistrosAcopio() {
 
                     if (data.success) {
                         await obtenerMovimientosAcopio();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -649,6 +651,10 @@ function eventosRegistrosAcopio() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular el registro',
@@ -656,7 +662,7 @@ function eventosRegistrosAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-anulado')
                 }
             });
         }

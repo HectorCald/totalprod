@@ -2,6 +2,7 @@ const CACHE_NAME = 'totalprod-v7'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
+    '/img',
     '/js/dashboard.js',
     '/css/dashboard.css',
     '/js/modules/home.js',

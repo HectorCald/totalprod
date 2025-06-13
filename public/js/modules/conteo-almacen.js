@@ -580,7 +580,7 @@ function eventosConteo() {
         // Modificar la función del botón registrar en vistaPreviaConteo
         document.getElementById('registrar-conteo').addEventListener('click', async () => {
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-registro');
                 const stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
                 const observaciones = document.querySelector('.Observaciones').value;
                 const nombre = document.querySelector('.nombre-conteo').value;
@@ -616,7 +616,6 @@ function eventosConteo() {
                 const data = await response.json();
 
                 if (data.success) {
-                    ocultarCarga();
                     mostrarNotificacion({
                         message: 'Conteo registrado correctamente',
                         type: 'success',
@@ -632,14 +631,18 @@ function eventosConteo() {
                     throw new Error(data.error || 'Error al registrar el conteo');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: 'Error al registrar el conteo',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-registro');
             }
         });
         const restaurarConteo = document.getElementById('restaurar-conteo');

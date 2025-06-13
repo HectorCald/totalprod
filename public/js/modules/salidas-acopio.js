@@ -491,7 +491,7 @@ function eventosPedidos() {
     }
     async function procesarSalida() {
         try {
-            mostrarCarga();
+            const signal = await mostrarProgreso('.pro-salida')
             const [id, item] = Array.from(carritoIngresosAcopio.entries())[0];
 
             const tipoMateria = document.querySelector('.tipo-materia').value;
@@ -551,7 +551,7 @@ function eventosPedidos() {
             });
 
             if (!movimientoResponse.ok) throw new Error('Error al registrar movimiento');
-            ocultarCarga();
+            ocultarProgreso('.pro-salida');
             mostrarNotificacion({
                 message: 'Salida registrada correctamente',
                 type: 'success',
@@ -567,14 +567,18 @@ function eventosPedidos() {
             await mostrarSalidasAcopio();
 
         } catch (error) {
+            if (error.message === 'cancelled') {
+                console.log('Operación cancelada por el usuario');
+                return;
+            }
             console.error('Error:', error);
             mostrarNotificacion({
-                message: error.message || 'Error al procesar la salida',
+                message: error.message || 'Error al procesar la operación',
                 type: 'error',
                 duration: 3500
             });
         } finally {
-            ocultarCarga();
+            ocultarProgreso('.pro-salida');
         }
     }
     function agregarAlCarrito(productoId) {

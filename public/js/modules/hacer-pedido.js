@@ -615,7 +615,7 @@ function eventosPedidos() {
                 return;
             }
 
-            mostrarCarga();
+            const signal = await mostrarProgreso('.pro-pedido')
 
             // Format products from cart
             const productosParaEnviar = Array.from(carritoPedidos.entries()).map(([id, item]) => {
@@ -658,7 +658,7 @@ function eventosPedidos() {
                 // Clear cart
                 carritoPedidos.clear();
                 localStorage.setItem('damabrava_carrito_pedidos', '[]');
-                ocultarCarga();
+                ocultarProgreso('.pro-pedido');
                 mostrarNotificacion({
                     message: 'Pedido registrado correctamente',
                     type: 'success',
@@ -674,14 +674,18 @@ function eventosPedidos() {
                 throw new Error(data.error || 'Error al registrar el pedido');
             }
         } catch (error) {
+            if (error.message === 'cancelled') {
+                console.log('Operación cancelada por el usuario');
+                return;
+            }
             console.error('Error:', error);
             mostrarNotificacion({
-                message: error.message,
+                message: error.message || 'Error al procesar la operación',
                 type: 'error',
                 duration: 3500
             });
         } finally {
-            ocultarCarga();
+            ocultarProgreso('.pro-pedido');
         }
     }
 

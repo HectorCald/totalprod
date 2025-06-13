@@ -1100,9 +1100,7 @@ function eventosIngresos() {
         registroIngreso.total = registroIngreso.subtotal - registroIngreso.descuento + registroIngreso.aumento;
 
         try {
-            mostrarCarga();
-
-            // Primero registramos el movimiento
+            const signal = await mostrarProgreso('.pro-ingreso');
             const response = await fetch('/registrar-movimiento', {
                 method: 'POST',
                 headers: {
@@ -1146,8 +1144,6 @@ function eventosIngresos() {
             carritoSalidas.clear();
             localStorage.removeItem('damabrava_carrito_ingresos');
             document.querySelector('.btn-flotante-ingresos').style.display = 'none';
-
-            ocultarCarga();
             mostrarNotificacion({
                 message: 'Ingreso registrado exitosamente',
                 type: 'success',
@@ -1157,16 +1153,21 @@ function eventosIngresos() {
                 'Administración',
                 'Creación',
                 usuarioInfo.nombre + 'registro un ingreso al almacen' + ' de: ' + proovedorSelect.value)
+            ocultarProgreso('.pro-ingreso');
             await mostrarIngresos();
         } catch (error) {
-            console.error('Error al procesar el ingreso:', error);
+            if (error.message === 'cancelled') {
+                console.log('Operación cancelada por el usuario');
+                return;
+            }
+            console.error('Error:', error);
             mostrarNotificacion({
-                message: 'Error al procesar el ingreso: ' + error.message,
+                message: error.message || 'Error al procesar la operación',
                 type: 'error',
                 duration: 3500
             });
         } finally {
-            ocultarCarga();
+            ocultarProgreso('.pro-ingreso');
         }
     }
     window.registrarIngreso = registrarIngreso;

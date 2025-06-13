@@ -47,7 +47,6 @@ export async function mostrarPersonal() {
     ]);
 
     updateHTMLWithData();
-    eventosPersonal();
 }
 function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
@@ -93,7 +92,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${persona.id}<span class="${persona.rol==='Sin rol'? 'pendiente' : 'rol'} ">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
+                    <span class="id">${persona.id}<span class="${persona.rol === 'Sin rol' ? 'pendiente' : 'rol'} ">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
                     <span class="nombre"><strong>${persona.nombre}</strong></span>
                     <span class="fecha">${persona.email}<span class="punto-referencia">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>`}</span></span>
                 </div>
@@ -101,6 +100,7 @@ function updateHTMLWithData() {
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosPersonal();
 }
 
 
@@ -300,7 +300,7 @@ function eventosPersonal() {
                 .join(',');
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-user');
                 const response = await fetch(`/actualizar-usuario-admin/${usuario.id}`, {
                     method: 'PUT',
                     headers: {
@@ -316,7 +316,6 @@ function eventosPersonal() {
 
                 if (response.ok) {
                     await obtenerPersonal();
-                    ocultarCarga();
                     info(userId);
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -327,19 +326,23 @@ function eventosPersonal() {
                     registrarNotificacion(
                         'Administración',
                         'Edición',
-                        usuarioInfo.nombre + ' realizo cambios en el perfil de: '+usuario.nombre+' que es parte del personal de la empresa')
+                        usuarioInfo.nombre + ' realizo cambios en el perfil de: ' + usuario.nombre + ' que es parte del personal de la empresa')
                 } else {
                     throw new Error('Error al actualizar el usuario');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al actualizar el usuario',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-user');
             }
         });
     };

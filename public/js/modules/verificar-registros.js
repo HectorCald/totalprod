@@ -326,7 +326,7 @@ function renderInitialHTML() {
                 </div>
             </div>
             <div class="filtros-opciones etiquetas-filter">
-                <button class="btn-filtro activado">Todos</button>
+                <button class="btn-filtro activado" data-user="Todos">Todos</button>
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
@@ -397,7 +397,7 @@ function updateHTMLWithData() {
 
     // 4. Insertar en el DOM
     etiquetasFilter.innerHTML = `
-    <button class="btn-filtro activado">Todos</button>
+    <button class="btn-filtro activado" data-user="Todos">Todos</button>
     ${etiquetasHTML}
   `;
 
@@ -455,7 +455,7 @@ function eventosVerificacion() {
 
 
     let filtroFechaInstance = null;
-    let filtroNombreActual = localStorage.getItem('filtroNombresProduccion') || 'Todos';
+    let filtroNombreActual = localStorage.getItem('filtroNombresProduccion') === 'undefined'? 'Todos':localStorage.getItem('filtroNombresProduccion') ;
     let filtroEstadoActual = 'Todos';
 
     function normalizarTexto(texto) {
@@ -566,8 +566,10 @@ function eventosVerificacion() {
     
     botonesNombre.forEach(boton => {
         boton.classList.remove('activado');
-        if (boton.dataset.user === filtroNombreActual) {
-            boton.classList.add('activado');
+        if(filtroNombreActual !== 'todos'){
+            if (boton.dataset.user === filtroNombreActual) {
+                boton.classList.add('activado');
+            }
         }
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
@@ -814,9 +816,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
-
-                    // Aseguramos que la URL sea correcta
+                    const signal = await mostrarProgreso('.pro-delete')
                     const response = await fetch(`/eliminar-registro-produccion/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -832,7 +832,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerRegistrosProduccion();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -852,6 +851,10 @@ function eventosVerificacion() {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el registro',
@@ -859,7 +862,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete')
                 }
             }
         }
@@ -1024,8 +1027,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
-
+                    const signal = await mostrarProgreso('.pro-edit')
                     const response = await fetch(`/editar-registro-produccion/${registroId}`, {
                         method: 'PUT',
                         headers: {
@@ -1052,7 +1054,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerRegistrosProduccion();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1072,6 +1073,10 @@ function eventosVerificacion() {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el registro',
@@ -1079,7 +1084,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit')
                 }
             }
         }
@@ -1161,7 +1166,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-verificado')
                     const registro = registrosProduccion.find(r => r.id === registroId);
 
                     const response = await fetch(`/verificar-registro-produccion/${registroId}`, {
@@ -1183,7 +1188,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerRegistrosProduccion();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1203,6 +1207,10 @@ function eventosVerificacion() {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al verificar el registro',
@@ -1210,7 +1218,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-verificado')
                 }
             }
         }
@@ -1271,7 +1279,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-anulado')
                     const response = await fetch(`/anular-verificacion-produccion/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -1288,7 +1296,6 @@ function eventosVerificacion() {
 
                     if (data.success) {
                         await obtenerRegistrosProduccion();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1309,6 +1316,10 @@ function eventosVerificacion() {
                         throw new Error(data.error || 'Error al anular la verificación');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular la verificación',
@@ -1316,14 +1327,13 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-anulado')
                 }
             }
         }
         async function arreglado(registro) {
             try {
-                mostrarCarga();
-
+                const signal = await mostrarProgreso('.pro-edit')
                 const response = await fetch(`/actualizar-observaciones-registro/${registro.id}`, {
                     method: 'PUT',
                     headers: {
@@ -1342,7 +1352,6 @@ function eventosVerificacion() {
 
                 if (data.success) {
                     await obtenerRegistrosProduccion();
-                    ocultarCarga();
                     info(registroId);
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -1354,6 +1363,10 @@ function eventosVerificacion() {
                     throw new Error(data.error || 'Error al marcar como arreglado');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al marcar como arreglado',
@@ -1361,7 +1374,7 @@ function eventosVerificacion() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-edit')
             }
         }
 
@@ -1718,7 +1731,7 @@ function eventosVerificacion() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-pago')
                 const response = await fetch('/registrar-pago', {
                     method: 'POST',
                     headers: {
@@ -1730,7 +1743,6 @@ function eventosVerificacion() {
                 const data = await response.json();
 
                 if (data.success) {
-                    ocultarCarga();
                     cerrarAnuncioManual('anuncioSecond');
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
@@ -1745,6 +1757,10 @@ function eventosVerificacion() {
                     throw new Error(data.error || 'Error al registrar el pago');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar el pago',
@@ -1752,7 +1768,7 @@ function eventosVerificacion() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-pago')
             }
         }
     }

@@ -300,14 +300,13 @@ function eventosProovedores() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
                     const response = await fetch(`/eliminar-proovedor/${proovedorId}`, {
                         method: 'DELETE'
                     });
                     const data = await response.json();
                     if (data.success) {
                         await obtenerProovedores();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -323,6 +322,10 @@ function eventosProovedores() {
                         throw new Error('Error al eliminar el proovedor');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el proovedor',
@@ -330,7 +333,7 @@ function eventosProovedores() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             });
         }
@@ -414,7 +417,7 @@ function eventosProovedores() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
                     const response = await fetch(`/editar-proovedor/${proovedorId}`, {
                         method: 'PUT',
                         headers: {
@@ -425,7 +428,6 @@ function eventosProovedores() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerProovedores();
-                        ocultarCarga();
                         info(proovedorId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -441,6 +443,10 @@ function eventosProovedores() {
                         throw new Error('Error al actualizar el proovedor');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el proovedor',
@@ -448,7 +454,7 @@ function eventosProovedores() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             });
         }
@@ -522,7 +528,7 @@ function eventosProovedores() {
             }
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-user');
                 const response = await fetch('/agregar-proovedor', {
                     method: 'POST',
                     headers: {
@@ -533,7 +539,6 @@ function eventosProovedores() {
                 const data = await response.json();
                 if (data.success) {
                     await obtenerProovedores();
-                    ocultarCarga();
                     info(data.id);
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -549,6 +554,10 @@ function eventosProovedores() {
                     throw new Error('Error al crear el proovedor');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear el proovedor',
@@ -556,7 +565,7 @@ function eventosProovedores() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-user');
             }
         });
     }

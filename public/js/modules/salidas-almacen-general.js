@@ -1036,8 +1036,7 @@ function eventosSalidas() {
         registroSalida.total = registroSalida.subtotal - registroSalida.descuento + registroSalida.aumento;
 
         try {
-            mostrarCarga();
-
+            const signal = await mostrarProgreso('.pro-salida')
             // Primero registramos el movimiento
             const response = await fetch('/registrar-movimiento', {
                 method: 'POST',
@@ -1083,7 +1082,7 @@ function eventosSalidas() {
             localStorage.removeItem('damabrava_carrito');
             document.querySelector('.btn-flotante-salidas').style.display = 'none';
 
-            ocultarCarga();
+            ocultarProgreso('.pro-salida')
             mostrarNotificacion({
                 message: 'Salida registrada exitosamente',
                 type: 'success',
@@ -1096,14 +1095,18 @@ function eventosSalidas() {
 
             await mostrarSalidas();
         } catch (error) {
-            console.error('Error al procesar la salida:', error);
+            if (error.message === 'cancelled') {
+                console.log('Operación cancelada por el usuario');
+                return;
+            }
+            console.error('Error:', error);
             mostrarNotificacion({
-                message: 'Error al procesar la salida: ' + error.message,
+                message: error.message || 'Error al procesar la operación',
                 type: 'error',
                 duration: 3500
             });
         } finally {
-            ocultarCarga();
+            ocultarProgreso('.pro-salida')
         }
     }
     window.registrarSalida = registrarSalida;

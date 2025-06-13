@@ -403,9 +403,7 @@ function eventosReglas() {
                 }
 
                 try {
-                    mostrarCarga();
-
-                    // Aseguramos que la URL sea correcta
+                    const signal = await mostrarProgreso('.pro-delete');
                     const response = await fetch(`/eliminar-regla/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -421,7 +419,6 @@ function eventosReglas() {
 
                     if (data.success) {
                         await obtenerReglas();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -433,6 +430,10 @@ function eventosReglas() {
                         throw new Error(data.error || 'Error al eliminar la regla');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar la regla',
@@ -440,7 +441,7 @@ function eventosReglas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             }
         }
@@ -667,7 +668,7 @@ function eventosReglas() {
 
         async function confirmarCreacion(tipo) {
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-registro');
                 let producto = '';
                 let gramajeMin = null;
                 let gramajeMax = null;
@@ -720,7 +721,6 @@ function eventosReglas() {
                 const result = await response.json();
                 if (result.success) {
                     await obtenerReglas();
-                    ocultarCarga();
                     info(result.id);
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -732,14 +732,18 @@ function eventosReglas() {
                     throw new Error(result.error || 'Error al guardar la regla');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al guardar la regla',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
-                    duration: 3000
+                    duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-registro');
             }
         }
     }
@@ -818,8 +822,7 @@ function eventosReglas() {
             }
 
             try {
-                mostrarCarga();
-
+                const signal = await mostrarProgreso('.pro-edit');
                 const response = await fetch(`/actualizar-precios-base`, {
                     method: 'PUT',
                     headers: {
@@ -841,7 +844,6 @@ function eventosReglas() {
 
                 if (data.success) {
                     await obtenerReglas();
-                    ocultarCarga();
                     updateHTMLWithData();
                     verPreciosBase();
                     mostrarNotificacion({
@@ -853,14 +855,18 @@ function eventosReglas() {
                     throw new Error(data.error || 'Error al actualizar los precios base');
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al actualizar los precios base',
+                    message: error.message || 'Error al procesar la operación',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-edit');
             }
         }
     }

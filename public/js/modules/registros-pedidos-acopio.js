@@ -120,7 +120,7 @@ function renderInitialHTML() {
                 </div>
 
                 <div class="acciones-grande">
-                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar pedidos</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
                     <button class="nuevo-pedido btn blue"><i class='bx bx-plus'></i> <span>Nuevo pedido</span></button>
                 </div>
             </div>
@@ -153,7 +153,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar pedidos</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar</button>
             <button class="nuevo-pedido btn blue"><i class='bx bx-plus'></i> Nuevo pedido</button>
         </div>
     `;
@@ -581,7 +581,11 @@ function eventosPedidos() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
                     const response = await fetch(`/eliminar-pedido/${registro.id}`, {
                         method: 'DELETE',
@@ -599,7 +603,6 @@ function eventosPedidos() {
 
                     if (data.success) {
                         await obtenerPedidos();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -615,6 +618,10 @@ function eventosPedidos() {
                         throw new Error(data.error || 'Error al eliminar el pedido');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el pedido',
@@ -622,7 +629,7 @@ function eventosPedidos() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             }
         }
@@ -834,7 +841,11 @@ function eventosPedidos() {
                         return;
                     }
 
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
                     const response = await fetch(`/editar-pedido/${registro.id}`, {
                         method: 'PUT',
@@ -848,7 +859,6 @@ function eventosPedidos() {
 
                     if (data.success) {
                         await obtenerPedidos();
-                        ocultarCarga();
                         info(registroId)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -864,6 +874,10 @@ function eventosPedidos() {
                         throw new Error(data.error || 'Error al actualizar el pedido');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el pedido',
@@ -871,7 +885,7 @@ function eventosPedidos() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             }
         }
@@ -1013,7 +1027,11 @@ function eventosPedidos() {
                         return;
                     }
 
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-pedido');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
 
                     // 1. Registrar la entrega del pedido
                     const entregaResponse = await fetch(`/entregar-pedido/${registro.id}`, {
@@ -1085,7 +1103,6 @@ function eventosPedidos() {
                                 body: JSON.stringify(pagoParcial)
                             });
                             await obtenerPedidos();
-                            ocultarCarga();
                             info(registroId)
                             updateHTMLWithData();
                             registrarNotificacion(
@@ -1118,6 +1135,10 @@ function eventosPedidos() {
                         throw new Error(entregaData.error || 'Error al entregar el pedido');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error en la operación',
@@ -1125,7 +1146,7 @@ function eventosPedidos() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-pedido');
                 }
             }
         }
@@ -1189,7 +1210,12 @@ function eventosPedidos() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-pack');
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+
                     const response = await fetch(`/rechazar-pedido/${idPedido}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -1199,7 +1225,6 @@ function eventosPedidos() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerPedidos();
-                        ocultarCarga();
                         info(registroId)
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -1213,20 +1238,30 @@ function eventosPedidos() {
                             usuarioInfo.nombre + ' realizo el rechazo del pedido de: ' + registro.producto + ' con el id: ' + registro.id + ' por el motivo de: ' + motivo)
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    console.error('Error:', error);
                     mostrarNotificacion({
                         message: 'Error al rechazar el pedido',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-pack');
                 }
             };
         }
         async function llego(registro) {
 
             try {
-                mostrarCarga();
+                const signal = await mostrarProgreso('.pro-pack');
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
+
                 const response = await fetch(`/llego-pedido/${registro.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -1235,7 +1270,6 @@ function eventosPedidos() {
                 const data = await response.json();
                 if (data.success) {
                     await obtenerPedidos();
-                    ocultarCarga();
                     info(registroId)
                     updateHTMLWithData();
                     mostrarNotificacion({
@@ -1249,13 +1283,18 @@ function eventosPedidos() {
                         usuarioInfo.nombre + ' se cambio el estado del registro: ' + registro.producto + ' con el id: ' + registro.id + ' se cambio de "no llego" a "llego" ')
                 }
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
+                console.error('Error:', error);
                 mostrarNotificacion({
                     message: 'Error al rechazar el pedido',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-pack');
             }
         };
 

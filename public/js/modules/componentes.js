@@ -3,7 +3,7 @@ export function activarProteccionNavegacion() {
     paginaProtegida = true;
     // Reemplazar el estado actual para bloquear el retroceso
     history.replaceState({ protegida: true, nivel: 0 }, '', window.location.href);
-    
+
     // Agregar una entrada adicional al historial para crear una "barrera"
     history.pushState({ protegida: true, nivel: 0 }, '', window.location.href);
 }
@@ -69,7 +69,7 @@ function ocultarAnuncioTercerFisico() {
 export function cerrarAnuncioManual(tipo) {
     if (estadoAnuncios.bloqueado) return;
     estadoAnuncios.bloqueado = true;
-    
+
     try {
         const estadoDOM = obtenerEstadoRealDOM();
         const nivelActual = calcularNivelReal(estadoDOM);
@@ -103,7 +103,7 @@ export function cerrarAnuncioManual(tipo) {
         }
 
         actualizarEstadoInterno();
-        
+
         // NUEVO: Limpiar entradas de historial fantasma
         const entradasAEliminar = nivelActual - nivelDestino;
         if (entradasAEliminar > 0) {
@@ -114,19 +114,19 @@ export function cerrarAnuncioManual(tipo) {
             // Actualizar el contador
             estadoAnuncios.entradasHistorial = Math.max(0, estadoAnuncios.entradasHistorial - entradasAEliminar);
         }
-        
+
         // Actualizar el estado actual
         if (paginaProtegida) {
-            history.replaceState({ 
-                protegida: true, 
-                nivel: nivelDestino 
+            history.replaceState({
+                protegida: true,
+                nivel: nivelDestino
             }, '', window.location.href);
         } else {
-            history.replaceState({ 
-                nivel: nivelDestino 
+            history.replaceState({
+                nivel: nivelDestino
             }, '', window.location.href);
         }
-        
+
     } finally {
         setTimeout(() => {
             estadoAnuncios.bloqueado = false;
@@ -137,7 +137,7 @@ export async function mostrarAnuncio() {
     const anuncio = document.querySelector('.anuncio');
     const anuncioSecond = document.querySelector('.anuncio-second');
     const contenido = document.querySelector('.anuncio .contenido');
-    contenido.style.maxWidth='100%'
+    contenido.style.maxWidth = '100%'
 
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
@@ -147,19 +147,19 @@ export async function mostrarAnuncio() {
 
         // Agregar al historial
         if (paginaProtegida) {
-            history.pushState({ 
-                protegida: true, 
-                nivel: 1, 
-                tipo: 'anuncio' 
+            history.pushState({
+                protegida: true,
+                nivel: 1,
+                tipo: 'anuncio'
             }, '', window.location.href);
         } else {
-            history.pushState({ 
-                nivel: 1, 
-                tipo: 'anuncio' 
+            history.pushState({
+                nivel: 1,
+                tipo: 'anuncio'
             }, '', window.location.href);
         }
         estadoAnuncios.entradasHistorial++;
-    }else if(anuncioSecond && anuncioSecond.classList.contains('mostrar')){
+    } else if (anuncioSecond && anuncioSecond.classList.contains('mostrar')) {
         cerrarAnuncioManual('anuncioSecond');
     }
 }
@@ -173,22 +173,22 @@ export async function mostrarAnuncioSecond() {
         actualizarEstadoInterno();
 
         if (paginaProtegida) {
-            history.pushState({ 
-                protegida: true, 
-                nivel: 2, 
-                tipo: 'anuncioSecond' 
+            history.pushState({
+                protegida: true,
+                nivel: 2,
+                tipo: 'anuncioSecond'
             }, '', window.location.href);
         } else {
-            history.pushState({ 
-                nivel: 2, 
-                tipo: 'anuncioSecond' 
+            history.pushState({
+                nivel: 2,
+                tipo: 'anuncioSecond'
             }, '', window.location.href);
         }
-        
+
         // Actualizar contador de entradas
         estadoAnuncios.entradasHistorial++;
 
-    } else if(anuncioTercer && anuncioTercer.classList.contains('mostrar')){
+    } else if (anuncioTercer && anuncioTercer.classList.contains('mostrar')) {
         cerrarAnuncioManual('anuncioTercer');
     }
     configuracionesEntrada();
@@ -201,18 +201,18 @@ export async function mostrarAnuncioTercer() {
         actualizarEstadoInterno();
 
         if (paginaProtegida) {
-            history.pushState({ 
-                protegida: true, 
-                nivel: 3, 
-                tipo: 'anuncioTercer' 
+            history.pushState({
+                protegida: true,
+                nivel: 3,
+                tipo: 'anuncioTercer'
             }, '', window.location.href);
         } else {
-            history.pushState({ 
-                nivel: 3, 
-                tipo: 'anuncioTercer' 
+            history.pushState({
+                nivel: 3,
+                tipo: 'anuncioTercer'
             }, '', window.location.href);
         }
-        
+
         // Actualizar contador de entradas
         estadoAnuncios.entradasHistorial++;
     }
@@ -247,13 +247,13 @@ window.addEventListener('popstate', (event) => {
     if (estadoAnuncios.bloqueado) return;
 
     const state = event.state;
-    
+
     // Si es una página protegida y no tiene el flag de protección, bloquear
     if (paginaProtegida && (!state || !state.protegida)) {
         // Restaurar el estado protegido
-        history.pushState({ 
-            protegida: true, 
-            nivel: estadoAnuncios.nivelActual 
+        history.pushState({
+            protegida: true,
+            nivel: estadoAnuncios.nivelActual
         }, '', window.location.href);
         return;
     }
@@ -297,11 +297,11 @@ export function resetearEstadoAnuncios() {
     cerrarAnunciosPorNivel(0);
     estadoAnuncios.bloqueado = false;
     estadoAnuncios.entradasHistorial = 0; // Resetear contador
-    
+
     if (paginaProtegida) {
-        history.replaceState({ 
-            protegida: true, 
-            nivel: 0 
+        history.replaceState({
+            protegida: true,
+            nivel: 0
         }, '', window.location.href);
     } else {
         history.replaceState({ nivel: 0 }, '', window.location.href);
@@ -871,3 +871,95 @@ export let usuarioInfo = {
     plugins: '',
     permisos: ''
 };
+
+
+
+let controladorCancelacion = null;
+let contadorInterval = null;
+
+export function mostrarProgreso(tipo) {
+    // Limpiar estado previo
+    if (contadorInterval) {
+        clearInterval(contadorInterval);
+    }
+    if (controladorCancelacion) {
+        controladorCancelacion.abort();
+    }
+
+    // Crear nuevo controlador de cancelación al inicio
+    controladorCancelacion = new AbortController();
+
+    const div = document.querySelector(tipo);
+    const botonesCancelar = document.querySelectorAll(
+        '.pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
+    );
+    let contador = 3;
+
+    // Mostrar el div de progreso
+    div.style.display = 'flex';
+    div.classList.remove('slide-out-flotante');
+    div.classList.add('slide-in-flotante');
+
+    return new Promise((resolve, reject) => {
+        // Configurar botones y listeners inmediatamente
+        botonesCancelar.forEach(btn => {
+            btn.style.display = 'flex';
+            btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar (${contador})</span>`;
+            
+            // Configurar el listener para cancelar durante el conteo
+            btn.onclick = () => {
+                clearInterval(contadorInterval);
+                ocultarProgreso(tipo);
+                mostrarNotificacion({
+                    message: 'Operación cancelada',
+                    type: 'warning',
+                    duration: 3000
+                });
+                controladorCancelacion.abort();
+                reject(new Error('cancelled'));
+            };
+        });
+
+        contadorInterval = setInterval(() => {
+            contador--;
+            
+            if (contador > 0) {
+                botonesCancelar.forEach(btn => {
+                    btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar (${contador})</span>`;
+                });
+            } else {
+                clearInterval(contadorInterval);
+                
+                botonesCancelar.forEach(btn => {
+                    btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar</span>`;
+                });
+
+                resolve(controladorCancelacion.signal);
+            }
+        }, 1000);
+    });
+}
+
+export function ocultarProgreso(tipo) {
+    if (contadorInterval) {
+        clearInterval(contadorInterval);
+        contadorInterval = null;
+    }
+    
+    const div = document.querySelector(tipo);
+    // Ocultar todos los botones de cancelar
+    const botonesCancelar = document.querySelectorAll(
+        '.pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
+      );
+    
+    botonesCancelar.forEach(btn => {
+        btn.style.display = 'none';
+    });
+
+    div.classList.remove('slide-in-flotante');
+    div.classList.add('slide-out-flotante');
+    
+    setTimeout(() => {
+        div.style.display = 'none';
+    }, 300);
+}

@@ -15,7 +15,9 @@ import { crearNotificacion,
     actualizarPermisos,
     inicializarDashboard,
     limpiarProteccionNavegacion,
-    usuarioInfo, 
+    usuarioInfo,
+    mostrarProgreso,
+    ocultarProgreso,
     registrarNotificacion } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
@@ -75,6 +77,8 @@ window.exportarArchivos = exportarArchivos
 window.registrarNotificacion = registrarNotificacion
 window.inicializarDashboard = inicializarDashboard
 window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
+window.mostrarProgreso = mostrarProgreso
+window.ocultarProgreso = ocultarProgreso
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarVerificacion = mostrarVerificacion

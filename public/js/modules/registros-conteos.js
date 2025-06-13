@@ -373,7 +373,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-delete');
                     const response = await fetch(`/eliminar-conteo/${registro.id}`, {
                         method: 'DELETE',
                         headers: {
@@ -386,7 +386,6 @@ function eventosRegistrosConteo() {
 
                     if (data.success) {
                         await obtenerRegistrosConteo();
-                        ocultarCarga();
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -402,14 +401,18 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: 'Error al eliminar el registro',
+                        message: error.message || 'Error al eliminar el registro',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-delete');
                 }
             });
         }
@@ -489,7 +492,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
                     const response = await fetch(`/editar-conteo/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -506,7 +509,6 @@ function eventosRegistrosConteo() {
 
                     if (data.success) {
                         await obtenerRegistrosConteo();
-                        ocultarCarga();
                         info(registroId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -522,14 +524,18 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error || 'Error al actualizar el conteo');
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: 'Error al actualizar el conteo',
+                        message: error.message || 'Error al actualizar el conteo',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             });
         }
@@ -592,7 +598,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    mostrarCarga();
+                    const signal = await mostrarProgreso('.pro-edit');
                     const response = await fetch(`/sobreescribir-inventario/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -605,7 +611,6 @@ function eventosRegistrosConteo() {
 
                     if (data.success) {
                         await mostrarAlmacenGeneral();
-                        ocultarCarga();
                         mostrarNotificacion({
                             message: 'Inventario actualizado correctamente',
                             type: 'success',
@@ -619,6 +624,10 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al sobreescribir el inventario',
@@ -626,7 +635,7 @@ function eventosRegistrosConteo() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarCarga();
+                    ocultarProgreso('.pro-edit');
                 }
             });
         }
