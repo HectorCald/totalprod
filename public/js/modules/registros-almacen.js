@@ -1,6 +1,38 @@
 let registrosAlmacen = [];
 let proovedores = [];
 let clientes = [];
+const DB_NAME = 'damabrava_db';
+const REGISTROS_ALMACEN_STORE = 'registros_almacen';
+
+async function initDB() {
+    return new Promise((resolve, reject) => {
+        // Primero intentar obtener la versión actual de la base de datos
+        const request = indexedDB.open(DB_NAME);
+        
+        request.onerror = () => reject(request.error);
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const currentVersion = db.version;
+            db.close();
+            
+            // Abrir la base de datos con la versión actual + 1
+            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
+            
+            upgradeRequest.onerror = () => reject(upgradeRequest.error);
+            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+            
+            upgradeRequest.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Crear o actualizar los object stores
+                if (!db.objectStoreNames.contains(REGISTROS_ALMACEN_STORE)) {
+                    db.createObjectStore(REGISTROS_ALMACEN_STORE, { keyPath: 'id' });
+                }
+            };
+        };
+    });
+}
 async function obtenerProovedores() {
     try {
         const response = await fetch('/obtener-proovedores');
@@ -64,6 +96,18 @@ async function obtenerClientes() {
 }
 async function obtenerRegistrosAlmacen() {
     try {
+
+        const registrosCacheAlmacen = await obtenerRegistrosLocal();
+        
+        // Si hay registros en caché, actualizar la UI inmediatamente
+        if (registrosCacheAlmacen.length > 0) {
+            registrosAlmacen = registrosCacheAlmacen.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            updateHTMLWithData();
+        }
         const response = await fetch('/obtener-movimientos-almacen');
         const data = await response.json();
 
@@ -74,6 +118,34 @@ async function obtenerRegistrosAlmacen() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA; // Orden descendente por número de ID
             });
+            // Actualizar UI si los datos son diferentes
+            if (JSON.stringify(registrosCacheAlmacen) !== JSON.stringify(registrosAlmacen)) {
+                console.log('Son diferentes')
+
+                // Limpiar y actualizar el caché con los nuevos registros
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
+                    const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+                    
+                    // Limpiar todos los registros existentes
+                    await store.clear();
+                    
+                    // Guardar los nuevos registros
+                    for (const registro of registrosAlmacen) {
+                        await store.put({
+                            id: registro.id,
+                            data: registro,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
+                    console.log('Caché actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché:', error);
+                }
+                updateHTMLWithData();
+            }
             return true;
 
         } else {
@@ -87,9 +159,6 @@ async function obtenerRegistrosAlmacen() {
             duration: 3500
         });
         return false;
-    }
-    finally {
-        ocultarCarga();
     }
 }
 
@@ -164,7 +233,6 @@ export async function mostrarMovimientosAlmacen() {
         obtenerClientes(),
         obtenerProovedores()
     ]);
-
     updateHTMLWithData();
 }
 function updateHTMLWithData() {
@@ -188,6 +256,7 @@ function updateHTMLWithData() {
 
 
 function eventosRegistrosAlmacen() {
+    console.log('eventos')
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = registrosAlmacen;
 
@@ -257,7 +326,6 @@ function eventosRegistrosAlmacen() {
     botonesTipo.forEach(boton => {
         if(boton.classList.contains('activado')){
             filtroNombreActual = boton.textContent.trim();
-            aplicarFiltros();
         }
         boton.addEventListener('click', async () => {
             botonesTipo.forEach(b => b.classList.remove('activado'));
@@ -291,6 +359,7 @@ function eventosRegistrosAlmacen() {
             .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
     }
     function aplicarFiltros() {
+        console.log('se aplicacn aqui')
         const filtroTipo = filtroNombreActual;
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
         const busqueda = normalizarTexto(inputBusqueda.value);
@@ -756,4 +825,47 @@ function eventosRegistrosAlmacen() {
         btn.addEventListener('click', () => exportarArchivos('almacen', registrosAExportar));
     })
     aplicarFiltros();
+}
+
+
+
+async function obtenerRegistrosLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readonly');
+        const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+        
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const registros = request.result.map(item => item.data);
+                resolve(registros);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo registros de alamcen del caché:', error);
+        return [];
+    }
+}
+async function guardarRegistrosLocal(registros) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
+        const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+
+        // Guardar cada registro individualmente
+        for (const registro of registros) {
+            await store.put({
+                id: registro.id,
+                data: registro,
+                timestamp: Date.now()
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error guardando registros en caché:', error);
+        return false;
+    }
 }

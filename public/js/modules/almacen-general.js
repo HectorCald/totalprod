@@ -2,8 +2,9 @@ let productos = [];
 let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
-const DB_NAME = 'damabrava_db';
+const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
+
 
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -319,6 +320,10 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno almacen-general">
+            <div class="pull-to-refresh">
+                <i class='bx bx-refresh'></i>
+                <span>Desliza para recargar</span>
+            </div>
             <div class="busqueda">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
@@ -477,7 +482,9 @@ function eventosAlmacenGeneral() {
             }
         }
     });
-
+    const cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarAlmacenGeneral();
+    });
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({

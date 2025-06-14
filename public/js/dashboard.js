@@ -18,6 +18,7 @@ import { crearNotificacion,
     usuarioInfo,
     mostrarProgreso,
     ocultarProgreso,
+    initPullToRefresh,
     registrarNotificacion } from './modules/componentes.js'
 import { crearNav } from './modules/nav.js'
 import { crearHome, mostrarHome } from './modules/home.js';
@@ -79,6 +80,7 @@ window.inicializarDashboard = inicializarDashboard
 window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
 window.mostrarProgreso = mostrarProgreso
 window.ocultarProgreso = ocultarProgreso
+window.initPullToRefresh = initPullToRefresh
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarVerificacion = mostrarVerificacion

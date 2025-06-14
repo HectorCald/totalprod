@@ -857,8 +857,6 @@ export async function registrarNotificacion(destino, suceso, detalle) {
         return false;
     }
 }
-
-
 export let usuarioInfo = {
     id: '',
     nombre: '',
@@ -900,8 +898,24 @@ export function mostrarProgreso(tipo) {
     div.classList.remove('slide-out-flotante');
     div.classList.add('slide-in-flotante');
 
+    // Verificar si los botones de cancelación están habilitados
+    const botonesCancelacionHabilitados = localStorage.getItem('botonesCancelacion') === 'true';
+
+    // Ocultar todos los botones de cancelación si están deshabilitados
+    if (!botonesCancelacionHabilitados) {
+        botonesCancelar.forEach(btn => {
+            btn.style.display = 'none';
+        });
+    }
+
     return new Promise((resolve, reject) => {
-        // Configurar botones y listeners inmediatamente
+        // Si los botones están deshabilitados, resolver inmediatamente
+        if (!botonesCancelacionHabilitados) {
+            resolve(controladorCancelacion.signal);
+            return;
+        }
+
+        // Configurar botones y listeners solo si están habilitados
         botonesCancelar.forEach(btn => {
             btn.style.display = 'flex';
             btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar (${contador})</span>`;
@@ -939,7 +953,6 @@ export function mostrarProgreso(tipo) {
         }, 1000);
     });
 }
-
 export function ocultarProgreso(tipo) {
     if (contadorInterval) {
         clearInterval(contadorInterval);
@@ -955,11 +968,131 @@ export function ocultarProgreso(tipo) {
     botonesCancelar.forEach(btn => {
         btn.style.display = 'none';
     });
-
-    div.classList.remove('slide-in-flotante');
-    div.classList.add('slide-out-flotante');
     
     setTimeout(() => {
-        div.style.display = 'none';
+        div.classList.remove('slide-in-flotante');
+        div.classList.add('slide-out-flotante');
     }, 300);
+}
+
+
+
+
+export function initPullToRefresh(container, refreshCallback) {
+    // Limpiar cualquier instancia anterior
+    const existingPullToRefresh = container.querySelector('.pull-to-refresh');
+    if (existingPullToRefresh) {
+        existingPullToRefresh.remove();
+    }
+
+    let startY = 0;
+    let pullDistance = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+
+    // Crear el indicador de pull-to-refresh
+    const pullToRefresh = document.createElement('div');
+    pullToRefresh.className = 'pull-to-refresh';
+    pullToRefresh.innerHTML = `
+        <i class='bx bx-refresh' style="color: white"></i>
+        <span>Desliza para recargar</span>
+    `;
+    container.appendChild(pullToRefresh);
+
+    // Función para manejar el inicio del pull
+    function handlePullStart(e) {
+        if (container.scrollTop === 0) {
+            isPulling = true;
+            startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        }
+    }
+
+    // Función para manejar el movimiento del pull
+    function handlePullMove(e) {
+        if (!isPulling || isRefreshing) return;
+
+        const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        pullDistance = Math.max(0, currentY - startY);
+
+        if (pullDistance > 0) {
+            e.preventDefault();
+            if (pullDistance <= 50) {
+                pullToRefresh.style.transform = `translateX(-50%) translateY(${pullDistance}px)`;
+                pullToRefresh.classList.add('active');
+                
+                if (pullDistance >= 50) {
+                    pullToRefresh.classList.add('ready');
+                    pullToRefresh.querySelector('span').textContent = 'Suelta para recargar';
+                } else {
+                    pullToRefresh.classList.remove('ready');
+                    pullToRefresh.querySelector('span').textContent = 'Desliza para recargar';
+                }
+            }
+        }
+    }
+
+    // Función para manejar el fin del pull
+    async function handlePullEnd() {
+        if (!isPulling || isRefreshing) return;
+
+        const isReady = pullDistance >= 50;
+
+        if (isReady) {
+            isRefreshing = true;
+            pullToRefresh.querySelector('span').textContent = 'Recargando...';
+            
+            try {
+                await refreshCallback();
+                mostrarNotificacion({
+                    message: 'Contenido actualizado correctamente',
+                    type: 'success',
+                    duration: 2000
+                });
+            } catch (error) {
+                console.error('Error al recargar:', error);
+                mostrarNotificacion({
+                    message: 'Error al recargar el contenido',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                isRefreshing = false;
+                pullDistance = 0;
+                pullToRefresh.style.transform = 'translateX(-50%)';
+                pullToRefresh.classList.remove('active', 'ready');
+                pullToRefresh.querySelector('span').textContent = 'Desliza para recargar';
+            }
+        } else {
+            pullDistance = 0;
+            pullToRefresh.style.transform = 'translateX(-50%)';
+            pullToRefresh.classList.remove('active', 'ready');
+            pullToRefresh.querySelector('span').textContent = 'Desliza para recargar';
+        }
+        
+        isPulling = false;
+    }
+
+    // Limpiar event listeners anteriores
+    const cleanup = () => {
+        container.removeEventListener('touchstart', handlePullStart);
+        container.removeEventListener('touchmove', handlePullMove);
+        container.removeEventListener('touchend', handlePullEnd);
+        container.removeEventListener('mousedown', handlePullStart);
+        container.removeEventListener('mousemove', handlePullMove);
+        container.removeEventListener('mouseup', handlePullEnd);
+        container.removeEventListener('mouseleave', handlePullEnd);
+        pullToRefresh.remove();
+    };
+
+    // Agregar nuevos event listeners
+    container.addEventListener('touchstart', handlePullStart, { passive: false });
+    container.addEventListener('touchmove', handlePullMove, { passive: false });
+    container.addEventListener('touchend', handlePullEnd);
+    container.addEventListener('mousedown', handlePullStart);
+    container.addEventListener('mousemove', handlePullMove);
+    container.addEventListener('mouseup', handlePullEnd);
+    container.addEventListener('mouseleave', handlePullEnd);
+
+    // Retornar función para limpiar event listeners
+    return cleanup;
 }

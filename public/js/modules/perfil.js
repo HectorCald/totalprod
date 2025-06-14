@@ -422,6 +422,7 @@ function evetosCuenta() {
 function mostrarConfiguraciones() {
     const contenido = document.querySelector('.anuncio .contenido');
     const currentTheme = localStorage.getItem('theme') || 'system';
+    const botonesCancelacion = localStorage.getItem('botonesCancelacion') === 'true';
 
     const registrationHTML = `
         <div class="encabezado">
@@ -429,7 +430,7 @@ function mostrarConfiguraciones() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-        <p class="normal">Tema de la aplicación</p>
+            <p class="normal">Tema de la aplicación</p>
             <div class="tema-selector">
                 <button class="btn-tema ${currentTheme === 'light' ? 'active' : ''} dia" data-theme="light">
                     <i class='bx bx-sun'></i> Claro
@@ -441,6 +442,18 @@ function mostrarConfiguraciones() {
                     <i class='bx bx-desktop'></i> Sistema
                 </button>
             </div>
+
+            <p class="normal">Opciones de operaciones</p>
+            <div class="entrada">
+                <i class='bx bx-exit-fullscreen'></i>
+                <div class="input">
+                    <p class="detalle">Botones de cancelación</p>
+                    <label class="switch">
+                        <input type="checkbox" class="botones-cancelacion" ${botonesCancelacion ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
         </div>
     `;
 
@@ -451,6 +464,7 @@ function mostrarConfiguraciones() {
 }
 function eventosConfiguraciones() {
     const btnsTheme = document.querySelectorAll('.btn-tema');
+    const botonesCancelacion = document.querySelector('.botones-cancelacion');
 
     // Detector de cambios en el tema del sistema
     const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -478,6 +492,18 @@ function eventosConfiguraciones() {
             btn.classList.add('active');
         });
     });
+
+    // Manejar cambios en la opción de botones de cancelación
+    if (botonesCancelacion) {
+        botonesCancelacion.addEventListener('change', (e) => {
+            localStorage.setItem('botonesCancelacion', e.target.checked);
+            mostrarNotificacion({
+                message: `Botones de cancelación ${e.target.checked ? 'habilitados' : 'deshabilitados'}`,
+                type: 'success',
+                duration: 3000
+            });
+        });
+    }
 }
 
 
