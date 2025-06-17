@@ -374,7 +374,7 @@ function evetosCuenta() {
             }
 
             try {
-                mostrarCarga();
+                const signal= await mostrarProgreso('.pro-save')
                 const response = await fetch('/actualizar-usuario', {
                     method: 'POST',
                     headers: {
@@ -406,6 +406,10 @@ function evetosCuenta() {
                 });
 
             } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al actualizar el perfil',
@@ -413,7 +417,7 @@ function evetosCuenta() {
                     duration: 3500
                 });
             } finally {
-                ocultarCarga();
+                ocultarProgreso('.pro-save')
             }
         });
     })
