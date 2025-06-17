@@ -512,7 +512,6 @@ function eventosPagos() {
                             ${justificativosFormateados.map(j => `
                                 <tr>
                                     <td>${j.producto}</td>
-                                    <td>${j.producto}</td>
                                     <td>Bs. ${j.envasado.toFixed(2)}</td>
                                     <td>Bs. ${j.etiquetado.toFixed(2)}</td>
                                     <td>Bs. ${j.sellado.toFixed(2)}</td>
