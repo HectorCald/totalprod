@@ -2,11 +2,40 @@ let registrosProduccion = [];
 let productosGlobal = [];
 
 const DB_NAME = 'damabrava_db';
+const DB_NAME_IMG ='damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
+const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
 
-function initDB() {
+async function initDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
+        // Primero intentar obtener la versión actual de la base de datos
+        const request = indexedDB.open(DB_NAME);
+        
+        request.onerror = () => reject(request.error);
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const currentVersion = db.version;
+            db.close();
+            
+            // Abrir la base de datos con la versión actual + 1
+            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
+            
+            upgradeRequest.onerror = () => reject(upgradeRequest.error);
+            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+            
+            upgradeRequest.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(REGISTROS_PRODUCCION_STORE)) {
+                    db.createObjectStore(REGISTROS_PRODUCCION_STORE, { keyPath: 'id' });
+                }
+            };
+        };
+    });
+}
+function initDB2() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME_IMG, 1);
 
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
@@ -19,10 +48,51 @@ function initDB() {
         };
     });
 }
+
+async function guardarRegistrosLocal(registros) {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
+        const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
+
+        // Guardar cada registro individualmente
+        for (const registro of registros) {
+            await store.put({
+                id: registro.id,
+                data: registro,
+                timestamp: Date.now()
+            });
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error guardando registros en caché:', error);
+        return false;
+    }
+}
+async function obtenerRegistrosLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readonly');
+        const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
+        
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const registros = request.result.map(item => item.data);
+                resolve(registros);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo registros del caché:', error);
+        return [];
+    }
+}
 async function guardarImagenLocal(id, imageUrl) {
     try {
         console.log(`⌛ Guardando imagen ${id}...`);
-        const db = await initDB();
+        const db = await initDB2();
 
         // Primero verificar si existe
         const tx1 = db.transaction(STORE_NAME, 'readonly');
@@ -83,7 +153,7 @@ async function guardarImagenLocal(id, imageUrl) {
 }
 async function obtenerImagenLocal(id) {
     try {
-        const db = await initDB();
+        const db = await initDB2();
         const tx = db.transaction(STORE_NAME, 'readonly');
         const store = tx.objectStore(STORE_NAME);
 
@@ -124,6 +194,18 @@ function necesitaActualizacion(imagenCache, nuevaUrl) {
 
 async function obtenerMisRegistros() {
     try {
+        const registrosCache = await obtenerRegistrosLocal();
+        
+        // Si hay registros en caché, actualizar la UI inmediatamente
+        if (registrosCache.length > 0) {
+            registrosProduccion = registrosCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            updateHTMLWithData();
+        }
+
         const response = await fetch('/obtener-mis-registros-produccion');
         const data = await response.json();
 
@@ -133,6 +215,36 @@ async function obtenerMisRegistros() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(registrosCache) !== JSON.stringify(registrosProduccion)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                updateHTMLWithData();
+            }
+
+            // Siempre actualizar el caché con los nuevos datos
+            try {
+                const db = await initDB();
+                const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
+                const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
+                
+                // Limpiar todos los registros existentes
+                await store.clear();
+                
+                // Guardar los nuevos registros
+                for (const registro of registrosProduccion) {
+                    await store.put({
+                        id: registro.id,
+                        data: registro,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                console.log('Caché actualizado correctamente');
+            } catch (error) {
+                console.error('Error actualizando el caché:', error);
+            }
+
             return true;
         } else {
             mostrarNotificacion({
@@ -264,8 +376,6 @@ export async function mostrarMisRegistros() {
         obtenerMisRegistros(),
         obtenerProductos()
     ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
     // Update productos

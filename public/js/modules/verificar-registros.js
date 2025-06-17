@@ -9,6 +9,13 @@ let preciosBase = {
     cernido: 0.08
 };
 let nombresUsuariosGlobal = [];
+const DB_NAME = 'damabrava_db';
+const DB_NAME_IMG ='damabrava_db_img'
+const STORE_NAME = 'imagenes_cache';
+const REGISTROS_STORE = 'registros_verificacion';
+const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
+
+
 async function obtenerNombresUsuarios() {
     try {
         const response = await fetch('/obtener-nombres-usuarios');
@@ -28,10 +35,7 @@ async function obtenerNombresUsuarios() {
         return false;
     }
 }
-const DB_NAME = 'damabrava_db';
-const DB_NAME_IMG ='damabrava_db_img'
-const STORE_NAME = 'imagenes_cache';
-const REGISTROS_STORE = 'registros_verificacion';
+
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -53,11 +57,6 @@ async function initDB() {
             
             upgradeRequest.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                
-                // Crear o actualizar los object stores
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-                }
                 if (!db.objectStoreNames.contains(REGISTROS_STORE)) {
                     db.createObjectStore(REGISTROS_STORE, { keyPath: 'id' });
                 }
@@ -83,7 +82,7 @@ function initDB2() {
 async function guardarImagenLocal(id, imageUrl) {
     try {
         console.log(`⌛ Guardando imagen ${id}...`);
-        const db = await initDB();
+        const db = await initDB2();
 
         // Primero verificar si existe
         const tx1 = db.transaction(STORE_NAME, 'readonly');
@@ -261,7 +260,6 @@ async function obtenerReglas() {
 }
 async function obtenerRegistrosProduccion() {
     try {
-        // Primero intentar obtener del caché
         const registrosCache = await obtenerRegistrosLocal();
         
         // Si hay registros en caché, actualizar la UI inmediatamente
@@ -274,44 +272,43 @@ async function obtenerRegistrosProduccion() {
             updateHTMLWithData();
         }
 
-        // Obtener datos actualizados del servidor
         const response = await fetch('/obtener-registros-produccion');
         const data = await response.json();
 
         if (data.success) {
-            // Actualizar registros globales
             registrosProduccion = data.registros.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
 
-            // Actualizar UI si los datos son diferentes
+            // Verificar si hay diferencias entre el caché y los nuevos datos
             if (JSON.stringify(registrosCache) !== JSON.stringify(registrosProduccion)) {
-
-                // Limpiar y actualizar el caché con los nuevos registros
-                try {
-                    const db = await initDB();
-                    const tx = db.transaction(REGISTROS_STORE, 'readwrite');
-                    const store = tx.objectStore(REGISTROS_STORE);
-                    
-                    // Limpiar todos los registros existentes
-                    await store.clear();
-                    
-                    // Guardar los nuevos registros
-                    for (const registro of registrosProduccion) {
-                        await store.put({
-                            id: registro.id,
-                            data: registro,
-                            timestamp: Date.now()
-                        });
-                    }
-                    
-                    console.log('Caché actualizado correctamente');
-                } catch (error) {
-                    console.error('Error actualizando el caché:', error);
-                }
+                console.log('Diferencias encontradas, actualizando UI');
                 updateHTMLWithData();
+            }
+
+            // Siempre actualizar el caché con los nuevos datos
+            try {
+                const db = await initDB();
+                const tx = db.transaction(REGISTROS_STORE, 'readwrite');
+                const store = tx.objectStore(REGISTROS_STORE);
+                
+                // Limpiar todos los registros existentes
+                await store.clear();
+                
+                // Guardar los nuevos registros
+                for (const registro of registrosProduccion) {
+                    await store.put({
+                        id: registro.id,
+                        data: registro,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                console.log('Caché actualizado correctamente');
+            } catch (error) {
+                console.error('Error actualizando el caché:', error);
             }
 
             return true;
@@ -495,9 +492,9 @@ function updateHTMLWithData() {
         ${etiquetasHTML}
     `;
 
-    // Update productos
     const productosContainer = document.querySelector('.productos-container');
-    const productosHTML = registrosProduccion.map(registro => `
+    const registrosLimitados = registrosProduccion.slice(0, 200);
+    const productosHTML = registrosLimitados.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
             <div class="header">
                 <i class='bx bx-file'></i>
@@ -509,7 +506,19 @@ function updateHTMLWithData() {
             </div>
         </div>
     `).join('');
-    productosContainer.innerHTML = productosHTML;
+
+    const showMoreButton = registrosProduccion.length > 250 ? `
+        <div class="show-more-container" style="text-align: center; display: flex; gap: 10px; justify-content: center;align-items:center;width:100%;min-height:70px;height:100%">
+            <button class="btn show-more" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                <i class='bx bx-show'></i> Mostrar +50
+            </button>
+            <button class="btn show-all" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                <i class='bx bx-list-ul'></i> Mostrar todos
+            </button>
+        </div>
+    ` : '';
+
+    productosContainer.innerHTML = productosHTML + showMoreButton;
     eventosVerificacion();
 }
 
@@ -522,10 +531,118 @@ function eventosVerificacion() {
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
 
-
     const items = document.querySelectorAll('.registro-item');
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const botonCalendario = document.querySelector('.btn-calendario');
+
+    function cargarMasRegistros() {
+        const productosContainer = document.querySelector('.productos-container');
+        const currentItems = document.querySelectorAll('.registro-item').length;
+        const nextBatch = registrosProduccion.slice(currentItems, currentItems + 50);
+        
+        if (nextBatch.length > 0) {
+            const newItemsHTML = nextBatch.map(registro => `
+                <div class="registro-item" data-id="${registro.id}">
+                    <div class="header">
+                        <i class='bx bx-file'></i>
+                        <div class="info-header">
+                            <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'Verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
+                            <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
+                            <span class="fecha">${registro.fecha}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Remove the show more button
+            const showMoreContainer = document.querySelector('.show-more-container');
+            if (showMoreContainer) {
+                showMoreContainer.remove();
+            }
+
+            // Add new items
+            productosContainer.insertAdjacentHTML('beforeend', newItemsHTML);
+
+            // Add show more button again if there are more records
+            if (currentItems + nextBatch.length < registrosProduccion.length) {
+                productosContainer.insertAdjacentHTML('beforeend', `
+                    <div class="show-more-container" style="text-align: center; display: flex; gap: 10px; justify-content: center;width:100%">
+                        <button class="btn show-more" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                            <i class='bx bx-show'></i> Mostrar +50
+                        </button>
+                        <button class="btn show-all" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                            <i class='bx bx-list-ul'></i> Mostrar todos
+                        </button>
+                    </div>
+                `);
+
+                // Reattach event listeners to the new buttons
+                document.querySelector('.show-more').addEventListener('click', cargarMasRegistros);
+                document.querySelector('.show-all').addEventListener('click', cargarTodosLosRegistros);
+                aplicarFiltros();
+            }
+
+            // Reattach event listeners to new items
+            const newItems = document.querySelectorAll('.registro-item');
+            newItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const registroId = this.dataset.id;
+                    window.info(registroId);
+                });
+            });
+        }
+    }
+    function cargarTodosLosRegistros() {
+        const productosContainer = document.querySelector('.productos-container');
+        const currentItems = document.querySelectorAll('.registro-item').length;
+        const remainingRecords = registrosProduccion.slice(currentItems);
+        
+        if (remainingRecords.length > 0) {
+            const newItemsHTML = remainingRecords.map(registro => `
+                <div class="registro-item" data-id="${registro.id}">
+                    <div class="header">
+                        <i class='bx bx-file'></i>
+                        <div class="info-header">
+                            <span class="id">${registro.nombre}<span class="valor ${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'Verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
+                            <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
+                            <span class="fecha">${registro.fecha}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Remove the buttons container
+            const showMoreContainer = document.querySelector('.show-more-container');
+            if (showMoreContainer) {
+                showMoreContainer.remove();
+            }
+
+            // Add all remaining items
+            productosContainer.insertAdjacentHTML('beforeend', newItemsHTML);
+            aplicarFiltros();
+
+            // Reattach event listeners to new items
+            const newItems = document.querySelectorAll('.registro-item');
+            newItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const registroId = this.dataset.id;
+                    window.info(registroId);
+                });
+            });
+        }
+    }
+
+    // Add event listeners to initial buttons
+    const showMoreBtn = document.querySelector('.show-more');
+    const showAllBtn = document.querySelector('.show-all');
+
+    if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', cargarMasRegistros);
+    }
+
+    if (showAllBtn) {
+        showAllBtn.addEventListener('click', cargarTodosLosRegistros);
+    }
 
     const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
@@ -1870,7 +1987,6 @@ function eventosVerificacion() {
     }
     aplicarFiltros();
 }
-
 
 
 async function guardarRegistrosLocal(registros) {

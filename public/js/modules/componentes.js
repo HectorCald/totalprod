@@ -889,7 +889,7 @@ export function mostrarProgreso(tipo) {
 
     const div = document.querySelector(tipo);
     const botonesCancelar = document.querySelectorAll(
-        '.pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
+        '.pro-data .btn, .pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
     );
     let contador = 3;
 

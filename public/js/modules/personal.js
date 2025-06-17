@@ -1,6 +1,4 @@
 let personal = [];
-
-
 async function obtenerPersonal() {
     try {
         const response = await fetch('/obtener-personal');
@@ -35,6 +33,216 @@ async function obtenerPersonal() {
 }
 
 
+const pluginsMenu = {
+    'calcularmp': {
+        clase: 'opcion-btn',
+        vista: 'calculadora-view',
+        icono: 'fa-calculator',
+        texto: 'Materia Prima',
+        detalle: 'Calculadora de materia prima',
+        onclick: 'onclick="mostrarCalcularMp();"'
+    },
+    'tareasAc': {
+        clase: 'opcion-btn',
+        vista: 'regAcopio-view',
+        icono: 'fa-tasks',
+        texto: 'Tareas Acopio',
+        detalle: 'Gestiona el tiempo en tareas.',
+        onclick: 'onclick="mostrarTareas();"'
+    },
+    'formProduccion': {
+        clase: 'opcion-btn',
+        vista: 'formProduccion-view',
+        icono: 'fa-clipboard-list',
+        texto: 'Formulario Producción',
+        detalle: 'Registra una nueva producción.',
+        onclick: 'onclick="mostrarFormularioProduccion();"'
+    },
+    'misRegistrosProd': {
+        clase: 'opcion-btn',
+        vista: 'cuentasProduccion-view',
+        icono: 'fa-history',
+        texto: 'Mis registros producción',
+        detalle: 'Tus registros de producción.',
+        onclick: 'onclick="mostrarMisRegistros();"'
+    },
+    'reglasPrecios': {
+        clase: 'opcion-btn',
+        vista: 'cuentasProduccion-view',
+        icono: 'fa-solid fa-book',
+        texto: 'Reglas precios',
+        detalle: 'Todas las reglas para precios.',
+        onclick: 'onclick="mostrarReglas();"'
+    },
+    'verificarRegistros': {
+        clase: 'opcion-btn',
+        vista: 'verificarRegistros-view',
+        icono: 'fa-history',
+        texto: 'Verificar registros',
+        detalle: 'Todos los registros de producción.',
+        onclick: 'onclick="mostrarVerificacion()"'
+    },
+    'almAcopio': {
+        clase: 'opcion-btn',
+        vista: 'almAcopio-view',
+        icono: 'fa-dolly',
+        texto: 'Almacen acopio',
+        detalle: 'Gestiona el almacen de acopio.',
+        onclick: 'onclick="mostrarAlmacenAcopio();"'
+    },
+    'ingresosAcopio': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-arrow-down',
+        texto: 'Ingresos acopio',
+        detalle: 'Ingresos al almacen de acopio.',
+        onclick: 'onclick="mostrarIngresosAcopio()"'
+    },
+    'salidasAcopio': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-arrow-up',
+        texto: 'Salidas acopio',
+        detalle: 'Salidas del almacen acopio.',
+        onclick: 'onclick="mostrarSalidasAcopio()"'
+    },
+    'nuevoPedido': {
+        clase: 'opcion-btn',
+        vista: 'almAcopio-view',
+        icono: 'fa-shopping-cart',
+        texto: 'Nuevo Pedido',
+        detalle: 'Realiza pedidos de materia prima.',
+        onclick: 'onclick="mostrarHacerPedido()"'
+    },
+    'pedidos': {
+        clase: 'opcion-btn',
+        vista: 'regAcopio-view',
+        icono: 'fa-history',
+        texto: 'Pedidos',
+        detalle: 'Gestiona todos los pedidos.',
+        onclick: 'onclick="mostrarPedidos();"'
+    },
+    'registrosAcopio': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-history',
+        texto: 'Registros acopio',
+        detalle: 'Todos los registros de acopio.',
+        onclick: 'onclick="mostrarRegistrosAcopio();"'
+    },
+    'almacenGeneral': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-dolly',
+        texto: 'Almacen general',
+        detalle: 'Gestiona el almacen general.',
+        onclick: 'onclick="mostrarAlmacenGeneral()"'
+    },
+    'ingresosAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-arrow-down',
+        texto: 'Ingresos almacén',
+        detalle: 'Ingresos del almacen general.',
+        onclick: 'onclick="mostrarIngresos()"'
+    },
+    'salidasAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-arrow-up',
+        texto: 'Salidas almacén',
+        detalle: 'Salidas del almacen general.',
+        onclick: 'onclick="mostrarSalidas()"'
+    },
+    'conteoFisico': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-clipboard-list',
+        texto: 'Conteo fisico',
+        detalle: 'Realiza conteos del almacen',
+        onclick: 'onclick="mostrarConteo()"'
+    },
+    'verificarAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'verificarRegistros-view',
+        icono: 'fa-check-double',
+        texto: 'Verificar almacén',
+        detalle: 'Verifica registros de producción.',
+        onclick: 'onclick="mostrarVerificacion()"'
+    },
+    'registrosAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-history',
+        texto: 'Registros almacen',
+        detalle: 'Todos los registros de almacen.',
+        onclick: 'onclick="mostrarMovimientosAlmacen()"'
+    },
+    'registrosConteo': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-history',
+        texto: 'Registros conteo',
+        detalle: 'Todos los registros de conteo.',
+        onclick: 'onclick="registrosConteoAlmacen()"'
+    },
+    'personal': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-users',
+        texto: 'Personal',
+        detalle: 'Gestiona todo el personal.',
+        onclick: 'onclick="mostrarPersonal()"'
+    },
+    'clientes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-user-circle',
+        texto: 'Clientes',
+        detalle: 'Gestiona todos los clientes.',
+        onclick: 'onclick="mostrarClientes()"'
+    },
+    'proovedores': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-truck',
+        texto: 'Proovedores',
+        detalle: 'Gestiona todos los proovedores.',
+        onclick: 'onclick="mostrarProovedores()"'
+    },
+    'pagos': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-credit-card',
+        texto: 'Pagos',
+        detalle: 'Registra pagos en general.',
+        onclick: 'onclick="mostrarPagos()"'
+    },
+    'reportes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-file-invoice',
+        texto: 'Reportes',
+        detalle: 'Genera todos los reportes.',
+        onclick: 'onclick="mostrarReportes()"'
+    },
+    'catalogos': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-file-pdf',
+        texto: 'Catalogos',
+        detalle: 'Genera catalagos segun el precio',
+        onclick: 'onclick="mostrarDescargaCatalogo()"'
+    },
+    'ajustes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-cog',
+        texto: 'Ajustes',
+        detalle: 'Ajustes del sistema o/y aplicación',
+        onclick: 'onclick="mostrarConfiguracionesSistema()"'
+    }
+};
 export async function mostrarPersonal() {
     renderInitialHTML();
     mostrarAnuncio();
@@ -265,14 +473,12 @@ function eventosPersonal() {
                 </div>
                 <p class="normal">Plugins habilitados</p>
                 <div class="plugins-container">
-                    <label class="plugin">
-                        <input type="checkbox" value="calcularmp" ${usuario.plugins?.includes('calcularmp') ? 'checked' : ''}>
-                        <span>Calculadora de materia prima</span>
-                    </label>
-                    <label class="plugin">
-                        <input type="checkbox" value="tareasAc" ${usuario.plugins?.includes('tareasAc') ? 'checked' : ''}>
-                        <span>Calculadora de tiempo en tareas</span>
-                    </label>
+                    ${Object.entries(pluginsMenu).map(([key, plugin]) => `
+                        <label class="plugin">
+                            <input type="checkbox" value="${key}" ${usuario.plugins?.includes(key) ? 'checked' : ''}>
+                            <span>${plugin.texto}</span>
+                        </label>
+                    `).join('')}
                 </div> ` : ''}
             </div>
             <div class="anuncio-botones">

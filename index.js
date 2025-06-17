@@ -363,7 +363,7 @@ app.post('/check-company-id', async (req, res) => {
 
     // Predefined list of companies and their spreadsheet IDs
     const companies = {
-        '12345': process.env.SPREADSHEET_ID_1,
+        'A3$w9@zK!dPq&7Lx#1Tf': process.env.SPREADSHEET_ID_1,
         '6789': process.env.SPREADSHEET_ID_2
     };
 

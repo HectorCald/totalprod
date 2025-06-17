@@ -394,7 +394,7 @@ function evetosFormularioProduccion() {
                         'Almacen',
                         'Creación',
                         usuarioInfo.nombre + ' registro una nueva producción de ' + producto)
-                    await mostrarMisRegistros();
+                    mostrarFormularioProduccion();
                 } else {
                     throw new Error(data.error || 'Error al registrar la producción');
                 }

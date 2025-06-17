@@ -1,15 +1,70 @@
 let registrosProduccion = [];
 let registrosMovimientos = [];
 let movimientosAcopio = [];
+const REGISTROS_STORE = 'registros_verificacion';
+const DB_NAME = 'damabrava_db';
+
+// Versión actual de la aplicación
+const APP_VERSION = '2.0.0';
+
+// Detalles de la actualización
+const UPDATE_DETAILS = {
+    version: APP_VERSION,
+    title: 'Nueva Actualización Disponible',
+    changes: [
+        'Mejoras en el rendimiento general',
+        'Nuevas características añadidas',
+        'Corrección de errores conocidos',
+        'Actualización de la interfaz de usuario'
+    ]
+};
+
+async function initDB() {
+    return new Promise((resolve, reject) => {
+        // Primero intentar obtener la versión actual de la base de datos
+        const request = indexedDB.open(DB_NAME);
+        
+        request.onerror = () => reject(request.error);
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const currentVersion = db.version;
+            db.close();
+            
+            // Abrir la base de datos con la versión actual + 1
+            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
+            
+            upgradeRequest.onerror = () => reject(upgradeRequest.error);
+            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+        };
+    });
+}
+async function obtenerRegistrosLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_STORE, 'readonly');
+        const store = tx.objectStore(REGISTROS_STORE);
+        
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const registros = request.result.map(item => item.data);
+                resolve(registros);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo registros del caché:', error);
+        return [];
+    }
+}
 function obtenerAtajosGuardados() {
     const atajosGuardados = localStorage.getItem(`atajos_${usuarioInfo.rol}`);
     return atajosGuardados ? JSON.parse(atajosGuardados) : null;
 }
-
 async function obtenerUsuario() {
     try {
-        mostrarCarga();
-        // Primero intentamos obtener del servidor
+        ocultarCarga();
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
 
@@ -75,38 +130,35 @@ async function obtenerUsuario() {
 
 async function obtenerMisRegistros() {
     try {
-        const response = await fetch('/obtener-registros-acopio');
-        const data = await response.json();
+        const registros = await obtenerRegistrosLocal();
 
-        if (data.success) {
-            if (usuarioInfo.rol === 'Producción') {
-                registrosProduccion = data.registros
-                    .filter(registro => registro.user === usuarioInfo.email)
-                    .sort((a, b) => {
-                        const idA = parseInt(a.id.split('-')[1]);
-                        const idB = parseInt(b.id.split('-')[1]);
-                        return idB - idA;
-                    });
-                return true;
-            }
-            else if (usuarioInfo.rol === 'Administración') {
-                registrosProduccion = data.registros
-                    .sort((a, b) => {
-                        const idA = parseInt(a.id.split('-')[1]);
-                        const idB = parseInt(b.id.split('-')[1]);
-                        return idB - idA;
-                    });
-                return true;
-            }
-
-        } else {
+        if (registros.length === 0) {
             mostrarNotificacion({
-                message: 'Error al obtener registros de producción',
-                type: 'error',
+                message: 'No hay datos registrados por el momento',
+                type: 'info',
                 duration: 3500
             });
             return false;
         }
+
+        if (usuarioInfo.rol === 'Producción') {
+            registrosProduccion = registros
+                .filter(registro => registro.user === usuarioInfo.email)
+                .sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+        } else if (usuarioInfo.rol === 'Administración') {
+            registrosProduccion = registros
+                .sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+        }
+
+        return true;
     } catch (error) {
         console.error('Error al obtener registros:', error);
         mostrarNotificacion({
@@ -391,17 +443,209 @@ const pluginsMenu = {
         clase: 'opcion-btn',
         vista: 'calculadora-view',
         icono: 'fa-calculator',
-        texto: 'Calcular MP',
-        detalle: 'Calcula Materia P.',
+        texto: 'Materia Prima',
+        detalle: 'Calculadora de materia prima',
         onclick: 'onclick="mostrarCalcularMp();"'
     },
     'tareasAc': {
         clase: 'opcion-btn',
         vista: 'regAcopio-view',
         icono: 'fa-tasks',
-        texto: 'Tareas AC',
-        detalle: 'Gestionar tareas.',
+        texto: 'Tareas Acopio',
+        detalle: 'Gestiona el tiempo en tareas.',
         onclick: 'onclick="mostrarTareas();"'
+    },
+    'formProduccion': {
+        clase: 'opcion-btn',
+        vista: 'formProduccion-view',
+        icono: 'fa-clipboard-list',
+        texto: 'Formulario Producción',
+        detalle: 'Registra una nueva producción.',
+        onclick: 'onclick="mostrarFormularioProduccion();"'
+    },
+    'misRegistrosProd': {
+        clase: 'opcion-btn',
+        vista: 'cuentasProduccion-view',
+        icono: 'fa-history',
+        texto: 'Mis registros producción',
+        detalle: 'Tus registros de producción.',
+        onclick: 'onclick="mostrarMisRegistros();"'
+    },
+    'reglasPrecios': {
+        clase: 'opcion-btn',
+        vista: 'cuentasProduccion-view',
+        icono: 'fa-solid fa-book',
+        texto: 'Reglas precios',
+        detalle: 'Todas las reglas para precios.',
+        onclick: 'onclick="mostrarReglas();"'
+    },
+    'verificarRegistros': {
+        clase: 'opcion-btn',
+        vista: 'verificarRegistros-view',
+        icono: 'fa-history',
+        texto: 'Verificar registros',
+        detalle: 'Todos los registros de producción.',
+        onclick: 'onclick="mostrarVerificacion()"'
+    },
+    'almAcopio': {
+        clase: 'opcion-btn',
+        vista: 'almAcopio-view',
+        icono: 'fa-dolly',
+        texto: 'Almacen acopio',
+        detalle: 'Gestiona el almacen de acopio.',
+        onclick: 'onclick="mostrarAlmacenAcopio();"'
+    },
+    'ingresosAcopio': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-arrow-down',
+        texto: 'Ingresos acopio',
+        detalle: 'Ingresos al almacen de acopio.',
+        onclick: 'onclick="mostrarIngresosAcopio()"'
+    },
+    'salidasAcopio': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-arrow-up',
+        texto: 'Salidas acopio',
+        detalle: 'Salidas del almacen acopio.',
+        onclick: 'onclick="mostrarSalidasAcopio()"'
+    },
+    'nuevoPedido': {
+        clase: 'opcion-btn',
+        vista: 'almAcopio-view',
+        icono: 'fa-shopping-cart',
+        texto: 'Nuevo Pedido',
+        detalle: 'Realiza pedidos de materia prima.',
+        onclick: 'onclick="mostrarHacerPedido()"'
+    },
+    'pedidos': {
+        clase: 'opcion-btn',
+        vista: 'regAcopio-view',
+        icono: 'fa-history',
+        texto: 'Pedidos',
+        detalle: 'Gestiona todos los pedidos.',
+        onclick: 'onclick="mostrarPedidos();"'
+    },
+    'registrosAcopio': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-history',
+        texto: 'Registros acopio',
+        detalle: 'Todos los registros de acopio.',
+        onclick: 'onclick="mostrarRegistrosAcopio();"'
+    },
+    'almacenGeneral': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-dolly',
+        texto: 'Almacen general',
+        detalle: 'Gestiona el almacen general.',
+        onclick: 'onclick="mostrarAlmacenGeneral()"'
+    },
+    'ingresosAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-arrow-down',
+        texto: 'Ingresos almacén',
+        detalle: 'Ingresos del almacen general.',
+        onclick: 'onclick="mostrarIngresos()"'
+    },
+    'salidasAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-arrow-up',
+        texto: 'Salidas almacén',
+        detalle: 'Salidas del almacen general.',
+        onclick: 'onclick="mostrarSalidas()"'
+    },
+    'conteoFisico': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-clipboard-list',
+        texto: 'Conteo fisico',
+        detalle: 'Realiza conteos del almacen',
+        onclick: 'onclick="mostrarConteo()"'
+    },
+    'verificarAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'verificarRegistros-view',
+        icono: 'fa-check-double',
+        texto: 'Verificar almacén',
+        detalle: 'Verifica registros de producción.',
+        onclick: 'onclick="mostrarVerificacion()"'
+    },
+    'registrosAlmacen': {
+        clase: 'opcion-btn',
+        vista: 'regAlmacen-view',
+        icono: 'fa-history',
+        texto: 'Registros almacen',
+        detalle: 'Todos los registros de almacen.',
+        onclick: 'onclick="mostrarMovimientosAlmacen()"'
+    },
+    'registrosConteo': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-history',
+        texto: 'Registros conteo',
+        detalle: 'Todos los registros de conteo.',
+        onclick: 'onclick="registrosConteoAlmacen()"'
+    },
+    'personal': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-users',
+        texto: 'Personal',
+        detalle: 'Gestiona todo el personal.',
+        onclick: 'onclick="mostrarPersonal()"'
+    },
+    'clientes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-user-circle',
+        texto: 'Clientes',
+        detalle: 'Gestiona todos los clientes.',
+        onclick: 'onclick="mostrarClientes()"'
+    },
+    'proovedores': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-truck',
+        texto: 'Proovedores',
+        detalle: 'Gestiona todos los proovedores.',
+        onclick: 'onclick="mostrarProovedores()"'
+    },
+    'pagos': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-credit-card',
+        texto: 'Pagos',
+        detalle: 'Registra pagos en general.',
+        onclick: 'onclick="mostrarPagos()"'
+    },
+    'reportes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-file-invoice',
+        texto: 'Reportes',
+        detalle: 'Genera todos los reportes.',
+        onclick: 'onclick="mostrarReportes()"'
+    },
+    'catalogos': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-file-pdf',
+        texto: 'Catalogos',
+        detalle: 'Genera catalagos segun el precio',
+        onclick: 'onclick="mostrarDescargaCatalogo()"'
+    },
+    'ajustes': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-cog',
+        texto: 'Ajustes',
+        detalle: 'Ajustes del sistema o/y aplicación',
+        onclick: 'onclick="mostrarConfiguracionesSistema()"'
     }
 };
 
@@ -613,11 +857,98 @@ window.addEventListener('resize', () => {
     }
 });
 
+function checkForUpdates() {
+    const currentVersion = localStorage.getItem('app_version');
+    
+    if (!currentVersion || currentVersion !== APP_VERSION) {
+        showUpdateModal();
+    }
+}
 
+function showUpdateModal() {
+    const modalHTML = `
+        <div class="update-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${UPDATE_DETAILS.title}</h2>
+                    <p>Versión ${UPDATE_DETAILS.version}</p>
+                </div>
+                <div class="modal-body">
+                    <div class="update-details">
+                        <h3>Cambios en esta versión:</h3>
+                        <ul>
+                            ${UPDATE_DETAILS.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-update">
+                        <span class="spinner"></span>
+                        Actualizar Ahora
+                    </button>
+                </div>
+                <div class="logo-of">
+                    <h1>TP</h1>
+                    <div class="info-logo">
+                        <p class="nombre-logo">TotalProd</p>
+                        <p class="slogan-logo">Gestiona mejor, produce mas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = document.querySelector('.update-modal');
+    const btnUpdate = modal.querySelector('.btn-update');
+    
+    btnUpdate.addEventListener('click', async () => {
+        btnUpdate.classList.add('updating');
+        btnUpdate.disabled = true;
+
+        try {
+            // Eliminar completamente las bases de datos
+            await new Promise((resolve, reject) => {
+                const request = indexedDB.deleteDatabase('damabrava_db');
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve();
+            });
+
+            await new Promise((resolve, reject) => {
+                const request = indexedDB.deleteDatabase('damabrava_db_img');
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve();
+            });
+
+            // Simular proceso de actualización
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Guardar nueva versión
+            localStorage.setItem('app_version', APP_VERSION);
+
+            // Recargar la aplicación
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Error durante la actualización:', error);
+            btnUpdate.classList.remove('updating');
+            btnUpdate.disabled = false;
+            mostrarNotificacion({
+                message: 'Error durante la actualización',
+                type: 'error',
+                duration: 3000
+            });
+        }
+    });
+
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
 
 export async function crearHome() {
     const view = document.querySelector('.home-view');
-    view.style.opacity = '0';  // Start with opacity 0
+    view.style.opacity = '0';
+
+    // Verificar actualizaciones
+    checkForUpdates();
 
     await obtenerUsuario();
     crearNav(usuarioInfo);
@@ -798,7 +1129,9 @@ export function mostrarHome(view) {
         crearGraficoAlmacen();
         crearGraficoAcopio();
     }
-    ocultarCarga();
+    const screenStart = document.querySelector('.pro-start')
+    screenStart.classList.remove('slide-in-flotante')
+    screenStart.classList.add('slide-out-flotante');
     const funciones = document.querySelectorAll('.funcion');
     const opciones = document.querySelectorAll('.opcion');
 

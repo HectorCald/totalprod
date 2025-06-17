@@ -115,7 +115,6 @@ window.mostrarTareas = mostrarTareas
 
 document.addEventListener('DOMContentLoaded', async () => {
     inicializarDashboard();
-    mostrarCarga();
     flotante();
     await crearHome();
 });

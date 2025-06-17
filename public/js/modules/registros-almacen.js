@@ -96,7 +96,6 @@ async function obtenerClientes() {
 }
 async function obtenerRegistrosAlmacen() {
     try {
-
         const registrosCacheAlmacen = await obtenerRegistrosLocal();
         
         // Si hay registros en caché, actualizar la UI inmediatamente
@@ -108,6 +107,7 @@ async function obtenerRegistrosAlmacen() {
             });
             updateHTMLWithData();
         }
+
         const response = await fetch('/obtener-movimientos-almacen');
         const data = await response.json();
 
@@ -118,36 +118,37 @@ async function obtenerRegistrosAlmacen() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA; // Orden descendente por número de ID
             });
-            // Actualizar UI si los datos son diferentes
-            if (JSON.stringify(registrosCacheAlmacen) !== JSON.stringify(registrosAlmacen)) {
-                console.log('Son diferentes')
 
-                // Limpiar y actualizar el caché con los nuevos registros
-                try {
-                    const db = await initDB();
-                    const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
-                    const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
-                    
-                    // Limpiar todos los registros existentes
-                    await store.clear();
-                    
-                    // Guardar los nuevos registros
-                    for (const registro of registrosAlmacen) {
-                        await store.put({
-                            id: registro.id,
-                            data: registro,
-                            timestamp: Date.now()
-                        });
-                    }
-                    
-                    console.log('Caché actualizado correctamente');
-                } catch (error) {
-                    console.error('Error actualizando el caché:', error);
-                }
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(registrosCacheAlmacen) !== JSON.stringify(registrosAlmacen)) {
+                console.log('Diferencias encontradas, actualizando UI');
                 updateHTMLWithData();
             }
-            return true;
 
+            // Siempre actualizar el caché con los nuevos datos
+            try {
+                const db = await initDB();
+                const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
+                const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+                
+                // Limpiar todos los registros existentes
+                await store.clear();
+                
+                // Guardar los nuevos registros
+                for (const registro of registrosAlmacen) {
+                    await store.put({
+                        id: registro.id,
+                        data: registro,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                console.log('Caché actualizado correctamente');
+            } catch (error) {
+                console.error('Error actualizando el caché:', error);
+            }
+
+            return true;
         } else {
             throw new Error(data.error || 'Error al obtener los productos');
         }
@@ -233,7 +234,6 @@ export async function mostrarMovimientosAlmacen() {
         obtenerClientes(),
         obtenerProovedores()
     ]);
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
 

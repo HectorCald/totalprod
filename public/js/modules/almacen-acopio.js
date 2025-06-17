@@ -868,7 +868,7 @@ function eventosAlmacenAcopio() {
                         registrarNotificacion(
                             'Administración',
                             'Edición',
-                            usuarioInfo.nombre + ' edito el producto ' + producto + ' su motivo fue: ' + motivo)
+                            usuarioInfo.nombre + ' edito el producto ' + producto.producto + ' su motivo fue: ' + motivo)
                     } else {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }

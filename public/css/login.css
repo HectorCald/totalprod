@@ -161,3 +161,6 @@
 .entrada .input .validation-icon.fa-spinner {
     color: #FFC354 !important;
 }
+.pro-start{
+    display: none;
+}

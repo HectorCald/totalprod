@@ -4,7 +4,7 @@ async function obtenerUsuario() {
         // Primero intentamos obtener del servidor
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
-        
+
         if (data.success) {
             const nombreCompleto = data.usuario.nombre.split(' ');
             usuarioInfo = {
@@ -45,7 +45,7 @@ async function obtenerUsuario() {
                 usuarioInfo = JSON.parse(usuarioGuardado);
                 return true;
             }
-            
+
             mostrarNotificacion({
                 message: 'Error al obtener datos del usuario',
                 type: 'error',
@@ -72,6 +72,7 @@ export async function crearPerfil(usuario) {
     mostrarPerfil(view);
 }
 function mostrarPerfil(view) {
+    const version = localStorage.getItem('app_version') || 'No disponible';
     const perfil = `
         <h1 class="titulo"><i class='bx bx-user'></i> Perfil</h1>
         <div class="info">
@@ -89,7 +90,7 @@ function mostrarPerfil(view) {
         <button class="apartado configuraciones"><i class='bx bx-cog'></i> Configuraciones</button>
         <button class="cerrar-sesion"><i class='bx bx-log-out'></i> Cerrar Sesión</button>
         <button class="soporte-tecnico">Soporte técnico</button>
-        <p class="version">Version 1.0.0</p>
+        <p class="version">Versión ${version}</p>
     `;
     view.innerHTML = perfil;
 
@@ -331,7 +332,7 @@ function evetosCuenta() {
             const apellido = document.querySelectorAll('input.nombre')[1].value.trim();
             const passwordActual = document.querySelector('input.password-actual')?.value;
             const passwordNueva = document.querySelector('input.password-nueva')?.value;
-    
+
             // Validaciones básicas
             if (!nombre || !apellido || !telefono) {
                 mostrarNotificacion({
@@ -341,7 +342,7 @@ function evetosCuenta() {
                 });
                 return;
             }
-            
+
             if (!/^[67]\d{7}$/.test(telefono)) {
                 mostrarNotificacion({
                     message: 'Ingrese un número válido de 8 dígitos (ej: 67644705)',
@@ -350,8 +351,8 @@ function evetosCuenta() {
                 });
                 return;
             }
-    
-    
+
+
             // Validación de contraseña nueva
             if (passwordNueva && passwordNueva.length < 8) {
                 mostrarNotificacion({
@@ -361,7 +362,7 @@ function evetosCuenta() {
                 });
                 return;
             }
-    
+
             // Validar que ambas contraseñas estén presentes si se está cambiando
             if ((passwordActual && !passwordNueva) || (!passwordActual && passwordNueva)) {
                 mostrarNotificacion({
@@ -371,7 +372,7 @@ function evetosCuenta() {
                 });
                 return;
             }
-    
+
             try {
                 mostrarCarga();
                 const response = await fetch('/actualizar-usuario', {
@@ -388,13 +389,13 @@ function evetosCuenta() {
                         telefono
                     })
                 });
-    
+
                 const data = await response.json();
-    
+
                 if (!response.ok) {
                     throw new Error(data.error || 'Error al actualizar el perfil');
                 }
-    
+
                 await obtenerUsuario();
                 mostrarPerfil(document.querySelector('.perfil-view'));
                 ocultarAnuncio();
@@ -403,7 +404,7 @@ function evetosCuenta() {
                     type: 'success',
                     duration: 3500
                 });
-    
+
             } catch (error) {
                 console.error('Error:', error);
                 mostrarNotificacion({
@@ -419,7 +420,7 @@ function evetosCuenta() {
 }
 
 
-function mostrarConfiguraciones() {
+async function mostrarConfiguraciones() {
     const contenido = document.querySelector('.anuncio .contenido');
     const currentTheme = localStorage.getItem('theme') || 'system';
     const botonesCancelacion = localStorage.getItem('botonesCancelacion') === 'true';
@@ -454,6 +455,22 @@ function mostrarConfiguraciones() {
                     </label>
                 </div>
             </div>
+
+            <p class="normal">Almacenamiento</p>
+            <div class="entrada">
+                <i class='bx bx-hdd'></i>
+                <div class="input">
+                    <p class="detalle">Espacio utilizado</p>
+                    <p class="storage-info" style="font-weight:900; margin-left:auto;padding-right:10px">Calculando...</p>
+                </div>
+            </div>
+            <div class="entrada">
+                <i class='bx bx-trash'></i>
+                <div class="input">
+                    <p class="detalle">Eliminar datos almacenados</p>
+                    <button class="btn-limpiar btn" style="margin-left:auto; padding-right:10px;min-width:60px; text-align:right; color:red !important">Limpiar</button>
+                </div>
+            </div>
         </div>
     `;
 
@@ -461,10 +478,163 @@ function mostrarConfiguraciones() {
     mostrarAnuncio();
     contenido.style.maxWidth = '450px';
     eventosConfiguraciones();
+
+    // Calcular el almacenamiento después de mostrar las configuraciones
+    const storageInfo = document.querySelector('.storage-info');
+    const storageUsed = await calculateStorageUsed();
+    storageInfo.textContent = storageUsed;
 }
-function eventosConfiguraciones() {
+
+async function openDB(dbName) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Primero intentar obtener la versión actual de la base de datos
+            const request = indexedDB.open(dbName);
+
+            request.onerror = () => reject(request.error);
+
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                const currentVersion = db.version;
+                db.close();
+
+                // Abrir la base de datos con la versión actual + 1
+                const upgradeRequest = indexedDB.open(dbName, currentVersion + 1);
+
+                upgradeRequest.onerror = () => reject(upgradeRequest.error);
+                upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+
+                upgradeRequest.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                };
+            };
+        } catch (error) {
+            console.error('Error al intentar abrir la base de datos:', error);
+            reject(error);
+        }
+    });
+}
+async function openDB2(dbName) {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+
+
+async function calculateStorageUsed() {
+    try {
+        let totalSize = 0;
+        const storageInfo = document.querySelector('.storage-info');
+        storageInfo.textContent = 'Calculando...';
+
+        // Función auxiliar para obtener datos de un store
+        const getStoreData = (db, storeName) => {
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = db.transaction(storeName, 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => {
+                        console.warn(`Error al obtener datos del store ${storeName}:`, request.error);
+                        resolve([]); // Si hay error, retornamos array vacío
+                    };
+                } catch (error) {
+                    console.warn(`Error al acceder al store ${storeName}:`, error);
+                    resolve([]); // Si el store no existe, retornamos array vacío
+                }
+            });
+        };
+
+        // Calcular tamaño de damabrava_db
+        const db = await openDB('damabrava_db');
+        const storeNames = Array.from(db.objectStoreNames);
+        console.log('Stores encontrados en damabrava_db:', storeNames);
+
+        for (const storeName of storeNames) {
+            const data = await getStoreData(db, storeName);
+            totalSize += JSON.stringify(data).length;
+        }
+
+        // Calcular tamaño de damabrava_db_img
+        const dbImg = await openDB2('damabrava_db_img');
+        const storeNamesImg = Array.from(dbImg.objectStoreNames);
+        console.log('Stores encontrados en damabrava_db_img:', storeNamesImg);
+
+        for (const storeName of storeNamesImg) {
+            const data = await getStoreData(dbImg, storeName);
+            totalSize += JSON.stringify(data).length;
+        }
+
+        // Calcular tamaño del localStorage usando tu función
+        function calcularLocalStorageSize() {
+            let totalBytes = 0;
+        
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+        
+                // Cada carácter en UTF-16 ocupa 2 bytes
+                const bytes = (key.length + value.length) * 2;
+                totalBytes += bytes;
+            }
+        
+            const totalKB = (totalBytes / 1024).toFixed(2);
+        
+            console.log(`📦 Tamaño del localStorage: ${totalBytes} bytes (${totalKB} KB)`);
+            return { bytes: totalBytes, kilobytes: totalKB };
+        }
+
+        // Obtener tamaño del localStorage
+        const localStorageSize = calcularLocalStorageSize();
+        totalSize += localStorageSize.bytes;
+
+        // Calcular tamaño del cache storage
+        if ('caches' in window) {
+            try {
+                const cacheNames = await caches.keys();
+                for (const cacheName of cacheNames) {
+                    const cache = await caches.open(cacheName);
+                    const requests = await cache.keys();
+                    for (const request of requests) {
+                        const response = await cache.match(request);
+                        if (response) {
+                            const blob = await response.blob();
+                            totalSize += blob.size;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('Error al calcular tamaño del cache:', error);
+            }
+        }
+
+        // Convertir a MB con 3 decimales
+        const sizeInMB = (totalSize / (1024 * 1024)).toFixed(3);
+        storageInfo.textContent = `${sizeInMB} MB`;
+        return `${sizeInMB} MB`;
+    } catch (error) {
+        console.error('Error al calcular almacenamiento:', error);
+        storageInfo.textContent = '0 MB';
+        return '0 MB';
+    }
+}
+
+async function eventosConfiguraciones() {
     const btnsTheme = document.querySelectorAll('.btn-tema');
     const botonesCancelacion = document.querySelector('.botones-cancelacion');
+    const btnLimpiar = document.querySelector('.btn-limpiar');
 
     // Detector de cambios en el tema del sistema
     const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -501,6 +671,135 @@ function eventosConfiguraciones() {
                 message: `Botones de cancelación ${e.target.checked ? 'habilitados' : 'deshabilitados'}`,
                 type: 'success',
                 duration: 3000
+            });
+        });
+    }
+
+    // Manejar limpieza de almacenamiento
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', async () => {
+            const contenido = document.querySelector('.anuncio .contenido');
+            const relleno = contenido.querySelector('.relleno');
+
+            // Guardar el contenido original
+            const contenidoOriginal = relleno.innerHTML;
+
+            // Actualizar el contenido completo
+            contenido.innerHTML = `
+            <div class="encabezado">
+                <h1 class="titulo">Eliminar datos almacenados</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
+            </div>    
+            <div class="relleno">
+                    <p class="normal">Se eliminará del dispositivo</p>
+                    <div class="campo-vertical">
+                        <span class="valor"><strong><i class='bx bx-data'></i>Registros</strong>Todos los registros guardados</span>
+                        <span class="valor"><strong><i class='bx bx-image'></i>Imágenes: </strong>Fotos y documentos guardados</span>
+                        <span class="valor"><strong><i class='bx bx-refresh'></i>Actualizaciones: </strong>Historial de actualizaciones</span>
+                        <span class="valor"><strong><i class='bx bx-log-in'></i>Sesión: </strong>Datos de inicio de sesión</span>
+                        <span class="valor"><strong><i class='bx bx-cog'></i>Configuraciones: </strong>Preferencias guardadas</span>
+                    </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Esta acción no se puede deshacer, asegúrate de que deseas continuar.</p>
+                        </div>
+                    </div>
+                    <div class="busqueda">
+                        <div class="acciones-grande" style="width:100%;">
+                            <button class="btn-volver btn blue" ><i class='bx bx-arrow-back'></i></i> Volver</button>
+                            <button class="btn-confirmar btn red"><i class='bx bx-trash'></i> Eliminar datos</button>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-volver btn blue"><i class='bx bx-arrow-back'></i> Volver</button>
+                    <button class="btn-confirmar btn red"><i class='bx bx-trash'></i> Eliminar datos</button>
+                </div>
+            `;
+            contenido.paddingBottom = "80px"
+
+            // Event listeners para los botones
+            const btnVolver = contenido.querySelectorAll('.btn-volver');
+            const btnConfirmar = contenido.querySelectorAll('.btn-confirmar');
+
+
+            btnVolver.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    mostrarConfiguraciones();
+                });
+            });
+
+            btnConfirmar.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    try {
+                        const signal = await mostrarProgreso('.pro-data')
+
+                        // Primero limpiar localStorage
+                        localStorage.clear();
+
+                        // Luego eliminar las bases de datos
+                        await new Promise((resolve, reject) => {
+                            const request = indexedDB.deleteDatabase('damabrava_db');
+                            request.onerror = () => reject(request.error);
+                            request.onsuccess = () => resolve();
+                        });
+
+                        await new Promise((resolve, reject) => {
+                            const request = indexedDB.deleteDatabase('damabrava_db_img');
+                            request.onerror = () => reject(request.error);
+                            request.onsuccess = () => resolve();
+                        });
+
+                        // Limpiar service workers
+                        if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (const registration of registrations) {
+                                await registration.unregister();
+                            }
+                        }
+
+                        // Actualizar la vista
+                        mostrarConfiguraciones();
+
+                        mostrarNotificacion({
+                            message: 'Datos eliminados correctamente',
+                            type: 'success',
+                            duration: 3500
+                        });
+
+                        // Recargar la página después de un breve delay
+
+                        try {
+                            const response = await fetch('/cerrar-sesion', { method: 'POST' });
+                            if (response.ok) {
+                                limpiarProteccionNavegacion();
+                                window.location.href = '/';
+                            }
+                        } catch (error) {
+                            console.error('Error al cerrar sesión:', error);
+                            mostrarNotificacion({
+                                message: 'Error al cerrar sesión',
+                                type: 'error',
+                                duration: 3500
+                            });
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        console.error('Error al eliminar datos:', error);
+                        mostrarNotificacion({
+                            message: 'Error al eliminar los datos',
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-data')
+                    }
+                });
             });
         });
     }

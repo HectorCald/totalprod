@@ -57,6 +57,8 @@ function iniciarSesion() {
                 const data = await response.json();
 
                 if (data.success) {
+                    ocultarCarga();
+                    
                     if (rememberMe) {
                         localStorage.setItem('credentials', JSON.stringify({
                             email: cleanEmail,
@@ -119,7 +121,6 @@ function iniciarSesion() {
 }
 /* ==================== INICIALIZACIÓN DE LA APP ==================== */
 function inicializarApp() {
-
     const registerLink = document.querySelector('.sin-cuenta span');
     const forgotPasswordLink = document.querySelector('.olvido');
     const moreInfoLink = document.querySelector('.registro.mas-info');

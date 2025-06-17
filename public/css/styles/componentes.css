@@ -59,7 +59,7 @@
     justify-content: center;
     align-items: center;
     border: none;
-    border-radius: 20px;
+    border-radius: 10px;
     color: white;
     font-weight: 800;
     position: relative;
@@ -2840,7 +2840,8 @@
 .pro-pedido,
 .pro-pack,
 .pro-peso,
-.pro-save {
+.pro-save,
+.pro-data {
     position: fixed;
     top: 0;
     left: 0;
@@ -2926,6 +2927,137 @@
         }
     }
 }
+.pro-start {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--fondo5);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+
+    .logo {
+        display: flex;
+        ;
+        width: 300px;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+
+        h1 {
+            background-color: var(--cuarto-color);
+            border-radius: 10px;
+            color: white;
+            font-size: 40px;
+            margin: 0;
+            height: 60px;
+            width: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .info-logo {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+
+
+            .nombre-logo {
+                color: var(--cuarto-color);
+                font-size: var(--text-2xl);
+                font-weight: 900;
+            }
+
+            .slogan-logo {
+                color: gray;
+                font-size: 13px;
+            }
+        }
+    }
+
+    .sub-carga {
+        width: auto;
+        height: auto;
+        border-radius: 10px;
+        background-color: var(--fondo5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        flex-direction: column;
+
+        img {
+            width: auto;
+            height: 100px;
+        }
+
+        p {
+            font-size: var(--text-detalle);
+            font-weight: 900;
+            color: var(--cuarto-color);
+            text-align: center;
+        }
+    }
+}
+.logo-of {
+    display: flex;
+    ;
+    width: 300px;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+
+    h1 {
+        background-color: var(--cuarto-color);
+        border-radius: 10px;
+        color: white;
+        font-size: 40px;
+        margin: 0;
+        height: 60px;
+        width: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 10px;
+    }
+
+    .info-logo {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+
+
+        .nombre-logo {
+            color: var(--cuarto-color);
+            font-size: var(--text-2xl);
+            font-weight: 900;
+        }
+
+        .slogan-logo {
+            color: gray;
+            font-size: 13px;
+        }
+    }
+}
 
 
 
@@ -2937,6 +3069,7 @@
     width: 50px;
     height: 30px;
     margin-left: auto;
+    padding-right: 10px;
 }
 
 .switch input {
@@ -2952,7 +3085,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #9b9b9b;
     transition: .4s;
 }
 
@@ -3027,3 +3160,143 @@ input:checked+.slider:before {
         transform: rotate(360deg);
     }
 }
+
+
+
+
+
+
+
+
+/* Modal de Actualización */
+.update-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.update-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.update-modal .modal-content {
+    background: var(--fondo5);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    height: 95%;
+    max-width: 500px;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+    color: var(--text);
+    z-index: 9999999999;
+}
+
+.update-modal.active .modal-content {
+    transform: translateY(0);
+}
+
+.update-modal .modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.update-modal .modal-header h2 {
+    color: var(--text);
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.update-modal .modal-body {
+    margin-bottom: 25px;
+}
+
+.update-modal .update-details {
+    background: var(--primary-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.update-modal .update-details h3 {
+    color:var(--text) !important;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.update-modal .update-details ul {
+    list-style: none;
+    padding: 0;
+}
+
+.update-modal .update-details li {
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.update-modal .update-details li:before {
+    content: "•";
+    color: gray;
+    position: absolute;
+    left: 0;
+}
+
+.update-modal .modal-footer {
+    text-align: center;
+}
+
+.update-modal .btn-update {
+    background: var(--primary-color);
+    color: var(--text);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.update-modal .btn-update:hover {
+    background: var(--cuarto-color);
+}
+
+.update-modal .btn-update:disabled {
+    background: var(--primary-color);
+    cursor: not-allowed;
+}
+
+.update-modal .btn-update .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--cuarto-color);
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+.update-modal .btn-update.updating .spinner {
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} 
