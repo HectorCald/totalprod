@@ -11,23 +11,23 @@ async function initDB() {
     return new Promise((resolve, reject) => {
         // Primero intentar obtener la versión actual de la base de datos
         const request = indexedDB.open(DB_NAME);
-        
+
         request.onerror = () => reject(request.error);
-        
+
         request.onsuccess = (event) => {
             const db = event.target.result;
             const currentVersion = db.version;
             db.close();
-            
+
             // Abrir la base de datos con la versión actual + 1
             const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-            
+
             upgradeRequest.onerror = () => reject(upgradeRequest.error);
             upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-            
+
             upgradeRequest.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                
+
                 // Crear o actualizar los object stores
                 if (!db.objectStoreNames.contains(REGISTROS_PEDIDOS_STORE)) {
                     db.createObjectStore(REGISTROS_PEDIDOS_STORE, { keyPath: 'id' });
@@ -41,7 +41,7 @@ async function obtenerRegistrosLocal() {
         const db = await initDB();
         const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readonly');
         const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
-        
+
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => {
@@ -93,7 +93,7 @@ async function obtenerPedidos() {
     try {
 
         const registrosCachePedidos = await obtenerRegistrosLocal();
-        
+
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCachePedidos.length > 0) {
             pedidosGlobal = registrosCachePedidos.sort((a, b) => {
@@ -126,10 +126,10 @@ async function obtenerPedidos() {
                 const db = await initDB();
                 const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readwrite');
                 const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
-                
+
                 // Limpiar todos los registros existentes
                 await store.clear();
-                
+
                 // Guardar los nuevos registros
                 for (const registro of pedidosGlobal) {
                     await store.put({
@@ -138,7 +138,7 @@ async function obtenerPedidos() {
                         timestamp: Date.now()
                     });
                 }
-                
+
                 console.log('Caché actualizado correctamente');
             } catch (error) {
                 console.error('Error actualizando el caché:', error);
@@ -454,7 +454,7 @@ function eventosPedidos() {
         }, 100);
     }
     botonesNombre.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroNombreActual = boton.textContent.trim();
         }
         boton.addEventListener('click', () => {
@@ -466,7 +466,7 @@ function eventosPedidos() {
         });
     });
     botonesEstado.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroEstadoActual = boton.textContent.trim();
         }
         boton.addEventListener('click', () => {
@@ -1207,6 +1207,10 @@ function eventosPedidos() {
                                 'Administración',
                                 'Información',
                                 usuarioInfo.nombre + ' registro un nuevo pago pendiente generico de materia prima del monto: Bs./' + totalPago + ' del producto: ' + registro.producto)
+                            registrarNotificacion(
+                                'Acopio',
+                                'Información',
+                                usuarioInfo.nombre + ' se hizo la entrega del producto: ' + registro.producto + ' cantidad: ' + registro.cantidadEntregadaUnd)
 
                             // Actualizar mensaje de compras y notificar éxito
                             if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
@@ -1379,6 +1383,10 @@ function eventosPedidos() {
                         'Administración',
                         'Información',
                         usuarioInfo.nombre + ' se cambio el estado del registro: ' + registro.producto + ' con el id: ' + registro.id + ' se cambio de "no llego" a "llego" ')
+                    registrarNotificacion(
+                        'Acopio',
+                        'Información',
+                        usuarioInfo.nombre + ' se puso como llego el producto: ' + registro.producto + ' cantidad: ' + registro.cantidadEntregadaUnd)
                 }
             } catch (error) {
                 if (error.message === 'cancelled') {
