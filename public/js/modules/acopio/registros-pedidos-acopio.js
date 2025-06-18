@@ -3,6 +3,61 @@ let productos = [];
 let proovedoresAcopioGlobal = [];
 let mensajeCompras = localStorage.getItem('damabrava_mensaje_compras') || 'Se compro:\n• Sin compras registradas';
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
+
+const DB_NAME = 'damabrava_db';
+const REGISTROS_PEDIDOS_STORE = 'registros_pedidos_acopio';
+
+async function initDB() {
+    return new Promise((resolve, reject) => {
+        // Primero intentar obtener la versión actual de la base de datos
+        const request = indexedDB.open(DB_NAME);
+        
+        request.onerror = () => reject(request.error);
+        
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const currentVersion = db.version;
+            db.close();
+            
+            // Abrir la base de datos con la versión actual + 1
+            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
+            
+            upgradeRequest.onerror = () => reject(upgradeRequest.error);
+            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+            
+            upgradeRequest.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Crear o actualizar los object stores
+                if (!db.objectStoreNames.contains(REGISTROS_PEDIDOS_STORE)) {
+                    db.createObjectStore(REGISTROS_PEDIDOS_STORE, { keyPath: 'id' });
+                }
+            };
+        };
+    });
+}
+async function obtenerRegistrosLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readonly');
+        const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
+        
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const registros = request.result.map(item => item.data);
+                resolve(registros);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo los pedidos del caché:', error);
+        return [];
+    }
+}
+
+
+
 async function obtenerProovedoresAcopio() {
     try {
         const response = await fetch('/obtener-proovedores');
@@ -36,16 +91,59 @@ async function obtenerProovedoresAcopio() {
 }
 async function obtenerPedidos() {
     try {
+
+        const registrosCachePedidos = await obtenerRegistrosLocal();
+        
+        // Si hay registros en caché, actualizar la UI inmediatamente
+        if (registrosCachePedidos.length > 0) {
+            pedidosGlobal = registrosCachePedidos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            updateHTMLWithData();
+        }
+
         const response = await fetch('/obtener-pedidos');
         const data = await response.json();
 
         if (data.success) {
-            // Sort pedidos by ID (newest first)
+            // Filtrar registros por el email del usuario actual y ordenar de más reciente a más antiguo
             pedidosGlobal = data.pedidos.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA; // Descending order
+                return idB - idA; // Orden descendente por número de ID
             });
+
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(registrosCachePedidos) !== JSON.stringify(pedidosGlobal)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                updateHTMLWithData();
+            }
+
+            // Siempre actualizar el caché con los nuevos datos
+            try {
+                const db = await initDB();
+                const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readwrite');
+                const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
+                
+                // Limpiar todos los registros existentes
+                await store.clear();
+                
+                // Guardar los nuevos registros
+                for (const registro of pedidosGlobal) {
+                    await store.put({
+                        id: registro.id,
+                        data: registro,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                console.log('Caché actualizado correctamente');
+            } catch (error) {
+                console.error('Error actualizando el caché:', error);
+            }
+
             return true;
         } else {
             mostrarNotificacion({
@@ -67,7 +165,8 @@ async function obtenerPedidos() {
 }
 async function obtenerAlmacenAcopio() {
     try {
-        mostrarCarga();
+        const signal = await mostrarProgreso('.pro-obtner')
+
         const response = await fetch('/obtener-productos-acopio');
         if (!response.ok) {
             throw new Error('Error en la respuesta del servidor');
@@ -86,6 +185,10 @@ async function obtenerAlmacenAcopio() {
             throw new Error(data.error || 'Error al obtener los productos');
         }
     } catch (error) {
+        if (error.message === 'cancelled') {
+            console.log('Operación cancelada por el usuario');
+            return;
+        }
         console.error('Error al obtener productos:', error);
         mostrarNotificacion({
             message: 'Error al obtener los productos de acopio',
@@ -94,7 +197,7 @@ async function obtenerAlmacenAcopio() {
         });
         return false;
     } finally {
-        ocultarCarga();
+        ocultarProgreso('.pro-obtner')
     }
 }
 
@@ -171,8 +274,6 @@ export async function mostrarPedidos() {
         obtenerPedidos(),
         obtenerProovedoresAcopio()
     ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -355,7 +456,6 @@ function eventosPedidos() {
     botonesNombre.forEach(boton => {
         if(boton.classList.contains('activado')){
             filtroNombreActual = boton.textContent.trim();
-            aplicarFiltros();
         }
         boton.addEventListener('click', () => {
             botonesNombre.forEach(b => b.classList.remove('activado'));
@@ -368,7 +468,6 @@ function eventosPedidos() {
     botonesEstado.forEach(boton => {
         if(boton.classList.contains('activado')){
             filtroEstadoActual = boton.textContent.trim();
-            aplicarFiltros();
         }
         boton.addEventListener('click', () => {
             botonesEstado.forEach(b => b.classList.remove('activado'));
@@ -830,7 +929,6 @@ function eventosPedidos() {
                         observacionesIngresado: document.querySelector('.editar-pedido .obs-ingre').value,
                         motivo: document.querySelector('.editar-pedido .motivo').value
                     };
-                    console.log(datosActualizados);
 
                     if (!datosActualizados.motivo) {
                         mostrarNotificacion({

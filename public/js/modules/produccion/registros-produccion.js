@@ -625,11 +625,10 @@ function eventosMisRegistros() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">Información del registro</h1>
+            <h1 class="titulo">${registro.producto}</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
-        <p class="normal-center">${registro.producto}</p>
             <div class="imagen-producto-registro">
                 ${imagenMostrar}
             </div>

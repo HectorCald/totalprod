@@ -1,55 +1,52 @@
-import { crearNotificacion, 
-    mostrarNotificacion, 
-    mostrarAnuncio, 
-    ocultarAnuncio, 
-    mostrarCarga, 
-    ocultarCarga, 
-    configuracionesEntrada, 
-    mostrarAnuncioSecond, 
-    ocultarAnuncioSecond, 
-    exportarArchivos, 
-    cerrarAnuncioManual, 
-    mostrarAnuncioTercer, 
-    ocultarAnuncioTercer, 
-    scrollToTop, tienePermiso, 
-    actualizarPermisos,
-    inicializarDashboard,
-    limpiarProteccionNavegacion,
-    usuarioInfo,
-    mostrarProgreso,
-    ocultarProgreso,
-    initPullToRefresh,
-    registrarNotificacion } from './modules/componentes.js'
-import { crearNav } from './modules/nav.js'
-import { crearHome, mostrarHome } from './modules/home.js';
-import { crearPerfil } from './modules/perfil.js';
-import { crearNotificaciones } from './modules/notificaciones.js'
-import { flotante } from './modules/flotante.js';
-import { mostrarFormularioProduccion } from './modules/formulario-produccion.js'
-import { mostrarVerificacion } from './modules/verificar-registros.js'
-import { mostrarAlmacenGeneral } from './modules/almacen-general.js'
-import { mostrarSalidas } from './modules/salidas-almacen-general.js';
-import { mostrarIngresos } from './modules/ingresos-almacen-general.js';
-import { mostrarClientes } from './modules/clientes.js';
-import { mostrarProovedores } from './modules/proovedores.js';
-import { mostrarHacerPedido } from './modules/hacer-pedido.js';
-import { mostrarAlmacenAcopio } from './modules/almacen-acopio.js';
-import { mostrarMovimientosAlmacen } from './modules/registros-almacen.js';
-import { mostrarMisRegistros } from './modules/registros-produccion.js';
-import { mostrarConteo } from './modules/conteo-almacen.js';
-import { registrosConteoAlmacen } from './modules/registros-conteos.js';
-import { mostrarPedidos } from './modules/registros-pedidos-acopio.js';
-import { mostrarIngresosAcopio } from './modules/ingresos-acopio.js';
-import { mostrarSalidasAcopio } from './modules/salidas-acopio.js';
-import { mostrarRegistrosAcopio } from './modules/registros-acopio.js';
-import { mostrarPagos } from './modules/pagos.js';
-import { mostrarReglas } from './modules/reglas.js';
-import { mostrarPersonal } from './modules/personal.js';
-import { mostrarCalcularMp } from './modules/calculadora-mp.js';
-import { mostrarTareas } from './modules/tareas-acopio.js';
-import { mostrarConfiguracionesSistema} from './modules/configuraciones-sistema.js';
-import { mostrarDescargaCatalogo} from './modules/descargas.js';
-import { mostrarReportes} from './modules/reportes.js';
+import {
+    crearNotificacion, mostrarNotificacion,
+    mostrarAnuncio, ocultarAnuncio, mostrarCarga,
+    ocultarCarga, configuracionesEntrada,
+    mostrarAnuncioSecond, ocultarAnuncioSecond,
+    exportarArchivos, cerrarAnuncioManual,
+    mostrarAnuncioTercer, ocultarAnuncioTercer,
+    scrollToTop, tienePermiso, actualizarPermisos,
+    inicializarDashboard, limpiarProteccionNavegacion,
+    usuarioInfo, mostrarProgreso,
+    ocultarProgreso, initPullToRefresh,
+    registrarNotificacion
+} from './modules/componentes/componentes.js'
+
+import { crearNav } from './modules/main/nav.js'
+import { crearHome, mostrarHome } from './modules/main/home.js';
+import { crearPerfil } from './modules/main/perfil.js';
+import { crearNotificaciones } from './modules/main/notificaciones.js';
+import { flotante } from './modules/main/flotante.js';
+
+import { mostrarFormularioProduccion } from './modules/produccion/formulario-produccion.js'
+import { mostrarMisRegistros } from './modules/produccion/registros-produccion.js'
+import { mostrarReglas } from './modules/produccion/reglas.js'
+
+import { mostrarVerificacion } from './modules/almacen/verificar-registros.js'
+import { mostrarAlmacenGeneral } from './modules/almacen/almacen-general.js'
+import { mostrarSalidas } from './modules/almacen/salidas-almacen-general.js';
+import { mostrarIngresos } from './modules/almacen/ingresos-almacen-general.js';
+import { mostrarConteo } from './modules/almacen/conteo-almacen.js';
+import { registrosConteoAlmacen } from './modules/almacen/registros-conteos.js';
+import { mostrarMovimientosAlmacen } from './modules/almacen/registros-almacen.js';
+
+import { mostrarHacerPedido } from './modules/acopio/hacer-pedido.js';
+import { mostrarAlmacenAcopio } from './modules/acopio/almacen-acopio.js';
+import { mostrarPedidos } from './modules/acopio/registros-pedidos-acopio.js';
+import { mostrarIngresosAcopio } from './modules/acopio/ingresos-acopio.js';
+import { mostrarSalidasAcopio } from './modules/acopio/salidas-acopio.js';
+import { mostrarRegistrosAcopio } from './modules/acopio/registros-acopio.js';
+
+import { mostrarClientes } from './modules/admin/clientes.js';
+import { mostrarProovedores } from './modules/admin/proovedores.js';
+import { mostrarPagos } from './modules/admin/pagos.js';
+import { mostrarPersonal } from './modules/admin/personal.js';
+import { mostrarConfiguracionesSistema } from './modules/admin/configuraciones-sistema.js';
+import { mostrarDescargaCatalogo } from './modules/admin/descargas.js';
+import { mostrarReportes } from './modules/admin/reportes.js';
+
+import { mostrarTareas } from './modules/plugins/tareas-acopio.js';
+import { mostrarCalcularMp } from './modules/plugins/calculadora-mp.js';
 
 window.usuarioInfo = usuarioInfo
 
@@ -82,17 +79,16 @@ window.mostrarProgreso = mostrarProgreso
 window.ocultarProgreso = ocultarProgreso
 window.initPullToRefresh = initPullToRefresh
 
+
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
-window.mostrarVerificacion = mostrarVerificacion
 window.mostrarMisRegistros = mostrarMisRegistros
 window.mostrarReglas = mostrarReglas
 
+window.mostrarVerificacion = mostrarVerificacion
 window.mostrarAlmacenGeneral = mostrarAlmacenGeneral
 window.mostrarSalidas = mostrarSalidas
 window.mostrarIngresos = mostrarIngresos
 window.mostrarMovimientosAlmacen = mostrarMovimientosAlmacen
-window.mostrarClientes = mostrarClientes
-window.mostrarProovedores = mostrarProovedores
 window.mostrarConteo = mostrarConteo
 window.registrosConteoAlmacen = registrosConteoAlmacen
 
@@ -103,6 +99,8 @@ window.mostrarIngresosAcopio = mostrarIngresosAcopio
 window.mostrarSalidasAcopio = mostrarSalidasAcopio
 window.mostrarRegistrosAcopio = mostrarRegistrosAcopio
 
+window.mostrarClientes = mostrarClientes
+window.mostrarProovedores = mostrarProovedores
 window.mostrarPagos = mostrarPagos
 window.mostrarPersonal = mostrarPersonal
 window.mostrarConfiguracionesSistema = mostrarConfiguracionesSistema
@@ -114,7 +112,7 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    inicializarDashboard();
+    await inicializarDashboard();
     flotante();
     await crearHome();
 });

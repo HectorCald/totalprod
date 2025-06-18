@@ -538,9 +538,6 @@ function obtenerOpcionesMenu() {
     const rol = usuarioInfo.rol;
     let atajosUsuario = [];
 
-    // Obtener plugins como string del localStorage
-    const plugins = localStorage.getItem('plugins_activos') || '';
-
     // Primero agregamos las opciones del rol
     const atajosRol = atajosPorRol[rol];
     if (atajosRol) {
@@ -567,13 +564,17 @@ function renderMenu() {
 
     if (usuarioInfo.rol === 'Administración') {
         // Agrupar por roles
+        const pluginsKeys = Object.keys(pluginsMenu).slice(0, 2); // Obtiene las dos primeras claves
+        const plugins = pluginsKeys.map(key => pluginsMenu[key]); // Obtiene los objetos de esas claves
+
         const grupos = {
             'Administración': atajosPorRol['Administración'],
             'Producción': atajosPorRol['Producción'],
             'Almacen': atajosPorRol['Almacen'],
             'Acopio': atajosPorRol['Acopio'],
-            'Plugins': Object.values(pluginsMenu)
+            'Plugins': plugins
         };
+
 
         // Generar HTML para cada grupo - AGREGAR data-tooltip aquí también
         opcionesHTML = Object.entries(grupos).map(([titulo, opciones]) => {
@@ -776,12 +777,12 @@ function eventosNav() {
         opcion.addEventListener('click', () => {
             opciones.forEach(opcion => opcion.classList.remove('opcion-activa'));
             opcion.classList.add('opcion-activa');
-        
+
             if (div.style.width !== '92px' && estatic === false) {
                 achicarDiv();
             }
         });
-        
+
     })
 
     refreshButton.addEventListener('click', () => {

@@ -49,11 +49,7 @@ export async function mostrarConfiguracionesSistema() {
                         <input type="time" class="hora-fin" value="${configuracionesGlobal?.horario?.horaFin || ''}">
                     </div>
                 </div>
-                <button class="btn-guardar-config btn blue">
-                    <i class='bx bx-save'></i> Guardar Cambios
-                </button>
             </div>
-
             <p class="normal">Estado del Sistema</p>
             <div class="estado-selector">
                 <button class="btn-estado ${configuracionesGlobal?.sistema?.estado === 'Activo' ? 'active' : ''}" data-estado="Activo">
@@ -67,6 +63,13 @@ export async function mostrarConfiguracionesSistema() {
                 <i class='bx bx-info-circle'></i>
                 <div class="detalle-info">
                     <p>Si has realizado cambios en la configuración. No olvides guardarlos para que se apliquen. los cambios pueden afectar a varios aspectos del sistema.</p>
+                </div>
+            </div>
+            <div class="busqueda" >
+                <div class="acciones-grande" style="min-width: 100%; display:flex; justify-content:center " >
+                    <button class="btn-guardar-config btn blue">
+                        <i class='bx bx-save'></i> Guardar Cambios
+                    </button>
                 </div>
             </div>
         </div>

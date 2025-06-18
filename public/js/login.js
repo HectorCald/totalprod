@@ -1,7 +1,7 @@
 /* ==================== COMPONENTES ==================== */
-import { crearNotificacion, mostrarNotificacion } from './modules/componentes.js'
-import { mostrarAnuncio, ocultarAnuncio, configuracionesEntrada, mostrarAnuncioSecond,mostrarAnuncioTercer, cerrarAnuncioManual } from './modules/componentes.js'
-import { mostrarCarga, ocultarCarga, inicializarDashboard } from './modules/componentes.js'
+import { crearNotificacion, mostrarNotificacion } from './modules/componentes/componentes.js'
+import { mostrarAnuncio, ocultarAnuncio, configuracionesEntrada, mostrarAnuncioSecond,mostrarAnuncioTercer, cerrarAnuncioManual } from './modules/componentes/componentes.js'
+import { mostrarCarga, ocultarCarga, inicializarDashboard } from './modules/componentes/componentes.js'
 
 window.cerrarAnuncioManual = cerrarAnuncioManual
 window.crearNotificacion = crearNotificacion

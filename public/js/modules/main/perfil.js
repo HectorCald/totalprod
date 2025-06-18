@@ -625,7 +625,7 @@ async function calculateStorageUsed() {
         }
 
         // Convertir a MB con 3 decimales
-        const sizeInMB = (totalSize / (1024 * 1024)).toFixed(3);
+        const sizeInMB = (totalSize / (1024 * 1024)).toFixed(1);
         storageInfo.textContent = `${sizeInMB} MB`;
         return `${sizeInMB} MB`;
     } catch (error) {

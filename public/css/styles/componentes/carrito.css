@@ -1,0 +1,225 @@
+.carrito-items {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+
+
+    .carrito-item {
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        padding: 10px 15px;
+        transition: transform 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: transform 0.3s ease, opacity 0.3s ease, height 0.3s ease;
+        height: auto;
+
+
+        .item-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+
+            h3 {
+                color: var(--text) !important;
+                font-size: var(--text-subtitulo);
+            }
+
+            .cantidad-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+
+                input {
+                    width: 60px;
+                    text-align: center;
+                    background: none;
+                    border-radius: 10px;
+                    padding: 10px;
+                    border: 1px solid var(--primary-color);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    text-align: center;
+                    transition: all 0.5s ease;
+                    color: var(--text);
+                    font-size: var(--text-subtitulo);
+
+                    &:focus {
+                        border: 1px solid var(--tercer-color);
+                    }
+                }
+
+                button {
+                    width: 40px;
+                    min-height: 40px;
+                    border: none;
+                    border-radius: 50%;
+                    height: 100%;
+                    color: white;
+                    font-size: var(--text-3xl) !important;
+                    font-size: 900;
+                    font-family: 'Impact', sans-serif !important;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    text-align: center;
+                    background: none;
+                }
+            }
+
+        }
+
+        .subtotal-delete {
+            margin-top: 10px;
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+
+            .info-valores {
+                display: flex;
+                gap: 10px;
+
+                select {
+                    min-width: 70px !important;
+                    background-color: var(--primary-color);
+                    color: var(--text);
+                    border-radius: 10px;
+                    padding: 10px;
+                    border: none;
+                    font-size: var(--text-subtitulo);
+                }
+
+                .detalle {
+                    width: 100%;
+                    background-color: var(--primary-color);
+                    color: var(--text);
+                    border-radius: 10px;
+                    padding: 10px;
+                    border: none;
+                    transition: all 0.5s ease;
+                    font-size: var(--text-subtitulo);
+                    margin-right: 10px;
+
+                    &:focus {
+                        border: 1px solid var(--tercer-color);
+                    }
+                }
+
+                .detalle::placeholder {
+                    color: var(--cero-color);
+                }
+
+                p {
+                    font-size: var(--text-detalle);
+                    font-weight: 900 !important;
+                    padding: 5px 10px;
+                    border-radius: 10px;
+                    text-align: center;
+                    background: none;
+                }
+
+                p.subtotal {
+                    font-weight: 900;
+                    font-size: 13px;
+                    color: var(--success);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-inline: 10px;
+                    border-radius: 5px;
+                    font-size: 10px;
+                    background-color: #4caf4f24;
+                }
+
+                p.stock-disponible {
+                    font-weight: 900;
+                    font-size: 13px;
+                    color: orange;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-inline: 10px;
+                    border-radius: 5px;
+                    font-size: 10px;
+                    background-color: #f39d1228;
+                }
+            }
+
+            button {
+                background: none;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 10px;
+                width: auto;
+                height: 100%;
+
+                i {
+                    color: var(--error) !important;
+                    font-size: var(--text-2xl) !important;
+                }
+            }
+        }
+
+        .item-info-acopio {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}
+.carrito-total {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+@keyframes agregarAlCarrito {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+        background-color: var(--oct-color);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.agregado-al-carrito {
+    animation: agregarAlCarrito 0.5s ease;
+}
+
+@keyframes eliminarItem {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        max-height: 200px;
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.eliminar-item {
+    animation: eliminarItem 0.3s ease forwards;
+}
+
+.carrito-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

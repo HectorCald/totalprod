@@ -4,10 +4,7 @@ let movimientosAcopio = [];
 const REGISTROS_STORE = 'registros_verificacion';
 const DB_NAME = 'damabrava_db';
 
-// Versión actual de la aplicación
 const APP_VERSION = '2.0.0';
-
-// Detalles de la actualización
 const UPDATE_DETAILS = {
     version: APP_VERSION,
     title: 'Nueva Actualización Disponible',
@@ -723,13 +720,15 @@ function editarAtajos() {
     let atajosHTML = '';
 
     if (rol === 'Administración') {
+        const pluginsKeys = Object.keys(pluginsMenu).slice(0, 2); // Obtiene las dos primeras claves
+        const plugins = pluginsKeys.map(key => pluginsMenu[key]);
         // Agrupar por roles y plugins
         const grupos = {
             'Administración': atajosPorRol['Administración'],
             'Producción': atajosPorRol['Producción'],
             'Almacen': atajosPorRol['Almacen'],
             'Acopio': atajosPorRol['Acopio'],
-            'Plugins': Object.values(pluginsMenu)
+            'Plugins': Object.values(plugins)
         };
 
         // Generar HTML por grupos
@@ -1126,8 +1125,6 @@ export function mostrarHome(view) {
         crearGraficoAcopio();
     } else if (usuarioInfo.rol === 'Administración') {
         crearGraficoVelas();
-        crearGraficoAlmacen();
-        crearGraficoAcopio();
     }
     const screenStart = document.querySelector('.pro-start')
     screenStart.classList.remove('slide-in-flotante')

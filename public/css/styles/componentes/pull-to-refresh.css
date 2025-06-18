@@ -1,0 +1,40 @@
+.pull-to-refresh {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 50px;
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background-color: var(--primary-color);
+    border-radius: 10px;
+    margin: 0 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: var(--text);
+    pointer-events: none;
+}
+
+.pull-to-refresh.active {
+    opacity: 1;
+}
+
+.pull-to-refresh i {
+    margin-right: 8px;
+    font-size: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
