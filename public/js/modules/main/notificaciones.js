@@ -4,13 +4,19 @@ let cantidadAnterior = parseInt(localStorage.getItem('cantidad_notificaciones') 
 let notificacionesNuevasIds = new Set(JSON.parse(localStorage.getItem('notificaciones_nuevas') || '[]'));
 let fcmToken = null;
 let messaging = null;
+let getToken = null;
+let onMessage = null;
 
 // Inicializar Firebase Messaging
 async function inicializarFirebaseMessaging() {
     try {
         // Importar Firebase dinámicamente
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
-        const { getMessaging, getToken, onMessage } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
+        const { getMessaging, getToken: getTokenFn, onMessage: onMessageFn } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
+
+        // Asignar las funciones al scope global del módulo
+        getToken = getTokenFn;
+        onMessage = onMessageFn;
 
         const firebaseConfig = {
             apiKey: "AIzaSyCbfR1fpCDIsE8R_9RAN9lG0H9bsk2WQeQ",
@@ -65,6 +71,13 @@ async function registrarServiceWorker() {
 // Obtener token FCM
 async function obtenerFCMToken() {
     try {
+        if (!getToken || !messaging) {
+            console.log('Firebase Messaging no está inicializado, esperando...');
+            // Reintentar después de 2 segundos
+            setTimeout(obtenerFCMToken, 2000);
+            return;
+        }
+
         const registration = await navigator.serviceWorker.ready;
         fcmToken = await getToken(messaging, {
             vapidKey: 'BPeyAQuzecxcE6GsmdeYnTVwi1x4ULPDkaMOv_CQ0Mryu0jW0A8PD-n7kcjvBNis14-HEAncrq1LYcqY6vwFgTU',
@@ -75,10 +88,14 @@ async function obtenerFCMToken() {
             console.log('Token FCM obtenido:', fcmToken.substring(0, 50) + '...');
             await registrarTokenEnServidor(fcmToken);
         } else {
-            console.log('No se pudo obtener el token FCM');
+            console.log('No se pudo obtener el token FCM, reintentando en 5 segundos...');
+            // Reintentar después de 5 segundos
+            setTimeout(obtenerFCMToken, 5000);
         }
     } catch (error) {
         console.error('Error al obtener token FCM:', error);
+        // Reintentar después de 10 segundos en caso de error
+        setTimeout(obtenerFCMToken, 10000);
     }
 }
 
@@ -199,7 +216,13 @@ export async function crearNotificaciones(user) {
 
     // Inicializar notificaciones push si no están inicializadas
     if (!messaging) {
+        console.log('Inicializando Firebase Messaging...');
         await solicitarPermisosNotificacion();
+        
+        // Esperar un poco para que Firebase se inicialice completamente
+        if (!messaging) {
+            console.log('Firebase Messaging no se pudo inicializar, continuando sin notificaciones push');
+        }
     }
 
     await obtenerMisNotificaciones();
