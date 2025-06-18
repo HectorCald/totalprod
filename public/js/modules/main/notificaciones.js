@@ -6,6 +6,15 @@ let fcmToken = null;
 let messaging = null;
 let getToken = null;
 let onMessage = null;
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(() => {
+            console.log('Service Worker registrado desde el inicio');
+        })
+        .catch(error => {
+            console.error('Error al registrar Service Worker desde el inicio:', error);
+        });
+}
 
 // Inicializar Firebase Messaging
 async function inicializarFirebaseMessaging() {
@@ -58,7 +67,7 @@ async function inicializarFirebaseMessaging() {
 // Registrar Service Worker
 async function registrarServiceWorker() {
     try {
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
         await navigator.serviceWorker.ready;
         console.log('Service Worker registrado para notificaciones');
         return registration;
