@@ -57,7 +57,6 @@ async function obtenerRegistrosLocal() {
 }
 
 
-
 async function obtenerProovedoresAcopio() {
     try {
         const response = await fetch('/obtener-proovedores');
@@ -1126,10 +1125,6 @@ function eventosPedidos() {
                     }
 
                     const signal = await mostrarProgreso('.pro-pedido');
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
 
                     // 1. Registrar la entrega del pedido
                     const entregaResponse = await fetch(`/entregar-pedido/${registro.id}`, {
