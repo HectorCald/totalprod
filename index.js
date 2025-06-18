@@ -799,6 +799,38 @@ app.get('/obtener-usuarios-produccion', requireAuth, async (req, res) => {
         });
     }
 });
+app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!A2:H' // Solo ID y NOMBRE
+        });
+
+        const rows = response.data.values || [];
+        const nombres = rows.map(row => ({
+            id: row[0] || '',
+            nombre: row[1] || '',
+            rol: row[4] || '',
+            user: row[7] || ''
+        }));
+
+        res.json({
+            success: true,
+            nombres
+        });
+
+    } catch (error) {
+        console.error('Error al obtener nombres:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los nombres'
+        });
+    }
+});
+
 
 /* ==================== RUTAS DE PRODUCCIÓN ==================== */
 app.get('/obtener-registros-produccion', requireAuth, async (req, res) => {
@@ -4733,6 +4765,39 @@ app.get('/obtener-personal', requireAuth, async (req, res) => {
         });
     }
 });
+
+app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Usuarios!A2:H' // Solo ID y NOMBRE
+        });
+
+        const rows = response.data.values || [];
+        const nombres = rows.map(row => ({
+            id: row[0] || '',
+            nombre: row[1] || '',
+            rol: row[4] || '',
+            user: row[7] || ''
+        }));
+
+        res.json({
+            success: true,
+            nombres
+        });
+
+    } catch (error) {
+        console.error('Error al obtener nombres:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener los nombres'
+        });
+    }
+});
+
 app.put('/actualizar-usuario-admin/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
