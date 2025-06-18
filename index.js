@@ -11,6 +11,7 @@ import multer from 'multer';
 import xlsx from 'xlsx';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import admin from 'firebase-admin';
 
 /* ==================== CONFIGURACIÓN INICIAL ==================== */
 dotenv.config();
@@ -47,7 +48,6 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
 const cloudinaryStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -55,7 +55,6 @@ const cloudinaryStorage = new CloudinaryStorage({
         allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
     }
 });
-
 const uploadImage = multer({
     storage: cloudinaryStorage,
     fileFilter: (req, file, cb) => {
@@ -65,6 +64,25 @@ const uploadImage = multer({
             cb(new Error('Solo se permiten archivos de imagen'));
         }
     }
+});
+
+/* ==================== CONFIGURACIÓN DE FIREBASE ==================== */
+const serviceAccount = {
+    type: process.env.FIREBASE_TYPE,
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+    auth_uri: process.env.FIREBASE_AUTH_URI,
+    token_uri: process.env.FIREBASE_TOKEN_URI,
+    auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+    client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+    universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN
+};
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
 });
 
 /* ==================== MIDDLEWARES Y CONFIGURACIÓN DE APP ==================== */
@@ -108,6 +126,34 @@ function requireAuth(req, res, next) {
         return res.status(401).json({ error: 'Token inválido' });
     }
 }
+/* ==================== FUNCIONES DE UTILIDAD ==================== */
+async function enviarNotificacion(token, titulo, mensaje) {
+    if (!titulo || !mensaje) {
+        console.error('Título o mensaje indefinidos');
+        return false;
+    }
+
+    try {
+        const mensajeNotificacion = {
+            token: token,
+            notification: {
+                title: titulo,
+                body: mensaje
+            },
+            data: {
+                title: titulo,
+                body: mensaje
+            }
+        };
+
+        const response = await admin.messaging().send(mensajeNotificacion);
+        return true;
+    } catch (error) {
+        console.error('Error al enviar notificación:', error);
+        return false;
+    }
+}
+
 /* ==================== RUTAS DE VISTAS ==================== */
 app.get('/', (req, res) => {
     const token = req.cookies.token;
@@ -132,6 +178,54 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 app.get('/dashboard_otro', requireAuth, (req, res) => {
     res.render('dashboard_otro')
+});
+/* ==================== RUTAS DE API - NOTIFICACIONES ==================== */
+app.post('/register-fcm-token', requireAuth, async (req, res) => {
+    try {
+        const { token } = req.body;
+        const { spreadsheetId } = req.user; // Ahora sí tendremos acceso a req.user
+        
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token FCM requerido'
+            });
+        }
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'FCMTokens!A:B',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: [[new Date().toISOString(), token]]
+            }
+        });
+
+        const resultado = await enviarNotificacion(
+            token,
+            'Bienvenido a Damabrava',
+            'Las notificaciones se han activado correctamente'
+        );
+
+        if (!resultado) {
+            throw new Error('Error al enviar la notificación de prueba');
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Token FCM registrado correctamente' 
+        });
+
+    } catch (error) {
+        console.error('Error al registrar token FCM:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error al registrar token FCM: ' + error.message 
+        });
+    }
 });
 
 /* ==================== RUTAS DE AUTENTICACION ==================== */
@@ -454,6 +548,45 @@ app.post('/registrar-notificacion', requireAuth, async (req, res) => {
                 ]]
             }
         });
+
+        // ENVIAR NOTIFICACIÓN PUSH A TODOS LOS USUARIOS
+        try {
+            // Obtener todos los tokens FCM registrados
+            const tokensResponse = await sheets.spreadsheets.values.get({
+                spreadsheetId,
+                range: 'FCMTokens!A:B'
+            });
+
+            const tokens = tokensResponse.data.values || [];
+            let exitosos = 0;
+            let fallidos = 0;
+
+            // Enviar notificación a cada token
+            for (const token of tokens) {
+                try {
+                    const resultado = await enviarNotificacion(
+                        token[1], // El token FCM
+                        suceso,   // Título de la notificación
+                        detalle   // Mensaje de la notificación
+                    );
+                    
+                    if (resultado) {
+                        exitosos++;
+                    } else {
+                        fallidos++;
+                    }
+                } catch (error) {
+                    console.error(`Error al enviar notificación a token ${token[1]}:`, error);
+                    fallidos++;
+                }
+            }
+
+            console.log(`Notificaciones push enviadas: ${exitosos} exitosas, ${fallidos} fallidas`);
+
+        } catch (pushError) {
+            console.error('Error al enviar notificaciones push:', pushError);
+            // No fallar la operación principal si las notificaciones push fallan
+        }
 
         res.json({
             success: true,

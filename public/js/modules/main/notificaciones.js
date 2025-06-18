@@ -2,6 +2,146 @@ let usuarioInfo = [];
 let historialNotificaciones = [];
 let cantidadAnterior = parseInt(localStorage.getItem('cantidad_notificaciones') || '0');
 let notificacionesNuevasIds = new Set(JSON.parse(localStorage.getItem('notificaciones_nuevas') || '[]'));
+let fcmToken = null;
+let messaging = null;
+
+// Inicializar Firebase Messaging
+async function inicializarFirebaseMessaging() {
+    try {
+        // Importar Firebase dinámicamente
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js');
+        const { getMessaging, getToken, onMessage } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js');
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCbfR1fpCDIsE8R_9RAN9lG0H9bsk2WQeQ",
+            authDomain: "damabravaapp.firebaseapp.com",
+            projectId: "damabravaapp",
+            storageBucket: "damabravaapp.firebasestorage.app",
+            messagingSenderId: "36776613676",
+            appId: "1:36776613676:web:f031d9435399a75a9afe89",
+            measurementId: "G-NX0Z9ZPC5R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        messaging = getMessaging(app);
+
+        // Manejar mensajes en primer plano
+        onMessage(messaging, (payload) => {
+            console.log('Notificación push recibida en primer plano:', payload);
+            
+            // Mostrar notificación local
+            mostrarNotificacionLocal(
+                payload.notification?.title || 'Nueva notificación',
+                payload.notification?.body || 'Tienes un nuevo mensaje'
+            );
+
+            // Actualizar el historial de notificaciones
+            actualizarHistorialNotificaciones();
+        });
+
+        // Registrar service worker y obtener token
+        await registrarServiceWorker();
+        await obtenerFCMToken();
+
+        console.log('Firebase Messaging inicializado correctamente');
+    } catch (error) {
+        console.error('Error al inicializar Firebase Messaging:', error);
+    }
+}
+
+// Registrar Service Worker
+async function registrarServiceWorker() {
+    try {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        await navigator.serviceWorker.ready;
+        console.log('Service Worker registrado para notificaciones');
+        return registration;
+    } catch (error) {
+        console.error('Error al registrar Service Worker:', error);
+        throw error;
+    }
+}
+
+// Obtener token FCM
+async function obtenerFCMToken() {
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        fcmToken = await getToken(messaging, {
+            vapidKey: 'BPeyAQuzecxcE6GsmdeYnTVwi1x4ULPDkaMOv_CQ0Mryu0jW0A8PD-n7kcjvBNis14-HEAncrq1LYcqY6vwFgTU',
+            serviceWorkerRegistration: registration
+        });
+
+        if (fcmToken) {
+            console.log('Token FCM obtenido:', fcmToken.substring(0, 50) + '...');
+            await registrarTokenEnServidor(fcmToken);
+        } else {
+            console.log('No se pudo obtener el token FCM');
+        }
+    } catch (error) {
+        console.error('Error al obtener token FCM:', error);
+    }
+}
+
+// Registrar token en el servidor
+async function registrarTokenEnServidor(token) {
+    try {
+        const response = await fetch('/register-fcm-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token: token })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Token FCM registrado en el servidor');
+        } else {
+            console.error('Error al registrar token:', result.error);
+        }
+    } catch (error) {
+        console.error('Error al enviar token al servidor:', error);
+    }
+}
+
+// Mostrar notificación local
+function mostrarNotificacionLocal(titulo, mensaje) {
+    if (Notification.permission === 'granted') {
+        const notificacion = new Notification(titulo, {
+            body: mensaje,
+            icon: '/icons/icon.png',
+            badge: '/badge.png',
+            silent: false,
+            requireInteraction: true
+        });
+
+        // Manejar clic en la notificación
+        notificacion.onclick = () => {
+            window.focus();
+            notificacion.close();
+            // Aquí puedes agregar lógica para abrir una sección específica
+        };
+    }
+}
+
+// Solicitar permisos de notificación
+async function solicitarPermisosNotificacion() {
+    try {
+        const permission = await Notification.requestPermission();
+        console.log('Permiso de notificación:', permission);
+        
+        if (permission === 'granted') {
+            await inicializarFirebaseMessaging();
+        } else {
+            console.log('Permiso de notificación denegado');
+        }
+        
+        return permission;
+    } catch (error) {
+        console.error('Error al solicitar permisos:', error);
+        return 'denied';
+    }
+}
 
 async function obtenerMisNotificaciones() {
     try {
@@ -44,14 +184,31 @@ async function obtenerMisNotificaciones() {
     }
 }
 
+// Actualizar historial de notificaciones
+async function actualizarHistorialNotificaciones() {
+    await obtenerMisNotificaciones();
+    const view = document.querySelector('.notificacion-view');
+    if (view) {
+        mostrarNotificaciones(view);
+    }
+}
 
 export async function crearNotificaciones(user) {
     usuarioInfo = user;
     const view = document.querySelector('.notificacion-view');
 
+    // Inicializar notificaciones push si no están inicializadas
+    if (!messaging) {
+        await solicitarPermisosNotificacion();
+    }
+
     await obtenerMisNotificaciones();
     mostrarNotificaciones(view);
+
+    // Configurar actualización automática cada 30 segundos
+    setInterval(actualizarHistorialNotificaciones, 30000);
 }
+
 function obtenerIcono(suceso) {
     const iconos = {
         'Edición': 'edit',
@@ -63,6 +220,7 @@ function obtenerIcono(suceso) {
     };
     return iconos[suceso] || 'bell';
 }
+
 function formatearFecha(fechaCompleta) {
     // Convertir el formato "DD/MM/YYYY, HH:mm:ss" a Date
     const [fecha, hora] = fechaCompleta.split(',');
@@ -98,6 +256,7 @@ function formatearFecha(fechaCompleta) {
         };
     }
 }
+
 function mostrarNotificaciones(view) {
     // Agrupar notificaciones por fecha
     const notificacionesAgrupadas = {};

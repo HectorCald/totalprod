@@ -15,12 +15,6 @@ const ASSETS_TO_CACHE = [
     '/css/styles/flotante.css',
     '/js/modules/main/flotante.js',
     '/js/modules/componentes/componentes.js',
-    '/js/modules/acopio',
-    '/js/modules/almacen',
-    '/js/modules/produccion',
-    '/js/modules/admin',
-    '/js/modules/plugins',
-    '/js/modules/main',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
 ];
