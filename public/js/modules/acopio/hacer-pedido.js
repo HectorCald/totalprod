@@ -667,7 +667,7 @@ function eventosPedidos() {
                 registrarNotificacion(
                     'Administración',
                     'Creación',
-                    usuarioInfo.nombre + ' registro un nuevo pedido de materia prima del producto: '+nombre+' '+cantidad)
+                    usuarioInfo.nombre + ' registro un nuevo pedido de materia prima')
                 mostrarMensajePedido();
                 await mostrarHacerPedido();
             } else {

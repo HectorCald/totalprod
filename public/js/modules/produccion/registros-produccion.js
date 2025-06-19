@@ -83,6 +83,7 @@ async function obtenerRegistrosLocal() {
                 resolve(registros);
             };
             request.onerror = () => reject(request.error);
+            alert('hola')
         });
     } catch (error) {
         console.error('Error obteniendo registros del caché:', error);
@@ -195,7 +196,6 @@ function necesitaActualizacion(imagenCache, nuevaUrl) {
 async function obtenerMisRegistros() {
     try {
         const registrosCache = await obtenerRegistrosLocal();
-        
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCache.length > 0) {
             registrosProduccion = registrosCache.sort((a, b) => {
