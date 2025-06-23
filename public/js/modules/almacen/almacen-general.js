@@ -1846,7 +1846,7 @@ function eventosAlmacenGeneral() {
             const contenidoTercer = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
                 <div class="encabezado">
-                    <h1 class="titulo">Actualizar precios desde hoja vinculada</h1>
+                    <h1 class="titulo">Actualizar desde hoja vinculada</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
