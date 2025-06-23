@@ -688,8 +688,8 @@ function eventosPagos() {
                         </div>
                     </div>
                 ` : ''}
-                ${pagosParciales.length > 0 ? `
                 <p class="normal">Historial de pagos</p>
+                ${pagosParciales.length > 0 ? `
                 <div class="tabla-responsive">
                     <table>
                         <thead>
