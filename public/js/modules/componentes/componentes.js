@@ -139,6 +139,15 @@ export async function mostrarAnuncio() {
     const contenido = document.querySelector('.anuncio .contenido');
     contenido.style.maxWidth = '100%'
 
+    
+    const botonCarrito = document.querySelector('.btn-flotante-salidas')
+    const botonCarrito2 = document.querySelector('.btn-flotante-ingresos')
+    if (botonCarrito) {
+        botonCarrito.style.display = 'none'
+    } else if (botonCarrito2) {
+        botonCarrito2.style.display = 'none'
+    }
+
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
@@ -191,6 +200,7 @@ export async function mostrarAnuncioSecond() {
     } else if (anuncioTercer && anuncioTercer.classList.contains('mostrar')) {
         cerrarAnuncioManual('anuncioTercer');
     }
+
     configuracionesEntrada();
 }
 export async function mostrarAnuncioTercer() {
@@ -919,7 +929,7 @@ export function mostrarProgreso(tipo) {
         botonesCancelar.forEach(btn => {
             btn.style.display = 'flex';
             btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar (${contador})</span>`;
-            
+
             // Configurar el listener para cancelar durante el conteo
             btn.onclick = () => {
                 clearInterval(contadorInterval);
@@ -936,14 +946,14 @@ export function mostrarProgreso(tipo) {
 
         contadorInterval = setInterval(() => {
             contador--;
-            
+
             if (contador > 0) {
                 botonesCancelar.forEach(btn => {
                     btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar (${contador})</span>`;
                 });
             } else {
                 clearInterval(contadorInterval);
-                
+
                 botonesCancelar.forEach(btn => {
                     btn.innerHTML = `<i class='bx bx-x'></i><span>Cancelar</span>`;
                 });
@@ -958,17 +968,17 @@ export function ocultarProgreso(tipo) {
         clearInterval(contadorInterval);
         contadorInterval = null;
     }
-    
+
     const div = document.querySelector(tipo);
     // Ocultar todos los botones de cancelar
     const botonesCancelar = document.querySelectorAll(
         '.pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
-      );
-    
+    );
+
     botonesCancelar.forEach(btn => {
         btn.style.display = 'none';
     });
-    
+
     setTimeout(() => {
         div.classList.remove('slide-in-flotante');
         div.classList.add('slide-out-flotante');
@@ -1019,7 +1029,7 @@ export function initPullToRefresh(container, refreshCallback) {
             if (pullDistance <= 50) {
                 pullToRefresh.style.transform = `translateX(-50%) translateY(${pullDistance}px)`;
                 pullToRefresh.classList.add('active');
-                
+
                 if (pullDistance >= 50) {
                     pullToRefresh.classList.add('ready');
                     pullToRefresh.querySelector('span').textContent = 'Suelta para recargar';
@@ -1040,7 +1050,7 @@ export function initPullToRefresh(container, refreshCallback) {
         if (isReady) {
             isRefreshing = true;
             pullToRefresh.querySelector('span').textContent = 'Recargando...';
-            
+
             try {
                 await refreshCallback();
                 mostrarNotificacion({
@@ -1068,7 +1078,7 @@ export function initPullToRefresh(container, refreshCallback) {
             pullToRefresh.classList.remove('active', 'ready');
             pullToRefresh.querySelector('span').textContent = 'Desliza para recargar';
         }
-        
+
         isPulling = false;
     }
 

@@ -2,7 +2,7 @@
     height: 100%;
     overflow-y: auto;
     display: flex;
-    gap: 10px;
+    gap: 5px !important;
     flex-direction: column;
 
 
@@ -26,7 +26,7 @@
 
             h3 {
                 color: var(--text) !important;
-                font-size: var(--text-subtitulo);
+                font-size: var(--text-detalle);
             }
 
             .cantidad-control {
@@ -75,7 +75,6 @@
         }
 
         .subtotal-delete {
-            margin-top: 10px;
             display: flex;
             width: 100%;
             justify-content: space-between;
@@ -83,7 +82,7 @@
 
             .info-valores {
                 display: flex;
-                gap: 10px;
+                gap: 5px;
 
                 select {
                     min-width: 70px !important;
@@ -148,6 +147,18 @@
                     border-radius: 5px;
                     font-size: 10px;
                     background-color: #f39d1228;
+                }
+                p.unitario {
+                    font-weight: 900;
+                    font-size: 13px;
+                    color: rgb(94, 136, 254);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding-inline: 10px;
+                    border-radius: 5px;
+                    font-size: 10px;
+                    background-color: rgba(59, 94, 248, 0.159);
                 }
             }
 

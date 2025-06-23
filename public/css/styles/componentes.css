@@ -96,7 +96,7 @@
 .productos-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr));
-    gap: 10px;
+    gap: 5px !important;
 }
 @media screen and (min-width: 768px) {
     .productos-container {
@@ -144,7 +144,7 @@
     font-size: var(--text-detalle);
     margin: 0;
     justify-content: center;
-    gap: 10px;
+    gap: 5px;
     align-items: center;
     width: 100%;
     background: none;
@@ -654,3 +654,45 @@
 .btn-precio:disabled i {
     opacity: 0.2;
 }
+
+
+
+.leyenda {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content:center;
+    align-items: center;
+  }
+  
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    p{
+        font-size: 10px;
+    }
+  }
+  
+  .punto {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  
+  .blue-light {
+    background-color: rgb(94, 136, 254);
+  }
+  
+  .orange {
+    background-color: orange;
+  }
+  
+  .verde {
+    background-color: var(--success);
+  }
+  

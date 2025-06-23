@@ -6,7 +6,7 @@ let proovedores = [];
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 let nombresUsuariosGlobal = [];
 
-const DB_NAME = 'damabrava_db';
+const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
 
 function initDB() {
@@ -726,6 +726,14 @@ function eventosIngresos() {
         actualizarCarritoLocalIngresos();
         actualizarBotonFlotante();
         actualizarCarritoUI();
+        // Mostrar el carrito automáticamente si la pantalla es grande
+        if (window.innerWidth >= 1024) {
+            mostrarCarritoIngresos();
+            setTimeout(() => {
+                const inputCantidad = document.querySelector(`.carrito-item[data-id='${productoId}'] input[type='number']`);
+                if (inputCantidad) inputCantidad.focus();
+            }, 100);
+        }
     }
     window.eliminarDelCarrito = (id) => {
         const itemToRemove = document.querySelector(`.carrito-item[data-id="${id}"]`);
@@ -833,6 +841,7 @@ function eventosIngresos() {
                         <div class="subtotal-delete">
                             <div class="info-valores">
                                 <p class="stock-disponible">${parseInt(item.stock) + parseInt(item.cantidad)} Und.</p>
+                                <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
                                 <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
                             </div>
                             <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
@@ -842,49 +851,63 @@ function eventosIngresos() {
                     </div>
                 `).join('')}
                     <div class="carrito-total">
-                    <div class="campo-vertical">
-                        <span><strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}</span>
-                        <span class="total-final"><strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div class="campo-horizontal">
+                        <div class="leyenda">
+                            <div class="item">
+                                <span class="punto orange"></span>
+                                <p>Stock actual</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto blue-light"></span>
+                                <p>Precio unitario</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto verde"></span>
+                                <p>Subtotal</p>
+                            </div>
+                        </div>
+                        <div class="campo-vertical">
+                            <span><strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                            <span class="total-final"><strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                        </div>
                         <div class="entrada">
-                            <i class='bx bx-purchase-tag-alt'></i>
+                            <i class='bx bx-label'></i>
                             <div class="input">
-                                <p class="detalle">Descuento</p>
-                                <input class="descuento" type="number" autocomplete="off" placeholder=" " required>
+                                <p class="detalle">Nombre del movimiento</p>
+                                <input class="nombre-movimiento" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-purchase-tag-alt'></i>
+                                <div class="input">
+                                    <p class="detalle">Descuento</p>
+                                    <input class="descuento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-plus'></i>
+                                <div class="input">
+                                    <p class="detalle">Aumento</p>
+                                    <input class="aumento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
                             </div>
                         </div>
                         <div class="entrada">
-                            <i class='bx bx-plus'></i>
+                            <i class='bx bx-user'></i>
                             <div class="input">
-                                <p class="detalle">Aumento</p>
-                                <input class="aumento" type="number" autocomplete="off" placeholder=" " required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-user'></i>
-                        <div class="input">
-                            <p class="detalle">Selecciona proovedor</p>
-                            <select class="select-proovedor" required>
-                                <option value=""></option>
-                                ${proovedores.map(proovedor => `
-                                    <option value="${proovedor.nombre}(${proovedor.id})">${proovedor.nombre}</option>
-                                `).join('')}
-                                ${nombresUsuariosGlobal
-                .filter(proveedor => proveedor.rol === 'Producción')
-                .map(proveedor => `
-                                      <option value="${proveedor.nombre}(${proveedor.id})">${proveedor.nombre}</option>
-                                    `).join('')
-            }
+                                <p class="detalle">Selecciona proovedor</p>
+                                <select class="select-proovedor" required>
+                                    <option value=""></option>
+                                    ${proovedores.map(proovedor => `
+                                        <option value="${proovedor.nombre}(${proovedor.id})">${proovedor.nombre}</option>
+                                    `).join('')}
+                                    ${nombresUsuariosGlobal
+                    .filter(proveedor => proveedor.rol === 'Producción')
+                    .map(proveedor => `
+                                        <option value="${proveedor.nombre}(${proveedor.id})">${proveedor.nombre}</option>
+                                        `).join('')
+                }
                             </select>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-label'></i>
-                        <div class="input">
-                            <p class="detalle">Nombre del movimiento</p>
-                            <input class="nombre-movimiento" type="text" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
                     <div class="entrada">
@@ -894,6 +917,7 @@ function eventosIngresos() {
                             <input class="Observaciones" type="text" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
+
                 </div>
                 </div>
             </div>
@@ -1016,38 +1040,140 @@ function eventosIngresos() {
             return;
         }
 
-        const items = document.querySelectorAll('.carrito-item');
-        items.forEach(item => {
-            const id = item.dataset.id;
-            const producto = carritoSalidas.get(id);
-            if (producto) {
-                const cantidadInput = item.querySelector('input[type="number"]');
-                const stockDisponible = item.querySelector('.stock-disponible');
-                const subtotalElement = item.querySelector('.subtotal');
-
-                cantidadInput.value = producto.cantidad;
-                // Mostrar el stock final (actual + cantidad a ingresar)
-                stockDisponible.textContent = `${parseInt(producto.stock) + producto.cantidad} Und.`;
-                subtotalElement.textContent = `Bs. ${(producto.cantidad * producto.subtotal).toFixed(2)}`;
+        // Actualiza solo la lista de items del carrito si el modal está abierto
+        const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+        if (anuncioSecond && anuncioSecond.querySelector('.carrito-items')) {
+            const carritoItemsDiv = anuncioSecond.querySelector('.carrito-items');
+            const carritoTotalDiv = anuncioSecond.querySelector('.carrito-total');
+            // Recalcular subtotal y total
+            const subtotal = Array.from(carritoSalidas.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
+            // Mantener los valores actuales de descuento y aumento y los selects/inputs
+            let descuentoValor = 0, aumentoValor = 0, proveedorValor = '', nombreMovimientoValor = '', observacionesValor = '';
+            if (carritoTotalDiv) {
+                const descuentoInput = carritoTotalDiv.querySelector('.descuento');
+                const aumentoInput = carritoTotalDiv.querySelector('.aumento');
+                const proveedorSelect = carritoTotalDiv.querySelector('.select-proovedor');
+                const nombreMovimientoInput = carritoTotalDiv.querySelector('.nombre-movimiento');
+                const observacionesInput = carritoTotalDiv.querySelector('.Observaciones');
+                descuentoValor = descuentoInput ? parseFloat(descuentoInput.value) || 0 : 0;
+                aumentoValor = aumentoInput ? parseFloat(aumentoInput.value) || 0 : 0;
+                proveedorValor = proveedorSelect ? proveedorSelect.value : '';
+                nombreMovimientoValor = nombreMovimientoInput ? nombreMovimientoInput.value : '';
+                observacionesValor = observacionesInput ? observacionesInput.value : '';
             }
-        });
-
-        // Actualizar el total
-        const subtotal = Array.from(carritoSalidas.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
-        const totalElement = document.querySelector('.total-final');
-        const subtotalElement = document.querySelector('.campo-vertical span:first-child');
-
-        subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}`;
-        totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}`;
-
-        // Mantener los valores de descuento y aumento
-        const descuentoInput = document.querySelector('.descuento');
-        const aumentoInput = document.querySelector('.aumento');
-        if (descuentoInput && aumentoInput) {
-            const descuentoValor = parseFloat(descuentoInput.value) || 0;
-            const aumentoValor = parseFloat(aumentoInput.value) || 0;
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
-            totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+            // Renderizar solo los productos y los campos extra actualizados
+            carritoItemsDiv.innerHTML = `
+                ${Array.from(carritoSalidas.values()).map(item => `
+                    <div class="carrito-item" data-id="${item.id}">
+                        <div class="item-info">
+                            <h3>${item.producto} - ${item.gramos}gr</h3>
+                            <div class="cantidad-control">
+                                <button class="btn-cantidad" style="color:var(--error)" onclick="ajustarCantidad('${item.id}', -1)">-</button>
+                                <input type="number" value="${item.cantidad}" min="1"
+                                    onfocus="this.select()"
+                                    onchange="actualizarCantidad('${item.id}', this.value)">
+                                <button class="btn-cantidad"style="color:var(--success)" onclick="ajustarCantidad('${item.id}', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="subtotal-delete">
+                            <div class="info-valores">
+                                <p class="stock-disponible">${parseInt(item.stock) + parseInt(item.cantidad)} Und.</p>
+                                <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
+                                <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
+                            </div>
+                            <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+                <div class="carrito-total">
+                    <div class="leyenda">
+                        <div class="item">
+                            <span class="punto orange"></span>
+                            <p>Stock actual</p>
+                        </div>
+                        <div class="item">
+                            <span class="punto blue-light"></span>
+                            <p>Precio unitario</p>
+                        </div>
+                        <div class="item">
+                            <span class="punto verde"></span>
+                            <p>Subtotal</p>
+                        </div>
+                    </div>
+                    <div class="campo-vertical">
+                        <span><strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                        <span class="total-final"><strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}</span>
+                    </div>
+                    <div class="entrada">
+                        <i class='bx bx-label'></i>
+                        <div class="input">
+                            <p class="detalle">Nombre del movimiento</p>
+                            <input class="nombre-movimiento" type="text" autocomplete="off" placeholder=" " required value="${nombreMovimientoValor}">
+                        </div>
+                    </div>
+                    <div class="campo-horizontal">
+                        <div class="entrada">
+                            <i class='bx bx-purchase-tag-alt'></i>
+                            <div class="input">
+                                <p class="detalle">Descuento</p>
+                                <input class="descuento" type="number" autocomplete="off" placeholder=" " required value="${descuentoValor}">
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-plus'></i>
+                            <div class="input">
+                                <p class="detalle">Aumento</p>
+                                <input class="aumento" type="number" autocomplete="off" placeholder=" " required value="${aumentoValor}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="entrada">
+                        <i class='bx bx-user'></i>
+                        <div class="input">
+                            <p class="detalle">Selecciona proovedor</p>
+                            <select class="select-proovedor" required>
+                                <option value=""></option>
+                                ${proovedores.map(proovedor => `
+                                    <option value="${proovedor.nombre}(${proovedor.id})" ${proveedorValor === `${proovedor.nombre}(${proovedor.id})` ? 'selected' : ''}>${proovedor.nombre}</option>
+                                `).join('')}
+                                ${nombresUsuariosGlobal
+                .filter(proveedor => proveedor.rol === 'Producción')
+                .map(proveedor => `
+                                      <option value="${proveedor.nombre}(${proveedor.id})" ${proveedorValor === `${proveedor.nombre}(${proveedor.id})` ? 'selected' : ''}>${proveedor.nombre}</option>
+                                    `).join('')
+            }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="entrada">
+                        <i class='bx bx-comment-detail'></i>
+                        <div class="input">
+                            <p class="detalle">Observaciones</p>
+                            <input class="Observaciones" type="text" autocomplete="off" placeholder=" " required value="${observacionesValor}">
+                        </div>
+                    </div>
+                    
+                </div>
+            `;
+            // Volver a enlazar eventos de descuento y aumento
+            const inputDescuento = carritoItemsDiv.querySelector('.descuento');
+            const inputAumento = carritoItemsDiv.querySelector('.aumento');
+            const totalFinal = carritoItemsDiv.querySelector('.total-final');
+            function actualizarTotal() {
+                const descuentoValor = parseFloat(inputDescuento.value) || 0;
+                const aumentoValor = parseFloat(inputAumento.value) || 0;
+                const totalCalculado = subtotal - descuentoValor + aumentoValor;
+                totalFinal.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+            }
+            if (inputDescuento && inputAumento && totalFinal) {
+                inputDescuento.addEventListener('input', actualizarTotal);
+                inputAumento.addEventListener('input', actualizarTotal);
+            }
+            configuracionesEntrada && configuracionesEntrada();
         }
     }
     function actualizarCarritoLocalIngresos() {
