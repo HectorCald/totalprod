@@ -322,7 +322,7 @@ function eventosPagos() {
     }
 
     botonesNombre.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroNombreActual = boton.textContent.trim();
             aplicarFiltros();
         }
@@ -335,7 +335,7 @@ function eventosPagos() {
         });
     });
     botonesEstado.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroEstadoActual = boton.textContent.trim();
             aplicarFiltros();
         }
@@ -640,12 +640,19 @@ function eventosPagos() {
         }
         function realizarPago(pago) {
             const contenido = document.querySelector('.anuncio-tercer .contenido');
-
+            function redondearDecimalPersonalizado(valor) {
+                const decimal = valor - Math.floor(valor);
+                if (decimal < 0.5) {
+                    return Math.floor(valor).toFixed(2);
+                } else {
+                    return Math.ceil(valor).toFixed(2);
+                }
+            }
             // Primero cargar los pagos parciales
             cargarPagosParciales(pago.id).then(datosPagos => {
                 if (!datosPagos) return;
-
                 const { pagosParciales, totalPagado, saldoPendiente } = datosPagos;
+                const saldoPendienteOf = redondearDecimalPersonalizado(saldoPendiente);
 
                 const registrationHTML = `
             <div class="encabezado">
@@ -661,10 +668,10 @@ function eventosPagos() {
                     <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
                     <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total a pagar: </strong>Bs. ${pago.total}</span>
                     <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Total pagado: </strong>Bs. ${totalPagado.toFixed(2)}</span>
-                    <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Saldo pendiente: </strong>Bs. ${saldoPendiente.toFixed(2)}</span>
+                    <span class="valor"><strong><i class='bx bx-dollar-circle'></i> Saldo pendiente: </strong>Bs. ${saldoPendienteOf}</span>
                 </div>
 
-                ${saldoPendiente > 0 && pago.estado !== 'Anulado' ? `
+                ${saldoPendienteOf > 0 && pago.estado !== 'Anulado' ? `
                     <p class="normal">Detalles del pago</p>
                     <div class="entrada">
                         <i class='bx bx-dollar'></i>
@@ -706,7 +713,7 @@ function eventosPagos() {
                     </table>
                 </div>
             </div>
-            ${saldoPendiente > 0 && pago.estado !== 'Anulado' ? `
+            ${saldoPendienteOf > 0 && pago.estado !== 'Anulado' ? `
                 <div class="anuncio-botones">
                     <button class="btn-realizar-pago btn green">
                         <i class='bx bx-check-circle'></i> Realizar pago
@@ -723,13 +730,14 @@ function eventosPagos() {
                 mostrarAnuncioTercer();
 
                 // Solo agregar el evento si hay saldo pendiente
-                if (saldoPendiente > 0) {
+                if (saldoPendienteOf > 0) {
                     const btnRealizarPago = contenido.querySelector('.btn-realizar-pago');
                     btnRealizarPago.addEventListener('click', async () => {
                         const cantidad = parseFloat(document.querySelector('.cantidad_pago').value);
                         const observaciones = document.querySelector('.observaciones').value.trim();
 
-                        if (!cantidad || cantidad <= 0 || cantidad > saldoPendiente) {
+                        if (!cantidad || cantidad <= 0 || cantidad > saldoPendienteOf) {
+                            console.error('Cantidad inválida:', cantidad, 'Saldo pendiente:', saldoPendienteOf);
                             mostrarNotificacion({
                                 message: 'Ingrese una cantidad válida',
                                 type: 'warning',
@@ -767,10 +775,10 @@ function eventosPagos() {
 
                             if (data.success) {
                                 await obtenerPagos();
-                                ocultarProgreso('.pro-pago');
-                                info(pagoId);
-                                cargarPagosParciales(pago.id);
                                 updateHTMLWithData();
+                                info(pagoId);
+                                cargarPagosParciales(pagoId);
+                                ocultarProgreso('.pro-pago');
                                 mostrarNotificacion({
                                     message: 'Pago registrado correctamente',
                                     type: 'success',
@@ -803,7 +811,7 @@ function eventosPagos() {
         }
     };
     btnNuevoPago.forEach(btn => {
-        btn.addEventListener('click',  nuevoPagoGenerico);
+        btn.addEventListener('click', nuevoPagoGenerico);
     })
     btnExcel.forEach(btn => {
         btn.addEventListener('click', () => exportarArchivos('pagos', registrosAExportar));

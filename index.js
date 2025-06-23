@@ -185,7 +185,7 @@ app.post('/register-fcm-token', requireAuth, async (req, res) => {
     try {
         const { token } = req.body;
         const { spreadsheetId, email } = req.user; // Ahora sí tendremos acceso a req.user
-        
+
         if (!token) {
             return res.status(400).json({
                 success: false,
@@ -202,13 +202,13 @@ app.post('/register-fcm-token', requireAuth, async (req, res) => {
         });
 
         const tokensExistentes = tokensResponse.data.values || [];
-        
+
         // Verificar si el token ya existe
         const tokenExistente = tokensExistentes.find(row => row[1] === token);
         if (tokenExistente) {
-            return res.json({ 
-                success: true, 
-                message: 'Token FCM ya registrado' 
+            return res.json({
+                success: true,
+                message: 'Token FCM ya registrado'
             });
         }
 
@@ -218,7 +218,7 @@ app.post('/register-fcm-token', requireAuth, async (req, res) => {
             if (tokensDelUsuario.length > 0) {
                 // Eliminar tokens antiguos del usuario
                 const tokensSinUsuario = tokensExistentes.filter(row => row[2] !== email);
-                
+
                 // Limpiar y reescribir sin los tokens del usuario
                 await sheets.spreadsheets.values.clear({
                     spreadsheetId,
@@ -265,16 +265,16 @@ app.post('/register-fcm-token', requireAuth, async (req, res) => {
             // No fallar el registro si la notificación de prueba falla
         }
 
-        res.json({ 
-            success: true, 
-            message: 'Token FCM registrado correctamente' 
+        res.json({
+            success: true,
+            message: 'Token FCM registrado correctamente'
         });
 
     } catch (error) {
         console.error('Error al registrar token FCM:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Error al registrar token FCM: ' + error.message 
+        res.status(500).json({
+            success: false,
+            error: 'Error al registrar token FCM: ' + error.message
         });
     }
 });
@@ -639,7 +639,7 @@ app.post('/registrar-notificacion', requireAuth, async (req, res) => {
             for (const emailDestinatario of destinatarios) {
                 // Buscar tokens del destinatario
                 const tokensDestinatario = tokens.filter(token => token[2] === emailDestinatario);
-                
+
                 for (const token of tokensDestinatario) {
                     try {
                         await enviarNotificacion(
@@ -4620,7 +4620,7 @@ app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
             .find(row => row[0] === id);
 
         if (pagoPrincipal) {
-            const totalAPagar = parseFloat(pagoPrincipal[11]); // Total del pago principal
+            const totalAPagar = parseFloat(Number(pagoPrincipal[11].replace(',', '.')).toFixed(2));// Total del pago principal
 
             // Si el total pagado iguala o supera el total a pagar, actualizar estado
             if (totalPagado >= totalAPagar) {
@@ -4638,12 +4638,14 @@ app.get('/obtener-pagos-parciales/:id', requireAuth, async (req, res) => {
             }
         }
 
+
         res.json({
             success: true,
             pagosParciales,
             totalPagado,
-            saldoPendiente: pagoPrincipal ? Math.max(0, parseFloat(pagoPrincipal[11]) - totalPagado) : 0
+            saldoPendiente: pagoPrincipal ? Math.max(0, parseFloat(Number(pagoPrincipal[11].replace(',', '.')).toFixed(2)) - totalPagado) : 0
         });
+
 
     } catch (error) {
         console.error('Error al obtener pagos parciales:', error);
@@ -4689,10 +4691,17 @@ app.post('/registrar-pago-parcial', requireAuth, async (req, res) => {
         if (!pagoPrincipal) {
             throw new Error('Pago principal no encontrado');
         }
+        function redondearDecimalPersonalizado(valor) {
+            const decimal = valor - Math.floor(valor);
+            if (decimal < 0.5) {
+                return Math.floor(valor).toFixed(2);
+            } else {
+                return Math.ceil(valor).toFixed(2);
+            }
+        }
 
-        const totalAPagar = parseFloat(pagoPrincipal[11]); // Total del pago principal
+        const totalAPagar = redondearDecimalPersonalizado(parseFloat(Number(pagoPrincipal[11].replace(',', '.')).toFixed(2))); // Total del pago principal
         const nuevoCantidadTotal = totalPagadoPrevio + parseFloat(cantidad_pagada);
-
         // Verificar que no se exceda el total a pagar
         if (nuevoCantidadTotal > totalAPagar) {
             return res.status(400).json({
@@ -4754,7 +4763,7 @@ app.post('/registrar-pago-parcial', requireAuth, async (req, res) => {
             error: 'Error al registrar el pago parcial'
         });
     }
-});
+}); 
 
 /* ==================== RUTAS DE PERSONAL ==================== */
 app.get('/obtener-personal', requireAuth, async (req, res) => {
