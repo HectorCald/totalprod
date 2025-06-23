@@ -764,7 +764,7 @@ function eventosPagos() {
                                 },
                                 body: JSON.stringify({
                                     pago_id: pago.id,
-                                    pagado_por: usuarioInfo.nombre,
+                                    pagado_por: usuarioInfo.nombre+' '+usuarioInfo.apellido,
                                     beneficiario: pago.beneficiario,
                                     cantidad_pagada: cantidad,
                                     observaciones
@@ -856,7 +856,7 @@ function eventosPagos() {
                         <i class='bx bx-user-check'></i>
                         <div class="input">
                             <p class="detalle">Registrado por</p>
-                            <input type="text" name="pagado_por" value="${usuarioInfo.nombre}+' '+${usuarioInfo.apellido}" readonly>
+                            <input type="text" name="pagado_por" value="${usuarioInfo.nombre} ${usuarioInfo.apellido}" readonly>
                         </div>
                     </div>
     
