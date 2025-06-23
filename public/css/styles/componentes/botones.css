@@ -118,7 +118,7 @@
     }
 
     .btn i {
-        width: auto;
+        min-width: 20px;
     }
 }
 .btn {
