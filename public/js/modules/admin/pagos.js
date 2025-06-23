@@ -688,7 +688,7 @@ function eventosPagos() {
                         </div>
                     </div>
                 ` : ''}
-
+                ${pagosParciales.length > 0 ? `
                 <p class="normal">Historial de pagos</p>
                 <div class="tabla-responsive">
                     <table>
@@ -712,7 +712,9 @@ function eventosPagos() {
                         </tbody>
                     </table>
                 </div>
+                 ` : ` <div class="no-hay"><i class='bx bx-dollar-circle'></i> <p>No hay pagos parciales registrados para este pago.</p></div>`}
             </div>
+           
             ${saldoPendienteOf > 0 && pago.estado !== 'Anulado' ? `
                 <div class="anuncio-botones">
                     <button class="btn-realizar-pago btn green">

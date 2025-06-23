@@ -1162,7 +1162,7 @@ function eventosPedidos() {
                             descuento: 0,
                             aumento: 0,
                             total: totalPago,
-                            observaciones: observaciones,
+                            observaciones: observaciones || 'Sin observaciones',
                             estado: 'Pagado',
                             tipo: 'Acopio'
                         };
