@@ -1608,9 +1608,12 @@ function eventosAlmacenGeneral() {
                     <button class="btn-agregar-precio"><i class='bx bx-plus'></i></button>
                 </div>
             </div>
-
-            <p class="normal">Subir planilla de precios</p>
-            <buttom class="btn blue" id="excel-precios"><i class='bx bx-upload' style="color:white !important"></i>Cargar archivo excel</buttom>
+            <p class="normal">Actualización de precios</p>
+            <div class="campo-horizontal">
+                <buttom class="btn blue" id="excel-precios"><i class='bx bx-upload' style="color:white !important"></i>Subir excel</buttom>
+                <buttom class="btn blue" id="hoja-vinculada"><i class='bx bx-refresh' style="color:white !important"></i>Vincular hoja</buttom>
+            </div>
+            
         </div>
     `;
 
@@ -1836,6 +1839,88 @@ function eventosAlmacenGeneral() {
                     ocultarProgreso('.pro-price')
                 }
             }
+        });
+
+        const btnHojaVinculada = contenido.querySelector('#hoja-vinculada');
+        btnHojaVinculada.addEventListener('click', async () => {
+            const contenidoTercer = document.querySelector('.anuncio-tercer .contenido');
+            const registrationHTML = `
+                <div class="encabezado">
+                    <h1 class="titulo">Actualizar precios desde hoja vinculada</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Motivo de la actualización</p>
+                    <div class="entrada">
+                        <i class='bx bx-comment-detail'></i>
+                        <div class="input">
+                            <p class="detalle">Motivo</p>
+                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                        </div>
+                    </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Esta acción actualizará los precios de los productos según la hoja vinculada de Google Sheets (CATALOGO). Asegúrese de que el formato sea correcto (ID,Producto,Precios...etc).</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-procesar-hoja btn blue"><i class="bx bx-check"></i> Procesar hoja vinculada</button>
+                </div>
+            `;
+            contenidoTercer.innerHTML = registrationHTML;
+            contenidoTercer.style.paddingBottom = '80px';
+            mostrarAnuncioTercer();
+
+            const btnProcesar = contenidoTercer.querySelector('.btn-procesar-hoja');
+            btnProcesar.addEventListener('click', async () => {
+                const motivo = contenidoTercer.querySelector('.motivo').value.trim();
+                if (!motivo) {
+                    mostrarNotificacion({
+                        message: 'Debe ingresar un motivo',
+                        type: 'warning',
+                        duration: 3500
+                    });
+                    return;
+                }
+                try {
+                    const signal = await mostrarProgreso('.pro-price');
+                    const response = await fetch('/actualizar-precios-hoja-vinculada', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ motivo })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        mostrarNotificacion({
+                            message: 'Precios actualizados correctamente desde hoja vinculada',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        registrarNotificacion(
+                            'Administración',
+                            'Edición',
+                            `${usuarioInfo.nombre} actualizó los precios mediante hoja vinculada. Motivo: ${motivo}`
+                        );
+                        await mostrarAlmacenGeneral();
+                    } else {
+                        throw new Error(data.error || 'Error al procesar la hoja vinculada');
+                    }
+                } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    mostrarNotificacion({
+                        message: error.message,
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarProgreso('.pro-price');
+                }
+            });
         });
 
     }

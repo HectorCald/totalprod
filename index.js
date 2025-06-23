@@ -2677,6 +2677,113 @@ app.post('/actualizar-precios-planilla', requireAuth, upload.single('file'), asy
         });
     }
 });
+app.post('/actualizar-precios-hoja-vinculada', requireAuth, async (req, res) => {
+    try {
+        const { motivo } = req.body;
+        const spreadsheetIdCatalogo = process.env.SPREADSHEET_ID_1_PRECIOS;
+        const spreadsheetId = req.user.spreadsheetId;
+        if (!spreadsheetIdCatalogo) {
+            return res.status(400).json({ success: false, error: 'No se ha configurado el ID de la hoja vinculada' });
+        }
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Leer la hoja CATALOGO del spreadsheet de catálogo, pidiendo valores calculados
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetIdCatalogo,
+            range: 'CATALOGO!A1:Z',
+            valueRenderOption: 'UNFORMATTED_VALUE'
+        });
+        const rows = response.data.values || [];
+        if (rows.length < 2) {
+            console.log('No hay suficientes filas en la hoja CATALOGO:', rows);
+            return res.status(400).json({ success: false, error: 'La hoja vinculada no tiene datos suficientes' });
+        }
+        // Convertir a formato de objetos igual que xlsx.utils.sheet_to_json
+        const headers = rows[0];
+        const data = rows.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((h, idx) => obj[h] = row[idx]);
+            return obj;
+        });
+        // Filtrar cabeceras excluyendo 'ID' y 'Producto'
+        const cabeceras = headers.filter(header => !['ID', 'Producto'].includes(header));
+        // Primero limpiamos la hoja de precios actual
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: 'Precios!A2:B'
+        });
+
+        // Registrar los nuevos precios
+        const nuevosPrecios = cabeceras.map((nombrePrecio, index) => {
+            const id = `PR-${(index + 1).toString().padStart(3, '0')}`;
+            return [id, nombrePrecio];
+        });
+
+        // Agregar nuevos precios
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Precios!A2:B',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: nuevosPrecios
+            }
+        });
+
+        // Obtener TODOS los productos del almacén
+        const productosResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Almacen general!A2:H'
+        });
+        const productos = productosResponse.data.values || [];
+
+        // Crear un mapa de los productos en la hoja de catálogo para búsqueda rápida
+        const productosCatalogo = new Map(data.map(row => [row['ID'], row]));
+
+        // Procesar todos los productos del almacén
+        const actualizaciones = productos.map((producto, index) => {
+            const id = producto[0];
+            const productoCatalogo = productosCatalogo.get(id);
+            // Construir string de precios para todos los productos
+            let preciosActualizados = cabeceras.map(nombrePrecio => {
+                // Si el producto está en el catálogo, usar su valor, si no, usar 0
+                let valor = productoCatalogo ? productoCatalogo[nombrePrecio] : undefined;
+                if (valor === undefined || valor === null || valor === '') valor = '0';
+                return `${nombrePrecio},${valor}`;
+            }).join(';');
+            if (index < 5) {
+                console.log(`Producto ${id} - preciosActualizados:`, preciosActualizados);
+            }
+            return {
+                range: `Almacen general!H${index + 2}`,
+                values: [[preciosActualizados]]
+            };
+        });
+
+        // Actualizar todos los productos en batch
+        if (actualizaciones.length > 0) {
+            await sheets.spreadsheets.values.batchUpdate({
+                spreadsheetId,
+                resource: {
+                    valueInputOption: 'RAW',
+                    data: actualizaciones
+                }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Precios actualizados correctamente desde hoja vinculada'
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar precios desde hoja vinculada:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Error al actualizar los precios desde hoja vinculada'
+        });
+    }
+});
 
 
 /* ==================== RUTAS CLIENTES DE AlMACEN ==================== */
@@ -4763,7 +4870,7 @@ app.post('/registrar-pago-parcial', requireAuth, async (req, res) => {
             error: 'Error al registrar el pago parcial'
         });
     }
-}); 
+});
 
 /* ==================== RUTAS DE PERSONAL ==================== */
 app.get('/obtener-personal', requireAuth, async (req, res) => {
@@ -5697,6 +5804,7 @@ app.put('/actualizar-configuraciones', requireAuth, async (req, res) => {
         });
     }
 });
+
 
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */

@@ -83,7 +83,6 @@ async function obtenerRegistrosLocal() {
                 resolve(registros);
             };
             request.onerror = () => reject(request.error);
-            alert('hola')
         });
     } catch (error) {
         console.error('Error obteniendo registros del caché:', error);

@@ -292,6 +292,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
+    contenido.style.paddingBottom = '10px'; // Aseguramos que haya espacio para los botones
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
