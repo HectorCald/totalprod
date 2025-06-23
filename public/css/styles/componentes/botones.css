@@ -30,7 +30,7 @@
         transition: opacity 0.3s ease, margin 0.3s ease, transform 0.3s ease;
         color: white;
         transition: all 0.5s ease;
-        width: 0;
+        width: 20px;
         overflow: hidden;
     }
 }
@@ -215,6 +215,7 @@
 
         .bx {
             color: white !important;
+            width: 0;
         }
     }
 
