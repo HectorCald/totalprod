@@ -35,7 +35,7 @@
 
     .acciones-grande {
         display: none;
-        gap: 10px;
+        gap: 5px;
         width: 350px;
         overflow-x: auto;
         justify-content: flex-end;
@@ -77,7 +77,7 @@
 
     .acciones-grande {
         display: none;
-        gap: 10px;
+        gap: 5px;
         width: 350px;
         overflow-x: auto;
         justify-content: flex-end;
