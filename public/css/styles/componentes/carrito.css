@@ -111,7 +111,7 @@
                 }
 
                 .detalle::placeholder {
-                    color: var(--cero-color);
+                    color: gray;
                 }
 
                 p {
