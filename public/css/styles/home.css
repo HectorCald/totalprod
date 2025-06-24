@@ -34,7 +34,7 @@
             display: flex;
             height: 100%;
             width: 100%;
-            gap: 10px;
+            gap: 5px;
             overflow-x: hidden;
             overflow-y: hidden;
             padding-top: 5px;
@@ -93,7 +93,7 @@
         height: auto;
         background: none;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         padding: 0;
     }
 
@@ -103,14 +103,14 @@
         height: auto;
         background: none;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         padding-bottom: 10px;
 
         .destacados {
             display: flex;
             height: 100%;
             width: 100%;
-            gap: 10px;
+            gap: 5px;
             overflow-x: auto;
             overflow-y: hidden;
 

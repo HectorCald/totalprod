@@ -508,12 +508,12 @@ function updateHTMLWithData() {
     `).join('');
 
     const showMoreButton = registrosProduccion.length > 250 ? `
-        <div class="show-more-container" style="text-align: center; display: flex; gap: 10px; justify-content: center;align-items:center;width:100%;min-height:70px;height:100%">
+        <div class="show-more-container" style="text-align: center; display: flex; gap: 5px; justify-content: center;align-items:center;width:100%;min-height:70px;height:100%">
             <button class="btn show-more" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
-                <i class='bx bx-show'></i> Mostrar +50
+                <i class='bx bx-show' style="min-width:20px"></i> Mostrar +50
             </button>
             <button class="btn show-all" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
-                <i class='bx bx-list-ul'></i> Mostrar todos
+                <i class='bx bx-list-ul'style="min-width:20px"></i> Mostrar todos
             </button>
         </div>
     ` : '';

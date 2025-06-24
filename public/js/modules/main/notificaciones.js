@@ -310,7 +310,7 @@ function mostrarNotificaciones(view) {
     // Generar HTML para cada grupo
     const gruposHTML = Object.entries(notificacionesAgrupadas)
         .map(([grupo, notificaciones]) => `
-            <div class="grupo-notificaciones" style="display:flex;flex-direction: column; gap:8px;">
+            <div class="grupo-notificaciones" style="display:flex;flex-direction: column; gap:5px;">
                 <p class="normal" style="margin-bottom:10px">${grupo}</p>
                 ${notificaciones.map(notif => `
                     <div class="notificacion ${notificacionesNuevasIds.has(notif.id) ? 'nueva-notificacion' : ''}">
