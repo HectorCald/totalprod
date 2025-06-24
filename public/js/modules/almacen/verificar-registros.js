@@ -1400,9 +1400,6 @@ function eventosVerificacion() {
                     const data = await response.json();
 
                     if (data.success) {
-                        await obtenerRegistrosProduccion();
-                        info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro verificado correctamente',
                             type: 'success',
@@ -1416,7 +1413,7 @@ function eventosVerificacion() {
                             registro.user,
                             'Verificación',
                             usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
-                        mostrarIngresos(registro.idProducto)
+                        await mostrarIngresos(registro.idProducto);
                     } else {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
