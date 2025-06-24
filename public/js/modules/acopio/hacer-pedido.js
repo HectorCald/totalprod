@@ -730,10 +730,11 @@ function eventosPedidos() {
         const formatoDiv = document.querySelector('.formato-pedido div[contenteditable]');
         if (!formatoDiv) return;
 
-        const texto = encodeURIComponent(formatoDiv.innerText);
+        const texto = formatoDiv.innerText + '\n\nAbrir en la app TotalProd: https://gestipro-iota.vercel.app/\n(Si tienes la app instalada, se abrirá automáticamente. Si no, se abrirá la web.)';
+        const textoEncoded = encodeURIComponent(texto);
 
         // Open WhatsApp web with the text pre-filled
-        window.open(`https://wa.me/?text=${texto}`, '_blank');
+        window.open(`https://wa.me/?text=${textoEncoded}`, '_blank');
     };
     window.registrarPedido = registrarPedido;
 

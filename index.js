@@ -43,6 +43,8 @@ const auth = new google.auth.GoogleAuth({
         "https://www.googleapis.com/auth/spreadsheets"
     ]
 });
+
+/* ==================== CONFIGURACIÓN DE CLOUDINARY ==================== */
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -80,7 +82,6 @@ const serviceAccount = {
     client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
     universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN
 };
-
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -126,7 +127,6 @@ function requireAuth(req, res, next) {
         return res.status(401).json({ error: 'Token inválido' });
     }
 }
-/* ==================== FUNCIONES DE UTILIDAD ==================== */
 async function enviarNotificacion(token, titulo, mensaje) {
     if (!titulo || !mensaje) {
         console.error('Título o mensaje indefinidos');
@@ -180,6 +180,7 @@ app.get('/dashboard', requireAuth, (req, res) => {
 app.get('/dashboard_otro', requireAuth, (req, res) => {
     res.render('dashboard_otro')
 });
+
 /* ==================== RUTAS DE API - NOTIFICACIONES ==================== */
 app.post('/register-fcm-token', requireAuth, async (req, res) => {
     try {
@@ -518,7 +519,6 @@ app.post('/check-company-id', async (req, res) => {
     return res.json({ exists });
 });
 
-
 /* ==================== RUTAS DE HISTORIAL ==================== */
 app.get('/obtener-mis-notificaciones', requireAuth, async (req, res) => {
     const { spreadsheetId, email, rol } = req.user;
@@ -673,7 +673,6 @@ app.post('/registrar-notificacion', requireAuth, async (req, res) => {
         });
     }
 });
-
 
 /* ==================== OBTENER USARIO ACTUAL Y ACTULIZAR USARIO ACTUAL ==================== */
 app.get('/obtener-usuario-actual', requireAuth, async (req, res) => {
@@ -860,7 +859,6 @@ app.get('/obtener-nombres-usuarios', requireAuth, async (req, res) => {
         });
     }
 });
-
 
 /* ==================== RUTAS DE PRODUCCIÓN ==================== */
 app.get('/obtener-registros-produccion', requireAuth, async (req, res) => {
@@ -2784,7 +2782,6 @@ app.post('/actualizar-precios-hoja-vinculada', requireAuth, async (req, res) => 
         });
     }
 });
-
 
 /* ==================== RUTAS CLIENTES DE AlMACEN ==================== */
 app.get('/obtener-clientes', requireAuth, async (req, res) => {
@@ -5301,7 +5298,6 @@ app.put('/editar-calculo-mp/:id', requireAuth, async (req, res) => {
     }
 });
 
-
 /* ==================== RUTAS DE TAREAS ACOPIO ==================== */
 app.get('/obtener-tareas', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
@@ -5724,8 +5720,6 @@ app.delete('/eliminar-tarea-lista/:id', requireAuth, async (req, res) => {
     }
 });
 
-
-
 /* ==================== RUTAS DE CONFIGURACIONES DEL SISTEMA ==================== */
 app.get('/obtener-configuraciones', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
@@ -5804,8 +5798,6 @@ app.put('/actualizar-configuraciones', requireAuth, async (req, res) => {
         });
     }
 });
-
-
 
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */
 if (process.env.NODE_ENV !== 'production') {
