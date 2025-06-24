@@ -383,10 +383,6 @@ function eventosPedidos() {
     });
 
 
-
-
-
-
     function agregarAlCarrito(productoId) {
         const producto = productos.find(p => p.id === productoId);
         if (!producto) return;
@@ -527,7 +523,7 @@ function eventosPedidos() {
         `;
 
         mostrarAnuncioSecond();
-        anuncioSecond.style.paddingBottom = '80px';
+        anuncioSecond.style.paddingBottom = '70px';
 
         const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
         botonLimpiar.addEventListener('click', () => {
@@ -714,6 +710,7 @@ function eventosPedidos() {
     `;
 
         anuncioSecond.innerHTML = formatoHTML;
+        anuncioSecond.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
     }
     window.mostrarFormatoPedido = function () {

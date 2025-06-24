@@ -81,7 +81,7 @@ export async function mostrarConfiguracionesSistema() {
     `;
 
     contenido.innerHTML = registrationHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
     mostrarAnuncio();
     eventosConfiguraciones();
     setTimeout(() => {

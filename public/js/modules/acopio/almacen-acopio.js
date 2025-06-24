@@ -147,7 +147,7 @@ function renderInitialHTML() {
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '10px';
     if (tienePermiso('creacion')) {
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
     }
 }
 function updateHTMLWithData() {
@@ -484,9 +484,9 @@ function eventosAlmacenAcopio() {
             </div>` : ''}
             `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '70px';
+        contenido.style.paddingBottom = '10px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
         mostrarAnuncioSecond();
 

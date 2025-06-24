@@ -451,7 +451,7 @@ function eventosPedidos() {
     `;
 
         mostrarAnuncioSecond();
-        anuncioSecond.style.paddingBottom = '80px';
+        anuncioSecond.style.paddingBottom = '70px';
 
         // Eventos para manejar los cambios
         const tipoMateriaSelect = anuncioSecond.querySelector('.tipo-materia');

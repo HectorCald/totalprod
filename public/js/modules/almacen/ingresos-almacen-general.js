@@ -925,7 +925,7 @@ function eventosIngresos() {
                 <button class="btn-procesar-salida btn green" onclick="registrarIngreso()"><i class='bx bx-import'></i> Procesar Ingresos</button>
             </div>
         `;
-        anuncioSecond.style.paddingBottom = '80px'
+        anuncioSecond.style.paddingBottom = '70px'
         mostrarAnuncioSecond();
 
         const inputDescuento = anuncioSecond.querySelector('.descuento');

@@ -260,7 +260,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarPedidos() {
     renderInitialHTML();
@@ -584,7 +584,7 @@ function eventosPedidos() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         if (registro.estado === 'Ingresado' || registro.estado === 'No llego' || registro.estado === 'Rechazado') {
@@ -660,7 +660,7 @@ function eventosPedidos() {
         </div>
     `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnEliminar = contenido.querySelector('.btn-eliminar-registro');
@@ -862,7 +862,7 @@ function eventosPedidos() {
         </div>
             `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
             const productoInput = document.querySelector('.entrada .producto-pedido');
             const sugerenciasList = document.querySelector('#productos-list');
@@ -1097,7 +1097,7 @@ function eventosPedidos() {
     `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
 
@@ -1293,7 +1293,7 @@ function eventosPedidos() {
 
     `;
             contenido.innerHTML = html;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
             window.confirmarRechazo = async function (idPedido) {
                 const motivo = document.querySelector('.input-motivo').value;
@@ -1424,8 +1424,8 @@ function eventosPedidos() {
         </button>
     </div>
 `;
-
         anuncioSecond.innerHTML = formatoHTML;
+        anuncioSecond.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
     }
     window.limpiarFormatoCompras = function () {

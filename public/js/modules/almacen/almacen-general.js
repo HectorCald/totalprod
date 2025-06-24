@@ -387,7 +387,7 @@ function renderInitialHTML() {
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '10px';
     if (tienePermiso('creacion')) {
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
     }
 }
 async function updateHTMLWithData() {
@@ -769,12 +769,12 @@ function eventosAlmacenGeneral() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '70px';
+        contenido.style.paddingBottom = '10px';
         mostrarAnuncioSecond();
 
 
         if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
 
 

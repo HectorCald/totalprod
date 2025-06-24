@@ -490,7 +490,7 @@ function eventosPersonal() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         // Eventos
