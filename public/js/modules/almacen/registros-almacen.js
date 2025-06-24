@@ -183,7 +183,8 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> <span>Descargar registros</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bxs-file'></i> <span>Descargar Excel</span></button>
+                    <button class="exportar-pdf btn red"><i class='bx bxs-file-pdf'></i> <span>Descargar PDF</span></button>
                 </div>
             </div>
             
@@ -216,7 +217,8 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange" style="margin-bottom:10px"><i class='bx bx-download'></i> Descargar registros</button>
+            <button class="exportar-excel btn orange"><i class='bx bxs-file'></i> Descargar Excel</button>
+            <button class="exportar-pdf btn red"><i class='bx bxs-file-pdf'></i> Descargar PDF</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -258,6 +260,7 @@ function updateHTMLWithData() {
 function eventosRegistrosAlmacen() {
     console.log('eventos')
     const btnExcel = document.querySelectorAll('.exportar-excel');
+    const btnPDF = document.querySelectorAll('.exportar-pdf');
     const registrosAExportar = registrosAlmacen;
 
     const botonesTipo = document.querySelectorAll('.filtros-opciones.tipo .btn-filtro');
@@ -823,10 +826,12 @@ function eventosRegistrosAlmacen() {
     }
     btnExcel.forEach(btn => {
         btn.addEventListener('click', () => exportarArchivos('almacen', registrosAExportar));
-    })
+    });
+    btnPDF.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivosPDF('almacen', registrosAExportar));
+    });
     aplicarFiltros();
 }
-
 
 
 async function obtenerRegistrosLocal() {

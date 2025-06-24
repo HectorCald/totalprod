@@ -805,6 +805,252 @@ export function exportarArchivos(rExp, registrosAExportar) {
         duration: 3000
     });
 }
+export function exportarArchivosPDF(rExp, registrosAExportar) {
+    // Obtener registros visibles
+    const registrosVisibles = Array.from(document.querySelectorAll('.registro-item'))
+        .filter(item => item.style.display !== 'none')
+        .map(item => registrosAExportar.find(r => r.id === item.dataset.id));
+
+    if (registrosVisibles.length === 0) {
+        mostrarNotificacion({
+            message: 'No hay registros visibles para exportar',
+            type: 'warning',
+            duration: 3500
+        });
+        return;
+    }
+
+    if (rExp === 'almacen') {
+        // Procesar cada registro visible individualmente
+        registrosVisibles.forEach(async (registro) => {
+            try {
+                // Crear nuevo documento PDF con tamaño carta
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ format: 'letter', unit: 'mm' });
+
+                // Configurar fuente y tamaños
+                doc.setFont('helvetica');
+                doc.setFontSize(20);
+
+                // Título principal
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text(registro.nombre_movimiento, 105, 30, { align: 'center' });
+
+                // Información del registro
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                
+                const fechaHora = registro.fecha_hora.split(',');
+                const fecha = fechaHora[0]?.trim() || '';
+                const hora = fechaHora[1]?.trim() || '';
+
+                // Cargar logo y marca de agua
+                const logoUrl = '/img/img-png/damabrava-1x1.png';
+                const watermarkUrl = '/img/logotipo-damabrava-1x1.png';
+                let logoDataUrl = null;
+                let watermarkDataUrl = null;
+                try {
+                    const logoResp = await fetch(logoUrl);
+                    const logoBlob = await logoResp.blob();
+                    logoDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(logoBlob);
+                    });
+                    // Marca de agua
+                    const watermarkResp = await fetch(watermarkUrl);
+                    const watermarkBlob = await watermarkResp.blob();
+                    watermarkDataUrl = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(watermarkBlob);
+                    });
+                } catch (e) {
+                    logoDataUrl = null;
+                    watermarkDataUrl = null;
+                }
+
+                // Cabecera con logo
+                if (logoDataUrl) {
+                    doc.addImage(logoDataUrl, 'PNG', 20, 5, 20, 20);
+                }
+
+                // Información básica y resumen financiero en la misma fila
+                const infoBasica = [
+                    ['ID', registro.id],
+                    ['Fecha', fecha],
+                    ['Hora', hora],
+                    ['Tipo', registro.tipo],
+                    ['Operario', registro.operario],
+                    ['Cliente/Proveedor', registro.cliente_proovedor.split('(')[0].trim()]
+                ];
+                const resumenFinanciero = [
+                    ['Subtotal', `Bs. ${registro.subtotal}`],
+                    ['Descuento', `Bs. ${registro.descuento}`],
+                    ['Aumento', `Bs. ${registro.aumento}`],
+                    ['Total', `Bs. ${registro.total}`]
+                ];
+                let yPosition = 38;
+                if (doc.autoTable) {
+                    doc.autoTable({
+                        head: [['Campo', 'Valor']],
+                        body: infoBasica,
+                        startY: yPosition,
+                        theme: 'grid',
+                        headStyles: { fillColor:[80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
+                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        margin: { left: 20, right: 120 },
+                        tableWidth: 80
+                    });
+                    doc.autoTable({
+                        head: [['Concepto', 'Valor']],
+                        body: resumenFinanciero,
+                        startY: yPosition,
+                        theme: 'grid',
+                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
+                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        margin: { left: 110, right: 20 },
+                        tableWidth: 70
+                    });
+                    yPosition = Math.max(doc.lastAutoTable.finalY, doc.lastAutoTable.finalY) + 10;
+                } else {
+                    // Manual: lado a lado
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Campo', 20, yPosition);
+                    doc.text('Valor', 60, yPosition);
+                    doc.text('Concepto', 110, yPosition);
+                    doc.text('Valor', 150, yPosition);
+                    doc.setFont('helvetica', 'normal');
+                    let yInfo = yPosition + 8;
+                    let yFin = yPosition + 8;
+                    infoBasica.forEach((row, i) => {
+                        doc.text(row[0], 20, yInfo);
+                        doc.text(row[1], 60, yInfo);
+                        yInfo += 8;
+                    });
+                    resumenFinanciero.forEach((row, i) => {
+                        doc.text(row[0], 110, yFin);
+                        doc.text(row[1], 150, yFin);
+                        yFin += 8;
+                    });
+                    yPosition = Math.max(yInfo, yFin) + 10;
+                }
+
+                yPosition += 5;
+
+                // Encabezados de la tabla
+                const tableHeaders = ['ID', 'Producto', 'Cantidad', 'P. Unitario', 'Subtotal'];
+                const productos = registro.productos.split(';');
+                const cantidades = registro.cantidades.split(';');
+                const preciosUnitarios = registro.precios_unitarios.split(';');
+                const ids = registro.idProductos ? registro.idProductos.split(';') : productos.map((_, i) => (i + 1).toString());
+
+                // Preparar datos de la tabla
+                const tableData = productos.map((producto, index) => {
+                    const cantidad = cantidades[index]?.trim() || 'N/A';
+                    const precioUnitario = preciosUnitarios[index]?.trim() || '0';
+                    const subtotal = parseFloat(cantidad) * parseFloat(precioUnitario);
+                    return [
+                        ids[index] || '',
+                        producto.trim(),
+                        cantidad,
+                        `Bs. ${precioUnitario}`,
+                        `Bs. ${subtotal.toFixed(2)}`
+                    ];
+                });
+
+                if (doc.autoTable) {
+                    doc.autoTable({
+                        head: [tableHeaders],
+                        body: tableData,
+                        startY: yPosition + 5,
+                        theme: 'grid',
+                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
+                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        margin: { left: 20, right: 20 },
+                    });
+                    yPosition = doc.lastAutoTable.finalY || (yPosition + 40);
+                } else {
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    let x = 20;
+                    tableHeaders.forEach((header, i) => {
+                        doc.text(header, x, yPosition + 10);
+                        x += 35;
+                    });
+                    doc.setFont('helvetica', 'normal');
+                    yPosition += 18;
+                    tableData.forEach(row => {
+                        let x = 20;
+                        row.forEach(cell => {
+                            doc.text(cell.toString(), x, yPosition);
+                            x += 35;
+                        });
+                        yPosition += 8;
+                    });
+                }
+                yPosition += 10;
+
+                // Pie de página
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'italic');
+                doc.text('TotalProd App', 105, pageHeight - 20, { align: 'center' });
+
+                // Marca de agua de fondo (por encima del contenido, pero después del logo)
+                if (watermarkDataUrl) {
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    let imgSize = Math.min(pageWidth, pageHeight) * 0.55;
+                    imgSize = imgSize * 2; // duplicar tamaño
+                    imgSize = imgSize * 0.8; // reducir 20%
+                    const x = (pageWidth - imgSize) / 2;
+                    const y = (pageHeight - imgSize) / 2;
+                    doc.saveGraphicsState && doc.saveGraphicsState();
+                    if (doc.setGState) {
+                        doc.setGState(new doc.GState({ opacity: 0.18 }));
+                    } else if (doc.setAlpha) {
+                        doc.setAlpha(0.18);
+                    }
+                    doc.addImage(watermarkDataUrl, 'PNG', x, y, imgSize, imgSize);
+                    if (doc.restoreGraphicsState) doc.restoreGraphicsState();
+                    if (doc.setAlpha) doc.setAlpha(1);
+                }
+
+                // Generar nombre del archivo
+                const fechaPDF = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+                const nombreArchivo = `Registro_${registro.id}_${fechaPDF}.pdf`;
+
+                // Descargar el PDF
+                doc.save(nombreArchivo);
+
+            } catch (error) {
+                console.error('Error generando PDF:', error);
+                mostrarNotificacion({
+                    message: `Error al generar PDF para registro ${registro.id}`,
+                    type: 'error',
+                    duration: 3500
+                });
+            }
+        });
+
+        mostrarNotificacion({
+            message: `Se descargaron ${registrosVisibles.length} registros en archivos PDF separados`,
+            type: 'success',
+            duration: 3000
+        });
+    } else {
+        mostrarNotificacion({
+            message: 'Exportación PDF solo disponible para registros de almacén',
+            type: 'warning',
+            duration: 3500
+        });
+    }
+}
 export function scrollToTop(view) {
     const view2 = document.querySelector(view);
     if (view2 && view2.scrollTo) {
@@ -834,6 +1080,7 @@ export function actualizarPermisos(recuperar) {
 export function tienePermiso(tipo) {
     return permisos[tipo] || false;
 }
+
 
 
 export async function registrarNotificacion(destino, suceso, detalle) {

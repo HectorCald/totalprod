@@ -102,7 +102,7 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${cliente.id}<span class="neutro">${cliente.zona? cliente.zon: 'No tiene zona'}</span></span>
+                    <span class="id">${cliente.id}<span class="neutro">${cliente.zona? cliente.zona: 'No tiene zona'}</span></span>
                     <span class="nombre"><strong>${cliente.nombre}</strong></span>
                     <span class="fecha">${cliente.telefono}-${cliente.direccion ? cliente.direccion : 'No tiene dirección'}</span>
                 </div>

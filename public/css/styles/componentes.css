@@ -49,6 +49,7 @@
         }
     }
 }
+
 .buscador-filtros {
     display: flex;
     justify-content: space-between;
@@ -98,6 +99,7 @@
     grid-template-columns: repeat(auto-fit, minmax(1fr, 1fr));
     gap: 5px !important;
 }
+
 @media screen and (min-width: 768px) {
     .productos-container {
         display: grid;
@@ -105,6 +107,7 @@
         gap: 10px;
     }
 }
+
 .campo-vertical {
     display: flex;
     flex-direction: column;
@@ -138,6 +141,7 @@
         }
     }
 }
+
 .campo-horizontal {
     display: flex;
     flex-direction: row;
@@ -214,6 +218,7 @@
         }
     }
 }
+
 .entrada {
     display: flex;
     justify-content: center;
@@ -342,6 +347,7 @@
 
     }
 }
+
 .timer-text {
     color: #666;
     font-size: 14px;
@@ -349,6 +355,7 @@
     text-align: left;
     padding-left: 10px;
 }
+
 .sugerencias {
     width: 100%;
     height: auto;
@@ -364,6 +371,7 @@
         color: var(--text);
     }
 }
+
 .custom-file-upload {
     display: flex;
     padding: 10px;
@@ -378,6 +386,7 @@
     align-items: center;
     font-size: var(--text-subtitulo);
 }
+
 .scroll-top {
     position: fixed;
     top: 60px;
@@ -400,6 +409,7 @@
         color: white !important;
     }
 }
+
 .no-encontrado {
     transition: opacity 0.3s ease;
 
@@ -408,6 +418,7 @@
         text-align: center;
     }
 }
+
 .info-sistema {
     display: flex;
     background-color: var(--primary-color);
@@ -427,6 +438,7 @@
         }
     }
 }
+
 .no-hay {
     display: flex;
     flex-direction: column;
@@ -439,11 +451,12 @@
     border-radius: 10px;
     gap: 10px;
 
-    i{
+    i {
         font-size: 50px;
         color: gray !important;
     }
-    p{
+
+    p {
         color: gray;
         font-size: var(--text-detalle);
         text-align: center;
@@ -483,6 +496,7 @@
     }
 
 }
+
 .precios-container {
     margin: 0;
 
@@ -516,6 +530,7 @@
     }
 
 }
+
 .lista-tareas-container {
     display: flex;
     flex-direction: column;
@@ -552,6 +567,7 @@
         }
     }
 }
+
 .plugins-container,
 .permisos-container {
     display: flex;
@@ -602,6 +618,7 @@
         border-left: 5px solid #4CAF50
     }
 }
+
 .formato-pedido {
     background-color: var(--primary-color);
     padding: 20px;
@@ -612,12 +629,14 @@
     flex-direction: column;
     align-items: flex-start !important;
 }
+
 #graficoVelas {
     width: 100% !important;
     height: 200px !important;
     background-color: var(--primary-color) !important;
     padding: 10px !important;
 }
+
 .atajos-lista {
     display: flex;
     flex-direction: column;
@@ -646,11 +665,13 @@
     }
 
 }
+
 .btn-precio:disabled {
     opacity: 0.2;
     cursor: not-allowed;
     transition: all 0.3s ease;
 }
+
 .btn-precio:disabled i {
     opacity: 0.2;
 }
@@ -663,36 +684,35 @@
     align-items: center;
     flex-wrap: wrap;
     width: 100%;
-    justify-content:center;
+    justify-content: center;
     align-items: center;
-  }
-  
-  .item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
 
-    p{
-        font-size: 10px;
+    .item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+
+        p {
+            font-size: 10px;
+        }
     }
-  }
-  
-  .punto {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-  }
-  
-  .blue-light {
-    background-color: rgb(94, 136, 254);
-  }
-  
-  .orange {
-    background-color: orange;
-  }
-  
-  .verde {
-    background-color: var(--success);
-  }
-  
+
+    .punto {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .blue-light {
+        background-color: rgb(94, 136, 254);
+    }
+
+    .orange {
+        background-color: orange;
+    }
+
+    .verde {
+        background-color: var(--success);
+    }
+}

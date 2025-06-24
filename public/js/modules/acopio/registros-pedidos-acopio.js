@@ -999,6 +999,7 @@ function eventosPedidos() {
             <div class="campo-horizontal">
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                    <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto}</span>
                     <span class="valor"><strong><i class='bx bx-package'></i> Cantidad pedida: </strong>${registro.cantidadPedida}</span>
                     <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
                 </div>
@@ -1182,10 +1183,10 @@ function eventosPedidos() {
                             // 3. Registrar pago parcial
                             const pagoParcial = {
                                 pago_id: pagoData.id,
-                                pagado_por: usuarioInfo.nombre,
+                                pagado_por: usuarioInfo.nombre+' ' + usuarioInfo.apellido,
                                 beneficiario: proovedor,
                                 cantidad_pagada: totalPago,
-                                observaciones: observaciones
+                                observaciones: observaciones || 'Sin observaciones',
                             };
 
                             await fetch('/registrar-pago-parcial', {

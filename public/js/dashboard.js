@@ -9,7 +9,7 @@ import {
     inicializarDashboard, limpiarProteccionNavegacion,
     usuarioInfo, mostrarProgreso,
     ocultarProgreso, initPullToRefresh,
-    registrarNotificacion
+    registrarNotificacion, exportarArchivosPDF
 } from './modules/componentes/componentes.js'
 
 import { crearNav } from './modules/main/nav.js'
@@ -72,6 +72,7 @@ window.mostrarCarga = mostrarCarga
 window.ocultarCarga = ocultarCarga
 window.configuracionesEntrada = configuracionesEntrada
 window.exportarArchivos = exportarArchivos
+window.exportarArchivosPDF = exportarArchivosPDF
 window.registrarNotificacion = registrarNotificacion
 window.inicializarDashboard = inicializarDashboard
 window.limpiarProteccionNavegacion = limpiarProteccionNavegacion

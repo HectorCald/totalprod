@@ -326,7 +326,7 @@ function renderInitialHTML() {
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
                 <div class="acciones-grande">
-                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar</span></button>
+                    <button class="exportar-excel btn orange"><i class='bx bx-download'></i> <span>Descargar Excel</span></button>
                     <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> <span>Nuevo registro</span></button>
                 </div>
             </div>
@@ -357,7 +357,7 @@ function renderInitialHTML() {
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar</button>
+            <button class="exportar-excel btn orange"><i class='bx bx-download'></i> Descargar Excel</button>
             <button class="nueva-produccion btn blue"><i class='bx bx-plus'></i> Nuevo registro</button>
         </div>
     `;
