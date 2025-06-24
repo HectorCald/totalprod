@@ -144,7 +144,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarTareas() {
     renderInitialHTML();
@@ -460,7 +460,7 @@ function eventosTareas() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
 
@@ -522,7 +522,7 @@ function eventosTareas() {
             `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón eliminar
@@ -661,7 +661,7 @@ function eventosTareas() {
             `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Configurar eventos para agregar tareas
@@ -891,7 +891,7 @@ function eventosTareas() {
             `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const productoInput = document.querySelector('.entrada .tarea');
@@ -1248,7 +1248,7 @@ function eventosTareas() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const productoInput = document.querySelector('.entrada .producto');

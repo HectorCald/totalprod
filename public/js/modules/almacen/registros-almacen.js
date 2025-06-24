@@ -222,7 +222,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarMovimientosAlmacen() {
     renderInitialHTML();
@@ -559,7 +559,7 @@ function eventosRegistrosAlmacen() {
         </div>
     `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
 
@@ -614,7 +614,7 @@ function eventosRegistrosAlmacen() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -718,7 +718,7 @@ function eventosRegistrosAlmacen() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnAnular = contenido.querySelector('.btn-anular-registro');

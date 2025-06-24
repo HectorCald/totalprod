@@ -484,7 +484,7 @@ function eventosAlmacenAcopio() {
             </div>` : ''}
             `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
             contenido.style.paddingBottom = '80px';
         }
@@ -571,7 +571,7 @@ function eventosAlmacenAcopio() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -764,7 +764,7 @@ function eventosAlmacenAcopio() {
         `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
 
             // Event handlers for tags
             const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
@@ -968,7 +968,7 @@ function eventosAlmacenAcopio() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
 
         // Event handlers for tags
         const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');

@@ -111,7 +111,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarPagos() {
     renderInitialHTML();
@@ -536,7 +536,7 @@ function eventosPagos() {
         }
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const pagarBtn = contenido.querySelector('.btn-pagar');
@@ -575,7 +575,7 @@ function eventosPagos() {
             `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnAnularPago = contenido.querySelector('.btn-anular-pago');
@@ -725,9 +725,9 @@ function eventosPagos() {
                 `;
 
                 contenido.innerHTML = registrationHTML;
-                contenido.style.paddingBottom = '10px';
+                contenido.style.paddingBottom = '70px';
                 if (pago.estado !== 'Anulado' && saldoPendiente !== 0) {
-                    contenido.style.paddingBottom = '80px';
+                    contenido.style.paddingBottom = '70px';
                 }
                 mostrarAnuncioTercer();
 
@@ -919,7 +919,7 @@ function eventosPagos() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         // Función para calcular el total

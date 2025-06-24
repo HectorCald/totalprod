@@ -530,7 +530,7 @@ function eventosPedidos(producto, pedido) {
     `;
 
         mostrarAnuncioSecond();
-        anuncioSecond.style.paddingBottom = '80px';
+        anuncioSecond.style.paddingBottom = '70px';
 
         // Agregar evento para actualizar lote cuando cambie el tipo de materia
         const tipoMateriaSelect = anuncioSecond.querySelector('.tipo-materia');

@@ -199,7 +199,7 @@ export async function mostrarFormularioProduccion() {
     `;
 
     contenido.innerHTML = registrationHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
     contenido.style.maxWidth = '450px';
     await obtenerProductos();
     evetosFormularioProduccion();

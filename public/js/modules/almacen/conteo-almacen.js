@@ -306,7 +306,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 async function updateHTMLWithData() {
     // Update etiquetas filter
@@ -573,7 +573,7 @@ function eventosConteo() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         // Agregar evento al botón de registrar

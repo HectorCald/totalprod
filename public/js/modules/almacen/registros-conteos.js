@@ -78,7 +78,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function registrosConteoAlmacen() {
     renderInitialHTML();
@@ -305,7 +305,7 @@ function eventosRegistrosConteo() {
     `;
 
         contenido.innerHTML = infoHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         if (tienePermiso('edicion')) {
@@ -358,7 +358,7 @@ function eventosRegistrosConteo() {
             `;
 
             contenido.innerHTML = eliminarHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             document.getElementById('confirmar-eliminacion').addEventListener('click', async () => {
@@ -465,7 +465,7 @@ function eventosRegistrosConteo() {
             `;
 
             contenido.innerHTML = editarHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             document.getElementById('guardar-edicion').addEventListener('click', async () => {
@@ -581,7 +581,7 @@ function eventosRegistrosConteo() {
     `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnConfirmarSobreescritura = contenido.querySelector('.btn-confirmar-sobreescritura');

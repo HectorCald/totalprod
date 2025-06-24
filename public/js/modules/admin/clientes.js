@@ -79,7 +79,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarClientes() {
     renderInitialHTML();
@@ -228,7 +228,7 @@ function eventosClientes() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const btnEditar = contenido.querySelector('.btn-editar');
@@ -277,7 +277,7 @@ function eventosClientes() {
                 </div>
             `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
     
             const btnEliminarCliente = contenido.querySelector('.btn-eliminar-cliente-confirmar');
@@ -390,7 +390,7 @@ function eventosClientes() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
     
             const btnGuardarCliente = contenido.querySelector('.btn-guardar-cliente');
@@ -503,7 +503,7 @@ function eventosClientes() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const btnGuardarNuevoCliente = contenido.querySelector('.btn-guardar-nuevo-cliente');

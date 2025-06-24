@@ -159,7 +159,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarReglas() {
     renderInitialHTML();
@@ -383,7 +383,7 @@ function eventosReglas() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom='80px';
+            contenido.style.paddingBottom='70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -478,7 +478,7 @@ function eventosReglas() {
         `;
 
         contenido.innerHTML = seleccionHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         // Agregar eventos a los botones
@@ -799,7 +799,7 @@ function eventosReglas() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const btnGuardar = contenido.querySelector('.btn-guardar-base');

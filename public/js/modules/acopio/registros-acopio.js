@@ -437,12 +437,12 @@ function eventosRegistrosAcopio() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         if (tienePermiso('anulacion') && (esSalida || esUltimoIngreso)) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
         if (tienePermiso('eliminacion') && registro.tipo === 'Anulado') {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
 
         mostrarAnuncioSecond();
@@ -500,7 +500,7 @@ function eventosRegistrosAcopio() {
         `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón de confirmar eliminación
@@ -606,7 +606,7 @@ function eventosRegistrosAcopio() {
     `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnConfirmarAnular = contenido.querySelector('.btn-confirmar-anular');

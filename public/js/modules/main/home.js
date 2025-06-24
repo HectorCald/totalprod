@@ -802,7 +802,7 @@ function editarAtajos() {
     `;
 
     contenido.innerHTML = html;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
     mostrarAnuncio();
     contenido.style.maxWidth = '450px';
 }

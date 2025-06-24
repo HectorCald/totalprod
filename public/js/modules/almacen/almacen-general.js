@@ -769,7 +769,7 @@ function eventosAlmacenGeneral() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
 
@@ -1055,7 +1055,7 @@ function eventosAlmacenGeneral() {
         `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
 
             // Eventos para manejar etiquetas
             const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
@@ -1321,7 +1321,7 @@ function eventosAlmacenGeneral() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px'
+        contenido.style.paddingBottom = '70px'
 
         // Eventos para manejar etiquetas
         const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
@@ -1733,7 +1733,7 @@ function eventosAlmacenGeneral() {
     `;
 
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
 
             mostrarAnuncioTercer();
 
@@ -1870,7 +1870,7 @@ function eventosAlmacenGeneral() {
                 </div>
             `;
             contenidoTercer.innerHTML = registrationHTML;
-            contenidoTercer.style.paddingBottom = '80px';
+            contenidoTercer.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnProcesar = contenidoTercer.querySelector('.btn-procesar-hoja');

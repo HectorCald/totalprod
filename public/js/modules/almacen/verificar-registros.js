@@ -438,7 +438,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarVerificacion() {
     renderInitialHTML();
@@ -934,15 +934,15 @@ function eventosVerificacion() {
         `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion') && !registro.fecha_verificacion) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
         if (tienePermiso('anulacion') && registro.fecha_verificacion) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
         if (!registro.fecha_verificacion) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
 
         mostrarAnuncioSecond();
@@ -1009,7 +1009,7 @@ function eventosVerificacion() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -1172,7 +1172,7 @@ function eventosVerificacion() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const productoInput = document.querySelector('.entrada .producto');
@@ -1346,7 +1346,7 @@ function eventosVerificacion() {
             </div>
             `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -1416,6 +1416,7 @@ function eventosVerificacion() {
                             registro.user,
                             'Verificación',
                             usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
+                        mostrarIngresos(registro.idProducto)
                     } else {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
@@ -1473,7 +1474,7 @@ function eventosVerificacion() {
         </div>
     `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');
@@ -1846,7 +1847,7 @@ function eventosVerificacion() {
                 <button type="submit" class="btn green"><i class='bx bx-save'></i> Guardar pago</button>
             </div>
         `;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
 
         mostrarAnuncioSecond();
 

@@ -362,7 +362,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarMisRegistros() {
     renderInitialHTML();
@@ -673,9 +673,9 @@ function eventosMisRegistros() {
 
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         if (tienePermiso('edicion') || tienePermiso('eliminacion') || tienePermiso('anulacion')) {
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
         }
         mostrarAnuncioSecond();
         if (tienePermiso('anulacion') && registro.fecha_verificacion) {
@@ -732,7 +732,7 @@ function eventosMisRegistros() {
                     </div>
                 `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -910,7 +910,7 @@ function eventosMisRegistros() {
                     </div>
                 `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const productoInput = document.querySelector('.entrada .producto');
@@ -1080,7 +1080,7 @@ function eventosMisRegistros() {
         </div>
     `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');

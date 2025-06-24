@@ -80,7 +80,7 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '80px';
+    contenido.style.paddingBottom = '70px';
 }
 export async function mostrarProovedores() {
     renderInitialHTML();
@@ -234,7 +234,7 @@ function eventosProovedores() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const btnEditar = contenido.querySelector('.btn-editar');
@@ -283,7 +283,7 @@ function eventosProovedores() {
                 </div>
             `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnEliminarProovedor = contenido.querySelector('.btn-eliminar-proovedor-confirmar');
@@ -396,7 +396,7 @@ function eventosProovedores() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             const btnGuardarProveedor = contenido.querySelector('.btn-guardar-proovedor');
@@ -508,7 +508,7 @@ function eventosProovedores() {
             </div>
         `;
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '80px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
         const btnGuardarNuevoProovedor = contenido.querySelector('.btn-guardar-nuevo-proovedor');
