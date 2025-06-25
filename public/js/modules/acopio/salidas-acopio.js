@@ -439,7 +439,7 @@ function eventosPedidos() {
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
                     <p class="detalle">Razon o motivo del ingreso</p>
-                    <input class="razon-ingreso" type="text" autocomplete="off" placeholder=" " required>
+                    <input class="observaciones-salida" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
         </div>
@@ -498,9 +498,9 @@ function eventosPedidos() {
             const numeroLote = document.querySelector('.numero-lote').value;
             const pesoKg = parseFloat(document.querySelector('.peso-kg').value);
             const nombreMovimiento = document.querySelector('.nombre-movimiento').value;
-            const razonSalida = document.querySelector('.razon-ingreso').value;
+            const razonSalida = document.querySelector('.observaciones-salida').value;
 
-            if (!numeroLote || !pesoKg || !nombreMovimiento || !razonSalida) {
+            if (!numeroLote || !pesoKg || !nombreMovimiento) {
                 throw new Error('Por favor complete todos los campos');
             }
 
@@ -557,10 +557,12 @@ function eventosPedidos() {
                 type: 'success',
                 duration: 3000
             });
-            registrarNotificacion(
-                'Administración',
-                'Creación',
-                usuarioInfo.nombre + 'registro una salida de almacen acopio de: ' + item.producto)
+            if (razonSalida !== '') {
+                registrarNotificacion(
+                    'Administración',
+                    'Información',
+                    usuarioInfo.nombre + ' registro una salida de almacen de acopio de: ' + item.producto + ' Observaciones: ' + razonSalida)
+            }
 
             carritoIngresosAcopio.clear();
             localStorage.setItem('damabrava_ingreso_acopio', '[]');

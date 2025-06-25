@@ -508,7 +508,7 @@ function eventosPedidos(producto, pedido) {
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
-                    <p class="detalle">Nombre del movimeinto</p>
+                    <p class="detalle">Nombre del movimiento</p>
                     <input class="nombre-movimiento" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
@@ -517,8 +517,8 @@ function eventosPedidos(producto, pedido) {
             <div class="entrada">
                 <i class='bx bx-comment-detail'></i>
                 <div class="input">
-                    <p class="detalle">Razon o motivo del ingreso</p>
-                    <input class="razon-ingreso" type="text" autocomplete="off" placeholder=" " required>
+                    <p class="detalle">Observaciones</p>
+                    <input class="observaciones-ingreso" type="text" autocomplete="off" placeholder=" " required>
                 </div>
             </div>
         </div>
@@ -557,9 +557,9 @@ function eventosPedidos(producto, pedido) {
                 const olor = document.querySelector('.olor').value;
                 const sabor = document.querySelector('.sabor').value;
                 const textura = document.querySelector('.textura').value;
-                const razonIngreso = document.querySelector('.razon-ingreso').value;
+                const razonIngreso = document.querySelector('.observaciones-ingreso').value;
 
-                if (!pesoKg || !numeroLote || !color || !olor || !razonIngreso) {
+                if (!pesoKg || !numeroLote || !color || !olor) {
                     throw new Error('Por favor complete todos los campos');
                 }
 
@@ -580,7 +580,7 @@ function eventosPedidos(producto, pedido) {
                         tipo: `Ingreso ${tipoMateria}`,
                         nombreMovimiento: nombreMovimiento,
                         caracteristicas: caracteristicas,
-                        observaciones: razonIngreso,
+                        observaciones: razonIngreso || 'Sin observaciones',
                         pedidoId: pedido // ← Añadir esta línea
                     })
                 });
@@ -620,10 +620,12 @@ function eventosPedidos(producto, pedido) {
                     type: 'success',
                     duration: 3000
                 });
-                registrarNotificacion(
-                    'Administración',
-                    'Creación',
-                    usuarioInfo.nombre + 'registro un ingreso al almacen de acopio de: ' + item.producto)
+                if (razonIngreso !== '') {
+                    registrarNotificacion(
+                        'Administración',
+                        'Información',
+                        usuarioInfo.nombre + ' registro un ingreso al almacen de acopio de: ' + item.producto + ' Observaciones: ' + razonIngreso)
+                }
                 if (pedido) {
                     await mostrarPedidos();
                 }

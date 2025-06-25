@@ -1184,6 +1184,7 @@ function eventosIngresos() {
     async function registrarIngreso() {
         const proovedorSelect = document.querySelector('.select-proovedor');
         const nombreMovimiento = document.querySelector('.nombre-movimiento');
+        const observacionesValor = document.querySelector('.Observaciones').value;
         if (!proovedorSelect.value) {
             mostrarNotificacion({
                 message: 'Seleccione un prooveedor antes de continuar',
@@ -1275,10 +1276,12 @@ function eventosIngresos() {
                 type: 'success',
                 duration: 3000
             });
-            registrarNotificacion(
-                'Administración',
-                'Creación',
-                usuarioInfo.nombre + 'registro un ingreso al almacen' + ' de: ' + proovedorSelect.value)
+            if (observacionesValor !== '') {
+                registrarNotificacion(
+                    'Administración',
+                    'Creación',
+                    usuarioInfo.nombre + 'registro un ingreso al almacen de: ' + proovedorSelect.value + ' Observaciones: ' + observacionesValor)
+            }
             ocultarProgreso('.pro-ingreso');
             await mostrarIngresos();
         } catch (error) {

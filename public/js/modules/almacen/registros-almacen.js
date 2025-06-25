@@ -8,23 +8,23 @@ async function initDB() {
     return new Promise((resolve, reject) => {
         // Primero intentar obtener la versión actual de la base de datos
         const request = indexedDB.open(DB_NAME);
-        
+
         request.onerror = () => reject(request.error);
-        
+
         request.onsuccess = (event) => {
             const db = event.target.result;
             const currentVersion = db.version;
             db.close();
-            
+
             // Abrir la base de datos con la versión actual + 1
             const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-            
+
             upgradeRequest.onerror = () => reject(upgradeRequest.error);
             upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-            
+
             upgradeRequest.onupgradeneeded = (event) => {
                 const db = event.target.result;
-                
+
                 // Crear o actualizar los object stores
                 if (!db.objectStoreNames.contains(REGISTROS_ALMACEN_STORE)) {
                     db.createObjectStore(REGISTROS_ALMACEN_STORE, { keyPath: 'id' });
@@ -97,7 +97,7 @@ async function obtenerClientes() {
 async function obtenerRegistrosAlmacen() {
     try {
         const registrosCacheAlmacen = await obtenerRegistrosLocal();
-        
+
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCacheAlmacen.length > 0) {
             registrosAlmacen = registrosCacheAlmacen.sort((a, b) => {
@@ -125,28 +125,30 @@ async function obtenerRegistrosAlmacen() {
                 updateHTMLWithData();
             }
 
-            // Siempre actualizar el caché con los nuevos datos
-            try {
-                const db = await initDB();
-                const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
-                const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
-                
-                // Limpiar todos los registros existentes
-                await store.clear();
-                
-                // Guardar los nuevos registros
-                for (const registro of registrosAlmacen) {
-                    await store.put({
-                        id: registro.id,
-                        data: registro,
-                        timestamp: Date.now()
-                    });
+            (async () => {
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
+                    const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+
+                    // Limpiar todos los registros existentes
+                    await store.clear();
+
+                    // Guardar los nuevos registros
+                    for (const registro of registrosAlmacen) {
+                        await store.put({
+                            id: registro.id,
+                            data: registro,
+                            timestamp: Date.now()
+                        });
+                    }
+
+                    console.log('Caché actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché:', error);
                 }
-                
-                console.log('Caché actualizado correctamente');
-            } catch (error) {
-                console.error('Error actualizando el caché:', error);
-            }
+
+            })();
 
             return true;
         } else {
@@ -327,7 +329,7 @@ function eventosRegistrosAlmacen() {
         filtroFechaInstance.open();
     });
     botonesTipo.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroNombreActual = boton.textContent.trim();
         }
         boton.addEventListener('click', async () => {
@@ -839,7 +841,7 @@ async function obtenerRegistrosLocal() {
         const db = await initDB();
         const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readonly');
         const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
-        
+
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => {

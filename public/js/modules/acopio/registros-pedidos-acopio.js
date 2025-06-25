@@ -1,3 +1,5 @@
+import { registrarNotificacion } from '../componentes/componentes.js';
+
 let pedidosGlobal = [];
 let productos = [];
 let proovedoresAcopioGlobal = [];
@@ -118,30 +120,31 @@ async function obtenerPedidos() {
             if (JSON.stringify(registrosCachePedidos) !== JSON.stringify(pedidosGlobal)) {
                 console.log('Diferencias encontradas, actualizando UI');
                 updateHTMLWithData();
+                ocultarProgreso('.pro-pedido');
             }
 
-            // Siempre actualizar el caché con los nuevos datos
-            try {
-                const db = await initDB();
-                const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readwrite');
-                const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
+            // Actualizar el caché en segundo plano
+            (async () => {
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(REGISTROS_PEDIDOS_STORE, 'readwrite');
+                    const store = tx.objectStore(REGISTROS_PEDIDOS_STORE);
 
-                // Limpiar todos los registros existentes
-                await store.clear();
+                    await store.clear();
 
-                // Guardar los nuevos registros
-                for (const registro of pedidosGlobal) {
-                    await store.put({
-                        id: registro.id,
-                        data: registro,
-                        timestamp: Date.now()
-                    });
+                    for (const registro of pedidosGlobal) {
+                        await store.put({
+                            id: registro.id,
+                            data: registro,
+                            timestamp: Date.now()
+                        });
+                    }
+
+                    console.log('Caché actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché:', error);
                 }
-
-                console.log('Caché actualizado correctamente');
-            } catch (error) {
-                console.error('Error actualizando el caché:', error);
-            }
+            })();
 
             return true;
         } else {
@@ -702,7 +705,6 @@ function eventosPedidos() {
                     if (data.success) {
                         await obtenerPedidos();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido eliminado correctamente',
                             type: 'success',
@@ -957,7 +959,6 @@ function eventosPedidos() {
                     if (data.success) {
                         await obtenerPedidos();
                         info(registroId)
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido actualizado correctamente',
                             type: 'success',
@@ -1148,87 +1149,89 @@ function eventosPedidos() {
                     const entregaData = await entregaResponse.json();
 
                     if (entregaData.success) {
-                        // 2. Crear registro de pago genérico
-                        const totalPago = precio + transporteOtros;
-                        const proveedorInfo = proovedoresAcopioGlobal.find(p => p.nombre === proovedor);
-
-                        const pagoGenerico = {
-                            nombre_pago: `Materia prima (${registro.producto})`,
-                            id_beneficiario: proveedorInfo?.id || 'No registrado',
-                            beneficiario: proovedor,
-                            pagado_por: usuarioInfo.nombre + ' ' + usuarioInfo.apellido,
-                            justificativos_id: registro.id,
-                            justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + precio + ')Transporte: (Bs./' + transporteOtros + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
-                            subtotal: totalPago,
-                            descuento: 0,
-                            aumento: 0,
-                            total: totalPago,
-                            observaciones: observaciones || 'Sin observaciones',
-                            estado: 'Pagado',
-                            tipo: 'Acopio'
-                        };
-
-                        const pagoResponse = await fetch('/registrar-pago', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(pagoGenerico)
+                        await obtenerPedidos();
+                        info(registroId)
+                        ocultarProgreso('.pro-pedido');
+                        mostrarNotificacion({
+                            message: 'Entrega registrada correctamente',
+                            type: 'success',
+                            duration: 3000
                         });
+                        registrarNotificacion(
+                            'Acopio',
+                            'Información',
+                            usuarioInfo.nombre + ' se hizo la entrega del producto: ' + registro.producto + ' cantidad: ' + registro.cantidadEntregadaUnd)
 
-                        const pagoData = await pagoResponse.json();
-
-                        if (pagoData.success) {
-
-                            // 3. Registrar pago parcial
-                            const pagoParcial = {
-                                pago_id: pagoData.id,
-                                pagado_por: usuarioInfo.nombre+' ' + usuarioInfo.apellido,
-                                beneficiario: proovedor,
-                                cantidad_pagada: totalPago,
-                                observaciones: observaciones || 'Sin observaciones',
-                            };
-
-                            await fetch('/registrar-pago-parcial', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(pagoParcial)
-                            });
-                            await obtenerPedidos();
-                            info(registroId)
-                            updateHTMLWithData();
-                            registrarNotificacion(
-                                'Administración',
-                                'Información',
-                                usuarioInfo.nombre + ' registro un nuevo pago pendiente generico de materia prima del monto: Bs./' + totalPago + ' del producto: ' + registro.producto)
-                            registrarNotificacion(
-                                'Acopio',
-                                'Información',
-                                usuarioInfo.nombre + ' se hizo la entrega del producto: ' + registro.producto + ' cantidad: ' + registro.cantidadEntregadaUnd)
-
-                            // Actualizar mensaje de compras y notificar éxito
-                            if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
-                                mensajeCompras = 'Se compro:\n';
-                            }
-                            mensajeCompras = mensajeCompras.replace(/\n\nSe compro en la App de TotalProd.$/, '');
-                            mensajeCompras = mensajeCompras.replace(/\n$/, '');
-                            mensajeCompras += `\n• ${registro.producto} - ${cantidadUnd} ${unidadMedida} (${estadoCompra})`;
-                            mensajeCompras += '\n\nSe compro en la App de TotalProd.';
-
-                            localStorage.setItem('damabrava_mensaje_compras', mensajeCompras);
-
-                            mostrarNotificacion({
-                                message: 'Pedido entregado y pago registrado correctamente',
-                                type: 'success',
-                                duration: 3000
-                            });
-                            registrarNotificacion(
-                                'Administración',
-                                'Información',
-                                usuarioInfo.nombre + ' hizo la entrega/compra de materia prima del producto: ' + registro.producto + ' con el id de registro: ' + registro.id)
+                        // Actualizar mensaje de compras y notificar éxito
+                        if (mensajeCompras === 'Se compro:\n• Sin compras registradas') {
+                            mensajeCompras = 'Se compro:\n';
                         }
+                        mensajeCompras = mensajeCompras.replace(/\n\nSe compro en la App de TotalProd.$/, '');
+                        mensajeCompras = mensajeCompras.replace(/\n$/, '');
+                        mensajeCompras += `\n• ${registro.producto} - ${cantidadUnd} ${unidadMedida} (${estadoCompra})`;
+                        mensajeCompras += '\n\nSe compro en la App de TotalProd.';
+                        localStorage.setItem('damabrava_mensaje_compras', mensajeCompras);
+
+                        // 2. En segundo plano: crear registro de pago genérico y parcial
+                        (async () => {
+                            try {
+                                const totalPago = precio + transporteOtros;
+                                const proveedorInfo = proovedoresAcopioGlobal.find(p => p.nombre === proovedor);
+                                const pagoGenerico = {
+                                    nombre_pago: `Materia prima (${registro.producto})`,
+                                    id_beneficiario: proveedorInfo?.id || 'No registrado',
+                                    beneficiario: proovedor,
+                                    pagado_por: usuarioInfo.nombre + ' ' + usuarioInfo.apellido,
+                                    justificativos_id: registro.id,
+                                    justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + precio + ')Transporte: (Bs./' + transporteOtros + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
+                                    subtotal: totalPago,
+                                    descuento: 0,
+                                    aumento: 0,
+                                    total: totalPago,
+                                    observaciones: observaciones || 'Sin observaciones',
+                                    estado: 'Pagado',
+                                    tipo: 'Acopio'
+                                };
+                                const pagoResponse = await fetch('/registrar-pago', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(pagoGenerico)
+                                });
+                                const pagoData = await pagoResponse.json();
+                                if (pagoData.success) {
+                                    // 3. Registrar pago parcial
+                                    const pagoParcial = {
+                                        pago_id: pagoData.id,
+                                        pagado_por: usuarioInfo.nombre + ' ' + usuarioInfo.apellido,
+                                        beneficiario: proovedor,
+                                        cantidad_pagada: totalPago,
+                                        observaciones: observaciones || 'Sin observaciones',
+                                    };
+                                    await fetch('/registrar-pago-parcial', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify(pagoParcial)
+                                    });
+                                    mostrarNotificacion({
+                                        message: 'Pago registrado correctamente',
+                                        type: 'success',
+                                        duration: 3000
+                                    });
+                                }
+                            } catch (err) {
+                                console.error('Error en el registro de pagos en segundo plano:', err);
+                                mostrarNotificacion({
+                                    message: 'Error al registrar el pago',
+                                    type: 'error',
+                                    duration: 3500
+                                });
+                            }
+                        })();
+                        // Fin segundo plano
                     } else {
                         throw new Error(entregaData.error || 'Error al entregar el pedido');
                     }
@@ -1324,7 +1327,6 @@ function eventosPedidos() {
                     if (data.success) {
                         await obtenerPedidos();
                         info(registroId)
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pedido rechazado correctamente',
                             type: 'success',
@@ -1369,16 +1371,11 @@ function eventosPedidos() {
                 if (data.success) {
                     await obtenerPedidos();
                     info(registroId)
-                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Se cambio el estado a llego',
                         type: 'success',
                         duration: 3000
                     });
-                    registrarNotificacion(
-                        'Administración',
-                        'Información',
-                        usuarioInfo.nombre + ' se cambio el estado del registro: ' + registro.producto + ' con el id: ' + registro.id + ' se cambio de "no llego" a "llego" ')
                     registrarNotificacion(
                         'Acopio',
                         'Información',

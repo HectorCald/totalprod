@@ -10,7 +10,7 @@ let preciosBase = {
 };
 let nombresUsuariosGlobal = [];
 const DB_NAME = 'damabrava_db';
-const DB_NAME_IMG ='damabrava_db_img'
+const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_STORE = 'registros_verificacion';
 const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
@@ -41,20 +41,20 @@ async function initDB() {
     return new Promise((resolve, reject) => {
         // Primero intentar obtener la versión actual de la base de datos
         const request = indexedDB.open(DB_NAME);
-        
+
         request.onerror = () => reject(request.error);
-        
+
         request.onsuccess = (event) => {
             const db = event.target.result;
             const currentVersion = db.version;
             db.close();
-            
+
             // Abrir la base de datos con la versión actual + 1
             const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-            
+
             upgradeRequest.onerror = () => reject(upgradeRequest.error);
             upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-            
+
             upgradeRequest.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(REGISTROS_STORE)) {
@@ -261,7 +261,7 @@ async function obtenerReglas() {
 async function obtenerRegistrosProduccion() {
     try {
         const registrosCache = await obtenerRegistrosLocal();
-        
+
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCache.length > 0) {
             registrosProduccion = registrosCache.sort((a, b) => {
@@ -289,27 +289,29 @@ async function obtenerRegistrosProduccion() {
             }
 
             // Siempre actualizar el caché con los nuevos datos
-            try {
-                const db = await initDB();
-                const tx = db.transaction(REGISTROS_STORE, 'readwrite');
-                const store = tx.objectStore(REGISTROS_STORE);
-                
-                // Limpiar todos los registros existentes
-                await store.clear();
-                
-                // Guardar los nuevos registros
-                for (const registro of registrosProduccion) {
-                    await store.put({
-                        id: registro.id,
-                        data: registro,
-                        timestamp: Date.now()
-                    });
+            (async () => {
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(REGISTROS_STORE, 'readwrite');
+                    const store = tx.objectStore(REGISTROS_STORE);
+
+                    // Limpiar todos los registros existentes
+                    await store.clear();
+
+                    // Guardar los nuevos registros
+                    for (const registro of registrosProduccion) {
+                        await store.put({
+                            id: registro.id,
+                            data: registro,
+                            timestamp: Date.now()
+                        });
+                    }
+
+                    console.log('Caché actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché:', error);
                 }
-                
-                console.log('Caché actualizado correctamente');
-            } catch (error) {
-                console.error('Error actualizando el caché:', error);
-            }
+            })();
 
             return true;
         } else {
@@ -539,7 +541,7 @@ function eventosVerificacion() {
         const productosContainer = document.querySelector('.productos-container');
         const currentItems = document.querySelectorAll('.registro-item').length;
         const nextBatch = registrosProduccion.slice(currentItems, currentItems + 50);
-        
+
         if (nextBatch.length > 0) {
             const newItemsHTML = nextBatch.map(registro => `
                 <div class="registro-item" data-id="${registro.id}">
@@ -585,7 +587,7 @@ function eventosVerificacion() {
             // Reattach event listeners to new items
             const newItems = document.querySelectorAll('.registro-item');
             newItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     const registroId = this.dataset.id;
                     window.info(registroId);
                 });
@@ -596,7 +598,7 @@ function eventosVerificacion() {
         const productosContainer = document.querySelector('.productos-container');
         const currentItems = document.querySelectorAll('.registro-item').length;
         const remainingRecords = registrosProduccion.slice(currentItems);
-        
+
         if (remainingRecords.length > 0) {
             const newItemsHTML = remainingRecords.map(registro => `
                 <div class="registro-item" data-id="${registro.id}">
@@ -624,7 +626,7 @@ function eventosVerificacion() {
             // Reattach event listeners to new items
             const newItems = document.querySelectorAll('.registro-item');
             newItems.forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     const registroId = this.dataset.id;
                     window.info(registroId);
                 });
@@ -669,7 +671,7 @@ function eventosVerificacion() {
 
 
     let filtroFechaInstance = null;
-    let filtroNombreActual = localStorage.getItem('filtroNombresProduccion') === 'undefined'? 'Todos':localStorage.getItem('filtroNombresProduccion') ;
+    let filtroNombreActual = localStorage.getItem('filtroNombresProduccion') === 'undefined' ? 'Todos' : localStorage.getItem('filtroNombresProduccion');
     let filtroEstadoActual = 'Todos';
 
     function normalizarTexto(texto) {
@@ -709,7 +711,7 @@ function eventosVerificacion() {
                     mostrar = registroData.fecha_verificacion && registroData.observaciones !== 'Sin observaciones';
                 }
             }
-            
+
             if (mostrar && filtroNombreActual && filtroNombreActual !== 'Todos') {
                 mostrar = registroData.user === filtroNombreActual;
             }
@@ -777,10 +779,10 @@ function eventosVerificacion() {
             }
         }, 100);
     }
-    
+
     botonesNombre.forEach(boton => {
         boton.classList.remove('activado');
-        if(filtroNombreActual !== 'todos'){
+        if (filtroNombreActual !== 'todos') {
             if (boton.dataset.user === filtroNombreActual) {
                 boton.classList.add('activado');
             }
@@ -795,7 +797,7 @@ function eventosVerificacion() {
         });
     });
     botonesEstado.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroEstadoActual = boton.textContent.trim();
         }
         boton.addEventListener('click', () => {
@@ -1405,14 +1407,16 @@ function eventosVerificacion() {
                             type: 'success',
                             duration: 3000
                         });
-                        registrarNotificacion(
-                            'Administración',
-                            'Verificación',
-                            usuarioInfo.nombre + ' verifico el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
-                        registrarNotificacion(
-                            registro.user,
-                            'Verificación',
-                            usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
+                        if (observaciones !== '') {
+                            registrarNotificacion(
+                                'Administración',
+                                'Verificación',
+                                usuarioInfo.nombre + ' verifico el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
+                            registrarNotificacion(
+                                registro.user,
+                                'Verificación',
+                                usuarioInfo.nombre + ' verifico tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' Observaciones: ' + observaciones)
+                        }
                         await mostrarIngresos(registro.idProducto);
                     } else {
                         throw new Error(data.error || 'Error al verificar el registro');
@@ -2013,7 +2017,7 @@ async function obtenerRegistrosLocal() {
         const db = await initDB();
         const tx = db.transaction(REGISTROS_STORE, 'readonly');
         const store = tx.objectStore(REGISTROS_STORE);
-        
+
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => {

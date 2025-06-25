@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v4'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v5'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -111,6 +111,11 @@ self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     
     if (!event.request.url.startsWith(self.location.origin)) {
+        return;
+    }
+
+    // Solo cachear GET
+    if (event.request.method !== 'GET') {
         return;
     }
 

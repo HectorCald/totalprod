@@ -2,7 +2,7 @@ let registrosProduccion = [];
 let productosGlobal = [];
 
 const DB_NAME = 'damabrava_db';
-const DB_NAME_IMG ='damabrava_db_img'
+const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
 
@@ -10,20 +10,20 @@ async function initDB() {
     return new Promise((resolve, reject) => {
         // Primero intentar obtener la versión actual de la base de datos
         const request = indexedDB.open(DB_NAME);
-        
+
         request.onerror = () => reject(request.error);
-        
+
         request.onsuccess = (event) => {
             const db = event.target.result;
             const currentVersion = db.version;
             db.close();
-            
+
             // Abrir la base de datos con la versión actual + 1
             const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-            
+
             upgradeRequest.onerror = () => reject(upgradeRequest.error);
             upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-            
+
             upgradeRequest.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(REGISTROS_PRODUCCION_STORE)) {
@@ -75,7 +75,7 @@ async function obtenerRegistrosLocal() {
         const db = await initDB();
         const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readonly');
         const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
-        
+
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => {
@@ -222,28 +222,29 @@ async function obtenerMisRegistros() {
             }
 
             // Siempre actualizar el caché con los nuevos datos
-            try {
-                const db = await initDB();
-                const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
-                const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
-                
-                // Limpiar todos los registros existentes
-                await store.clear();
-                
-                // Guardar los nuevos registros
-                for (const registro of registrosProduccion) {
-                    await store.put({
-                        id: registro.id,
-                        data: registro,
-                        timestamp: Date.now()
-                    });
-                }
-                
-                console.log('Caché actualizado correctamente');
-            } catch (error) {
-                console.error('Error actualizando el caché:', error);
-            }
+            (async () => {
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
+                    const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
 
+                    // Limpiar todos los registros existentes
+                    await store.clear();
+
+                    // Guardar los nuevos registros
+                    for (const registro of registrosProduccion) {
+                        await store.put({
+                            id: registro.id,
+                            data: registro,
+                            timestamp: Date.now()
+                        });
+                    }
+
+                    console.log('Caché actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché:', error);
+                }
+            })();
             return true;
         } else {
             mostrarNotificacion({
@@ -462,7 +463,7 @@ function eventosMisRegistros() {
         filtroFechaInstance.open();
     });
     botonesEstado.forEach(boton => {
-        if(boton.classList.contains('activado')){
+        if (boton.classList.contains('activado')) {
             filtroNombreActual = boton.textContent.trim().toLowerCase();
             aplicarFiltros();
         }
@@ -779,10 +780,12 @@ function eventosMisRegistros() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Eliminación',
-                            usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        if (registro.user !== usuarioInfo.email) {
+                            registrarNotificacion(
+                                registro.user,
+                                'Eliminación',
+                                usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        }
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
@@ -1019,10 +1022,12 @@ function eventosMisRegistros() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Edición',
-                            usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        if (registro.user !== usuarioInfo.email) {
+                            registrarNotificacion(
+                                registro.user,
+                                'Edición',
+                                usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        }
                     } else {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
@@ -1127,10 +1132,12 @@ function eventosMisRegistros() {
                             'Administración',
                             'Información',
                             usuarioInfo.nombre + ' anulo el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Información',
-                            usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        if (registro.user !== usuarioInfo.email) {
+                            registrarNotificacion(
+                                registro.user,
+                                'Información',
+                                usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+                        }
                     } else {
                         throw new Error(data.error || 'Error al anular la verificación');
                     }

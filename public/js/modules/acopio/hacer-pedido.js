@@ -663,7 +663,7 @@ function eventosPedidos() {
                 registrarNotificacion(
                     'Administración',
                     'Creación',
-                    usuarioInfo.nombre + ' registro un nuevo pedido de materia prima')
+                    usuarioInfo.nombre + ' hizo un nuevo pedido de materia prima')
                 mostrarMensajePedido();
                 await mostrarHacerPedido();
             } else {

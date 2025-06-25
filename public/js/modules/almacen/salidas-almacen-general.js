@@ -1117,6 +1117,7 @@ function eventosSalidas() {
         const clienteSelect = document.querySelector('.select-cliente');
         const nombreMovimiento = document.querySelector('.nombre-movimiento');
         const estadoSelect = document.querySelector('.select');  // Nuevo
+        const observacionesValor = document.querySelector('.observaciones').value;
 
         if (!clienteSelect.value) {
             mostrarNotificacion({
@@ -1211,11 +1212,12 @@ function eventosSalidas() {
                 type: 'success',
                 duration: 3000
             });
-            registrarNotificacion(
-                'Administración',
-                'Creación',
-                usuarioInfo.nombre + 'registro una salida de almacen' + ' para: ' + clienteSelect.value)
-
+            if (observacionesValor !== '') {
+                registrarNotificacion(
+                    'Administración',
+                    'Creación',
+                    usuarioInfo.nombre + ' registro una salida al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
+            }
             await mostrarSalidas();
         } catch (error) {
             if (error.message === 'cancelled') {

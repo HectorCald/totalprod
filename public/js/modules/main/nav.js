@@ -460,12 +460,9 @@ class TooltipManager {
     }
 
     handleMouseEnter(event) {
-        const element = event.target.closest('.opcion[data-tooltip]');
-        if (!element) return;
-
-        const div = document.querySelector('.panel-lateral');
-        // Solo mostrar tooltip si el panel está contraído
-        if (div && div.style.width === "92px") {
+        const target = event.target;
+        const element = target && typeof target.closest === 'function' ? target.closest('.opcion[data-tooltip]') : null;
+        if (element) {
             const tooltipText = element.getAttribute('data-tooltip');
             if (tooltipText) {
                 this.showTooltip(element, tooltipText);
@@ -474,14 +471,16 @@ class TooltipManager {
     }
 
     handleMouseLeave(event) {
-        const element = event.target.closest('.opcion[data-tooltip]');
+        const target = event.target;
+        const element = target && typeof target.closest === 'function' ? target.closest('.opcion[data-tooltip]') : null;
         if (element) {
             this.hideTooltip();
         }
     }
 
     handleMouseMove(event) {
-        const element = event.target.closest('.opcion[data-tooltip]');
+        const target = event.target;
+        const element = target && typeof target.closest === 'function' ? target.closest('.opcion[data-tooltip]') : null;
         if (element && this.tooltip.classList.contains('show')) {
             this.updateTooltipPosition(element);
         }
