@@ -260,7 +260,6 @@ function updateHTMLWithData() {
 
 
 function eventosRegistrosAlmacen() {
-    console.log('eventos')
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const btnPDF = document.querySelectorAll('.exportar-pdf');
     const registrosAExportar = registrosAlmacen;
@@ -364,7 +363,6 @@ function eventosRegistrosAlmacen() {
             .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
     }
     function aplicarFiltros() {
-        console.log('se aplicacn aqui')
         const filtroTipo = filtroNombreActual;
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
         const busqueda = normalizarTexto(inputBusqueda.value);

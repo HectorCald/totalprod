@@ -142,10 +142,13 @@ export async function mostrarAnuncio() {
     
     const botonCarrito = document.querySelector('.btn-flotante-salidas')
     const botonCarrito2 = document.querySelector('.btn-flotante-ingresos')
+    const botonCarrito3 = document.querySelector('.btn-flotante-pedidos')
     if (botonCarrito) {
         botonCarrito.style.display = 'none'
     } else if (botonCarrito2) {
         botonCarrito2.style.display = 'none'
+    } else if (botonCarrito3) {
+        botonCarrito3.style.display = 'none'
     }
 
 
@@ -337,7 +340,12 @@ export function ocultarCarga() {
 }
 
 
-export function crearNotificacion({ message, type = 'info', duration = 3000 }) {
+export function crearNotificacion(options = {}) {
+    // Validar y establecer valores por defecto
+    const { message, type = 'info', duration = 3000 } = options || {};
+    // Si no hay mensaje real, no mostrar nada
+    if (!message) return;
+    
     let container = document.querySelector('.notification-container');
 
     if (!container) {
@@ -1231,8 +1239,6 @@ export function ocultarProgreso(tipo) {
         div.classList.add('slide-out-flotante');
     }, 300);
 }
-
-
 
 
 export function initPullToRefresh(container, refreshCallback) {

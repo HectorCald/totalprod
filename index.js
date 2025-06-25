@@ -4885,7 +4885,7 @@ app.get('/obtener-personal', requireAuth, async (req, res) => {
             telefono: row[2] || '',               // TELEFONO
             estado: row[3] || '',                 // ESTADO
             rol: row[4] || '',                    // ROL
-            foto: row[5] || './icons/default-user.png', // FOTO
+            foto: row[5] || '', // FOTO
             plugins: row[6] || '',                // PLUGINS
             email: row[7] || '',                  // EMAIL
             // No enviamos la contraseña por seguridad

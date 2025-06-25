@@ -130,11 +130,6 @@ async function obtenerMisRegistros() {
         const registros = await obtenerRegistrosLocal();
 
         if (registros.length === 0) {
-            mostrarNotificacion({
-                message: 'No hay datos registrados por el momento',
-                type: 'info',
-                duration: 3500
-            });
             return false;
         }
 

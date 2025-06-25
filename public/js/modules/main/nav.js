@@ -712,7 +712,8 @@ function renderMenu() {
                     notificacionesNuevas.forEach(element => {
                         element.classList.remove('nueva-notificacion');
                     });
-                    localStorage.setItem('cantidad_notificaciones', historialNotificaciones.length.toString());
+                    const cantidadActual = notificacion.querySelectorAll('.notificacion').length;
+                    localStorage.setItem('cantidad_notificaciones', cantidadActual.toString());
                 }, 3000);
             }, 300);
         }

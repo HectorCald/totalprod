@@ -193,8 +193,10 @@ function inicializarApp() {
     
         const savedCredentials = JSON.parse(localStorage.getItem('credentials'));
         if (savedCredentials) {
-            document.querySelector('.email').value = savedCredentials.email;
-            document.querySelector('.password').value = savedCredentials.password;
+            const emailInput = document.querySelector('.email');
+            const passwordInput = document.querySelector('.password');
+            if (emailInput) emailInput.value = savedCredentials.email;
+            if (passwordInput) passwordInput.value = savedCredentials.password;
         }
     
         inputs.forEach(input => {
@@ -892,7 +894,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Precarga el dashboard
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(registration => {
-            registration.prefetch('/dashboard');
+            // El método prefetch no existe en Service Worker API
+            // Se puede usar fetch para precargar si es necesario
+            fetch('/dashboard', { method: 'HEAD' }).catch(() => {});
         });
     }
     await verificarTemaInicial();

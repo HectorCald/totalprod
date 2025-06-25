@@ -9,7 +9,7 @@ let onMessage = null;
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
         .then(() => {
-            console.log('Service Worker registrado desde el inicio');
+            // console.log('Service Worker registrado desde el inicio');
         })
         .catch(error => {
             console.error('Error al registrar Service Worker desde el inicio:', error);
@@ -42,7 +42,7 @@ async function inicializarFirebaseMessaging() {
 
         // Manejar mensajes en primer plano
         onMessage(messaging, (payload) => {
-            console.log('[FRONT] onMessage payload:', payload);
+            // console.log('[FRONT] onMessage payload:', payload);
             // Reenviar el payload al Service Worker para mostrar la notificación push
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
@@ -58,7 +58,7 @@ async function inicializarFirebaseMessaging() {
         await registrarServiceWorker();
         await obtenerFCMToken();
 
-        console.log('Firebase Messaging inicializado correctamente');
+        // console.log('Firebase Messaging inicializado correctamente');
     } catch (error) {
         console.error('Error al inicializar Firebase Messaging:', error);
     }
@@ -69,7 +69,7 @@ async function registrarServiceWorker() {
     try {
         const registration = await navigator.serviceWorker.register('/service-worker.js');
         await navigator.serviceWorker.ready;
-        console.log('Service Worker registrado para notificaciones');
+        // console.log('Service Worker registrado para notificaciones');
         return registration;
     } catch (error) {
         console.error('Error al registrar Service Worker:', error);
@@ -81,7 +81,7 @@ async function registrarServiceWorker() {
 async function obtenerFCMToken() {
     try {
         if (!getToken || !messaging) {
-            console.log('Firebase Messaging no está inicializado, esperando...');
+            // console.log('Firebase Messaging no está inicializado, esperando...');
             // Reintentar después de 2 segundos
             setTimeout(obtenerFCMToken, 2000);
             return;
@@ -94,10 +94,10 @@ async function obtenerFCMToken() {
         });
 
         if (fcmToken) {
-            console.log('Token FCM obtenido:', fcmToken.substring(0, 50) + '...');
+            // console.log('Token FCM obtenido:', fcmToken.substring(0, 50) + '...');
             await registrarTokenEnServidor(fcmToken);
         } else {
-            console.log('No se pudo obtener el token FCM, reintentando en 5 segundos...');
+            // console.log('No se pudo obtener el token FCM, reintentando en 5 segundos...');
             // Reintentar después de 5 segundos
             setTimeout(obtenerFCMToken, 5000);
         }
@@ -121,7 +121,7 @@ async function registrarTokenEnServidor(token) {
 
         const result = await response.json();
         if (result.success) {
-            console.log('Token FCM registrado en el servidor');
+            // console.log('Token FCM registrado en el servidor');
         } else {
             console.error('Error al registrar token:', result.error);
         }
@@ -154,12 +154,12 @@ function mostrarNotificacionLocal(titulo, mensaje) {
 async function solicitarPermisosNotificacion() {
     try {
         const permission = await Notification.requestPermission();
-        console.log('Permiso de notificación:', permission);
+        // console.log('Permiso de notificación:', permission);
         
         if (permission === 'granted') {
             await inicializarFirebaseMessaging();
         } else {
-            console.log('Permiso de notificación denegado');
+            // console.log('Permiso de notificación denegado');
         }
         
         return permission;
@@ -225,12 +225,12 @@ export async function crearNotificaciones(user) {
 
     // Inicializar notificaciones push si no están inicializadas
     if (!messaging) {
-        console.log('Inicializando Firebase Messaging...');
+        // console.log('Inicializando Firebase Messaging...');
         await solicitarPermisosNotificacion();
         
         // Esperar un poco para que Firebase se inicialice completamente
         if (!messaging) {
-            console.log('Firebase Messaging no se pudo inicializar, continuando sin notificaciones push');
+            // console.log('Firebase Messaging no se pudo inicializar, continuando sin notificaciones push');
         }
     }
 

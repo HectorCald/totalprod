@@ -34,6 +34,9 @@
         overflow: hidden;
     }
 }
+.btn:active{
+    opacity: 0.8;
+}
 .btn.orange {
     background-color: var(--cuarto-color);
 }

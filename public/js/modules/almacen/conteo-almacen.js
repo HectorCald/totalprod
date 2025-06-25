@@ -2,7 +2,7 @@ let productos = [];
 let etiquetas = [];
 
 
-const DB_NAME = 'damabrava_db';
+const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
 
 function initDB() {
