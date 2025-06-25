@@ -179,4 +179,17 @@ self.addEventListener('message', event => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
+    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+        const data = event.data.payload || {};
+        const notificationTitle = data.title || 'Nueva notificación';
+        const notificationOptions = {
+            body: data.body || 'Tienes un nuevo mensaje',
+            icon: '/icons/icon.png',
+            badge: '/badge.png',
+            data: data,
+            requireInteraction: true,
+            silent: false
+        };
+        self.registration.showNotification(notificationTitle, notificationOptions);
+    }
 });

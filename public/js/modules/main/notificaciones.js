@@ -43,7 +43,13 @@ async function inicializarFirebaseMessaging() {
         // Manejar mensajes en primer plano
         onMessage(messaging, (payload) => {
             console.log('[FRONT] onMessage payload:', payload);
-            // Ya no mostrar notificación local
+            // Reenviar el payload al Service Worker para mostrar la notificación push
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    payload: payload.data || {}
+                });
+            }
             // Actualizar el historial de notificaciones
             actualizarHistorialNotificaciones();
         });
