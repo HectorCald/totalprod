@@ -44,10 +44,13 @@ async function inicializarFirebaseMessaging() {
         onMessage(messaging, (payload) => {
             console.log('[FRONT] onMessage payload:', payload);
             
-            mostrarNotificacionLocal(
-                payload.data?.title || 'Nueva notificación',
-                payload.data?.body || 'Tienes un nuevo mensaje'
-            );
+            // Solo mostrar notificación local si la ventana está visible
+            if (document.visibilityState === 'visible') {
+                mostrarNotificacionLocal(
+                    payload.data?.title || 'Nueva notificación',
+                    payload.data?.body || 'Tienes un nuevo mensaje'
+                );
+            }
 
             // Actualizar el historial de notificaciones
             actualizarHistorialNotificaciones();
