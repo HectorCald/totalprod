@@ -136,10 +136,7 @@ async function enviarNotificacion(token, titulo, mensaje) {
     try {
         const mensajeNotificacion = {
             token: token,
-            notification: {
-                title: titulo,
-                body: mensaje
-            },
+            // NO ENVIAR 'notification' para evitar notificación push por defecto
             data: {
                 title: titulo,
                 body: mensaje
