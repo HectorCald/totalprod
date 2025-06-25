@@ -42,8 +42,12 @@ async function inicializarFirebaseMessaging() {
 
         // Manejar mensajes en primer plano
         onMessage(messaging, (payload) => {
-            console.log('Notificación push recibida en primer plano:', payload);
+            console.log('[FRONT] onMessage payload:', payload);
             
+            mostrarNotificacionLocal(
+                payload.data?.title || 'Nueva notificación',
+                payload.data?.body || 'Tienes un nuevo mensaje'
+            );
 
             // Actualizar el historial de notificaciones
             actualizarHistorialNotificaciones();
