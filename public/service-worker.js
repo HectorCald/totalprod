@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v8'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v9'; // Incrementamos la versión
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -41,7 +41,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('Mensaje recibido en background:', payload);
     
-    const notificationTitle = payload.notification?.title || 'Nueva notificación';
+    const notificationTitle = '[PUSH SW] ' + (payload.notification?.title || 'Nueva notificación');
     const notificationOptions = {
         body: payload.notification?.body || 'Tienes un nuevo mensaje',
         icon: '/icons/icon.png',

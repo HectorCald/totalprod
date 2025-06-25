@@ -47,7 +47,7 @@ async function inicializarFirebaseMessaging() {
             // Solo mostrar notificación local si la ventana está visible
             if (document.visibilityState === 'visible') {
                 mostrarNotificacionLocal(
-                    payload.data?.title || 'Nueva notificación',
+                    '[LOCAL] ' + (payload.data?.title || 'Nueva notificación'),
                     payload.data?.body || 'Tienes un nuevo mensaje'
                 );
             }
