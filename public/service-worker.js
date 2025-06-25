@@ -40,10 +40,10 @@ const messaging = firebase.messaging();
 // Manejar mensajes en background
 messaging.onBackgroundMessage((payload) => {
     console.log('Mensaje recibido en background:', payload);
-    
-    const notificationTitle = '[PUSH SW] ' + (payload.notification?.title || 'Nueva notificación');
+    // Usar data si existe, ya que notification ya no se envía
+    const notificationTitle = '[PUSH SW] ' + (payload.data?.title || 'Nueva notificación');
     const notificationOptions = {
-        body: payload.notification?.body || 'Tienes un nuevo mensaje',
+        body: payload.data?.body || 'Tienes un nuevo mensaje',
         icon: '/icons/icon.png',
         badge: '/badge.png',
         data: payload.data || {},
