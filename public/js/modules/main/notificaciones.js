@@ -43,15 +43,7 @@ async function inicializarFirebaseMessaging() {
         // Manejar mensajes en primer plano
         onMessage(messaging, (payload) => {
             console.log('[FRONT] onMessage payload:', payload);
-            
-            // Solo mostrar notificación local si la ventana está visible
-            if (document.visibilityState === 'visible') {
-                mostrarNotificacionLocal(
-                    payload.data?.title || 'Nueva notificación',
-                    payload.data?.body || 'Tienes un nuevo mensaje'
-                );
-            }
-
+            // Ya no mostrar notificación local
             // Actualizar el historial de notificaciones
             actualizarHistorialNotificaciones();
         });
