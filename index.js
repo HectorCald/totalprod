@@ -137,11 +137,11 @@ async function enviarNotificacion(token, titulo, mensaje) {
         const mensajeNotificacion = {
             token: token,
             notification: {
-                title: '[PUSH SERVER] ' + titulo,
+                title: titulo,
                 body: mensaje
             },
             data: {
-                title: '[PUSH SERVER] ' + titulo,
+                title: titulo,
                 body: mensaje
             }
         };
