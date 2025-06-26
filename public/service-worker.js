@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v1'; // Incrementamos la versión
+const CACHE_NAME = 'totalprod-v2'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -28,7 +28,6 @@ const ASSETS_TO_CACHE = [
     '/js/modules/main/perfil.js',
     '/js/modules/main/flotante.js',
     '/js/modules/main/notificaciones.js',
-    '/js/modules/main/componentes.js',
     '/js/modules/acopio/almacen-acopio.js',
     '/js/modules/acopio/hacer-pedido.js',
     '/js/modules/acopio/ingresos-acopio.js',
@@ -50,7 +49,6 @@ const ASSETS_TO_CACHE = [
     '/js/modules/almacen/salidas-almacen-general.js',
     '/js/modules/almacen/verificar-registros.js',
     '/js/modules/componentes/componentes.js',
-    '/js/modules/componentes/componentes.js',
     '/js/modules/main/flotante.js',
     '/js/modules/main/home.js',
     '/js/modules/main/nav.js',
@@ -67,6 +65,13 @@ const ASSETS_TO_CACHE = [
     '/css/styles/flotante.css',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
+    // Archivos EJS
+    '/views/componentes.ejs',
+    '/views/dashboard.ejs',
+    '/views/login.ejs',
+    '/views/dashboard_otro.ejs',
+    '/views/partials/footer.ejs',
+    '/views/partials/header.ejs',
     // Imágenes
     '/img/data.gif',
     '/img/start.gif',

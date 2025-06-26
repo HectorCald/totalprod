@@ -1,0 +1,38 @@
+<!-- ==================== HEADER ==================== -->
+<%- include('partials/header') %>
+    <div class="container-login">
+        <div class="logo">
+            <img src="./icons/icon.png" alt="Gestipro Logo">
+        </div>
+        <h1 class="bienvenida">TotalProd</h1>
+        <p class="titulo">Produce más, gestiona mejor.</p>
+        <div class="entrada">
+            <i class='bx bx-envelope'></i>
+            <div class="input">
+                <p class="detalle">Email/Usuario</p>
+                <input class="email" type="email" placeholder=" " required>
+                <button class="clear-input"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="entrada">
+            <i class='bx bx-lock'></i>
+            <div class="input">
+                <p class="detalle">Contraseña</p>
+                <input class="password" type="password" placeholder=" " required>
+                <button class="toggle-password"><i class="fas fa-eye"></i></button>
+            </div>
+        </div>
+        <p class="error"></p>
+        <div class="check">
+            <div class="checkbox">
+                <input type="checkbox" checked>
+                <p class="recordar">Recordarme</p>
+            </div>
+            <p class="olvido">Olvide mi contraseña</p>
+        </div>
+        <button class="btn orange iniciar-sesion" id="loginButton" style="min-width: 100% !important;"><i class="bx bx-log-in"></i> Iniciar Sesión</button>
+        <p class="sin-cuenta">No tienes una cuenta? <span class="registro">Crear cuenta.</span></p>
+        <p class="sin-cuenta">Quieres registrar tu empresa? <span class="registro mas-info">Más Información.</span></p>
+    </div>
+    <%- include('./componentes') %>
+    <%- include('partials/footer') %>
