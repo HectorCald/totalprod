@@ -722,7 +722,7 @@ async function eventosConfiguraciones() {
                     <button class="btn-confirmar btn red"><i class='bx bx-trash'></i> Eliminar datos</button>
                 </div>
             `;
-            contenido.paddingBottom = "80px"
+            contenido.style.paddingBottom = "70px"
 
             // Event listeners para los botones
             const btnVolver = contenido.querySelectorAll('.btn-volver');
