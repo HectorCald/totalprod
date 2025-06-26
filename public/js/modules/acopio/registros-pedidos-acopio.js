@@ -8,6 +8,7 @@ let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_i
 
 const DB_NAME = 'damabrava_db';
 const REGISTROS_PEDIDOS_STORE = 'registros_pedidos_acopio';
+let cleanupPullToRefresh = null;
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -338,6 +339,10 @@ function eventosPedidos() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarPedidos();
     });
 
     let filtroFechaInstance = null;

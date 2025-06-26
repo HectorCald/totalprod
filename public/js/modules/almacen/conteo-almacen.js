@@ -1,5 +1,6 @@
 let productos = [];
 let etiquetas = [];
+let cleanupPullToRefresh = null;
 
 
 const DB_NAME = 'damabrava_db_img';
@@ -381,6 +382,10 @@ function eventosConteo() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarConteo();
     });
 
 

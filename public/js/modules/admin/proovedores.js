@@ -1,4 +1,5 @@
 let proovedores = [];
+let cleanupPullToRefresh = null;
 
 async function obtenerProovedores() {
     try {
@@ -138,6 +139,10 @@ function eventosProovedores() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarProovedores();
     });
 
 

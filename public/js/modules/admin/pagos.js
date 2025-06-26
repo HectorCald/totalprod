@@ -1,4 +1,6 @@
 let pagosGlobal = [];
+let cleanupPullToRefresh = null;
+
 
 async function obtenerPagos() {
     try {
@@ -178,7 +180,10 @@ function eventosPagos() {
             }
         }
     });
-
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarPagos();
+    });
 
     let filtroFechaInstance = null;
     let filtroNombreActual = 'Todos';

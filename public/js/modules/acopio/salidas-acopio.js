@@ -1,6 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
+let cleanupPullToRefresh = null;
 
 async function obtenerEtiquetasAcopio() {
     try {
@@ -215,6 +216,10 @@ function eventosPedidos() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarSalidasAcopio();
     });
 
     let pesoMostrado = 'bruto';

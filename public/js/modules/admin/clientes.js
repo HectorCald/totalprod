@@ -1,4 +1,5 @@
 let clientes = [];
+let cleanupPullToRefresh = null;
 async function obtenerClientes() {
     try {
         const response = await fetch('/obtener-clientes');
@@ -136,6 +137,10 @@ function eventosClientes() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarClientes();
     });
 
     items.forEach(item => {

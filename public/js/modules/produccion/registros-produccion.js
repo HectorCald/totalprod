@@ -5,6 +5,7 @@ const DB_NAME = 'damabrava_db';
 const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
+let cleanupPullToRefresh = null;
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -424,7 +425,10 @@ function eventosMisRegistros() {
             }
         }
     });
-
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarMisRegistros();
+    });
 
     items.forEach(item => {
         item.addEventListener('click', function () {

@@ -1,5 +1,6 @@
 let movimientosAcopio = [];
 
+let cleanupPullToRefresh = null;
 
 async function obtenerMovimientosAcopio() {
     try {
@@ -166,6 +167,10 @@ function eventosRegistrosAcopio() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarRegistrosAcopio();
     });
 
     let filtroNombreActual = 'todos';

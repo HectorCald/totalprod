@@ -4,7 +4,7 @@ let configuracionHorario = {
     horaFin: '',
     estado: ''
 };
-
+let cleanupPullToRefresh = null;
 async function verificarHorarioProduccion() {
     try {
         mostrarProgreso('.pro-obtner')
@@ -212,6 +212,11 @@ function evetosFormularioProduccion() {
     const sugerenciasList = document.querySelector('#productos-list');
     const gramajeInput = document.querySelector('.entrada .gramaje');
     const registrar = document.querySelectorAll('.btn-registrar');
+    const contenedor = document.querySelector('.anuncio .relleno');
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarFormularioProduccion();
+    });
 
     function normalizarTexto(texto) {
         return texto

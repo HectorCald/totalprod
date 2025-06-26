@@ -1,4 +1,5 @@
 let personal = [];
+let cleanupPullToRefresh = null;
 async function obtenerPersonal() {
     try {
         const response = await fetch('/obtener-personal');
@@ -334,6 +335,10 @@ function eventosPersonal() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarPersonal();
     });
 
 

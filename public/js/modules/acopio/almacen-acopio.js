@@ -1,6 +1,6 @@
 let productos = [];
 let etiquetasAcopio = [];
-
+let cleanupPullToRefresh = null;
 
 async function obtenerEtiquetasAcopio() {
     try {
@@ -237,6 +237,10 @@ function eventosAlmacenAcopio() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarAlmacenAcopio();
     });
 
     const items = document.querySelectorAll('.registro-item');

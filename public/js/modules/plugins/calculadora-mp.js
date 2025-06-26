@@ -2,7 +2,7 @@ let registrosProduccion = [];
 let productosGlobal = [];
 let calculosMP = [];
 let nombresUsuariosGlobal = [];
-
+let cleanupPullToRefresh = null;
 
 async function obtenerCalculosMP() {
     try {
@@ -203,6 +203,10 @@ function eventosVerificacion() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarCalcularMp();
     });
 
 

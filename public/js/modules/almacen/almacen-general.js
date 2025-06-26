@@ -4,6 +4,7 @@ let etiquetas = [];
 let precios = [];
 const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
+let cleanupPullToRefresh = null;
 
 
 function initDB() {
@@ -482,9 +483,11 @@ function eventosAlmacenGeneral() {
             }
         }
     });
-    const cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
         await mostrarAlmacenGeneral();
     });
+    
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({

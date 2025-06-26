@@ -1,5 +1,6 @@
 let productos = [];
 let etiquetasAcopio = [];
+let cleanupPullToRefresh = null;
 
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 let mensajeIngresos = localStorage.getItem('damabrava_mensaje_ingresos') || 'Se ingreso:\n• Sin ingresos registrados';
@@ -217,6 +218,10 @@ function eventosPedidos(producto, pedido) {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarIngresosAcopio();
     });
     if (producto) {
         agregarAlCarrito(producto);

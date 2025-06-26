@@ -276,6 +276,43 @@ app.post('/register-fcm-token', requireAuth, async (req, res) => {
         });
     }
 });
+app.post('/eliminar-fcm-token', requireAuth, async (req, res) => {
+    try {
+        const { email } = req.body;
+        const { spreadsheetId } = req.user;
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email requerido' });
+        }
+        const sheets = google.sheets({ version: 'v4', auth });
+        // Obtener todos los tokens
+        const tokensResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'FCMTokens!A:C'
+        });
+        const tokens = tokensResponse.data.values || [];
+        // Filtrar filas que NO son del email
+        const tokensFiltrados = tokens.filter(row => row[2] !== email);
+        // Limpiar la hoja
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: 'FCMTokens!A:C'
+        });
+        // Reescribir solo los que no son del email
+        if (tokensFiltrados.length > 0) {
+            await sheets.spreadsheets.values.append({
+                spreadsheetId,
+                range: 'FCMTokens!A:C',
+                valueInputOption: 'RAW',
+                insertDataOption: 'INSERT_ROWS',
+                resource: { values: tokensFiltrados }
+            });
+        }
+        res.json({ success: true, message: 'Tokens eliminados correctamente para el email' });
+    } catch (error) {
+        console.error('Error al eliminar token FCM:', error);
+        res.status(500).json({ success: false, error: 'Error al eliminar el token FCM' });
+    }
+});
 
 /* ==================== RUTAS DE AUTENTICACION ==================== */
 app.post('/login', async (req, res) => {

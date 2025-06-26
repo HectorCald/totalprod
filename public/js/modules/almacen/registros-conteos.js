@@ -1,4 +1,6 @@
 let registrosConteos = [];
+let cleanupPullToRefresh = null;
+
 
 async function obtenerRegistrosConteo() {
     try {
@@ -138,6 +140,10 @@ function eventosRegistrosConteo() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await registrosConteoAlmacen();
     });
 
     let filtroFechaInstance = null;

@@ -1,6 +1,7 @@
 let productosGlobal = [];
 let tareasGlobal = [];
 let listaTareasGlobal = [];
+let cleanupPullToRefresh = null;
 
 async function obtenerListaTareas() {
     try {
@@ -228,6 +229,10 @@ function eventosTareas() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarTareas();
     });
 
 

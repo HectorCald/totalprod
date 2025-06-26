@@ -7,6 +7,7 @@ let preciosBase = {
     sellado: 0,
     cernido: 0
 };
+let cleanupPullToRefresh = null;
 async function obtenerReglasBase() {
     try {
         const response = await fetch('/obtener-reglas-base');
@@ -218,6 +219,10 @@ function eventosReglas() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarReglas();
     });
 
 

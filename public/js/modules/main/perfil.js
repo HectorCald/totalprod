@@ -1,3 +1,5 @@
+import { borrarFCMToken } from './notificaciones.js';
+
 async function obtenerUsuario() {
     try {
         mostrarCarga();
@@ -110,6 +112,7 @@ function mostrarPerfil(view) {
     btnCerrarSesion.addEventListener('click', async () => {
         try {
             mostrarCarga();
+            await borrarFCMToken(usuarioInfo.email);
             const response = await fetch('/cerrar-sesion', { method: 'POST' });
             if (response.ok) {
                 limpiarProteccionNavegacion();

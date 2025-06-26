@@ -1,6 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
 let carritoPedidos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_pedidos') || '[]'));
+let cleanupPullToRefresh = null;
 
 async function obtenerEtiquetasAcopio() {
     try {
@@ -224,7 +225,10 @@ function eventosPedidos() {
             }
         }
     });
-
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarHacerPedido();
+    });
     let pesoMostrado = 'bruto';
     let filtroNombreActual = 'Todos';
 

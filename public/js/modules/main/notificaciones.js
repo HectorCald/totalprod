@@ -348,3 +348,27 @@ function mostrarNotificaciones(view) {
         </div>
     `;
 }
+
+export async function borrarFCMToken(email) {
+    try {
+        if (!messaging || !getToken) return;
+        const registration = await navigator.serviceWorker.ready;
+        const currentToken = await getToken(messaging, {
+            vapidKey: 'BPeyAQuzecxcE6GsmdeYnTVwi1x4ULPDkaMOv_CQ0Mryu0jW0A8PD-n7kcjvBNis14-HEAncrq1LYcqY6vwFgTU',
+            serviceWorkerRegistration: registration
+        });
+        if (currentToken && email) {
+            // Elimina en el servidor por email
+            await fetch('/eliminar-fcm-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            // Elimina localmente
+            await messaging.deleteToken(currentToken);
+            localStorage.removeItem('fcm_token');
+        }
+    } catch (error) {
+        console.error('Error al borrar el token FCM:', error);
+    }
+}

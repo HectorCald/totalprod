@@ -5,7 +5,7 @@ let clientes = [];
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
 const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
-
+let cleanupPullToRefresh = null;
 function initDB() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 1);
@@ -452,6 +452,10 @@ function eventosSalidas() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarSalidas();
     });
 
     let filtroNombreActual = 'Todos';

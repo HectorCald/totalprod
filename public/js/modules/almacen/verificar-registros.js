@@ -14,6 +14,7 @@ const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_STORE = 'registros_verificacion';
 const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
+let cleanupPullToRefresh = null;
 
 
 async function obtenerNombresUsuarios() {
@@ -526,6 +527,7 @@ function updateHTMLWithData() {
 
 
 function eventosVerificacion() {
+    const contenedor = document.querySelector('.anuncio .relleno');
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const btnNuevoPagoGenerico = document.querySelectorAll('.nuevo-pago');
     const registrosAExportar = registrosProduccion;
@@ -536,6 +538,11 @@ function eventosVerificacion() {
     const items = document.querySelectorAll('.registro-item');
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const botonCalendario = document.querySelector('.btn-calendario');
+
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarVerificacion();
+    });
 
     function cargarMasRegistros() {
         const productosContainer = document.querySelector('.productos-container');
@@ -646,7 +653,7 @@ function eventosVerificacion() {
         showAllBtn.addEventListener('click', cargarTodosLosRegistros);
     }
 
-    const contenedor = document.querySelector('.anuncio .relleno');
+
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -664,9 +671,6 @@ function eventosVerificacion() {
                 yaExiste.remove();
             }
         }
-    });
-    const cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarVerificacion();
     });
 
 

@@ -5,6 +5,7 @@ let proovedores = [];
 
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 let nombresUsuariosGlobal = [];
+let cleanupPullToRefresh = null;
 
 const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
@@ -506,6 +507,10 @@ function eventosIngresos() {
                 yaExiste.remove();
             }
         }
+    });
+    if (cleanupPullToRefresh) cleanupPullToRefresh();
+    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
+        await mostrarIngresos();
     });
 
 
