@@ -208,7 +208,15 @@ const pluginsMenu = {
         texto: 'Ajustes',
         detalle: 'Ajustes del sistema o/y aplicación',
         onclick: 'onclick="mostrarConfiguracionesSistema()"'
-    }
+    },
+    'paginaWeb': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-globe',
+        texto: 'Pagina Web',
+        detalle: 'Pagina Web de la empresa',
+        onclick: 'onclick="mostrarPaginaWeb()"'
+    },
 };
 const atajosPorRol = {
     'Producción': [
@@ -403,6 +411,14 @@ const atajosPorRol = {
             texto: 'Catalogos',
             detalle: 'Genera catalagos segun el precio',
             onclick: 'onclick="mostrarDescargaCatalogo()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-globe',
+            texto: 'Pagina Web',
+            detalle: 'Pagina Web de la empresa',
+            onclick: 'onclick="mostrarPaginaWeb()"'
         },
         {
             clase: 'opcion-btn',
@@ -734,7 +750,7 @@ function mostrarMenu() {
     const opciones = document.querySelectorAll('.opcion');
     opciones.forEach(opcion => {
         opcion.addEventListener('click', () => {
-            opcion.add.classList('opcion-activa');
+            opcion.classList.add('opcion-activa');
         });
     });
 }

@@ -7,7 +7,7 @@ let preciosBase = {
     sellado: 0,
     cernido: 0
 };
-let cleanupPullToRefresh = null;
+
 async function obtenerReglasBase() {
     try {
         const response = await fetch('/obtener-reglas-base');
@@ -170,8 +170,8 @@ export async function mostrarReglas() {
     }, 100);
 
     const [registrosProduccion, productos] = await Promise.all([
-        obtenerReglas(),
-        obtenerProductos()
+        await obtenerReglas(),
+        await obtenerProductos()
     ]);
 
     updateHTMLWithData();
@@ -220,10 +220,7 @@ function eventosReglas() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarReglas();
-    });
+
 
 
     function normalizarTexto(texto) {

@@ -5,7 +5,7 @@ let proovedores = [];
 
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 let nombresUsuariosGlobal = [];
-let cleanupPullToRefresh = null;
+let modoTiraGlobal = false; // Variable global para controlar el modo tira
 
 const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
@@ -290,11 +290,11 @@ export async function mostrarIngresos(producto = '') {
 
     // Load data in parallel
     const [almacenGeneral, etiquetas, precios, proovedores, usuarios] = await Promise.all([
-        obtenerAlmacenGeneral(),
-        obtenerEtiquetas(),
-        obtenerPrecios(),
-        obtenerProovedores(),
-        obtenerNombresUsuarios()
+        await obtenerAlmacenGeneral(),
+        await obtenerEtiquetas(),
+        await obtenerPrecios(),
+        await obtenerProovedores(),
+        await obtenerNombresUsuarios()
     ]);
 
     const carritoBasico = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
@@ -389,6 +389,15 @@ function renderInitialHTML(producto) {
                     <select class="precios-select" style="width:auto">
                         <option class="skeleton skeleton-etiqueta" value="">Precios</option>
                     </select>
+                    <div class="switch-container" style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
+                        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
+                            <input type="checkbox" class="switch-tira-global" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;">
+                                <span class="slider-thumb" style="position: absolute; content: ''; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                        <span style="font-size: 0.8em; color: #666;">Tira</span>
+                    </div>
                 </div>
             </div>
             <div class="filtros-opciones etiquetas-filter">
@@ -508,10 +517,7 @@ function eventosIngresos() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarIngresos();
-    });
+
 
 
     let filtroNombreActual = 'Todos';
@@ -676,6 +682,55 @@ function eventosIngresos() {
     });
     selectPrecios.addEventListener('change', aplicarFiltros);
 
+    // Event listener para el switch global de tira
+    const switchTiraGlobal = document.querySelector('.switch-tira-global');
+    if (switchTiraGlobal) {
+        switchTiraGlobal.addEventListener('change', (e) => {
+            modoTiraGlobal = e.target.checked;
+            
+            // Actualizar estilos del switch
+            const slider = e.target.nextElementSibling;
+            const sliderThumb = slider.querySelector('.slider-thumb');
+            
+            if (modoTiraGlobal) {
+                slider.style.backgroundColor = '#4CAF50';
+                sliderThumb.style.transform = 'translateX(20px)';
+                mostrarNotificacion({
+                    message: 'Cambiado a modo Tira',
+                    type: 'success',
+                    duration: 2000
+                });
+            } else {
+                slider.style.backgroundColor = '#ccc';
+                sliderThumb.style.transform = 'translateX(0)';
+                mostrarNotificacion({
+                    message: 'Cambiado a modo Unidades',
+                    type: 'info',
+                    duration: 2000
+                });
+            }
+            
+            // Actualizar precios en el carrito
+            carritoSalidas.forEach((item, id) => {
+                // Obtener el precio base original del producto
+                const producto = productos.find(p => p.id === id);
+                if (producto) {
+                    const selectPrecios = document.querySelector('.precios-select');
+                    const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
+                    const preciosProducto = producto.precios.split(';');
+                    const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+                    const precioBaseOriginal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                    
+                    const cantidadxtira = item.cantidadxgrupo || 1;
+                    item.subtotal = modoTiraGlobal ? precioBaseOriginal * cantidadxtira : precioBaseOriginal;
+                }
+            });
+            
+            // Actualizar UI
+            actualizarCarritoUI();
+        });
+    }
+
 
     function agregarAlCarrito(productoId) {
         const producto = productos.find(p => p.id === productoId);
@@ -702,10 +757,13 @@ function eventosIngresos() {
             }, 500);
         }
 
+        // Aplicar modo tira si está activado
+        const precioFinal = modoTiraGlobal ? precioActual * (producto.cantidadxgrupo || 1) : precioActual;
+
         if (carritoSalidas.has(productoId)) {
             const itemCarrito = carritoSalidas.get(productoId);
             itemCarrito.cantidad += 1;
-            itemCarrito.subtotal = precioActual; // Actualizar el precio
+            itemCarrito.subtotal = precioFinal; // Usar el precio final
 
             if (item) {
                 const cantidadSpan = item.querySelector('.carrito-cantidad');
@@ -717,7 +775,7 @@ function eventosIngresos() {
             carritoSalidas.set(productoId, {
                 ...producto,
                 cantidad: 1,
-                subtotal: precioActual // Usar el precio actual
+                subtotal: precioFinal // Usar el precio final
             });
 
             if (item) {
@@ -823,38 +881,38 @@ function eventosIngresos() {
         let descuento = 0;
         let aumento = 0;
 
-        anuncioSecond.innerHTML = `
+                anuncioSecond.innerHTML = `
             <div class="encabezado">
-                <h1 class="titulo">Carrito de Ingresos</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-                <button class="btn filtros limpiar"><i class="fas fa-broom"></i></button>
-            </div>
-            <div class="relleno">
-                <div class="carrito-items">
-                ${Array.from(carritoSalidas.values()).map(item => `
-                    <div class="carrito-item" data-id="${item.id}">
-                        <div class="item-info">
-                            <h3>${item.producto} - ${item.gramos}gr</h3>
-                            <div class="cantidad-control">
-                                <button class="btn-cantidad" style="color:var(--error)" onclick="ajustarCantidad('${item.id}', -1)">-</button>
-                                <input type="number" value="${item.cantidad}" min="1"
-                                    onfocus="this.select()"
-                                    onchange="actualizarCantidad('${item.id}', this.value)">
-                                <button class="btn-cantidad"style="color:var(--success)" onclick="ajustarCantidad('${item.id}', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="subtotal-delete">
-                            <div class="info-valores">
-                                <p class="stock-disponible">${parseInt(item.stock) + parseInt(item.cantidad)} Und.</p>
-                                <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
-                                <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
-                            </div>
-                            <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
-                                <i class="bx bx-trash"></i>
-                            </button>
+            <h1 class="titulo">Carrito de Ingresos</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+            <button class="btn filtros limpiar"><i class="fas fa-broom"></i></button>
+        </div>
+        <div class="relleno">
+            <div class="carrito-items">
+            ${Array.from(carritoSalidas.values()).map(item => `
+                <div class="carrito-item" data-id="${item.id}">
+                    <div class="item-info">
+                        <h3>${item.producto} - ${item.gramos}gr</h3>
+                        <div class="cantidad-control">
+                            <button class="btn-cantidad" style="color:var(--error)" onclick="ajustarCantidad('${item.id}', -1)">-</button>
+                            <input type="number" value="${item.cantidad}" min="1"
+                                onfocus="this.select()"
+                                onchange="actualizarCantidad('${item.id}', this.value)">
+                            <button class="btn-cantidad"style="color:var(--success)" onclick="ajustarCantidad('${item.id}', 1)">+</button>
                         </div>
                     </div>
-                `).join('')}
+                    <div class="subtotal-delete">
+                        <div class="info-valores">
+                            <p class="stock-disponible">${parseInt(item.stock) + parseInt(item.cantidad)} Und.</p>
+                            <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
+                            <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
+                        </div>
+                        <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
+                            <i class="bx bx-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
                     <div class="carrito-total">
                         <div class="leyenda">
                             <div class="item">
@@ -1178,6 +1236,7 @@ function eventosIngresos() {
                 inputDescuento.addEventListener('input', actualizarTotal);
                 inputAumento.addEventListener('input', actualizarTotal);
             }
+            
             configuracionesEntrada && configuracionesEntrada();
         }
     }

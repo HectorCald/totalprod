@@ -1,6 +1,5 @@
 let productos = [];
 let etiquetas = [];
-let cleanupPullToRefresh = null;
 
 
 const DB_NAME = 'damabrava_db_img';
@@ -241,8 +240,8 @@ export async function mostrarConteo() {
 
     // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
-        obtenerAlmacenGeneral(),
-        obtenerEtiquetas(),
+        await obtenerAlmacenGeneral(),
+        await obtenerEtiquetas(),
     ]);
 
     await updateHTMLWithData(); // Update HTML once data is loaded
@@ -382,10 +381,6 @@ function eventosConteo() {
                 yaExiste.remove();
             }
         }
-    });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarConteo();
     });
 
 

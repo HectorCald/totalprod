@@ -5,7 +5,6 @@ const DB_NAME = 'damabrava_db';
 const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
-let cleanupPullToRefresh = null;
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -50,27 +49,6 @@ function initDB2() {
     });
 }
 
-async function guardarRegistrosLocal(registros) {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
-        const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
-
-        // Guardar cada registro individualmente
-        for (const registro of registros) {
-            await store.put({
-                id: registro.id,
-                data: registro,
-                timestamp: Date.now()
-            });
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error guardando registros en caché:', error);
-        return false;
-    }
-}
 async function obtenerRegistrosLocal() {
     try {
         const db = await initDB();
@@ -375,7 +353,7 @@ export async function mostrarMisRegistros() {
 
     const [registrosProduccion, productos] = await Promise.all([
         obtenerMisRegistros(),
-        obtenerProductos()
+        await obtenerProductos()
     ]);
 }
 function updateHTMLWithData() {
@@ -425,10 +403,7 @@ function eventosMisRegistros() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarMisRegistros();
-    });
+
 
     items.forEach(item => {
         item.addEventListener('click', function () {

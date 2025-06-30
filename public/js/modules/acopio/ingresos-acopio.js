@@ -1,6 +1,6 @@
 let productos = [];
 let etiquetasAcopio = [];
-let cleanupPullToRefresh = null;
+
 
 let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_ingreso_acopio') || '[]'));
 let mensajeIngresos = localStorage.getItem('damabrava_mensaje_ingresos') || 'Se ingreso:\n• Sin ingresos registrados';
@@ -85,8 +85,8 @@ export async function mostrarIngresosAcopio(producto = '', pedido = '') {
 
     // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
-        obtenerAlmacenAcopio(),
-        obtenerEtiquetasAcopio(),
+        await obtenerAlmacenAcopio(),
+        await obtenerEtiquetasAcopio(),
     ]);
 
     updateHTMLWithData(); // Update HTML once data is loaded
@@ -219,10 +219,7 @@ function eventosPedidos(producto, pedido) {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarIngresosAcopio();
-    });
+
     if (producto) {
         agregarAlCarrito(producto);
         mostrarCarritoIngresosAcopio();

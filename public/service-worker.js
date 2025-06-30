@@ -139,7 +139,7 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(
         clients.openWindow('/')
     );
-});     
+});
 // --- FIN: Lógica de notificaciones push Firebase ---
 
 self.addEventListener('install', event => {
@@ -262,7 +262,7 @@ self.addEventListener('message', event => {
         const notificationTitle = data.title || 'Nueva notificación';
         const notificationOptions = {
             body: data.body || 'Tienes un nuevo mensaje',
-            icon: '/icons/icon.png',
+            icon: '/icons/icon-192x192.png',
             badge: '/badge.png',
             data: data,
             requireInteraction: true,

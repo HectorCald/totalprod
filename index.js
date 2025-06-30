@@ -1486,7 +1486,7 @@ app.get('/obtener-productos', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Almacen general!A2:M' // Ahora incluye la columna L para la imagen
+            range: 'Almacen general!A2:O' // Ahora incluye la columna L para la imagen
         });
 
         const rows = response.data.values || [];
@@ -1504,8 +1504,10 @@ app.get('/obtener-productos', requireAuth, async (req, res) => {
             etiquetas: row[8] || '',
             acopio_id: row[9] || '',
             alm_acopio_producto: row[10] || '',
-            imagen: row[11] || './icons/default-product.png', // Valor por defecto si no hay imagen
-            uSueltas: row[12] || ''
+            imagen: row[11] || '', // Valor por defecto si no hay imagen
+            uSueltas: row[12] || '',
+            promocion: row[13] || '',
+            precio_promocion: row[14] || '',
         }));
 
         res.json({
@@ -1813,6 +1815,47 @@ app.put('/actualizar-observaciones-registro/:id', requireAuth, async (req, res) 
             success: false,
             error: 'Error al actualizar las observaciones'
         });
+    }
+});
+
+app.put('/actualizar-promocion/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { promocion, precio_promocion } = req.body;
+
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener datos actuales del producto
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Almacen general!A2:O'
+        });
+
+        const productos = response.data.values || [];
+        const rowIndex = productos.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+
+        // Actualizar solo las columnas de promoción (N y O)
+        const promocionValue = promocion || '';
+        const precioPromocionValue = precio_promocion || '';
+
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Almacen general!N${rowIndex + 2}:O${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: {
+                values: [[promocionValue, precioPromocionValue]]
+            }
+        });
+
+        res.json({ success: true, message: 'Promoción actualizada correctamente' });
+    } catch (error) {
+        console.error('Error al actualizar promoción:', error);
+        res.status(500).json({ success: false, error: 'Error al actualizar la promoción' });
     }
 });
 
@@ -2416,6 +2459,119 @@ app.post('/agregar-etiqueta', requireAuth, async (req, res) => {
     }
 });
 app.delete('/eliminar-etiqueta/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get current tags
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Etiquetas!A2:B'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Etiqueta no encontrada' });
+        }
+
+        // Clear the specific row
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: `Etiquetas!A${rowIndex + 2}:B${rowIndex + 2}`
+        });
+
+        // Get remaining tags and reorder them
+        const remainingTags = rows.filter((_, index) => index !== rowIndex);
+        if (remainingTags.length > 0) {
+            await sheets.spreadsheets.values.clear({
+                spreadsheetId,
+                range: 'Etiquetas!A2:B'
+            });
+
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: 'Etiquetas!A2',
+                valueInputOption: 'RAW',
+                resource: { values: remainingTags }
+            });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error al eliminar etiqueta:', error);
+        res.status(500).json({ success: false, error: 'Error al eliminar etiqueta' });
+    }
+});
+
+/* ==================== RUTAS ETIQUETAS DE AlMACEN ==================== */
+app.get('/obtener-etiquetas-web', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId: spreadsheetId,
+            range: 'Etiquetas web!A2:B' // Columnas A y B para ID y ETIQUETA
+        });
+
+        const rows = response.data.values || [];
+
+        const etiquetas = rows.map(row => ({
+            id: row[0] || '',
+            etiqueta: row[1] || ''
+        }));
+
+        res.json({
+            success: true,
+            etiquetas
+        });
+
+    } catch (error) {
+        console.error('Error al obtener etiquetas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener las etiquetas'
+        });
+    }
+});
+app.post('/agregar-etiqueta-web', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { etiqueta } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Get existing tags to calculate next ID
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Etiquetas!A2:B'
+        });
+
+        const rows = response.data.values || [];
+        const nextId = rows.length > 0 ?
+            parseInt(rows[rows.length - 1][0].split('-')[1]) + 1 : 1;
+
+        const newTag = [`ET-${nextId.toString().padStart(3, '0')}`, etiqueta];
+
+        // Append the new tag
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Etiquetas!A2:B',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: { values: [newTag] }
+        });
+
+        res.json({ success: true, id: newTag[0], etiqueta });
+    } catch (error) {
+        console.error('Error al agregar etiqueta:', error);
+        res.status(500).json({ success: false, error: 'Error al agregar etiqueta' });
+    }
+});
+app.delete('/eliminar-etiqueta-web/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
@@ -5833,7 +5989,123 @@ app.put('/actualizar-configuraciones', requireAuth, async (req, res) => {
     }
 });
 
+
+
+app.post('/guardar-precios-web', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+    const { precios } = req.body; // [{ producto_id, precio }]
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        // Limpiar hoja antes de guardar
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: 'Precio web!A2:C'
+        });
+        // Guardar nuevos precios
+        const values = precios.map(p => [p.producto_id, '', p.precio]);
+        await sheets.spreadsheets.values.append({
+            spreadsheetId,
+            range: 'Precio web!A2:C',
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: { values }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Error al guardar precios web' });
+    }
+});
+app.post('/guardar-precio-web', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { precio } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Guardar el precio seleccionado en A1
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: 'Precio web!A1',
+            valueInputOption: 'RAW',
+            resource: {
+                values: [[precio]]
+            }
+        });
+
+        res.json({ success: true, message: 'Precio web guardado correctamente' });
+    } catch (error) {
+        console.error('Error al guardar precio web:', error);
+        res.status(500).json({ success: false, error: 'Error al guardar precio web' });
+    }
+});
+app.get('/obtener-precio-web', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Precio web!A1'
+        });
+
+        const precio = response.data.values?.[0]?.[0] || '';
+        res.json({ success: true, precio });
+    } catch (error) {
+        console.error('Error al obtener precio web:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener precio web' });
+    }
+});
+app.post('/guardar-etiquetas-web', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { etiquetas } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Limpiar toda la columna A desde A1
+        await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: 'Etiquetas web!A:A'
+        });
+
+        // Guardar las etiquetas seleccionadas en la columna A
+        if (etiquetas.length > 0) {
+            const values = etiquetas.map(etiqueta => [etiqueta]);
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: 'Etiquetas web!A1',
+                valueInputOption: 'RAW',
+                resource: {
+                    values: values
+                }
+            });
+        }
+
+        res.json({ success: true, message: 'Etiquetas web guardadas correctamente' });
+    } catch (error) {
+        console.error('Error al guardar etiquetas web:', error);
+        res.status(500).json({ success: false, error: 'Error al guardar etiquetas web' });
+    }
+});
+app.get('/obtener-etiquetas-web', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Etiquetas web!A:A'
+        });
+
+        const etiquetas = response.data.values?.map(row => row[0]).filter(etiqueta => etiqueta) || [];
+        res.json({ success: true, etiquetas });
+    } catch (error) {
+        console.error('Error al obtener etiquetas web:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener etiquetas web' });
+    }
+});
+
+
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */
+
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
         console.log(`Server running in port: ${port}`);

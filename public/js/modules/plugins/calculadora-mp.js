@@ -2,7 +2,6 @@ let registrosProduccion = [];
 let productosGlobal = [];
 let calculosMP = [];
 let nombresUsuariosGlobal = [];
-let cleanupPullToRefresh = null;
 
 async function obtenerCalculosMP() {
     try {
@@ -146,9 +145,9 @@ export async function mostrarCalcularMp() {
     }, 100);
 
     const [calculos, productos, nombres] = await Promise.all([
-        obtenerCalculosMP(),
-        obtenerProductos(),
-        obtenerNombresUsuarios()
+        await obtenerCalculosMP(),
+        await obtenerProductos(),
+        await obtenerNombresUsuarios()
     ]);
 
     updateHTMLWithData();
@@ -204,10 +203,7 @@ function eventosVerificacion() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarCalcularMp();
-    });
+
 
 
     let filtroFechaInstance = null;

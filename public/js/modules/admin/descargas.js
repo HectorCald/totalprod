@@ -1,7 +1,6 @@
 
 let productos = [];
 let precios = [];
-let cleanupPullToRefresh = null;
 
 
 async function obtenerDatos() {
@@ -138,11 +137,6 @@ async function mostrarOpcionesCatalogo() {
         progressBar.style.width = '1px';
         progressText.textContent = '0%';
         boton.addEventListener('click', () => generarCatalogo(boton.dataset.precio));
-    });
-    const contenedor = document.querySelector('.anuncio .relleno');
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarDescargaCatalogo();
     });
 }
 async function generarCatalogo(tipoPrecio) {

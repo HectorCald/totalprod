@@ -1,5 +1,5 @@
 let personal = [];
-let cleanupPullToRefresh = null;
+
 async function obtenerPersonal() {
     try {
         const response = await fetch('/obtener-personal');
@@ -252,7 +252,7 @@ export async function mostrarPersonal() {
     }, 100);
 
     const [personalObtenido] = await Promise.all([
-        obtenerPersonal()
+        await obtenerPersonal()
     ]);
 
     updateHTMLWithData();
@@ -336,10 +336,7 @@ function eventosPersonal() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarPersonal();
-    });
+
 
 
     items.forEach(item => {

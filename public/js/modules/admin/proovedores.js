@@ -1,5 +1,4 @@
 let proovedores = [];
-let cleanupPullToRefresh = null;
 
 async function obtenerProovedores() {
     try {
@@ -91,7 +90,7 @@ export async function mostrarProovedores() {
     }, 100);
 
     const [proovedor] = await Promise.all([
-        obtenerProovedores()
+        await obtenerProovedores()
     ]);
 
     updateHTMLWithData();
@@ -140,10 +139,7 @@ function eventosProovedores() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarProovedores();
-    });
+
 
 
     btnNuevoCliente.forEach(btn => {

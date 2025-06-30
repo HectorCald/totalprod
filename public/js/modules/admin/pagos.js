@@ -1,5 +1,4 @@
 let pagosGlobal = [];
-let cleanupPullToRefresh = null;
 
 
 async function obtenerPagos() {
@@ -123,7 +122,7 @@ export async function mostrarPagos() {
     }, 100);
 
     const [pagos] = await Promise.all([
-        obtenerPagos()
+        await obtenerPagos()
     ]);
 
     updateHTMLWithData();
@@ -179,10 +178,6 @@ function eventosPagos() {
                 yaExiste.remove();
             }
         }
-    });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarPagos();
     });
 
     let filtroFechaInstance = null;

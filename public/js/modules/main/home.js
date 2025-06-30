@@ -422,6 +422,14 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
+            icono: 'fa-globe',
+            texto: 'Pagina Web',
+            detalle: 'Pagina Web de la empresa',
+            onclick: 'onclick="mostrarPaginaWeb()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
             icono: 'fa-cog',
             texto: 'Ajustes',
             detalle: 'Ajustes del sistema',
@@ -630,6 +638,14 @@ const pluginsMenu = {
         texto: 'Catalogos',
         detalle: 'Genera catalagos segun el precio',
         onclick: 'onclick="mostrarDescargaCatalogo()"'
+    },
+    'paginaWeb': {
+        clase: 'opcion-btn',
+        vista: 'almacen-view',
+        icono: 'fa-globe',
+        texto: 'Pagina Web',
+        detalle: 'Pagina Web de la empresa',
+        onclick: 'onclick="mostrarPaginaWeb()"'
     },
     'ajustes': {
         clase: 'opcion-btn',

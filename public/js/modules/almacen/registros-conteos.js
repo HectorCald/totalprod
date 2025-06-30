@@ -1,5 +1,4 @@
 let registrosConteos = [];
-let cleanupPullToRefresh = null;
 
 
 async function obtenerRegistrosConteo() {
@@ -90,7 +89,7 @@ export async function registrosConteoAlmacen() {
     }, 100);
 
     const [obtnerRegistros] = await Promise.all([
-        obtenerRegistrosConteo(),
+        await obtenerRegistrosConteo(),
     ]);
 
     updateHTMLWithData();
@@ -141,10 +140,7 @@ function eventosRegistrosConteo() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await registrosConteoAlmacen();
-    });
+
 
     let filtroFechaInstance = null;
 

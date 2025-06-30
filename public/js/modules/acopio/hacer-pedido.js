@@ -1,7 +1,7 @@
 let productos = [];
 let etiquetasAcopio = [];
 let carritoPedidos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_pedidos') || '[]'));
-let cleanupPullToRefresh = null;
+
 
 async function obtenerEtiquetasAcopio() {
     try {
@@ -84,8 +84,8 @@ export async function mostrarHacerPedido() {
 
     // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
-        obtenerAlmacenAcopio(),
-        obtenerEtiquetasAcopio(),
+        await obtenerAlmacenAcopio(),
+        await obtenerEtiquetasAcopio(),
     ]);
 
     updateHTMLWithData(); // Update HTML once data is loaded
@@ -225,10 +225,7 @@ function eventosPedidos() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarHacerPedido();
-    });
+
     let pesoMostrado = 'bruto';
     let filtroNombreActual = 'Todos';
 

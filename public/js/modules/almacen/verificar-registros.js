@@ -1,3 +1,4 @@
+
 let registrosProduccion = [];
 let productosGlobal = [];
 let reglasProduccion = [];
@@ -13,16 +14,65 @@ const DB_NAME = 'damabrava_db';
 const DB_NAME_IMG = 'damabrava_db_img'
 const STORE_NAME = 'imagenes_cache';
 const REGISTROS_STORE = 'registros_verificacion';
-const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
-let cleanupPullToRefresh = null;
+const NOMBRES_STORE = 'nombres_usuarios_cache';
 
 
 async function obtenerNombresUsuarios() {
     try {
+        // Primero intentar obtener del caché local
+        const nombresCache = await obtenerNombresLocal();
+        
+        // Si hay nombres en caché, actualizar la UI inmediatamente
+        if (nombresCache.length > 0) {
+            nombresUsuariosGlobal = nombresCache;
+            updateHTMLWithData();
+            return true;
+        }
+
+        // Si no hay caché, obtener del servidor
         const response = await fetch('/obtener-nombres-usuarios');
         const data = await response.json();
+        
         if (data.success) {
-            nombresUsuariosGlobal = data.nombres;
+            // Procesar nombres: tomar solo la primera palabra
+            const nombresProcesados = data.nombres.map(usuario => ({
+                ...usuario,
+                nombre: usuario.nombre.split(' ')[0] || usuario.nombre // Solo el primer nombre
+            }));
+            
+            nombresUsuariosGlobal = nombresProcesados;
+            
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(nombresCache) !== JSON.stringify(nombresProcesados)) {
+                console.log('Diferencias encontradas en nombres, actualizando UI');
+                updateHTMLWithData();
+            }
+            
+            // Actualizar el caché en segundo plano
+            (async () => {
+                try {
+                    const db = await initDB();
+                    const tx = db.transaction(NOMBRES_STORE, 'readwrite');
+                    const store = tx.objectStore(NOMBRES_STORE);
+                    
+                    // Limpiar todos los nombres existentes
+                    await store.clear();
+                    
+                    // Guardar los nuevos nombres
+                    for (const nombre of nombresProcesados) {
+                        await store.put({
+                            id: nombre.user,
+                            data: nombre,
+                            timestamp: Date.now()
+                        });
+                    }
+                    
+                    console.log('Caché de nombres actualizado correctamente');
+                } catch (error) {
+                    console.error('Error actualizando el caché de nombres:', error);
+                }
+            })();
+            
             return true;
         }
         throw new Error('Error al obtener nombres de usuarios');
@@ -34,6 +84,46 @@ async function obtenerNombresUsuarios() {
             duration: 3500
         });
         return false;
+    }
+}
+
+async function obtenerNombresLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(NOMBRES_STORE, 'readonly');
+        const store = tx.objectStore(NOMBRES_STORE);
+        
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const nombres = request.result.map(item => item.data);
+                resolve(nombres);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo nombres del caché:', error);
+        return [];
+    }
+}
+
+async function obtenerRegistrosLocal() {
+    try {
+        const db = await initDB();
+        const tx = db.transaction(REGISTROS_STORE, 'readonly');
+        const store = tx.objectStore(REGISTROS_STORE);
+
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const registros = request.result.map(item => item.data);
+                resolve(registros);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo registros del caché:', error);
+        return [];
     }
 }
 
@@ -60,6 +150,9 @@ async function initDB() {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(REGISTROS_STORE)) {
                     db.createObjectStore(REGISTROS_STORE, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(NOMBRES_STORE)) {
+                    db.createObjectStore(NOMBRES_STORE, { keyPath: 'id' });
                 }
             };
         };
@@ -450,23 +543,15 @@ export async function mostrarVerificacion() {
         configuracionesEntrada();
     }, 100);
 
-    // Primero cargar los nombres de usuarios
-    const usuariosCargados = await obtenerNombresUsuarios();
-    if (!usuariosCargados) {
-        mostrarNotificacion({
-            message: 'Error al cargar los nombres de usuarios',
-            type: 'error',
-            duration: 3500
-        });
-        return;
-    }
-
-    // Luego cargar el resto de datos
-    const [registrosProduccion, productos, reglas] = await Promise.all([
+    // Luego cargar el resto de datos en segundo plano
+    const [usuarios, productos, reglas] = await Promise.all([
         obtenerRegistrosProduccion(),
-        obtenerProductos(),
-        obtenerReglas()
+        await obtenerNombresUsuarios(),
+        await obtenerProductos(),
+        await obtenerReglas(),
     ]);
+    
+    // Cargar registros de producción sin await
 }
 function updateHTMLWithData() {
     // 2. Obtener usuarios únicos de los registros
@@ -475,17 +560,21 @@ function updateHTMLWithData() {
     // 3. Mapear cada user a su nombre correspondiente
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
     const etiquetasHTML = usuariosUnicos.map(user => {
-        // Buscar el usuario en nombresUsuariosGlobal
+        // Buscar el usuario en nombresUsuariosGlobal (ya procesado con solo primer nombre)
         const usuario = nombresUsuariosGlobal.find(u => u.user === user);
+        
         // Si no encontramos el usuario, intentar buscar por el nombre del registro
         if (!usuario) {
             const registro = registrosProduccion.find(r => r.user === user);
             if (registro) {
-                return `<button class="btn-filtro" data-user="${user}">${registro.nombre}</button>`;
+                // Procesar el nombre del registro también
+                const primerNombre = registro.nombre.split(' ')[0] || 'Sin nombre';
+                return `<button class="btn-filtro" data-user="${user}">${primerNombre}</button>`;
             }
         }
-        // Extraer solo la primera palabra del nombre
-        const primerNombre = usuario?.nombre?.split(' ')[0] || 'Sin nombre';
+        
+        // Usar el nombre ya procesado del caché
+        const primerNombre = usuario?.nombre || 'Sin nombre';
         return `<button class="btn-filtro" data-user="${user}">${primerNombre}</button>`;
     }).join('');
 
@@ -539,10 +628,6 @@ function eventosVerificacion() {
     const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const botonCalendario = document.querySelector('.btn-calendario');
 
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarVerificacion();
-    });
 
     function cargarMasRegistros() {
         const productosContainer = document.querySelector('.productos-container');
@@ -1992,46 +2077,4 @@ function eventosVerificacion() {
         }
     }
     aplicarFiltros();
-}
-
-
-async function guardarRegistrosLocal(registros) {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_STORE, 'readwrite');
-        const store = tx.objectStore(REGISTROS_STORE);
-
-        // Guardar cada registro individualmente
-        for (const registro of registros) {
-            await store.put({
-                id: registro.id,
-                data: registro,
-                timestamp: Date.now()
-            });
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error guardando registros en caché:', error);
-        return false;
-    }
-}
-async function obtenerRegistrosLocal() {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_STORE, 'readonly');
-        const store = tx.objectStore(REGISTROS_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const registros = request.result.map(item => item.data);
-                resolve(registros);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo registros del caché:', error);
-        return [];
-    }
 }

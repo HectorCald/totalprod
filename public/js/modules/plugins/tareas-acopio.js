@@ -1,7 +1,6 @@
 let productosGlobal = [];
 let tareasGlobal = [];
 let listaTareasGlobal = [];
-let cleanupPullToRefresh = null;
 
 async function obtenerListaTareas() {
     try {
@@ -155,9 +154,9 @@ export async function mostrarTareas() {
     }, 100);
 
     const [productos, tareas, registros] = await Promise.all([
-        obtenerProductos(),
-        obtenerListaTareas(),
-        obtenerTareas(),
+        await obtenerProductos(),
+        await obtenerListaTareas(),
+        await obtenerTareas(),
     ]);
 
     updateHTMLWithData();
@@ -230,10 +229,7 @@ function eventosTareas() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarTareas();
-    });
+
 
 
     let filtroFechaInstance = null;

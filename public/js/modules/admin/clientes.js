@@ -1,5 +1,5 @@
 let clientes = [];
-let cleanupPullToRefresh = null;
+
 async function obtenerClientes() {
     try {
         const response = await fetch('/obtener-clientes');
@@ -90,7 +90,7 @@ export async function mostrarClientes() {
     }, 100)
 
     const [clientes] = await Promise.all([
-        obtenerClientes()
+        await obtenerClientes()
     ]);
 
     updateHTMLWithData();
@@ -138,10 +138,7 @@ function eventosClientes() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarClientes();
-    });
+
 
     items.forEach(item => {
         item.addEventListener('click', function () {

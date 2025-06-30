@@ -3,7 +3,7 @@ let proovedores = [];
 let clientes = [];
 const DB_NAME = 'damabrava_db';
 const REGISTROS_ALMACEN_STORE = 'registros_almacen';
-let cleanupPullToRefresh = null;
+
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -236,8 +236,8 @@ export async function mostrarMovimientosAlmacen() {
 
     const [obtnerRegistros, clientes, proovedores] = await Promise.all([
         obtenerRegistrosAlmacen(),
-        obtenerClientes(),
-        obtenerProovedores()
+        await obtenerClientes(),
+        await obtenerProovedores()
     ]);
 }
 function updateHTMLWithData() {
@@ -291,10 +291,7 @@ function eventosRegistrosAlmacen() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarMovimientosAlmacen();
-    });
+
 
     let filtroNombreActual = 'Todos';
     let filtroFechaInstance = null;

@@ -44,6 +44,7 @@ import { mostrarPersonal } from './modules/admin/personal.js';
 import { mostrarConfiguracionesSistema } from './modules/admin/configuraciones-sistema.js';
 import { mostrarDescargaCatalogo } from './modules/admin/descargas.js';
 import { mostrarReportes } from './modules/admin/reportes.js';
+import { mostrarPaginaWeb } from './modules/admin/pagina-web.js';
 
 import { mostrarTareas } from './modules/plugins/tareas-acopio.js';
 import { mostrarCalcularMp } from './modules/plugins/calculadora-mp.js';
@@ -107,6 +108,7 @@ window.mostrarPersonal = mostrarPersonal
 window.mostrarConfiguracionesSistema = mostrarConfiguracionesSistema
 window.mostrarDescargaCatalogo = mostrarDescargaCatalogo
 window.mostrarReportes = mostrarReportes
+window.mostrarPaginaWeb = mostrarPaginaWeb
 
 window.mostrarCalcularMp = mostrarCalcularMp
 window.mostrarTareas = mostrarTareas

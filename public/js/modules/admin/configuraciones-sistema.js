@@ -1,5 +1,4 @@
 let configuracionesGlobal = null;
-let cleanupPullToRefresh = null;
 
 async function obtenerConfiguraciones() {
     try {
@@ -94,10 +93,7 @@ function eventosConfiguraciones() {
     const btnEstados = document.querySelectorAll('.btn-estado');
     const btnGuardar = document.querySelector('.btn-guardar-config');
     const contenedor = document.querySelector('.anuncio .relleno');
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarConfiguracionesSistema();
-    });
+
 
     btnEstados.forEach(btn => {
         btn.addEventListener('click', () => {

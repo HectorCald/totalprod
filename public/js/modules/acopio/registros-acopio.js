@@ -1,6 +1,5 @@
 let movimientosAcopio = [];
 
-let cleanupPullToRefresh = null;
 
 async function obtenerMovimientosAcopio() {
     try {
@@ -56,7 +55,7 @@ export async function mostrarRegistrosAcopio() {
     }, 100);
 
     const [obtnerRegistros] = await Promise.all([
-        obtenerMovimientosAcopio(),
+        await obtenerMovimientosAcopio(),
     ]);
 
     updateHTMLWithData();
@@ -168,10 +167,7 @@ function eventosRegistrosAcopio() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarRegistrosAcopio();
-    });
+
 
     let filtroNombreActual = 'todos';
     let filtroMateriaActual = null;

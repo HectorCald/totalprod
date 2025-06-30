@@ -3,9 +3,10 @@ let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
 const DB_NAME = 'damabrava_db_img';
+const DB_NAME_CACHE = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
-let cleanupPullToRefresh = null;
-
+const PRODUCTOS_STORE = 'productos_almacen_cache';
+const ETIQUETAS_STORE = 'etiquetas_almacen_cache';
 
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -22,6 +23,38 @@ function initDB() {
         };
     });
 }
+
+function initDBCache() {
+    return new Promise((resolve, reject) => {
+        // Primero intentar obtener la versión actual de la base de datos
+        const request = indexedDB.open(DB_NAME_CACHE);
+
+        request.onerror = () => reject(request.error);
+
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            const currentVersion = db.version;
+            db.close();
+
+            // Abrir la base de datos con la versión actual + 1
+            const upgradeRequest = indexedDB.open(DB_NAME_CACHE, currentVersion + 1);
+
+            upgradeRequest.onerror = () => reject(upgradeRequest.error);
+            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
+
+            upgradeRequest.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(PRODUCTOS_STORE)) {
+                    db.createObjectStore(PRODUCTOS_STORE, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(ETIQUETAS_STORE)) {
+                    db.createObjectStore(ETIQUETAS_STORE, { keyPath: 'id' });
+                }
+            };
+        };
+    });
+}
+
 async function guardarImagenLocal(id, imageUrl) {
     try {
         console.log(`⌛ Guardando imagen ${id}...`);
@@ -100,40 +133,6 @@ async function obtenerImagenLocal(id) {
         return null;
     }
 }
-async function limpiarCacheImagenes() {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-        store.clear();
-        console.log('🧹 Cache limpiado completamente');
-    } catch (error) {
-        console.error('Error limpiando cache:', error);
-    }
-}
-async function limpiarImagenesAntiguas() {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        const store = tx.objectStore(STORE_NAME);
-
-        const unDia = 24 * 60 * 60 * 1000;
-        const ahora = Date.now();
-
-        store.openCursor().onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (ahora - cursor.value.timestamp > unDia) {
-                    store.delete(cursor.key);
-                    console.log(`🗑️ Eliminada imagen antigua: ${cursor.key}`);
-                }
-                cursor.continue();
-            }
-        };
-    } catch (error) {
-        console.error('Error limpiando imágenes antiguas:', error);
-    }
-}
 async function urlToBlob(url) {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -162,15 +161,43 @@ function necesitaActualizacion(imagenCache, nuevaUrl) {
 
 async function obtenerEtiquetas() {
     try {
-        const response = await fetch('/obtener-etiquetas');
-        const data = await response.json();
-
-        if (data.success) {
-            etiquetas = data.etiquetas.sort((a, b) => {
+        // Primero intentar obtener del caché local
+        const etiquetasCache = await obtenerEtiquetasLocal();
+        
+        // Si hay etiquetas en caché, actualizar la UI inmediatamente
+        if (etiquetasCache.length > 0) {
+            etiquetas = etiquetasCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+            return true;
+        }
+
+        // Si no hay caché, obtener del servidor
+        const response = await fetch('/obtener-etiquetas');
+        const data = await response.json();
+
+        if (data.success) {
+            const etiquetasProcesadas = data.etiquetas.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            
+            etiquetas = etiquetasProcesadas;
+            
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(etiquetasCache) !== JSON.stringify(etiquetasProcesadas)) {
+                console.log('Diferencias encontradas en etiquetas, actualizando UI');
+                updateHTMLWithData();
+            }
+            
+            // Actualizar el caché en segundo plano
+            (async () => {
+                await guardarEtiquetasLocal(etiquetasProcesadas);
+            })();
+            
             return true;
         } else {
             mostrarNotificacion({
@@ -251,19 +278,41 @@ async function obtenerAlmacenAcopio() {
 }
 async function obtenerAlmacenGeneral() {
     try {
+        // Primero intentar obtener del caché local
+        const productosCache = await obtenerProductosLocal();
+        
+        // Si hay productos en caché, actualizar la UI inmediatamente
+        if (productosCache.length > 0) {
+            productos = productosCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            updateHTMLWithData();
+            return true;
+        }
+
+        // Si no hay caché, obtener del servidor
         const response = await fetch('/obtener-productos');
         const data = await response.json();
 
         if (data.success) {
-            // Guardar los productos en la variable global y ordenarlos por ID
-            productos = data.productos.sort((a, b) => {
+            const productosProcesados = data.productos.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA; // Orden descendente por número de ID
+                return idB - idA;
             });
-
+            
+            productos = productosProcesados;
+            
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(productosCache) !== JSON.stringify(productosProcesados)) {
+                console.log('Diferencias encontradas en productos, actualizando UI');
+                updateHTMLWithData();
+            }
+            
             // Procesar y guardar todas las imágenes antes de retornar
-            await Promise.all(productos.map(async producto => {
+            await Promise.all(productosProcesados.map(async producto => {
                 if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
                     const imagenCache = await obtenerImagenLocal(producto.id);
                     if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
@@ -271,6 +320,11 @@ async function obtenerAlmacenGeneral() {
                     }
                 }
             }));
+
+            // Actualizar el caché en segundo plano
+            (async () => {
+                await guardarProductosLocal(productosProcesados);
+            })();
 
             return true;
         } else {
@@ -301,15 +355,38 @@ export async function mostrarAlmacenGeneral() {
         configuracionesEntrada();
     }, 100);
 
-    // Load data in parallel
-    const [almacenGeneral, etiquetasResult, preciosResult, almacenAcopio] = await Promise.all([
-        obtenerAlmacenGeneral(),
-        obtenerEtiquetas(),
-        obtenerPrecios(),
-        obtenerAlmacenAcopio()
+    // Cargar datos del caché primero para mostrar UI inmediatamente
+    const [productosCache, etiquetasCache] = await Promise.all([
+        obtenerProductosLocal(),
+        obtenerEtiquetasLocal()
     ]);
 
-    await updateHTMLWithData();
+    // Si hay datos en caché, actualizar la UI inmediatamente
+    if (productosCache.length > 0) {
+        productos = productosCache.sort((a, b) => {
+            const idA = parseInt(a.id.split('-')[1]);
+            const idB = parseInt(b.id.split('-')[1]);
+            return idB - idA;
+        });
+        updateHTMLWithData();
+    }
+
+    if (etiquetasCache.length > 0) {
+        etiquetas = etiquetasCache.sort((a, b) => {
+            const idA = parseInt(a.id.split('-')[1]);
+            const idB = parseInt(b.id.split('-')[1]);
+            return idB - idA;
+        });
+        updateHTMLWithData();
+    }
+
+    // Luego cargar el resto de datos en segundo plano
+    const [almacenGeneral, etiquetasResult, preciosResult, almacenAcopio] = await Promise.all([
+        await obtenerAlmacenGeneral(),
+        await obtenerEtiquetas(),
+        await obtenerPrecios(),
+        await obtenerAlmacenAcopio(),
+    ]);
 }
 function renderInitialHTML() {
 
@@ -483,10 +560,6 @@ function eventosAlmacenGeneral() {
             }
         }
     });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarAlmacenGeneral();
-    });
     
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
@@ -505,7 +578,8 @@ function eventosAlmacenGeneral() {
     function aplicarFiltros() {
         const registros = document.querySelectorAll('.registro-item');
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const precioSeleccionado = selectPrecios.options[selectPrecios.selectedIndex].text;
+        const precioSeleccionado = selectPrecios.selectedIndex >= 0 && selectPrecios.options[selectPrecios.selectedIndex] ? 
+            selectPrecios.options[selectPrecios.selectedIndex].text : '';
         const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro.activado');
         const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro:nth-child(5)');
         const mostrarSueltas = botonSueltas.classList.contains('activado');
@@ -523,7 +597,7 @@ function eventosAlmacenGeneral() {
                 registro.style.display = 'none';
                 const producto = productos.find(p => p.id === registro.dataset.id);
                 const stockSpan = registro.querySelector('.stock');
-                if (stockSpan) {
+                if (stockSpan && producto) {
                     stockSpan.textContent = mostrarSueltas ?
                         `${producto.uSueltas || 0} Sueltas` :
                         `${producto.stock} Und.`;
@@ -533,6 +607,8 @@ function eventosAlmacenGeneral() {
             // Filtrar y ordenar
             const productosFiltrados = Array.from(registros).filter(registro => {
                 const producto = productos.find(p => p.id === registro.dataset.id);
+                if (!producto) return false;
+                
                 const etiquetasProducto = producto.etiquetas.split(';').map(e => e.trim());
                 let mostrar = true;
 
@@ -566,35 +642,43 @@ function eventosAlmacenGeneral() {
                 switch (index) {
                     case 0:
                         productosFiltrados.sort((a, b) => {
+                            const productoA = productos.find(p => p.id === a.dataset.id);
+                            const productoB = productos.find(p => p.id === b.dataset.id);
                             const valA = mostrarSueltas ?
-                                (productos.find(p => p.id === a.dataset.id).uSueltas || 0) :
-                                parseInt(a.querySelector('.stock').textContent);
+                                (productoA?.uSueltas || 0) :
+                                parseInt(a.querySelector('.stock')?.textContent || '0');
                             const valB = mostrarSueltas ?
-                                (productos.find(p => p.id === b.dataset.id).uSueltas || 0) :
-                                parseInt(b.querySelector('.stock').textContent);
+                                (productoB?.uSueltas || 0) :
+                                parseInt(b.querySelector('.stock')?.textContent || '0');
                             return valB - valA;
                         });
                         break;
                     case 1:
                         productosFiltrados.sort((a, b) => {
+                            const productoA = productos.find(p => p.id === a.dataset.id);
+                            const productoB = productos.find(p => p.id === b.dataset.id);
                             const valA = mostrarSueltas ?
-                                (productos.find(p => p.id === a.dataset.id).uSueltas || 0) :
-                                parseInt(a.querySelector('.stock').textContent);
+                                (productoA?.uSueltas || 0) :
+                                parseInt(a.querySelector('.stock')?.textContent || '0');
                             const valB = mostrarSueltas ?
-                                (productos.find(p => p.id === b.dataset.id).uSueltas || 0) :
-                                parseInt(b.querySelector('.stock').textContent);
+                                (productoB?.uSueltas || 0) :
+                                parseInt(b.querySelector('.stock')?.textContent || '0');
                             return valA - valB;
                         });
                         break;
                     case 2:
-                        productosFiltrados.sort((a, b) =>
-                            a.querySelector('.nombre strong').textContent.localeCompare(b.querySelector('.nombre strong').textContent)
-                        );
+                        productosFiltrados.sort((a, b) => {
+                            const nombreA = a.querySelector('.nombre strong')?.textContent || '';
+                            const nombreB = b.querySelector('.nombre strong')?.textContent || '';
+                            return nombreA.localeCompare(nombreB);
+                        });
                         break;
                     case 3:
-                        productosFiltrados.sort((a, b) =>
-                            b.querySelector('.nombre strong').textContent.localeCompare(a.querySelector('.nombre strong').textContent)
-                        );
+                        productosFiltrados.sort((a, b) => {
+                            const nombreA = a.querySelector('.nombre strong')?.textContent || '';
+                            const nombreB = b.querySelector('.nombre strong')?.textContent || '';
+                            return nombreB.localeCompare(nombreA);
+                        });
                         break;
                 }
             }
@@ -615,19 +699,24 @@ function eventosAlmacenGeneral() {
             const contenedor = document.querySelector('.productos-container');
             productosFiltrados.forEach(registro => {
                 const producto = productos.find(p => p.id === registro.dataset.id);
-                if (precioSeleccionado) {
+                if (precioSeleccionado && producto) {
                     const preciosProducto = producto.precios.split(';');
                     const precioFiltrado = preciosProducto.find(p => p.split(',')[0] === precioSeleccionado);
                     if (precioFiltrado) {
                         const precio = parseFloat(precioFiltrado.split(',')[1]);
-                        registro.querySelector('.precio').textContent = `Bs. ${precio.toFixed(2)}`;
+                        const precioElement = registro.querySelector('.precio');
+                        if (precioElement) {
+                            precioElement.textContent = `Bs. ${precio.toFixed(2)}`;
+                        }
                     }
                 }
                 contenedor.appendChild(registro);
             });
 
             // Mensaje vacío
-            mensajeNoEncontrado.style.display = productosFiltrados.length === 0 ? 'block' : 'none';
+            if (mensajeNoEncontrado) {
+                mensajeNoEncontrado.style.display = productosFiltrados.length === 0 ? 'block' : 'none';
+            }
         }, 200);
     }
     inputBusqueda.addEventListener('focus', function () {
@@ -1929,4 +2018,92 @@ function eventosAlmacenGeneral() {
     }
 
     aplicarFiltros();
+}
+
+async function obtenerProductosLocal() {
+    try {
+        const db = await initDBCache();
+        const tx = db.transaction(PRODUCTOS_STORE, 'readonly');
+        const store = tx.objectStore(PRODUCTOS_STORE);
+
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const productos = request.result.map(item => item.data);
+                resolve(productos);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo productos del caché:', error);
+        return [];
+    }
+}
+
+async function guardarProductosLocal(productosData) {
+    try {
+        const db = await initDBCache();
+        const tx = db.transaction(PRODUCTOS_STORE, 'readwrite');
+        const store = tx.objectStore(PRODUCTOS_STORE);
+
+        // Limpiar todos los productos existentes
+        await store.clear();
+
+        // Guardar los nuevos productos
+        for (const producto of productosData) {
+            await store.put({
+                id: producto.id,
+                data: producto,
+                timestamp: Date.now()
+            });
+        }
+
+        console.log('Caché de productos actualizado correctamente');
+    } catch (error) {
+        console.error('Error actualizando el caché de productos:', error);
+    }
+}
+
+async function obtenerEtiquetasLocal() {
+    try {
+        const db = await initDBCache();
+        const tx = db.transaction(ETIQUETAS_STORE, 'readonly');
+        const store = tx.objectStore(ETIQUETAS_STORE);
+
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const etiquetas = request.result.map(item => item.data);
+                resolve(etiquetas);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obteniendo etiquetas del caché:', error);
+        return [];
+    }
+}
+
+async function guardarEtiquetasLocal(etiquetasData) {
+    try {
+        const db = await initDBCache();
+        const tx = db.transaction(ETIQUETAS_STORE, 'readwrite');
+        const store = tx.objectStore(ETIQUETAS_STORE);
+
+        // Limpiar todas las etiquetas existentes
+        await store.clear();
+
+        // Guardar las nuevas etiquetas
+        for (const etiqueta of etiquetasData) {
+            await store.put({
+                id: etiqueta.id,
+                data: etiqueta,
+                timestamp: Date.now()
+            });
+        }
+
+        console.log('Caché de etiquetas actualizado correctamente');
+    } catch (error) {
+        console.error('Error actualizando el caché de etiquetas:', error);
+    }
 }

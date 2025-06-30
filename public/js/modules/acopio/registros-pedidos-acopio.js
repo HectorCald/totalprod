@@ -8,7 +8,6 @@ let carritoIngresosAcopio = new Map(JSON.parse(localStorage.getItem('damabrava_i
 
 const DB_NAME = 'damabrava_db';
 const REGISTROS_PEDIDOS_STORE = 'registros_pedidos_acopio';
-let cleanupPullToRefresh = null;
 
 async function initDB() {
     return new Promise((resolve, reject) => {
@@ -274,8 +273,8 @@ export async function mostrarPedidos() {
     }, 100);
 
     const [registrosPedidos, registrosProovedores] = await Promise.all([
-        obtenerPedidos(),
-        obtenerProovedoresAcopio()
+        await obtenerPedidos(),
+        await obtenerProovedoresAcopio()
     ]);
 }
 function updateHTMLWithData() {
@@ -339,10 +338,6 @@ function eventosPedidos() {
                 yaExiste.remove();
             }
         }
-    });
-    if (cleanupPullToRefresh) cleanupPullToRefresh();
-    cleanupPullToRefresh = window.initPullToRefresh(contenedor, async () => {
-        await mostrarPedidos();
     });
 
     let filtroFechaInstance = null;
@@ -560,7 +555,7 @@ function eventosPedidos() {
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
                 <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
-                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs. ' + registro.precio || 'No registrado'}</span>` : ''}
+                <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs. ' + (parseFloat(registro.precio) || 0).toFixed(2) || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones compras: </strong>${registro.observacionesCompras || 'Sin observaciones'}</span>
             </div>
@@ -1188,7 +1183,7 @@ function eventosPedidos() {
                                     beneficiario: proovedor,
                                     pagado_por: usuarioInfo.nombre + ' ' + usuarioInfo.apellido,
                                     justificativos_id: registro.id,
-                                    justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + precio + ')Transporte: (Bs./' + transporteOtros + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
+                                    justificativos: 'Pago de materia prima: ' + registro.producto + ' (Bs./' + (parseFloat(precio) || 0).toFixed(2) + ')Transporte: (Bs./' + (parseFloat(transporteOtros) || 0).toFixed(2) + ')' + 'Cantidad: ' + cantidadUnd + ' ' + unidadMedida,
                                     subtotal: totalPago,
                                     descuento: 0,
                                     aumento: 0,

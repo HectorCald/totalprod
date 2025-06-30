@@ -896,10 +896,10 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     ['Cliente/Proveedor', registro.cliente_proovedor.split('(')[0].trim()]
                 ];
                 const resumenFinanciero = [
-                    ['Subtotal', `Bs. ${registro.subtotal}`],
-                    ['Descuento', `Bs. ${registro.descuento}`],
-                    ['Aumento', `Bs. ${registro.aumento}`],
-                    ['Total', `Bs. ${registro.total}`]
+                    ['Subtotal', `Bs. ${(parseFloat(registro.subtotal) || 0).toFixed(2)}`],
+                    ['Descuento', `Bs. ${(parseFloat(registro.descuento) || 0).toFixed(2)}`],
+                    ['Aumento', `Bs. ${(parseFloat(registro.aumento) || 0).toFixed(2)}`],
+                    ['Total', `Bs. ${(parseFloat(registro.total) || 0).toFixed(2)}`]
                 ];
                 let yPosition = 38;
                 if (doc.autoTable) {
@@ -966,7 +966,7 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                         ids[index] || '',
                         producto.trim(),
                         cantidad,
-                        `Bs. ${precioUnitario}`,
+                        `Bs. ${(parseFloat(precioUnitario) || 0).toFixed(2)}`,
                         `Bs. ${subtotal.toFixed(2)}`
                     ];
                 });
@@ -1154,7 +1154,7 @@ export function mostrarProgreso(tipo) {
 
     const div = document.querySelector(tipo);
     const botonesCancelar = document.querySelectorAll(
-        '.pro-data .btn, .pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn'
+        '.pro-data .btn, .pro-pago .btn, .pro-anulado .btn, .pro-user .btn, .pro-delete .btn, .pro-edit .btn, .pro-verificado .btn, .pro-registro .btn, .pro-new .btn, .pro-price .btn, .pro-tag .btn, .pro-ingreso .btn, .pro-salida .btn, .pro-pedido .btn, .pro-pack .btn, .pro-peso .btn, .pro-save .btn, .pro-promo .btn'
     );
     let contador = 3;
 
