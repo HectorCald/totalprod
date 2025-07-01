@@ -72,6 +72,29 @@ SPREADSHEET_ID_2=tu_spreadsheet_id_2
 - ✅ Mejor manejo de errores con mensajes específicos
 - ✅ Validación de tipo de archivo (solo PDF)
 - ✅ Límite de tamaño de archivo (10MB)
-- ✅ Limpieza automática de archivos temporales
+- ✅ Compatibilidad con entornos serverless (Vercel)
+- ✅ Uso directo de buffer sin archivos temporales
+- ✅ Timeouts extendidos para producción
 - ✅ Verificación de configuración al iniciar
-- ✅ Logs detallados para debugging 
+- ✅ Logs detallados para debugging
+
+## Configuración para Vercel
+
+### Variables de Entorno en Vercel
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Selecciona tu proyecto
+3. Ve a "Settings" → "Environment Variables"
+4. Agrega todas las variables necesarias, especialmente:
+   ```env
+   CATALOGO_FOLDER=tu_id_de_carpeta_google_drive
+   GOOGLE_SERVICE_ACCOUNT_EMAIL=damabrava@producciondb.iam.gserviceaccount.com
+   GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+   ```
+
+### Permisos de Google Drive
+Asegúrate de que la cuenta de servicio tenga permisos de "Editor" en la carpeta de catálogo.
+
+### Límites de Vercel
+- Tamaño máximo de archivo: 10MB
+- Timeout de función: 30 segundos
+- Memoria: 1024MB 

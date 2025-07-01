@@ -6010,8 +6010,23 @@ if (!CATALOGO_FOLDER) {
     console.log('[Catalogo] ✅ Carpeta de catálogo configurada:', CATALOGO_FOLDER);
 }
 
+// Verificar entorno
+const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+if (isVercel) {
+    console.log('[Catalogo] 🚀 Ejecutando en entorno serverless (Vercel)');
+} else {
+    console.log('[Catalogo] 💻 Ejecutando en entorno local');
+}
+
 // Subir catálogo PDF
 app.post('/subir-catalogo', requireAuth, (req, res, next) => {
+    // Configurar timeout más largo para Vercel
+    const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+    if (isVercel) {
+        req.setTimeout(30000); // 30 segundos para Vercel
+        res.setTimeout(30000);
+    }
+    
     upload.single('catalogo')(req, res, (err) => {
         if (err instanceof multer.MulterError) {
             console.error('[Catalogo] Error de Multer:', err);
@@ -6038,30 +6053,30 @@ app.post('/subir-catalogo', requireAuth, (req, res, next) => {
     console.log('[Catalogo] Petición POST /subir-catalogo recibida');
     console.log('[Catalogo] Archivo recibido:', req.file);
     console.log('[Catalogo] CATALOGO_FOLDER:', CATALOGO_FOLDER);
-    
+
     try {
         if (!req.file) {
             console.error('[Catalogo] No se envió ningún archivo');
             return res.status(400).json({ success: false, error: 'No se envió ningún archivo' });
         }
-        
+
         if (!CATALOGO_FOLDER) {
             console.error('[Catalogo] No está configurada la carpeta de catálogo');
-            return res.status(500).json({ 
-                success: false, 
-                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.' 
+            return res.status(500).json({
+                success: false,
+                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.'
             });
         }
-        
+
         // Verificar que el archivo sea PDF
         if (req.file.mimetype !== 'application/pdf') {
             console.error('[Catalogo] Archivo no es PDF:', req.file.mimetype);
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Solo se permiten archivos PDF' 
+            return res.status(400).json({
+                success: false,
+                error: 'Solo se permiten archivos PDF'
             });
         }
-        
+
         console.log('[Catalogo] Buscando catálogo anterior...');
         // 1. Buscar y borrar el catálogo anterior
         try {
@@ -6070,7 +6085,7 @@ app.post('/subir-catalogo', requireAuth, (req, res, next) => {
                 fields: 'files(id)'
             });
             console.log('[Catalogo] Archivos encontrados:', list.data.files);
-            
+
             for (const file of list.data.files) {
                 console.log('[Catalogo] Eliminando archivo anterior:', file.id);
                 await drive.files.delete({ fileId: file.id });
@@ -6079,36 +6094,49 @@ app.post('/subir-catalogo', requireAuth, (req, res, next) => {
             console.error('[Catalogo] Error al buscar/eliminar archivos anteriores:', driveError);
             // Continuar con la subida aunque falle la eliminación
         }
-        
-        console.log('[Catalogo] Subiendo nuevo catálogo...');
+
+                console.log('[Catalogo] Subiendo nuevo catálogo...');
         // 2. Subir el nuevo catálogo
         const fileMetadata = {
             name: 'catalogo-damabrava.pdf',
             parents: [CATALOGO_FOLDER]
         };
         
-        // Google Drive API requiere un stream, así que usamos buffer
-        const tmpPath = `./tmp-catalogo-${Date.now()}.pdf`;
-        console.log('[Catalogo] Guardando archivo temporal:', tmpPath);
+        // Usar directamente el buffer sin crear archivo temporal (compatible con Vercel)
+        console.log('[Catalogo] Subiendo archivo directamente desde buffer...');
         
-        try {
-            fs.writeFileSync(tmpPath, req.file.buffer);
+                try {
+            let response;
+            // Usar fs solo si no estamos en Vercel
+            const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
             
-            const response = await drive.files.create({
-                resource: fileMetadata,
-                media: { mimeType: 'application/pdf', body: fs.createReadStream(tmpPath) },
-                fields: 'id'
-            });
-            console.log('[Catalogo] Archivo subido con ID:', response.data.id);
-            
-            // Limpiar archivo temporal
-            try {
+            if (isVercel) {
+                // En Vercel: usar stream desde buffer
+                const { Readable } = await import('stream');
+                const stream = Readable.from(req.file.buffer);
+                
+                response = await drive.files.create({
+                    resource: fileMetadata,
+                    media: { mimeType: 'application/pdf', body: stream },
+                    fields: 'id'
+                });
+                console.log('[Catalogo] Archivo subido con ID:', response.data.id);
+            } else {
+                // En local: usar archivo temporal como antes
+                const tmpPath = `./tmp-catalogo-${Date.now()}.pdf`;
+                fs.writeFileSync(tmpPath, req.file.buffer);
+                
+                response = await drive.files.create({
+                    resource: fileMetadata,
+                    media: { mimeType: 'application/pdf', body: fs.createReadStream(tmpPath) },
+                    fields: 'id'
+                });
+                console.log('[Catalogo] Archivo subido con ID:', response.data.id);
+                
+                // Limpiar archivo temporal
                 fs.unlinkSync(tmpPath);
-                console.log('[Catalogo] Archivo temporal eliminado');
-            } catch (unlinkError) {
-                console.warn('[Catalogo] No se pudo eliminar archivo temporal:', unlinkError);
             }
-            
+
             // 3. Hacer público el archivo
             console.log('[Catalogo] Haciendo público el archivo...');
             try {
@@ -6122,27 +6150,20 @@ app.post('/subir-catalogo', requireAuth, (req, res, next) => {
             }
             
             // 4. Obtener la URL pública
-            const url = `https://drive.google.com/uc?id=${response.data.id}&export=download`;
+            const url = `https://drive.google.com/file/d/${response.data.id}/preview`;
             console.log('[Catalogo] URL pública generada:', url);
             res.json({ success: true, url });
-            
+
         } catch (uploadError) {
-            // Limpiar archivo temporal en caso de error
-            try {
-                if (fs.existsSync(tmpPath)) {
-                    fs.unlinkSync(tmpPath);
-                }
-            } catch (cleanupError) {
-                console.warn('[Catalogo] Error al limpiar archivo temporal:', cleanupError);
-            }
+            console.error('[Catalogo] Error durante la subida:', uploadError);
             throw uploadError;
         }
-        
+
     } catch (error) {
         console.error('[Catalogo] Error al subir catálogo:', error);
         console.error('[Catalogo] Stack trace:', error.stack);
-        
-        // Mensajes de error más específicos
+
+                // Mensajes de error más específicos
         let errorMessage = 'Error al subir el catálogo';
         
         if (error.code === 403) {
@@ -6153,8 +6174,12 @@ app.post('/subir-catalogo', requireAuth, (req, res, next) => {
             errorMessage = 'Se ha excedido la cuota de Google Drive';
         } else if (error.message.includes('network')) {
             errorMessage = 'Error de conexión con Google Drive';
+        } else if (error.message.includes('ENOENT') || error.message.includes('EACCES')) {
+            errorMessage = 'Error de permisos del sistema (entorno serverless)';
+        } else if (error.message.includes('stream')) {
+            errorMessage = 'Error al procesar el archivo (formato no válido)';
         }
-        
+
         res.status(500).json({ success: false, error: errorMessage });
     }
 });
@@ -6165,35 +6190,35 @@ app.get('/obtener-catalogo', requireAuth, async (req, res) => {
     try {
         if (!CATALOGO_FOLDER) {
             console.error('[Catalogo] No está configurada la carpeta de catálogo');
-            return res.status(500).json({ 
-                success: false, 
-                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.' 
+            return res.status(500).json({
+                success: false,
+                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.'
             });
         }
-        
+
         const list = await drive.files.list({
             q: `'${CATALOGO_FOLDER}' in parents and name = 'catalogo-damabrava.pdf' and trashed = false`,
             fields: 'files(id)'
         });
         console.log('[Catalogo] Respuesta de Google Drive:', list.data);
-        
+
         if (!list.data.files.length) {
             console.log('[Catalogo] No hay catálogo subido');
             return res.json({ success: true, url: null });
         }
-        
+
         const fileId = list.data.files[0].id;
         const url = `https://drive.google.com/file/d/${fileId}/preview`;
         console.log('[Catalogo] Catálogo encontrado. URL:', url);
         res.json({ success: true, url });
-        
+
     } catch (error) {
         console.error('[Catalogo] Error al obtener catálogo:', error);
         console.error('[Catalogo] Stack trace:', error.stack);
-        
+
         // Mensajes de error más específicos
         let errorMessage = 'Error al obtener el catálogo';
-        
+
         if (error.code === 403) {
             errorMessage = 'No tienes permisos para acceder a Google Drive';
         } else if (error.code === 404) {
@@ -6203,7 +6228,7 @@ app.get('/obtener-catalogo', requireAuth, async (req, res) => {
         } else if (error.message.includes('network')) {
             errorMessage = 'Error de conexión con Google Drive';
         }
-        
+
         res.status(500).json({ success: false, error: errorMessage });
     }
 });
