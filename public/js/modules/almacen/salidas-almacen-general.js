@@ -327,7 +327,7 @@ function renderInitialHTML() {
                         <input type="text" class="buscar-producto" placeholder="">
                     </div>
                 </div>
-                <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+                <div class="filtros-opciones cantidad-filter">
                     <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
                     <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
                     <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
@@ -335,15 +335,14 @@ function renderInitialHTML() {
                     <select class="precios-select" style="width:100%">
                         <option class="skeleton skeleton-etiqueta" value="">Precios</option>
                     </select>
-                    <div class="switch-container" style="display: flex; align-items: center; gap: 8px; margin-left: 10px;">
-                        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                            <input type="checkbox" class="switch-tira-global" style="opacity: 0; width: 0; height: 0;">
-                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;">
-                                <span class="slider-thumb" style="position: absolute; content: ''; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;"></span>
-                            </span>
+                
+                    <div class="input switch-container">
+                        <label class="switch">
+                            <input type="checkbox" class="botones-cancelacion switch-tira-global">
+                            <span class="slider round slider-thumb"></span>
                         </label>
-                        <span style="font-size: 0.8em; color: #666;">Tira</span>
                     </div>
+
                 </div>
             </div>
             
@@ -631,29 +630,29 @@ function eventosSalidas() {
     if (switchTiraGlobal) {
         switchTiraGlobal.addEventListener('change', (e) => {
             modoTiraGlobal = e.target.checked;
-            
+
             // Actualizar estilos del switch
             const slider = e.target.nextElementSibling;
-            const sliderThumb = slider.querySelector('.slider-thumb');
-            
+            const sliderThumb = slider && slider.querySelector('.slider-thumb');
+
             if (modoTiraGlobal) {
-                slider.style.backgroundColor = '#4CAF50';
-                sliderThumb.style.transform = 'translateX(20px)';
+                if (slider) slider.style.backgroundColor = '#4CAF50';
+                if (sliderThumb) sliderThumb.style.transform = 'translateX(20px)';
                 mostrarNotificacion({
                     message: 'Cambiado a modo Tira',
                     type: 'success',
                     duration: 2000
                 });
             } else {
-                slider.style.backgroundColor = '#ccc';
-                sliderThumb.style.transform = 'translateX(0)';
+                if (slider) slider.style.backgroundColor = '#9b9b9b';
+                if (sliderThumb) sliderThumb.style.transform = 'translateX(0)';
                 mostrarNotificacion({
                     message: 'Cambiado a modo Unidades',
                     type: 'info',
                     duration: 2000
                 });
             }
-            
+
             // Actualizar precios en el carrito
             carritoSalidas.forEach((item, id) => {
                 // Obtener el precio base original del producto
@@ -664,12 +663,12 @@ function eventosSalidas() {
                     const preciosProducto = producto.precios.split(';');
                     const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
                     const precioBaseOriginal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
-                    
+
                     const cantidadxtira = item.cantidadxgrupo || 1;
                     item.subtotal = modoTiraGlobal ? precioBaseOriginal * cantidadxtira : precioBaseOriginal;
                 }
             });
-            
+
             // Actualizar UI
             actualizarCarritoUI();
         });
@@ -948,49 +947,49 @@ function eventosSalidas() {
                 <button class="btn-procesar-salida btn green" onclick="registrarSalida()"><i class='bx bx-export'></i> Procesar Salida</button>
             </div>
         `;
-    anuncioSecond.style.paddingBottom='70px'                            
-    mostrarAnuncioSecond();
+        anuncioSecond.style.paddingBottom = '70px'
+        mostrarAnuncioSecond();
 
-    const inputDescuento = anuncioSecond.querySelector('.descuento');
-    const inputAumento = anuncioSecond.querySelector('.aumento');
-    const totalFinal = anuncioSecond.querySelector('.total-final');
+        const inputDescuento = anuncioSecond.querySelector('.descuento');
+        const inputAumento = anuncioSecond.querySelector('.aumento');
+        const totalFinal = anuncioSecond.querySelector('.total-final');
 
-    function actualizarTotal() {
-        const descuentoValor = parseFloat(inputDescuento.value) || 0;
-        const aumentoValor = parseFloat(inputAumento.value) || 0;
-        const totalCalculado = subtotal - descuentoValor + aumentoValor;
+        function actualizarTotal() {
+            const descuentoValor = parseFloat(inputDescuento.value) || 0;
+            const aumentoValor = parseFloat(inputAumento.value) || 0;
+            const totalCalculado = subtotal - descuentoValor + aumentoValor;
 
-        totalFinal.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+            totalFinal.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+        }
+
+        inputDescuento.addEventListener('input', actualizarTotal);
+        inputAumento.addEventListener('input', actualizarTotal);
+
+        const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
+        botonLimpiar.addEventListener('click', () => {
+
+            carritoSalidas.forEach((item, id) => {
+                const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
+                if (headerItem) {
+                    const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
+                    const stockSpan = headerItem.querySelector('.stock');
+                    if (cantidadSpan) cantidadSpan.textContent = '';
+                    if (stockSpan) stockSpan.textContent = `${item.stock} Und.`;
+                }
+            });
+
+            carritoSalidas.clear();
+            actualizarCarritoLocal();
+            actualizarBotonFlotante();
+            ocultarAnuncioSecond();
+            mostrarNotificacion({
+                message: 'Carrito limpiado exitosamente',
+                type: 'success',
+                duration: 2000
+            });
+            document.querySelector('.btn-flotante-saldias').style.display = 'none';
+        });
     }
-
-    inputDescuento.addEventListener('input', actualizarTotal);
-    inputAumento.addEventListener('input', actualizarTotal);
-
-    const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
-    botonLimpiar.addEventListener('click', () => {
-
-        carritoSalidas.forEach((item, id) => {
-            const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
-            if (headerItem) {
-                const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
-                const stockSpan = headerItem.querySelector('.stock');
-                if (cantidadSpan) cantidadSpan.textContent = '';
-                if (stockSpan) stockSpan.textContent = `${item.stock} Und.`;
-            }
-        });
-
-        carritoSalidas.clear();
-        actualizarCarritoLocal();
-        actualizarBotonFlotante();
-        ocultarAnuncioSecond();
-        mostrarNotificacion({
-            message: 'Carrito limpiado exitosamente',
-            type: 'success',
-            duration: 2000
-        });
-        document.querySelector('.btn-flotante-saldias').style.display = 'none';
-    });
-}
     window.ajustarCantidad = (id, delta) => {
         const item = carritoSalidas.get(id);
         if (!item) return;
@@ -1051,7 +1050,7 @@ function eventosSalidas() {
                 aumentoValor = aumentoInput ? parseFloat(aumentoInput.value) || 0 : 0;
             }
             const totalCalculado = subtotal - descuentoValor + aumentoValor;
-            
+
             // Renderizar solo los productos y los campos extra actualizados
             carritoItemsDiv.innerHTML = `
                 ${Array.from(carritoSalidas.values()).map(item => `
@@ -1168,7 +1167,7 @@ function eventosSalidas() {
                 inputDescuento.addEventListener('input', actualizarTotal);
                 inputAumento.addEventListener('input', actualizarTotal);
             }
-            
+
             configuracionesEntrada();
         }
     }

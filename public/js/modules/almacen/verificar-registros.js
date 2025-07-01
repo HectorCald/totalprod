@@ -21,7 +21,7 @@ async function obtenerNombresUsuarios() {
     try {
         // Primero intentar obtener del caché local
         const nombresCache = await obtenerNombresLocal();
-        
+
         // Si hay nombres en caché, actualizar la UI inmediatamente
         if (nombresCache.length > 0) {
             nombresUsuariosGlobal = nombresCache;
@@ -32,32 +32,32 @@ async function obtenerNombresUsuarios() {
         // Si no hay caché, obtener del servidor
         const response = await fetch('/obtener-nombres-usuarios');
         const data = await response.json();
-        
+
         if (data.success) {
             // Procesar nombres: tomar solo la primera palabra
             const nombresProcesados = data.nombres.map(usuario => ({
                 ...usuario,
                 nombre: usuario.nombre.split(' ')[0] || usuario.nombre // Solo el primer nombre
             }));
-            
+
             nombresUsuariosGlobal = nombresProcesados;
-            
+
             // Verificar si hay diferencias entre el caché y los nuevos datos
             if (JSON.stringify(nombresCache) !== JSON.stringify(nombresProcesados)) {
                 console.log('Diferencias encontradas en nombres, actualizando UI');
                 updateHTMLWithData();
             }
-            
+
             // Actualizar el caché en segundo plano
             (async () => {
                 try {
                     const db = await initDB();
                     const tx = db.transaction(NOMBRES_STORE, 'readwrite');
                     const store = tx.objectStore(NOMBRES_STORE);
-                    
+
                     // Limpiar todos los nombres existentes
                     await store.clear();
-                    
+
                     // Guardar los nuevos nombres
                     for (const nombre of nombresProcesados) {
                         await store.put({
@@ -66,13 +66,13 @@ async function obtenerNombresUsuarios() {
                             timestamp: Date.now()
                         });
                     }
-                    
+
                     console.log('Caché de nombres actualizado correctamente');
                 } catch (error) {
                     console.error('Error actualizando el caché de nombres:', error);
                 }
             })();
-            
+
             return true;
         }
         throw new Error('Error al obtener nombres de usuarios');
@@ -92,7 +92,7 @@ async function obtenerNombresLocal() {
         const db = await initDB();
         const tx = db.transaction(NOMBRES_STORE, 'readonly');
         const store = tx.objectStore(NOMBRES_STORE);
-        
+
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => {
@@ -550,7 +550,7 @@ export async function mostrarVerificacion() {
         await obtenerProductos(),
         await obtenerReglas(),
     ]);
-    
+
     // Cargar registros de producción sin await
 }
 function updateHTMLWithData() {
@@ -562,7 +562,7 @@ function updateHTMLWithData() {
     const etiquetasHTML = usuariosUnicos.map(user => {
         // Buscar el usuario en nombresUsuariosGlobal (ya procesado con solo primer nombre)
         const usuario = nombresUsuariosGlobal.find(u => u.user === user);
-        
+
         // Si no encontramos el usuario, intentar buscar por el nombre del registro
         if (!usuario) {
             const registro = registrosProduccion.find(r => r.user === user);
@@ -572,7 +572,7 @@ function updateHTMLWithData() {
                 return `<button class="btn-filtro" data-user="${user}">${primerNombre}</button>`;
             }
         }
-        
+
         // Usar el nombre ya procesado del caché
         const primerNombre = usuario?.nombre || 'Sin nombre';
         return `<button class="btn-filtro" data-user="${user}">${primerNombre}</button>`;
@@ -1485,7 +1485,21 @@ function eventosVerificacion() {
                     });
 
                     if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
+                        if (error.response && error.response.data && error.response.data.error === 'No hay suficiente stock en los lotes de acopio') {
+                            mostrarNotificacion({
+                                message: 'No hay suficiente peso en almacén acopio para esta verificación.',
+                                type: 'error',
+                                duration: 3500
+                            });
+                        } else {
+                            mostrarNotificacion({
+                                message: error.message || 'Error al verificar el registro',
+                                type: 'error',
+                                duration: 3500
+                            });
+                        }
+                        ocultarProgreso('.pro-verificado')
+                        return;
                     }
 
                     const data = await response.json();
@@ -1515,6 +1529,7 @@ function eventosVerificacion() {
                         console.log('Operación cancelada por el usuario');
                         return;
                     }
+
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al verificar el registro',

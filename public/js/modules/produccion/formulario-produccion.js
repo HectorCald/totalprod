@@ -240,7 +240,7 @@ function evetosFormularioProduccion() {
 
         if (valor) {
             const sugerencias = productosGlobal.filter(p =>
-                normalizarTexto(p.producto).includes(valor)
+                normalizarTexto(p.producto+p.gramos).includes(valor)
             ).slice(0, 5);
 
             if (sugerencias.length) {
@@ -416,6 +416,4 @@ function evetosFormularioProduccion() {
             }
         });
     });
-
-    
 }
