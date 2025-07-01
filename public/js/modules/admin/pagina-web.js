@@ -163,7 +163,7 @@ async function obtenerEtiquetas() {
         if (data.success) {
             // El endpoint devuelve un array de strings
             etiquetasGlobal = (data.etiquetas || []).filter(Boolean);
-                updateHTMLWithData();
+            updateHTMLWithData();
             return true;
         } else {
             mostrarNotificacion({
@@ -345,15 +345,15 @@ export async function mostrarPaginaWeb() {
                     if (a.id && typeof a.id === 'string' && a.id.includes('-')) {
                         const partesA = a.id.split('-');
                         idA = parseInt(partesA[1]) || -1;
-    }
+                    }
                     if (b.id && typeof b.id === 'string' && b.id.includes('-')) {
                         const partesB = b.id.split('-');
                         idB = parseInt(partesB[1]) || -1;
                     }
-            return idB - idA;
-        });
+                    return idB - idA;
+                });
                 productos = productosProcesados;
-    }
+            }
         })(),
         (async () => {
             const response = await fetch('/obtener-precios');
@@ -391,9 +391,9 @@ function renderInitialHTML() {
                 </div>
                 ${tienePermiso('creacion') ? `
                 <div class="acciones-grande">
-                    
                     <button class="btn-etiquetas btn blue"><i class='bx bx-purchase-tag'></i>  <span>Etiquetas</span></button>
                     <button class="btn-precios btn yellow"><i class='bx bx-dollar'></i> <span>Precios</span></button>
+                    <button class="btn-catalogo btn red"><i class='bx bxs-file-pdf'></i> <span>Catálogo</span></button>
                 </div>
                 ` : ''}
             </div>
@@ -425,9 +425,9 @@ function renderInitialHTML() {
 
         ${tienePermiso('creacion') ? `
         <div class="anuncio-botones">
-            
             <button class="btn-etiquetas btn blue"><i class='bx bx-purchase-tag'></i> Etiquetas</button>
             <button class="btn-precios btn yellow"><i class='bx bx-dollar'></i> Precios</button>
+            <button class="btn-catalogo btn red"><i class='bx bxs-file-pdf'></i> Catálogo</button>
         </div>
         ` : ''}
     `;
@@ -481,7 +481,7 @@ async function updateHTMLWithData() {
         // Verificar si tiene promoción
         const tienePromocion = producto.promocion && producto.promocion.trim() !== '';
         const estrellaPromocion = tienePromocion ? '<i class="fa fa-star" style="color: #ffd700 !important; position: absolute; bottom: 10px; right: 10px; font-size: 15px; z-index: 10;"></i>' : '';
-        const precioPromocional = tienePromocion && producto.precio_promocion ? 
+        const precioPromocional = tienePromocion && producto.precio_promocion ?
             `<span class="valor precio">Bs. ${(!isNaN(parseFloat(producto.precio_promocion)) ? parseFloat(producto.precio_promocion).toFixed(2) : '0.00')}</span>` : '';
 
         return `
@@ -516,6 +516,7 @@ function eventosAlmacenGeneral() {
     const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
     const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
     const btnPrecios = document.querySelectorAll('.btn-precios');
+    const btnCatalogo = document.querySelectorAll('.btn-catalogo');
 
     const items = document.querySelectorAll('.registro-item');
 
@@ -539,7 +540,7 @@ function eventosAlmacenGeneral() {
             }
         }
     });
-    
+
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({
@@ -577,7 +578,7 @@ function eventosAlmacenGeneral() {
             const productosFiltrados = Array.from(registros).filter(registro => {
                 const producto = productos.find(p => p.id === registro.dataset.id);
                 if (!producto) return false;
-                
+
                 const etiquetasProducto = producto.etiquetas.split(';').map(e => e.trim());
                 let mostrar = true;
 
@@ -664,6 +665,11 @@ function eventosAlmacenGeneral() {
         });
     }
 
+    btnCatalogo.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            mostrarModalCatalogo();
+        });
+    });
 
     window.info = async function (registroId) {
         const producto = productos.find(r => r.id === registroId);
@@ -792,17 +798,17 @@ function eventosAlmacenGeneral() {
                 const signal = await mostrarProgreso('.pro-tag')
                 const checkboxes = contenido.querySelectorAll('input[type="checkbox"]:checked');
                 const etiquetasSeleccionadas = Array.from(checkboxes).map(cb => cb.value);
-                
+
                 // Guardar en localStorage
                 localStorage.setItem('etiquetasWebSeleccionadas', JSON.stringify(etiquetasSeleccionadas));
-                
+
                 // Guardar en la hoja
                 const response = await fetch('/guardar-etiquetas-web', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ etiquetas: etiquetasSeleccionadas })
                 });
-                
+
                 const data = await response.json();
                 if (data.success) {
                     updateHTMLWithData();
@@ -865,17 +871,17 @@ function eventosAlmacenGeneral() {
             try {
                 const signal = await mostrarProgreso('.pro-price')
                 const seleccionado = contenido.querySelector('input[name="precio-web"]:checked').value;
-                
+
                 // Guardar en localStorage
                 localStorage.setItem('precioWebSeleccionado', seleccionado);
-                
+
                 // Guardar en la hoja
                 const response = await fetch('/guardar-precio-web', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ precio: seleccionado })
                 });
-                
+
                 const data = await response.json();
                 if (data.success) {
                     updateHTMLWithData();
@@ -890,7 +896,7 @@ function eventosAlmacenGeneral() {
                 }
                 console.error('Error:', error);
                 mostrarNotificacion({ message: error.message, type: 'error', duration: 3500 });
-            }finally{
+            } finally {
                 ocultarProgreso('.pro-price')
             }
         });
@@ -987,7 +993,7 @@ function promocionar(producto) {
     </div>
 `;
     contenido.innerHTML = registrationHTML;
-    
+
     mostrarAnuncioTercer();
     contenido.style.paddingBottom = '70px';
 
@@ -1030,8 +1036,8 @@ function promocionar(producto) {
                 registrarNotificacion(
                     'Administración',
                     'Creación',
-                    usuarioInfo.nombre + (nombrePromocion ? 
-                        ` creó la promoción "${nombrePromocion}" para ${producto.producto}` : 
+                    usuarioInfo.nombre + (nombrePromocion ?
+                        ` creó la promoción "${nombrePromocion}" para ${producto.producto}` :
                         ` eliminó la promoción de ${producto.producto}`)
                 );
             } else {
@@ -1066,5 +1072,198 @@ async function obtenerPrecioWebSeleccionado() {
         }
     } catch (error) {
         precioWebSeleccionado = '';
+    }
+}
+
+async function mostrarModalCatalogo() {
+    let urlCatalogo = null;
+    console.log('[Catalogo] Intentando obtener catálogo PDF...');
+    try {
+        const signal = await mostrarProgreso('.pro-obtner');
+        const res = await fetch('/obtener-catalogo');
+        console.log('[Catalogo] Respuesta fetch:', res);
+        const data = await res.json();
+        console.log('[Catalogo] Data recibida:', data);
+        if (data.success && data.url) urlCatalogo = data.url;
+    } catch (err) {
+        if (err.message === 'cancelled') {
+            console.log('Operación cancelada por el usuario');
+            return;
+        }
+        console.error('[Catalogo] Error al obtener catálogo:', err);
+        mostrarNotificacion({
+            message: err.message || 'Error al obtener catálogo',
+            type: 'error',
+            duration: 3500
+        });
+    }
+    finally {
+        ocultarProgreso('.pro-obtner');
+    }
+    const contenido = document.querySelector('.anuncio-second .contenido');
+    const catalogoHTML = `
+    <div class="encabezado">
+        <h1 class="titulo">Catálogo PDF</h1>
+        <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
+    </div>
+    <div class="relleno">
+        <div class="pdf-upload-container" id="drop-zone">
+            <label for="catalogoPdf" class="pdf-upload-label" id="upload-label">
+                <i class="fas fa-file-upload"></i>
+                <span id="upload-text">Arrastra tu catálogo PDF o haz clic aquí</span>
+                <input type="file" accept="application/pdf" class="input-catalogo-pdf" id="catalogoPdf">
+            </label>
+        </div>
+
+
+         ${!urlCatalogo ? '<span style="color:#888">No hay catálogo subido</span>' : ''}
+        <div class="info-sistema">
+            <i class='bx bx-info-circle'></i>
+            <div class="detalle-info">
+                <p>Solo puede haber uno, al subir uno nuevo se reemplaza el anterior.</p>
+            </div>
+        </div>
+    </div>
+    <div class="anuncio-botones">
+        <button class="btn subir-catalogo btn orange" style="margin-bottom:10px"><i class='bx bx-upload'></i> Actualizar catálogo</button>
+        <button class="btn ver-catalogo btn green" style="margin-bottom:10px" ${!urlCatalogo ? 'disabled' : ''}><i class='bx bx-show'></i> Ver catálogo actual</button>
+    </div>
+    `;
+    contenido.innerHTML = catalogoHTML;
+
+    mostrarAnuncioSecond();
+    contenido.style.paddingBottom = '70px';
+
+    function inicializarCargaPDF({ dropZoneId, inputId, labelTextId }) {
+        const dropZone = document.getElementById(dropZoneId);
+        const fileInput = document.getElementById(inputId);
+        const uploadText = document.getElementById(labelTextId);
+    
+        if (!dropZone || !fileInput || !uploadText) {
+          console.warn('Elementos no encontrados para inicializar carga PDF');
+          return;
+        }
+    
+        // Evitar comportamiento por defecto
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, e => e.preventDefault());
+        });
+    
+        dropZone.addEventListener('dragover', () => {
+          dropZone.classList.add('dragover');
+        });
+    
+        dropZone.addEventListener('dragleave', () => {
+          dropZone.classList.remove('dragover');
+        });
+    
+        dropZone.addEventListener('drop', (e) => {
+          dropZone.classList.remove('dragover');
+          const file = e.dataTransfer.files[0];
+    
+          if (file && file.type === "application/pdf") {
+            fileInput.files = e.dataTransfer.files;
+            uploadText.textContent = `Archivo: ${file.name}`;
+          } else {
+            uploadText.textContent = "Solo se permiten archivos PDF";
+          }
+        });
+    
+        fileInput.addEventListener('change', () => {
+          if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            uploadText.textContent = `Archivo: ${file.name}`;
+          }
+        });
+      }
+    
+      // Llamada de ejemplo (cuando se cargue la página)
+
+        inicializarCargaPDF({
+          dropZoneId: 'drop-zone',
+          inputId: 'catalogoPdf',
+          labelTextId: 'upload-text'
+        });
+
+
+    // Agregar eventos después de mostrar el modal
+    const input = contenido.querySelector('.input-catalogo-pdf');
+    const btnSubir = contenido.querySelector('.subir-catalogo');
+    const btnVer = contenido.querySelector('.ver-catalogo');
+    let archivo = null;
+
+    if (input) {
+        input.addEventListener('change', e => {
+            archivo = e.target.files[0];
+        });
+    }
+
+    if (btnSubir) {
+        btnSubir.addEventListener('click', confirmarSubidaCatalogo);
+    }
+
+    if (btnVer && urlCatalogo) {
+        btnVer.addEventListener('click', () => {
+            // Cambiar la URL para visualización directa en lugar de descarga
+            const urlVisualizacion = urlCatalogo.replace('&export=download', '&export=view');
+            window.open(urlVisualizacion, '_blank');
+        });
+    }
+
+    async function confirmarSubidaCatalogo() {
+        if (!archivo) {
+            mostrarNotificacion({
+                message: 'Selecciona un archivo PDF',
+                type: 'warning',
+                duration: 3000
+            });
+            return;
+        }
+
+        try {
+            const signal = await mostrarProgreso('.pro-save');
+            const formData = new FormData();
+            formData.append('catalogo', archivo);
+
+            const res = await fetch('/subir-catalogo', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+
+            const data = await res.json();
+
+            if (data.success) {
+                mostrarNotificacion({
+                    message: 'Catálogo subido correctamente',
+                    type: 'success',
+                    duration: 3000
+                });
+                registrarNotificacion(
+                    'Administración',
+                    'Creación',
+                    usuarioInfo.nombre + ' subió un nuevo catálogo PDF'
+                );
+                cerrarAnuncioManual('anuncioSecond');
+            } else {
+                throw new Error(data.error || 'Error al subir catálogo');
+            }
+        } catch (error) {
+            if (error.message === 'cancelled') {
+                console.log('Operación cancelada por el usuario');
+                return;
+            }
+            console.error('Error:', error);
+            mostrarNotificacion({
+                message: error.message || 'Error al subir catálogo',
+                type: 'error',
+                duration: 3500
+            });
+        } finally {
+            ocultarProgreso('.pro-save');
+        }
     }
 }

@@ -720,3 +720,52 @@
 }
 
 
+
+
+
+.pdf-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .pdf-upload-label {
+    background-color: var(--primary-color);
+    border: 2px dashed var(--tercer-color);
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    color: gray;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .pdf-upload-label:hover {
+    background-color: var(--primary-color);
+    border-color: #e31837;
+    color: #e31837;
+  }
+  
+  .pdf-upload-label i {
+    font-size: 2rem;
+    color: #e31837;
+  }
+  
+  .input-catalogo-pdf {
+    display: none;
+  }
+  
+  /* Estilos para cuando se arrastra un archivo */
+  .pdf-upload-container.dragover .pdf-upload-label {
+    background-color: gray;
+    border-color: white;
+    color: white;
+  }
+  
