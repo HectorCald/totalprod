@@ -24,13 +24,18 @@ const JWT_SECRET = 'secret-totalprod-hcco';
 const upload = multer({
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
+        console.log('[Multer] Verificando archivo:', file.originalname, 'MIME type:', file.mimetype);
         if (file.mimetype.includes('spreadsheet') ||
             file.mimetype.includes('excel') ||
             file.mimetype === 'application/pdf') {
             cb(null, true);
         } else {
-            cb(new Error('Formato no soportado'));
+            console.error('[Multer] Formato no soportado:', file.mimetype);
+            cb(new Error('Formato no soportado. Solo se permiten archivos PDF, Excel o Google Sheets'));
         }
+    },
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB máximo
     }
 });
 
@@ -5997,8 +6002,39 @@ app.get('/obtener-etiquetas-web', requireAuth, async (req, res) => {
 const drive = google.drive({ version: 'v3', auth });
 const CATALOGO_FOLDER = process.env.CATALOGO_FOLDER;
 
+// Verificar configuración de catálogo
+if (!CATALOGO_FOLDER) {
+    console.warn('[Catalogo] ⚠️  CATALOGO_FOLDER no está configurado en las variables de entorno');
+    console.warn('[Catalogo] Para habilitar la funcionalidad de catálogo, configura CATALOGO_FOLDER en tu archivo .env');
+} else {
+    console.log('[Catalogo] ✅ Carpeta de catálogo configurada:', CATALOGO_FOLDER);
+}
+
 // Subir catálogo PDF
-app.post('/subir-catalogo', requireAuth, upload.single('catalogo'), async (req, res) => {
+app.post('/subir-catalogo', requireAuth, (req, res, next) => {
+    upload.single('catalogo')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            console.error('[Catalogo] Error de Multer:', err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'El archivo es demasiado grande. Máximo 10MB.' 
+                });
+            }
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Error al procesar el archivo' 
+            });
+        } else if (err) {
+            console.error('[Catalogo] Error de validación:', err);
+            return res.status(400).json({ 
+                success: false, 
+                error: err.message 
+            });
+        }
+        next();
+    });
+}, async (req, res) => {
     console.log('[Catalogo] Petición POST /subir-catalogo recibida');
     console.log('[Catalogo] Archivo recibido:', req.file);
     console.log('[Catalogo] CATALOGO_FOLDER:', CATALOGO_FOLDER);
@@ -6008,22 +6044,40 @@ app.post('/subir-catalogo', requireAuth, upload.single('catalogo'), async (req, 
             console.error('[Catalogo] No se envió ningún archivo');
             return res.status(400).json({ success: false, error: 'No se envió ningún archivo' });
         }
+        
         if (!CATALOGO_FOLDER) {
             console.error('[Catalogo] No está configurada la carpeta de catálogo');
-            return res.status(500).json({ success: false, error: 'No está configurada la carpeta de catálogo' });
+            return res.status(500).json({ 
+                success: false, 
+                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.' 
+            });
+        }
+        
+        // Verificar que el archivo sea PDF
+        if (req.file.mimetype !== 'application/pdf') {
+            console.error('[Catalogo] Archivo no es PDF:', req.file.mimetype);
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Solo se permiten archivos PDF' 
+            });
         }
         
         console.log('[Catalogo] Buscando catálogo anterior...');
         // 1. Buscar y borrar el catálogo anterior
-        const list = await drive.files.list({
-            q: `'${CATALOGO_FOLDER}' in parents and name = 'catalogo-damabrava.pdf' and trashed = false`,
-            fields: 'files(id)'
-        });
-        console.log('[Catalogo] Archivos encontrados:', list.data.files);
-        
-        for (const file of list.data.files) {
-            console.log('[Catalogo] Eliminando archivo anterior:', file.id);
-            await drive.files.delete({ fileId: file.id });
+        try {
+            const list = await drive.files.list({
+                q: `'${CATALOGO_FOLDER}' in parents and name = 'catalogo-damabrava.pdf' and trashed = false`,
+                fields: 'files(id)'
+            });
+            console.log('[Catalogo] Archivos encontrados:', list.data.files);
+            
+            for (const file of list.data.files) {
+                console.log('[Catalogo] Eliminando archivo anterior:', file.id);
+                await drive.files.delete({ fileId: file.id });
+            }
+        } catch (driveError) {
+            console.error('[Catalogo] Error al buscar/eliminar archivos anteriores:', driveError);
+            // Continuar con la subida aunque falle la eliminación
         }
         
         console.log('[Catalogo] Subiendo nuevo catálogo...');
@@ -6036,33 +6090,72 @@ app.post('/subir-catalogo', requireAuth, upload.single('catalogo'), async (req, 
         // Google Drive API requiere un stream, así que usamos buffer
         const tmpPath = `./tmp-catalogo-${Date.now()}.pdf`;
         console.log('[Catalogo] Guardando archivo temporal:', tmpPath);
-        fs.writeFileSync(tmpPath, req.file.buffer);
         
-        const response = await drive.files.create({
-            resource: fileMetadata,
-            media: { mimeType: 'application/pdf', body: fs.createReadStream(tmpPath) },
-            fields: 'id'
-        });
-        console.log('[Catalogo] Archivo subido con ID:', response.data.id);
+        try {
+            fs.writeFileSync(tmpPath, req.file.buffer);
+            
+            const response = await drive.files.create({
+                resource: fileMetadata,
+                media: { mimeType: 'application/pdf', body: fs.createReadStream(tmpPath) },
+                fields: 'id'
+            });
+            console.log('[Catalogo] Archivo subido con ID:', response.data.id);
+            
+            // Limpiar archivo temporal
+            try {
+                fs.unlinkSync(tmpPath);
+                console.log('[Catalogo] Archivo temporal eliminado');
+            } catch (unlinkError) {
+                console.warn('[Catalogo] No se pudo eliminar archivo temporal:', unlinkError);
+            }
+            
+            // 3. Hacer público el archivo
+            console.log('[Catalogo] Haciendo público el archivo...');
+            try {
+                await drive.permissions.create({
+                    fileId: response.data.id,
+                    requestBody: { role: 'reader', type: 'anyone' }
+                });
+            } catch (permissionError) {
+                console.warn('[Catalogo] No se pudo hacer público el archivo:', permissionError);
+                // Continuar aunque falle la configuración de permisos
+            }
+            
+            // 4. Obtener la URL pública
+            const url = `https://drive.google.com/uc?id=${response.data.id}&export=download`;
+            console.log('[Catalogo] URL pública generada:', url);
+            res.json({ success: true, url });
+            
+        } catch (uploadError) {
+            // Limpiar archivo temporal en caso de error
+            try {
+                if (fs.existsSync(tmpPath)) {
+                    fs.unlinkSync(tmpPath);
+                }
+            } catch (cleanupError) {
+                console.warn('[Catalogo] Error al limpiar archivo temporal:', cleanupError);
+            }
+            throw uploadError;
+        }
         
-        fs.unlinkSync(tmpPath);
-        console.log('[Catalogo] Archivo temporal eliminado');
-        
-        // 3. Hacer público el archivo
-        console.log('[Catalogo] Haciendo público el archivo...');
-        await drive.permissions.create({
-            fileId: response.data.id,
-            requestBody: { role: 'reader', type: 'anyone' }
-        });
-        
-        // 4. Obtener la URL pública
-        const url = `https://drive.google.com/uc?id=${response.data.id}&export=download`;
-        console.log('[Catalogo] URL pública generada:', url);
-        res.json({ success: true, url });
     } catch (error) {
         console.error('[Catalogo] Error al subir catálogo:', error);
         console.error('[Catalogo] Stack trace:', error.stack);
-        res.status(500).json({ success: false, error: error.message });
+        
+        // Mensajes de error más específicos
+        let errorMessage = 'Error al subir el catálogo';
+        
+        if (error.code === 403) {
+            errorMessage = 'No tienes permisos para subir archivos a Google Drive';
+        } else if (error.code === 404) {
+            errorMessage = 'La carpeta de catálogo no existe o no tienes acceso';
+        } else if (error.message.includes('quota')) {
+            errorMessage = 'Se ha excedido la cuota de Google Drive';
+        } else if (error.message.includes('network')) {
+            errorMessage = 'Error de conexión con Google Drive';
+        }
+        
+        res.status(500).json({ success: false, error: errorMessage });
     }
 });
 
@@ -6072,24 +6165,46 @@ app.get('/obtener-catalogo', requireAuth, async (req, res) => {
     try {
         if (!CATALOGO_FOLDER) {
             console.error('[Catalogo] No está configurada la carpeta de catálogo');
-            return res.status(500).json({ success: false, error: 'No está configurada la carpeta de catálogo' });
+            return res.status(500).json({ 
+                success: false, 
+                error: 'No está configurada la carpeta de catálogo. Contacta al administrador.' 
+            });
         }
+        
         const list = await drive.files.list({
             q: `'${CATALOGO_FOLDER}' in parents and name = 'catalogo-damabrava.pdf' and trashed = false`,
             fields: 'files(id)'
         });
         console.log('[Catalogo] Respuesta de Google Drive:', list.data);
+        
         if (!list.data.files.length) {
             console.log('[Catalogo] No hay catálogo subido');
             return res.json({ success: true, url: null });
         }
+        
         const fileId = list.data.files[0].id;
         const url = `https://drive.google.com/file/d/${fileId}/preview`;
         console.log('[Catalogo] Catálogo encontrado. URL:', url);
         res.json({ success: true, url });
+        
     } catch (error) {
         console.error('[Catalogo] Error al obtener catálogo:', error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error('[Catalogo] Stack trace:', error.stack);
+        
+        // Mensajes de error más específicos
+        let errorMessage = 'Error al obtener el catálogo';
+        
+        if (error.code === 403) {
+            errorMessage = 'No tienes permisos para acceder a Google Drive';
+        } else if (error.code === 404) {
+            errorMessage = 'La carpeta de catálogo no existe o no tienes acceso';
+        } else if (error.message.includes('quota')) {
+            errorMessage = 'Se ha excedido la cuota de Google Drive';
+        } else if (error.message.includes('network')) {
+            errorMessage = 'Error de conexión con Google Drive';
+        }
+        
+        res.status(500).json({ success: false, error: errorMessage });
     }
 });
 
