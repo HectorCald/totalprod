@@ -168,7 +168,7 @@ async function obtenerEtiquetas() {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
-            });     
+            });
             etiquetas = etiquetasProcesadas;
             return true;
         } else {
@@ -414,7 +414,6 @@ async function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = await Promise.all(productos.map(async producto => {
         let imagenMostrar = '<i class=\'bx bx-package\'></i>';
-
         if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
             const imagenCache = await obtenerImagenLocal(producto.id);
             if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
@@ -422,7 +421,15 @@ async function updateHTMLWithData() {
                                 onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
             }
         }
-
+        // Formatear precio a dos decimales
+        let precioMostrar = '';
+        if (producto.precios) {
+            const primerPrecio = producto.precios.split(';')[0];
+            const valor = primerPrecio.split(',')[1];
+            precioMostrar = !isNaN(parseFloat(valor)) ? parseFloat(valor).toFixed(2) : '0.00';
+        } else {
+            precioMostrar = '0.00';
+        }
         return `
             <div class="registro-item" data-id="${producto.id}">
                 <div class="header">
@@ -431,7 +438,7 @@ async function updateHTMLWithData() {
                         <div class="id">${producto.id}
                             <div class="precio-cantidad">
                                 <span class="valor stock">${producto.stock} Und.</span>
-                                <span class="valor precio">Bs. ${producto.precios.split(';')[0].split(',')[1]}</span>
+                                <span class="valor precio">Bs. ${precioMostrar}</span>
                             </div>
                         </div>
                         <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
@@ -480,7 +487,7 @@ function eventosAlmacenGeneral() {
             }
         }
     });
-    
+
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({
@@ -498,7 +505,7 @@ function eventosAlmacenGeneral() {
     function aplicarFiltros() {
         const registros = document.querySelectorAll('.registro-item');
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const precioSeleccionado = selectPrecios.selectedIndex >= 0 && selectPrecios.options[selectPrecios.selectedIndex] ? 
+        const precioSeleccionado = selectPrecios.selectedIndex >= 0 && selectPrecios.options[selectPrecios.selectedIndex] ?
             selectPrecios.options[selectPrecios.selectedIndex].text : '';
         const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro.activado');
         const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro:nth-child(5)');
@@ -528,7 +535,7 @@ function eventosAlmacenGeneral() {
             const productosFiltrados = Array.from(registros).filter(registro => {
                 const producto = productos.find(p => p.id === registro.dataset.id);
                 if (!producto) return false;
-                
+
                 const etiquetasProducto = producto.etiquetas.split(';').map(e => e.trim());
                 let mostrar = true;
 
@@ -727,7 +734,7 @@ function eventosAlmacenGeneral() {
             .filter(precio => precio.trim()) // Eliminar elementos vacíos
             .map(precio => {
                 const [ciudad, valor] = precio.split(',');
-                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${valor}</span>`;
+                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${parseFloat(valor).toFixed(2)}</span>`;
             })
             .join('');
         const etiquetasFormateados = producto.etiquetas.split(';')
@@ -1468,37 +1475,37 @@ function eventosAlmacenGeneral() {
     function gestionarEtiquetas() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const etiquetasHTML = etiquetas.map(etiqueta => `
-            <div class="etiqueta-item" data-id="${etiqueta.id}">
-                <i class='bx bx-purchase-tag'></i>
-                <span>${etiqueta.etiqueta}</span>
-                <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
-            </div>
-        `).join('');
+                <div class="etiqueta-item" data-id="${etiqueta.id}">
+                    <i class='bx bx-purchase-tag'></i>
+                    <span>${etiqueta.etiqueta}</span>
+                    <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
+                </div>
+            `).join('');
 
         const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Gestionar Etiquetas</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno editar-produccion">
-            <p class="normal">Etiquetas existentes</p>
-            <div class="etiquetas-container">
-                <div class="etiquetas-actuales">
-                    ${etiquetasHTML}
-                </div>
+            <div class="encabezado">
+                <h1 class="titulo">Gestionar Etiquetas</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
+            <div class="relleno editar-produccion">
+                <p class="normal">Etiquetas existentes</p>
+                <div class="etiquetas-container">
+                    <div class="etiquetas-actuales">
+                        ${etiquetasHTML}
+                    </div>
+                </div>
 
-            <p class="normal">Agregar nueva etiqueta</p>
-            <div class="entrada">
-                <i class='bx bx-purchase-tag'></i>
-                <div class="input">
-                    <p class="detalle">Nueva etiqueta</p>
-                    <input class="nueva-etiqueta" type="text" autocomplete="off" placeholder=" " required>
-                    <button type="button" class="btn-agregar-etiqueta-temp"><i class='bx bx-plus'></i></button>
+                <p class="normal">Agregar nueva etiqueta</p>
+                <div class="entrada">
+                    <i class='bx bx-purchase-tag'></i>
+                    <div class="input">
+                        <p class="detalle">Nueva etiqueta</p>
+                        <input class="nueva-etiqueta" type="text" autocomplete="off" placeholder=" " required>
+                        <button type="button" class="btn-agregar-etiqueta-temp"><i class='bx bx-plus'></i></button>
+                    </div>
                 </div>
             </div>
-        </div>
-        `;
+            `;
 
         contenido.innerHTML = registrationHTML;
         mostrarAnuncioSecond();
@@ -1554,6 +1561,8 @@ function eventosAlmacenGeneral() {
                     const signal = await mostrarProgreso('.pro-tag')
                     const etiquetaItem = e.target.closest('.etiqueta-item');
                     const etiquetaId = etiquetaItem.dataset.id;
+                    // Obtener el nombre de la etiqueta eliminada
+                    const etiquetaEliminada = etiquetaItem.querySelector('span').textContent.trim();
 
                     const response = await fetch(`/eliminar-etiqueta/${etiquetaId}`, {
                         method: 'DELETE'
@@ -1563,11 +1572,47 @@ function eventosAlmacenGeneral() {
 
                     const data = await response.json();
                     if (data.success) {
+                        // Eliminar la etiqueta de todos los productos que la contengan
+                        let productosModificados = 0;
+                        for (const producto of productos) {
+                            if (producto.etiquetas && producto.etiquetas.includes(etiquetaEliminada)) {
+                                // Quitar la etiqueta del string
+                                const nuevasEtiquetas = producto.etiquetas
+                                    .split(';')
+                                    .map(e => e.trim())
+                                    .filter(e => e && e !== etiquetaEliminada)
+                                    .join(';');
+                                if (nuevasEtiquetas !== producto.etiquetas) {
+                                    productosModificados++;
+                                    // Enviar todos los campos relevantes del producto para evitar borrar otros datos
+                                    const body = {
+                                        producto: producto.producto,
+                                        gramos: producto.gramos,
+                                        stock: producto.stock,
+                                        cantidadxgrupo: producto.cantidadxgrupo,
+                                        lista: producto.lista,
+                                        codigo_barras: producto.codigo_barras,
+                                        etiquetas: nuevasEtiquetas,
+                                        precios: producto.precios,
+                                        uSueltas: producto.uSueltas,
+                                        alm_acopio_id: producto.acopio_id || producto.alm_acopio_id || '',
+                                        alm_acopio_producto: producto.alm_acopio_producto || '',
+                                        motivo: 'Eliminación de etiqueta global'
+                                    };
+                                    await fetch(`/actualizar-producto/${producto.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(body)
+                                    });
+                                }
+                            }
+                        }
                         await obtenerEtiquetas();
+                        await obtenerAlmacenGeneral();
                         updateHTMLWithData();
                         gestionarEtiquetas();
                         mostrarNotificacion({
-                            message: 'Etiqueta eliminada correctamente',
+                            message: 'Etiqueta eliminada correctamente' + (productosModificados ? ` y eliminada de ${productosModificados} productos` : ''),
                             type: 'success',
                             duration: 3000
                         });

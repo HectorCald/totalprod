@@ -163,7 +163,7 @@ async function obtenerEtiquetas() {
         if (data.success) {
             // El endpoint devuelve un array de strings
             etiquetasGlobal = (data.etiquetas || []).filter(Boolean);
-            updateHTMLWithData();
+                updateHTMLWithData();
             return true;
         } else {
             mostrarNotificacion({
@@ -345,15 +345,15 @@ export async function mostrarPaginaWeb() {
                     if (a.id && typeof a.id === 'string' && a.id.includes('-')) {
                         const partesA = a.id.split('-');
                         idA = parseInt(partesA[1]) || -1;
-                    }
+    }
                     if (b.id && typeof b.id === 'string' && b.id.includes('-')) {
                         const partesB = b.id.split('-');
                         idB = parseInt(partesB[1]) || -1;
                     }
-                    return idB - idA;
-                });
+            return idB - idA;
+        });
                 productos = productosProcesados;
-            }
+    }
         })(),
         (async () => {
             const response = await fetch('/obtener-precios');
@@ -441,7 +441,7 @@ async function updateHTMLWithData() {
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
     const skeletons = etiquetasFilter.querySelectorAll('.skeleton');
     skeletons.forEach(s => s.remove());
-    
+
     if (etiquetasGlobal.length === 0) {
         try {
             const response = await fetch('/obtener-etiquetas-web');
@@ -474,7 +474,7 @@ async function updateHTMLWithData() {
             const precioObj = preciosArr.find(p => p.split(',')[0] === precioWebSeleccionado);
             if (precioObj) {
                 const precio = parseFloat(precioObj.split(',')[1]);
-                precioMostrar = `Bs. ${precio.toFixed(2)}`;
+                precioMostrar = `Bs. ${(!isNaN(precio) ? precio.toFixed(2) : '0.00')}`;
             }
         }
 
@@ -482,7 +482,7 @@ async function updateHTMLWithData() {
         const tienePromocion = producto.promocion && producto.promocion.trim() !== '';
         const estrellaPromocion = tienePromocion ? '<i class="fa fa-star" style="color: #ffd700 !important; position: absolute; bottom: 10px; right: 10px; font-size: 15px; z-index: 10;"></i>' : '';
         const precioPromocional = tienePromocion && producto.precio_promocion ? 
-            `<span class="valor precio">Bs. ${(parseFloat(producto.precio_promocion) || 0).toFixed(2)}</span>` : '';
+            `<span class="valor precio">Bs. ${(!isNaN(parseFloat(producto.precio_promocion)) ? parseFloat(producto.precio_promocion).toFixed(2) : '0.00')}</span>` : '';
 
         return `
             <div class="registro-item" data-id="${producto.id}" style="position: relative;">
@@ -678,15 +678,6 @@ function eventosAlmacenGeneral() {
                             onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
             }
         }
-
-        // Procesar los precios
-        const preciosFormateados = producto.precios.split(';')
-            .filter(precio => precio.trim()) // Eliminar elementos vacíos
-            .map(precio => {
-                const [ciudad, valor] = precio.split(',');
-                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${valor}</span>`;
-            })
-            .join('');
         const etiquetasFormateados = producto.etiquetas.split(';')
             .filter(precio => precio.trim()) // Eliminar elementos vacíos
             .map(precio => {
@@ -718,11 +709,6 @@ function eventosAlmacenGeneral() {
                 <span class="valor"><strong><i class='bx bx-list-ul'></i> Lista: </strong>${producto.lista}</span>
                 <span class="valor"><strong><i class='bx bx-package'></i> Almacen acopio: </strong>${producto.alm_acopio_producto}</span>
                 <span class="valor"><strong><i class='bx bx-package'></i> Unidades sueltas: </strong>${producto.uSueltas}</span>
-            </div>
-
-            <p class="normal">Precios</p>
-            <div class="campo-vertical">
-                ${preciosFormateados}
             </div>
 
             <p class="normal">Etiquetas</p>
