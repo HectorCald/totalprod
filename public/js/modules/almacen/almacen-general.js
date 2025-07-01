@@ -161,43 +161,15 @@ function necesitaActualizacion(imagenCache, nuevaUrl) {
 
 async function obtenerEtiquetas() {
     try {
-        // Primero intentar obtener del caché local
-        const etiquetasCache = await obtenerEtiquetasLocal();
-        
-        // Si hay etiquetas en caché, actualizar la UI inmediatamente
-        if (etiquetasCache.length > 0) {
-            etiquetas = etiquetasCache.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            return true;
-        }
-
-        // Si no hay caché, obtener del servidor
         const response = await fetch('/obtener-etiquetas');
         const data = await response.json();
-
         if (data.success) {
             const etiquetasProcesadas = data.etiquetas.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
-            });
-            
+            });     
             etiquetas = etiquetasProcesadas;
-            
-            // Verificar si hay diferencias entre el caché y los nuevos datos
-            if (JSON.stringify(etiquetasCache) !== JSON.stringify(etiquetasProcesadas)) {
-                console.log('Diferencias encontradas en etiquetas, actualizando UI');
-                updateHTMLWithData();
-            }
-            
-            // Actualizar el caché en segundo plano
-            (async () => {
-                await guardarEtiquetasLocal(etiquetasProcesadas);
-            })();
-            
             return true;
         } else {
             mostrarNotificacion({
@@ -278,40 +250,17 @@ async function obtenerAlmacenAcopio() {
 }
 async function obtenerAlmacenGeneral() {
     try {
-        // Primero intentar obtener del caché local
-        const productosCache = await obtenerProductosLocal();
-        
-        // Si hay productos en caché, actualizar la UI inmediatamente
-        if (productosCache.length > 0) {
-            productos = productosCache.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            updateHTMLWithData();
-            return true;
-        }
-
-        // Si no hay caché, obtener del servidor
+        // Siempre obtener productos del servidor
         const response = await fetch('/obtener-productos');
         const data = await response.json();
-
         if (data.success) {
             const productosProcesados = data.productos.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            
             productos = productosProcesados;
-            
-            // Verificar si hay diferencias entre el caché y los nuevos datos
-            if (JSON.stringify(productosCache) !== JSON.stringify(productosProcesados)) {
-                console.log('Diferencias encontradas en productos, actualizando UI');
-                updateHTMLWithData();
-            }
-            
-            // Procesar y guardar todas las imágenes antes de retornar
+            // Solo caché de imágenes
             await Promise.all(productosProcesados.map(async producto => {
                 if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
                     const imagenCache = await obtenerImagenLocal(producto.id);
@@ -320,12 +269,6 @@ async function obtenerAlmacenGeneral() {
                     }
                 }
             }));
-
-            // Actualizar el caché en segundo plano
-            (async () => {
-                await guardarProductosLocal(productosProcesados);
-            })();
-
             return true;
         } else {
             mostrarNotificacion({
@@ -355,30 +298,6 @@ export async function mostrarAlmacenGeneral() {
         configuracionesEntrada();
     }, 100);
 
-    // Cargar datos del caché primero para mostrar UI inmediatamente
-    const [productosCache, etiquetasCache] = await Promise.all([
-        obtenerProductosLocal(),
-        obtenerEtiquetasLocal()
-    ]);
-
-    // Si hay datos en caché, actualizar la UI inmediatamente
-    if (productosCache.length > 0) {
-        productos = productosCache.sort((a, b) => {
-            const idA = parseInt(a.id.split('-')[1]);
-            const idB = parseInt(b.id.split('-')[1]);
-            return idB - idA;
-        });
-        updateHTMLWithData();
-    }
-
-    if (etiquetasCache.length > 0) {
-        etiquetas = etiquetasCache.sort((a, b) => {
-            const idA = parseInt(a.id.split('-')[1]);
-            const idB = parseInt(b.id.split('-')[1]);
-            return idB - idA;
-        });
-        updateHTMLWithData();
-    }
 
     // Luego cargar el resto de datos en segundo plano
     const [almacenGeneral, etiquetasResult, preciosResult, almacenAcopio] = await Promise.all([
@@ -387,6 +306,7 @@ export async function mostrarAlmacenGeneral() {
         await obtenerPrecios(),
         await obtenerAlmacenAcopio(),
     ]);
+    updateHTMLWithData();
 }
 function renderInitialHTML() {
 
@@ -2020,90 +1940,3 @@ function eventosAlmacenGeneral() {
     aplicarFiltros();
 }
 
-async function obtenerProductosLocal() {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(PRODUCTOS_STORE, 'readonly');
-        const store = tx.objectStore(PRODUCTOS_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const productos = request.result.map(item => item.data);
-                resolve(productos);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo productos del caché:', error);
-        return [];
-    }
-}
-
-async function guardarProductosLocal(productosData) {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(PRODUCTOS_STORE, 'readwrite');
-        const store = tx.objectStore(PRODUCTOS_STORE);
-
-        // Limpiar todos los productos existentes
-        await store.clear();
-
-        // Guardar los nuevos productos
-        for (const producto of productosData) {
-            await store.put({
-                id: producto.id,
-                data: producto,
-                timestamp: Date.now()
-            });
-        }
-
-        console.log('Caché de productos actualizado correctamente');
-    } catch (error) {
-        console.error('Error actualizando el caché de productos:', error);
-    }
-}
-
-async function obtenerEtiquetasLocal() {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(ETIQUETAS_STORE, 'readonly');
-        const store = tx.objectStore(ETIQUETAS_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const etiquetas = request.result.map(item => item.data);
-                resolve(etiquetas);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo etiquetas del caché:', error);
-        return [];
-    }
-}
-
-async function guardarEtiquetasLocal(etiquetasData) {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(ETIQUETAS_STORE, 'readwrite');
-        const store = tx.objectStore(ETIQUETAS_STORE);
-
-        // Limpiar todas las etiquetas existentes
-        await store.clear();
-
-        // Guardar las nuevas etiquetas
-        for (const etiqueta of etiquetasData) {
-            await store.put({
-                id: etiqueta.id,
-                data: etiqueta,
-                timestamp: Date.now()
-            });
-        }
-
-        console.log('Caché de etiquetas actualizado correctamente');
-    } catch (error) {
-        console.error('Error actualizando el caché de etiquetas:', error);
-    }
-}

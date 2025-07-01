@@ -1,7 +1,7 @@
 let productos = [];
-let productosAcopio = [];
-let etiquetas = [];
+let etiquetasGlobal = [];
 let precios = [];
+let precioWebSeleccionado = '';
 const DB_NAME = 'damabrava_db_img';
 const DB_NAME_CACHE = 'damabrava_db';
 const STORE_NAME = 'imagenes_cache';
@@ -157,47 +157,13 @@ function necesitaActualizacion(imagenCache, nuevaUrl) {
     return false;
 }
 
-
-
 async function obtenerEtiquetas() {
     try {
-        // Primero intentar obtener del caché local
-        const etiquetasCache = await obtenerEtiquetasLocal();
-        
-        // Si hay etiquetas en caché, actualizar la UI inmediatamente
-        if (etiquetasCache.length > 0) {
-            etiquetas = etiquetasCache.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            return true;
-        }
-
-        // Si no hay caché, obtener del servidor
-        const response = await fetch('/obtener-etiquetas-web');
-        const data = await response.json();
-
+        const data = await (await fetch('/obtener-etiquetas-web')).json();
         if (data.success) {
-            const etiquetasProcesadas = data.etiquetas.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            
-            etiquetas = etiquetasProcesadas;
-            
-            // Verificar si hay diferencias entre el caché y los nuevos datos
-            if (JSON.stringify(etiquetasCache) !== JSON.stringify(etiquetasProcesadas)) {
-                console.log('Diferencias encontradas en etiquetas, actualizando UI');
-                updateHTMLWithData();
-            }
-            
-            // Actualizar el caché en segundo plano
-            (async () => {
-                await guardarEtiquetasLocal(etiquetasProcesadas);
-            })();
-            
+            // El endpoint devuelve un array de strings
+            etiquetasGlobal = (data.etiquetas || []).filter(Boolean);
+            updateHTMLWithData();
             return true;
         } else {
             mostrarNotificacion({
@@ -250,47 +216,16 @@ async function obtenerPrecios() {
         ocultarProgreso('.pro-obtner')
     }
 }
-async function obtenerAlmacenAcopio() {
-    try {
-        const response = await fetch('/obtener-productos-acopio');
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            productosAcopio = data.productos.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            return true;
-        } else {
-            throw new Error(data.error || 'Error al obtener los productos');
-        }
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener los productos de acopio',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    }
-}
 async function obtenerAlmacenGeneral() {
     try {
         // Primero intentar obtener del caché local
         const productosCache = await obtenerProductosLocal();
-        
         // Si hay productos en caché, filtrar solo los que tienen etiqueta "Web" y actualizar la UI inmediatamente
         if (productosCache.length > 0) {
             const productosFiltrados = productosCache.filter(producto => {
                 const etiquetas = producto.etiquetas.split(';').map(e => e.trim());
                 return etiquetas.includes('Web');
             });
-            
             productos = productosFiltrados.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
@@ -299,33 +234,34 @@ async function obtenerAlmacenGeneral() {
             updateHTMLWithData();
             return true;
         }
-
         // Si no hay caché, obtener del servidor
         const response = await fetch('/obtener-productos');
         const data = await response.json();
-
         if (data.success) {
             // Filtrar solo productos con etiqueta "Web"
             const productosConWeb = data.productos.filter(producto => {
                 const etiquetas = producto.etiquetas.split(';').map(e => e.trim());
                 return etiquetas.includes('Web');
             });
-            
             const productosProcesados = productosConWeb.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
+                // Robustez: si falta id o el split falla, van al final
+                let idA = -1, idB = -1;
+                if (a.id && typeof a.id === 'string' && a.id.includes('-')) {
+                    const partesA = a.id.split('-');
+                    idA = parseInt(partesA[1]) || -1;
+                }
+                if (b.id && typeof b.id === 'string' && b.id.includes('-')) {
+                    const partesB = b.id.split('-');
+                    idB = parseInt(partesB[1]) || -1;
+                }
                 return idB - idA;
             });
-            
             productos = productosProcesados;
-            
-            // Verificar si hay diferencias entre el caché y los nuevos datos
+            // Comparar con caché antes de actualizar la UI
             if (JSON.stringify(productosCache) !== JSON.stringify(productosProcesados)) {
-                console.log('Diferencias encontradas en productos, actualizando UI');
                 updateHTMLWithData();
             }
-            
-            // Procesar y guardar todas las imágenes antes de retornar
+            // Procesar y guardar imágenes
             await Promise.all(productosProcesados.map(async producto => {
                 if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
                     const imagenCache = await obtenerImagenLocal(producto.id);
@@ -334,12 +270,10 @@ async function obtenerAlmacenGeneral() {
                     }
                 }
             }));
-
             // Actualizar el caché en segundo plano
             (async () => {
                 await guardarProductosLocal(productosProcesados);
             })();
-
             return true;
         } else {
             mostrarNotificacion({
@@ -360,49 +294,81 @@ async function obtenerAlmacenGeneral() {
     }
 }
 
-
+// Función para cargar y renderizar etiquetas directamente desde la petición
+async function cargarYRenderizarEtiquetas() {
+    try {
+        const response = await fetch('/obtener-etiquetas-web');
+        const data = await response.json();
+        if (data.success && Array.isArray(data.etiquetas)) {
+            etiquetasGlobal = data.etiquetas.filter(Boolean);
+        } else {
+            etiquetasGlobal = [];
+        }
+    } catch (error) {
+        etiquetasGlobal = [];
+    }
+    // Renderizar los botones de etiquetas
+    const etiquetasFilter = document.querySelector('.etiquetas-filter');
+    if (etiquetasFilter) {
+        // Eliminar todos los botones menos el de "Todos"
+        etiquetasFilter.querySelectorAll('.btn-filtro:not(.todos)').forEach(e => e.remove());
+        // Insertar los nuevos botones
+        etiquetasGlobal.forEach(etiqueta => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-filtro';
+            btn.textContent = etiqueta;
+            btn.setAttribute('data-etiqueta', etiqueta);
+            etiquetasFilter.appendChild(btn);
+        });
+    }
+}
 
 export async function mostrarPaginaWeb() {
-    renderInitialHTML(); // Render initial HTML immediately
+    renderInitialHTML();
     mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-
-    // Cargar datos del caché primero para mostrar UI inmediatamente
-    const [productosCache, etiquetasCache] = await Promise.all([
-        obtenerProductosLocal(),
-        obtenerEtiquetasLocal()
+    await cargarYRenderizarEtiquetas();
+    // Obtener productos y precios del servidor
+    const [productosResult, preciosResult] = await Promise.all([
+        (async () => {
+            const response = await fetch('/obtener-productos');
+            const data = await response.json();
+            if (data.success) {
+                const productosConWeb = data.productos.filter(producto => {
+                    const etiquetas = producto.etiquetas.split(';').map(e => e.trim());
+                    return etiquetas.includes('Web');
+                });
+                const productosProcesados = productosConWeb.sort((a, b) => {
+                    let idA = -1, idB = -1;
+                    if (a.id && typeof a.id === 'string' && a.id.includes('-')) {
+                        const partesA = a.id.split('-');
+                        idA = parseInt(partesA[1]) || -1;
+                    }
+                    if (b.id && typeof b.id === 'string' && b.id.includes('-')) {
+                        const partesB = b.id.split('-');
+                        idB = parseInt(partesB[1]) || -1;
+                    }
+                    return idB - idA;
+                });
+                productos = productosProcesados;
+            }
+        })(),
+        (async () => {
+            const response = await fetch('/obtener-precios');
+            const data = await response.json();
+            if (data.success) {
+                precios = data.precios;
+            }
+        })()
     ]);
-
-    // Si hay datos en caché, actualizar la UI inmediatamente
-    if (productosCache.length > 0) {
-        productos = productosCache.sort((a, b) => {
-            const idA = parseInt(a.id.split('-')[1]);
-            const idB = parseInt(b.id.split('-')[1]);
-            return idB - idA;
-        });
-        updateHTMLWithData();
-    }
-
-    if (etiquetasCache.length > 0) {
-        etiquetas = etiquetasCache.sort((a, b) => {
-            const idA = parseInt(a.id.split('-')[1]);
-            const idB = parseInt(b.id.split('-')[1]);
-            return idB - idA;
-        });
-        updateHTMLWithData();
-    }
-
-    // Luego cargar el resto de datos en segundo plano
-    const [almacenGeneral, etiquetasResult, preciosResult, almacenAcopio] = await Promise.all([
-        await obtenerAlmacenGeneral(),
-        await obtenerEtiquetas(),
-        await obtenerAlmacenAcopio(),
-    ]);
+    // Obtener el precio web seleccionado (nombre)
+    await obtenerPrecioWebSeleccionado();
+    // Renderizar productos con el precio correcto
+    updateHTMLWithData();
 }
 function renderInitialHTML() {
-
     const contenido = document.querySelector('.anuncio .contenido');
 
     const initialHTML = `  
@@ -433,9 +399,9 @@ function renderInitialHTML() {
             </div>
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro todos activado">Todos</button>
-                ${Array(5).fill().map(() => `
-                    <div class="skeleton skeleton-etiqueta"></div>
-                `).join('')}
+                ${etiquetasGlobal && etiquetasGlobal.length > 0 ? etiquetasGlobal.map(etiqueta => `
+                    <button class="btn-filtro" data-etiqueta="${etiqueta}">${etiqueta}</button>
+                `).join('') : ''}
             </div>
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
@@ -475,50 +441,16 @@ async function updateHTMLWithData() {
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
     const skeletons = etiquetasFilter.querySelectorAll('.skeleton');
     skeletons.forEach(s => s.remove());
-
-    // ✅ AGREGAR ESTA LÍNEA - Eliminar etiquetas existentes
-    const etiquetasExistentes = etiquetasFilter.querySelectorAll('.btn-filtro:not(.todos)');
-    etiquetasExistentes.forEach(e => e.remove());
-
-    // Obtener las etiquetas web seleccionadas (primero de localStorage, luego de la hoja)
-    let etiquetasWebSeleccionadas = JSON.parse(localStorage.getItem('etiquetasWebSeleccionadas') || '[]');
     
-    if (etiquetasWebSeleccionadas.length === 0) {
+    if (etiquetasGlobal.length === 0) {
         try {
             const response = await fetch('/obtener-etiquetas-web');
             const data = await response.json();
             if (data.success && data.etiquetas.length > 0) {
-                etiquetasWebSeleccionadas = data.etiquetas;
-                localStorage.setItem('etiquetasWebSeleccionadas', JSON.stringify(etiquetasWebSeleccionadas));
+                etiquetasGlobal = data.etiquetas;
             }
         } catch (error) {
             console.error('Error obteniendo etiquetas web:', error);
-        }
-    }
-
-    // Mostrar solo las etiquetas web seleccionadas (sin agregar "Todos" porque ya existe)
-    const etiquetasHTML = etiquetasWebSeleccionadas.map(etiqueta => `
-    <button class="btn-filtro">${etiqueta}</button>
-    `).join('');
-
-    etiquetasFilter.insertAdjacentHTML('beforeend', etiquetasHTML);
-
-    // Obtener el precio web seleccionado (primero de localStorage, luego de la hoja)
-    let precioWebSeleccionado = localStorage.getItem('precioWebSeleccionado');
-    
-    if (!precioWebSeleccionado) {
-        try {
-            const response = await fetch('/obtener-precio-web');
-            const data = await response.json();
-            if (data.success && data.precio) {
-                precioWebSeleccionado = data.precio;
-                localStorage.setItem('precioWebSeleccionado', precioWebSeleccionado);
-            } else {
-                precioWebSeleccionado = 'Santa Cruz'; // Precio por defecto
-            }
-        } catch (error) {
-            console.error('Error obteniendo precio web:', error);
-            precioWebSeleccionado = 'Santa Cruz'; // Precio por defecto
         }
     }
 
@@ -548,9 +480,9 @@ async function updateHTMLWithData() {
 
         // Verificar si tiene promoción
         const tienePromocion = producto.promocion && producto.promocion.trim() !== '';
-        const estrellaPromocion = tienePromocion ? '<i class="bx bx-star" style="color: #ffd700; position: absolute; top: 5px; right: 5px; font-size: 20px; z-index: 10;"></i>' : '';
+        const estrellaPromocion = tienePromocion ? '<i class="fa fa-star" style="color: #ffd700 !important; position: absolute; bottom: 10px; right: 10px; font-size: 15px; z-index: 10;"></i>' : '';
         const precioPromocional = tienePromocion && producto.precio_promocion ? 
-            `<span class="valor precio-promocional" style="color: #ff6b35; font-weight: bold;">Bs. ${(parseFloat(producto.precio_promocion) || 0).toFixed(2)}</span>` : '';
+            `<span class="valor precio">Bs. ${(parseFloat(producto.precio_promocion) || 0).toFixed(2)}</span>` : '';
 
         return `
             <div class="registro-item" data-id="${producto.id}" style="position: relative;">
@@ -566,7 +498,6 @@ async function updateHTMLWithData() {
                         </div>
                         <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
                         <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
-                        ${tienePromocion ? `<span class="promocion-tag" style="color: #ff6b35; font-size: 0.9em; font-weight: bold;">⭐ ${producto.promocion}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -578,7 +509,6 @@ async function updateHTMLWithData() {
 
     eventosAlmacenGeneral();
 }
-
 
 function eventosAlmacenGeneral() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
@@ -815,7 +745,7 @@ function eventosAlmacenGeneral() {
     `;
 
         contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
+        contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
 
@@ -1027,48 +957,6 @@ async function guardarProductosLocal(productosData) {
         console.error('Error actualizando el caché de productos:', error);
     }
 }
-async function obtenerEtiquetasLocal() {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(ETIQUETAS_STORE, 'readonly');
-        const store = tx.objectStore(ETIQUETAS_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const etiquetas = request.result.map(item => item.data);
-                resolve(etiquetas);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo etiquetas del caché:', error);
-        return [];
-    }
-}
-async function guardarEtiquetasLocal(etiquetasData) {
-    try {
-        const db = await initDBCache();
-        const tx = db.transaction(ETIQUETAS_STORE, 'readwrite');
-        const store = tx.objectStore(ETIQUETAS_STORE);
-
-        // Limpiar todas las etiquetas existentes
-        await store.clear();
-
-        // Guardar las nuevas etiquetas
-        for (const etiqueta of etiquetasData) {
-            await store.put({
-                id: etiqueta.id,
-                data: etiqueta,
-                timestamp: Date.now()
-            });
-        }
-
-        console.log('Caché de etiquetas actualizado correctamente');
-    } catch (error) {
-        console.error('Error actualizando el caché de etiquetas:', error);
-    }
-}
 
 function promocionar(producto) {
     const contenido = document.querySelector('.anuncio-tercer .contenido');
@@ -1078,6 +966,7 @@ function promocionar(producto) {
         <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
     </div>
     <div class="relleno promocionar-producto">
+        <div class="pro-promo" style="display:none"></div>
         <p class="normal">Información del producto</p>
         <div class="campo-vertical">
             <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -1125,7 +1014,7 @@ function promocionar(producto) {
         const precioPromocion = document.querySelector('.precio-promocion').value.trim();
 
         try {
-            const signal = await mostrarProgreso('.pro-promo')
+            const signal = await mostrarProgreso('.pro-save')
             const response = await fetch(`/actualizar-promocion/${producto.id}`, {
                 method: 'PUT',
                 headers: {
@@ -1144,7 +1033,7 @@ function promocionar(producto) {
             const data = await response.json();
 
             if (data.success) {
-                await obtenerAlmacenGeneral();
+                await mostrarPaginaWeb();
                 updateHTMLWithData();
                 info(producto.id);
                 mostrarNotificacion({
@@ -1154,7 +1043,7 @@ function promocionar(producto) {
                 });
                 registrarNotificacion(
                     'Administración',
-                    'Promoción',
+                    'Creación',
                     usuarioInfo.nombre + (nombrePromocion ? 
                         ` creó la promoción "${nombrePromocion}" para ${producto.producto}` : 
                         ` eliminó la promoción de ${producto.producto}`)
@@ -1174,7 +1063,22 @@ function promocionar(producto) {
                 duration: 3500
             });
         } finally {
-            ocultarProgreso('.pro-promo')
+            ocultarProgreso('.pro-save')
         }
+    }
+}
+
+// Después de obtener todos los precios, obtengo el precio web seleccionado
+async function obtenerPrecioWebSeleccionado() {
+    try {
+        const response = await fetch('/obtener-precio-web');
+        const data = await response.json();
+        if (data.success && data.precio) {
+            precioWebSeleccionado = data.precio;
+        } else {
+            precioWebSeleccionado = '';
+        }
+    } catch (error) {
+        precioWebSeleccionado = '';
     }
 }

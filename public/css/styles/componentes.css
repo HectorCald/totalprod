@@ -60,6 +60,7 @@
     flex-wrap: wrap;
 
     .filtros-opciones.cantidad-filter {
+        width: fit-content;
         .btn-filtro {
             width: 100%;
         }
