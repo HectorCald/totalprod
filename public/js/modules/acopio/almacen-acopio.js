@@ -110,7 +110,7 @@ function renderInitialHTML() {
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
             </div>
-            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+            <div class="filtros-opciones cantidad-filter">
                 <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
                 <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
