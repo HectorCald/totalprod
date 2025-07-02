@@ -1049,12 +1049,15 @@ function eventosIngresos() {
                 scanDiv.style.alignItems = 'center';
                 scanDiv.style.justifyContent = 'center';
                 scanDiv.innerHTML = `
-                    <div id="html5qr-code-full-region" style="background:#fff;padding:10px;border-radius:10px;width:95vw;max-width:600px;height:70vh;max-height:80vh;"></div>
+                    <div id="html5qr-code-full-region" style="background:#fff;padding:10px;border-radius:10px;width:95vw;max-width:600px;height:60vh;max-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;"></div>
+                    <div class="scan-help-message" style="color:#333;font-size:1.1rem;margin-top:10px;display:none;text-align:center;"></div>
                     <button class="btn cerrar-scan-cam" style="margin-top:20px;background:#f44336;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;">Cancelar</button>
                 `;
                 document.body.appendChild(scanDiv);
                 const btnCerrar = scanDiv.querySelector('.cerrar-scan-cam');
                 btnCerrar.addEventListener('click', () => {
+                    console.log('[SCAN] Cancelando escaneo...');
+                    clearTimeout(helpTimeout);
                     if (html5QrcodeScanner) {
                         html5QrcodeScanner.stop()
                             .then(() => html5QrcodeScanner.clear())
@@ -1063,7 +1066,6 @@ function eventosIngresos() {
                                 scanDiv.remove();
                             })
                             .catch(() => {
-                                // Si ya está parado, intenta limpiar igual
                                 html5QrcodeScanner.clear().then(() => {
                                     html5QrcodeScanner = null;
                                     scanDiv.remove();
@@ -1073,6 +1075,12 @@ function eventosIngresos() {
                         scanDiv.remove();
                     }
                 });
+                const helpMsg = scanDiv.querySelector('.scan-help-message');
+                let helpTimeout = setTimeout(() => {
+                    helpMsg.textContent = 'No se detectó ningún código. Asegúrate de enfocar bien el código de barras o QR.';
+                    helpMsg.style.display = 'block';
+                }, 10000);
+                console.log('[SCAN] Iniciando escáner...');
                 html5QrcodeScanner = new Html5Qrcode("html5qr-code-full-region");
                 html5QrcodeScanner.start(
                     { facingMode: "environment" },
@@ -1081,10 +1089,13 @@ function eventosIngresos() {
                         qrbox: { width: 400, height: 250 }
                     },
                     (decodedText, decodedResult) => {
+                        console.log('[SCAN] Código detectado:', decodedText, decodedResult);
+                        clearTimeout(helpTimeout);
                         // Buscar producto por código de barras
                         const codigo = decodedText.trim();
                         const producto = productos.find(p => (p.codigo_barras||'').toString() === codigo);
                         if(producto) {
+                            console.log('[SCAN] Producto encontrado:', producto);
                             agregarAlCarrito(producto.id);
                             setTimeout(() => {
                                 const inputCantidad = document.querySelector(`.carrito-item[data-id='${producto.id}'] input[type='number']`);
@@ -1092,18 +1103,23 @@ function eventosIngresos() {
                             }, 200);
                             mostrarNotificacion({message:'Producto agregado por código de barras',type:'success',duration:2000});
                         } else {
+                            console.log('[SCAN] No se encontró producto con ese código:', codigo);
                             mostrarNotificacion({message:'No se encontró producto con ese código',type:'error',duration:2000});
                         }
                         // Detener escaneo tras primer resultado
-                        html5QrcodeScanner.clear().then(()=>{
+                        html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).then(() => {
                             html5QrcodeScanner = null;
                             scanDiv.remove();
                         });
                     },
                     (errorMessage) => {
-                        // No mostrar errores de escaneo en UI
+                        // Solo loguear errores importantes
+                        if (errorMessage && errorMessage.length < 100) {
+                            console.log('[SCAN] Error de escaneo:', errorMessage);
+                        }
                     }
                 ).catch(err => {
+                    console.log('[SCAN] No se pudo acceder a la cámara:', err);
                     mostrarNotificacion({message:'No se pudo acceder a la cámara',type:'error',duration:3000});
                     scanDiv.remove();
                 });
