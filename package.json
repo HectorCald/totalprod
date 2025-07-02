@@ -33,6 +33,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.3",
     "punycode": "^2.3.1",
+    "quagga": "^0.12.1",
     "twilio": "^5.6.1",
     "xlsx": "^0.18.5"
   },
