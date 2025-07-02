@@ -1049,8 +1049,15 @@ function eventosIngresos() {
                 scanDiv.style.alignItems = 'center';
                 scanDiv.style.justifyContent = 'center';
                 scanDiv.innerHTML = `
-                    <div id="html5qr-code-full-region" style="background:#fff;padding:10px;border-radius:10px;width:95vw;max-width:600px;height:60vh;max-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;"></div>
-                    <div class="scan-help-message" style="color:#333;font-size:1.1rem;margin-top:10px;display:none;text-align:center;"></div>
+                    <div id="html5qr-code-full-region" style="background:#fff;padding:10px;border-radius:10px;width:98vw;max-width:900px;height:75vh;max-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;"></div>
+                    <div class="scan-help-message" style="color:#333;font-size:1.1rem;margin-top:10px;display:none;text-align:center;max-width:90vw;">
+                        Si el código no se detecta rápido:<br>
+                        • Asegúrate de que esté bien iluminado.<br>
+                        • No acerques demasiado el código, mantenlo plano y centrado.<br>
+                        • Limpia la lente si es necesario.<br>
+                        • Prueba alejarlo un poco si está borroso.<br>
+                        • Usa la cámara trasera si es posible.<br>
+                    </div>
                     <button class="btn cerrar-scan-cam" style="margin-top:20px;background:#f44336;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;">Cancelar</button>
                 `;
                 document.body.appendChild(scanDiv);
@@ -1077,16 +1084,19 @@ function eventosIngresos() {
                 });
                 const helpMsg = scanDiv.querySelector('.scan-help-message');
                 let helpTimeout = setTimeout(() => {
-                    helpMsg.textContent = 'No se detectó ningún código. Asegúrate de enfocar bien el código de barras o QR.';
                     helpMsg.style.display = 'block';
-                }, 10000);
+                }, 7000);
                 console.log('[SCAN] Iniciando escáner...');
                 html5QrcodeScanner = new Html5Qrcode("html5qr-code-full-region");
                 html5QrcodeScanner.start(
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        qrbox: { width: 400, height: 250 }
+                        qrbox: { width: 600, height: 350 },
+                        videoConstraints: {
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
                     },
                     (decodedText, decodedResult) => {
                         console.log('[SCAN] Código detectado:', decodedText, decodedResult);
@@ -1113,7 +1123,6 @@ function eventosIngresos() {
                         });
                     },
                     (errorMessage) => {
-                        // Solo loguear errores importantes
                         if (errorMessage && errorMessage.length < 100) {
                             console.log('[SCAN] Error de escaneo:', errorMessage);
                         }
