@@ -983,6 +983,7 @@ function eventosIngresos() {
             </div>
             <div class="anuncio-botones">
                 <button class="btn-procesar-salida btn green" onclick="registrarIngreso()"><i class='bx bx-import'></i> Procesar Ingresos</button>
+                <button class="btn blue btn-scan-barcode"><i class='bx bx-barcode'></i> Escanear codigo</button>
             </div>
         `;
         anuncioSecond.style.paddingBottom = '70px'
@@ -1027,6 +1028,87 @@ function eventosIngresos() {
             });
         });
 
+        const btnScanBarcode = anuncioSecond.querySelector('.btn-scan-barcode');
+        let scanDiv = null;
+        let html5QrcodeScanner = null;
+        if(btnScanBarcode) {
+            btnScanBarcode.addEventListener('click', async () => {
+                await cargarHtml5QrcodeScript();
+                if (scanDiv) scanDiv.remove();
+                scanDiv = document.createElement('div');
+                scanDiv.id = 'scan-barcode-container';
+                scanDiv.style.position = 'fixed';
+                scanDiv.style.zIndex = '9999';
+                scanDiv.style.top = '0';
+                scanDiv.style.left = '0';
+                scanDiv.style.width = '100vw';
+                scanDiv.style.height = '100vh';
+                scanDiv.style.background = 'rgba(0,0,0,0.7)';
+                scanDiv.style.display = 'flex';
+                scanDiv.style.flexDirection = 'column';
+                scanDiv.style.alignItems = 'center';
+                scanDiv.style.justifyContent = 'center';
+                scanDiv.innerHTML = `
+                    <div id="html5qr-code-full-region" style="background:#fff;padding:10px;border-radius:10px;width:95vw;max-width:600px;height:70vh;max-height:80vh;"></div>
+                    <button class="btn cerrar-scan-cam" style="margin-top:20px;background:#f44336;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;">Cancelar</button>
+                `;
+                document.body.appendChild(scanDiv);
+                const btnCerrar = scanDiv.querySelector('.cerrar-scan-cam');
+                btnCerrar.addEventListener('click', () => {
+                    if (html5QrcodeScanner) {
+                        html5QrcodeScanner.stop()
+                            .then(() => html5QrcodeScanner.clear())
+                            .then(() => {
+                                html5QrcodeScanner = null;
+                                scanDiv.remove();
+                            })
+                            .catch(() => {
+                                // Si ya está parado, intenta limpiar igual
+                                html5QrcodeScanner.clear().then(() => {
+                                    html5QrcodeScanner = null;
+                                    scanDiv.remove();
+                                });
+                            });
+                    } else {
+                        scanDiv.remove();
+                    }
+                });
+                html5QrcodeScanner = new Html5Qrcode("html5qr-code-full-region");
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 400, height: 250 }
+                    },
+                    (decodedText, decodedResult) => {
+                        // Buscar producto por código de barras
+                        const codigo = decodedText.trim();
+                        const producto = productos.find(p => (p.codigo_barras||'').toString() === codigo);
+                        if(producto) {
+                            agregarAlCarrito(producto.id);
+                            setTimeout(() => {
+                                const inputCantidad = document.querySelector(`.carrito-item[data-id='${producto.id}'] input[type='number']`);
+                                if(inputCantidad) inputCantidad.focus();
+                            }, 200);
+                            mostrarNotificacion({message:'Producto agregado por código de barras',type:'success',duration:2000});
+                        } else {
+                            mostrarNotificacion({message:'No se encontró producto con ese código',type:'error',duration:2000});
+                        }
+                        // Detener escaneo tras primer resultado
+                        html5QrcodeScanner.clear().then(()=>{
+                            html5QrcodeScanner = null;
+                            scanDiv.remove();
+                        });
+                    },
+                    (errorMessage) => {
+                        // No mostrar errores de escaneo en UI
+                    }
+                ).catch(err => {
+                    mostrarNotificacion({message:'No se pudo acceder a la cámara',type:'error',duration:3000});
+                    scanDiv.remove();
+                });
+            });
+        }
     }
 
     // Reemplaza las funciones existentes window.ajustarCantidad y window.actualizarCantidad
@@ -1362,4 +1444,18 @@ function eventosIngresos() {
     }
     window.registrarIngreso = registrarIngreso;
     aplicarFiltros()
+}
+
+function cargarHtml5QrcodeScript() {
+    return new Promise((resolve, reject) => {
+        if (window.Html5Qrcode) return resolve();
+        const script = document.createElement('script');
+        script.src = '/js/libs/html5-qrcode.min.js';
+        script.onload = resolve;
+        script.onerror = () => {
+            mostrarNotificacion({message:'No se pudo cargar el escáner de código de barras. Verifica que /js/libs/html5-qrcode.min.js existe.',type:'error',duration:5000});
+            reject(new Error('No se pudo cargar html5-qrcode desde local.'));
+        };
+        document.head.appendChild(script);
+    });
 }
