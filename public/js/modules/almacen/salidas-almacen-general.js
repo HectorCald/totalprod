@@ -476,7 +476,9 @@ function eventosSalidas() {
         carritoSalidas.forEach((item, id) => {
             const preciosProducto = item.precios.split(';');
             const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-            item.subtotal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            let precioBase = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            // Ajustar por modo tira
+            item.subtotal = modoTiraGlobal ? precioBase * (item.cantidadxgrupo || 1) : precioBase;
         });
 
         // Actualizar precios mostrados en los items
@@ -486,7 +488,9 @@ function eventosSalidas() {
             if (producto) {
                 const preciosProducto = producto.precios.split(';');
                 const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-                const precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                let precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                // Ajustar por modo tira
+                if (modoTiraGlobal) precio = precio * (producto.cantidadxgrupo || 1);
                 const precioSpan = registro.querySelector('.precio');
                 if (precioSpan) {
                     precioSpan.textContent = `Bs. ${precio.toFixed(2)}`;

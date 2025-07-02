@@ -329,7 +329,9 @@ export async function mostrarIngresos(producto = '') {
         carritoSalidas.forEach((item, id) => {
             const preciosProducto = item.precios.split(';');
             const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-            item.subtotal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            let precioBase = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            // Ajustar por modo tira
+            item.subtotal = modoTiraGlobal ? precioBase * (item.cantidadxgrupo || 1) : precioBase;
         });
 
         // Actualizar precios mostrados en los items
@@ -339,7 +341,9 @@ export async function mostrarIngresos(producto = '') {
             if (producto) {
                 const preciosProducto = producto.precios.split(';');
                 const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-                const precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                let precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                // Ajustar por modo tira
+                if (modoTiraGlobal) precio = precio * (producto.cantidadxgrupo || 1);
                 const precioSpan = registro.querySelector('.precio');
                 if (precioSpan) {
                     precioSpan.textContent = `Bs ${precio.toFixed(2)}`;
@@ -526,11 +530,13 @@ function eventosIngresos() {
     selectPrecios.addEventListener('change', () => {
         const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex].text;
 
-        // Actualizar precios en el carrito y en los items mostrados
+        // Actualizar TODOS los precios en el carrito
         carritoSalidas.forEach((item, id) => {
             const preciosProducto = item.precios.split(';');
             const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-            item.subtotal = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            let precioBase = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            // Ajustar por modo tira
+            item.subtotal = modoTiraGlobal ? precioBase * (item.cantidadxgrupo || 1) : precioBase;
         });
 
         // Actualizar precios mostrados en los items
@@ -540,7 +546,9 @@ function eventosIngresos() {
             if (producto) {
                 const preciosProducto = producto.precios.split(';');
                 const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
-                const precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                let precio = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+                // Ajustar por modo tira
+                if (modoTiraGlobal) precio = precio * (producto.cantidadxgrupo || 1);
                 const precioSpan = registro.querySelector('.precio');
                 if (precioSpan) {
                     precioSpan.textContent = `Bs ${precio.toFixed(2)}`;
@@ -983,7 +991,6 @@ function eventosIngresos() {
             </div>
             <div class="anuncio-botones">
                 <button class="btn-procesar-salida btn green" onclick="registrarIngreso()"><i class='bx bx-import'></i> Procesar Ingresos</button>
-                <button class="btn blue btn-scan-barcode"><i class='bx bx-barcode'></i> Escanear codigo</button>
             </div>
         `;
         anuncioSecond.style.paddingBottom = '70px'
@@ -1027,159 +1034,6 @@ function eventosIngresos() {
                 duration: 2000
             });
         });
-
-        const btnScanBarcode = anuncioSecond.querySelector('.btn-scan-barcode');
-        let scanDiv = null;
-        if(btnScanBarcode) {
-            btnScanBarcode.addEventListener('click', async () => {
-                // Cargar QuaggaJS si no está cargado
-                if (!window.Quagga) {
-                    await new Promise((resolve, reject) => {
-                        const script = document.createElement('script');
-                        script.src = '/js/libs/quagga.min.js';
-                        script.onload = resolve;
-                        script.onerror = () => reject(new Error('No se pudo cargar QuaggaJS'));
-                        document.head.appendChild(script);
-                    });
-                }
-                if (scanDiv) scanDiv.remove();
-                scanDiv = document.createElement('div');
-                scanDiv.id = 'scan-barcode-container';
-                scanDiv.style.position = 'fixed';
-                scanDiv.style.zIndex = '9999';
-                scanDiv.style.top = '0';
-                scanDiv.style.left = '0';
-                scanDiv.style.width = '100vw';
-                scanDiv.style.height = '100vh';
-                scanDiv.style.background = 'rgba(0,0,0,0.7)';
-                scanDiv.style.display = 'flex';
-                scanDiv.style.flexDirection = 'column';
-                scanDiv.style.alignItems = 'center';
-                scanDiv.style.justifyContent = 'center';
-                scanDiv.innerHTML = `
-                    <div id="foto-cam-region" style="background:#fff;padding:10px;border-radius:10px;width:98vw;max-width:900px;height:75vh;max-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box;position:relative;">
-                        <video id="foto-cam-video" autoplay playsinline style="width:100%;max-width:600px;max-height:60vh;border-radius:12px;"></video>
-                        <canvas id="foto-cam-canvas" style="display:none;width:100%;max-width:600px;max-height:60vh;border-radius:12px;"></canvas>
-                        <div class="foto-cam-rect" style="position:absolute;left:50%;top:50%;width:350px;height:120px;transform:translate(-50%,-50%);border:3px solid #2196f3;border-radius:12px;box-shadow:0 0 16px #2196f399;"></div>
-                    </div>
-                    <div class="scan-help-message" style="color:#333;font-size:1.1rem;margin-top:10px;text-align:center;max-width:90vw;">
-                        Centra el código de barras dentro del rectángulo azul y acércalo hasta que esté nítido.<br>
-                        Cuando esté listo, presiona <b>Tomar foto</b>.<br>
-                        Si no se detecta, puedes reintentar.
-                    </div>
-                    <div style="display:flex;gap:10px;justify-content:center;margin-top:10px;">
-                        <button class="btn tomar-foto-cam" style="background:#2196f3;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;">Tomar foto</button>
-                        <button class="btn cerrar-scan-cam" style="background:#f44336;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;">Cancelar</button>
-                        <button class="btn reintentar-foto-cam" style="background:#ff9800;color:#fff;font-weight:bold;border-radius:8px;padding:10px 20px;display:none;">Reintentar</button>
-                    </div>
-                `;
-                document.body.appendChild(scanDiv);
-                const btnCerrar = scanDiv.querySelector('.cerrar-scan-cam');
-                const btnFoto = scanDiv.querySelector('.tomar-foto-cam');
-                const btnReintentar = scanDiv.querySelector('.reintentar-foto-cam');
-                const video = scanDiv.querySelector('#foto-cam-video');
-                const canvas = scanDiv.querySelector('#foto-cam-canvas');
-                let stream = null;
-                // Iniciar cámara
-                try {
-                    console.log('[SCAN][QUAGGA] Solicitando acceso a la cámara...');
-                    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
-                    video.srcObject = stream;
-                    await video.play();
-                    console.log('[SCAN][QUAGGA] Cámara iniciada correctamente.');
-                } catch (e) {
-                    console.error('[SCAN][QUAGGA] No se pudo acceder a la cámara:', e);
-                    mostrarNotificacion({message:'No se pudo acceder a la cámara',type:'error',duration:3000});
-                    scanDiv.remove();
-                    return;
-                }
-                btnFoto.addEventListener('click', async () => {
-                    console.log('[SCAN][QUAGGA] Botón "Tomar foto" presionado.');
-                    // Tomar snapshot
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    console.log('[SCAN][QUAGGA] Tamaño del video:', video.videoWidth, video.videoHeight);
-                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                    canvas.style.display = 'block';
-                    video.style.display = 'none';
-                    btnFoto.disabled = true;
-                    btnFoto.textContent = 'Buscando...';
-                    btnReintentar.style.display = 'none';
-                    // Intentar decodificar SOLO códigos de barras con QuaggaJS
-                    try {
-                        console.log('[SCAN][QUAGGA] Intentando decodificar código de barras en la imagen...');
-                        Quagga.decodeSingle({
-                            src: canvas.toDataURL('image/png'),
-                            numOfWorkers: 0,
-                            inputStream: {
-                                size: 800  // for better accuracy
-                            },
-                            decoder: {
-                                readers: [
-                                    'ean_reader',
-                                    'ean_8_reader',
-                                    'code_128_reader',
-                                    'code_39_reader',
-                                    'upc_reader',
-                                    'upc_e_reader'
-                                ]
-                            }
-                        }, function(result) {
-                            if(result && result.codeResult) {
-                                const codigo = result.codeResult.code;
-                                console.log('[SCAN][QUAGGA] Código de barras detectado:', codigo, result);
-                                const producto = productos.find(p => (p.codigo_barras||'').toString() === codigo);
-                                if(producto) {
-                                    console.log('[SCAN][QUAGGA] Producto encontrado:', producto);
-                                    mostrarNotificacion({message:'Producto agregado por código de barras (foto)',type:'success',duration:2000});
-                                    agregarAlCarrito(producto.id);
-                                    setTimeout(() => {
-                                        const inputCantidad = document.querySelector(`.carrito-item[data-id='${producto.id}'] input[type='number']`);
-                                        if(inputCantidad) inputCantidad.focus();
-                                    }, 200);
-                                    // Cerrar visor
-                                    setTimeout(() => {
-                                        if (stream) stream.getTracks().forEach(track => track.stop());
-                                        scanDiv.remove();
-                                    }, 1000);
-                                } else {
-                                    console.warn('[SCAN][QUAGGA] No se encontró producto con ese código:', codigo);
-                                    mostrarNotificacion({message:'No se encontró producto con ese código',type:'error',duration:2000});
-                                    btnFoto.disabled = false;
-                                    btnFoto.textContent = 'Tomar foto';
-                                    btnReintentar.style.display = 'inline-block';
-                                }
-                            } else {
-                                console.error('[SCAN][QUAGGA] No se detectó código de barras en la imagen:', result);
-                                mostrarNotificacion({message:'No se detectó código de barras en la imagen',type:'error',duration:2000});
-                                btnFoto.disabled = false;
-                                btnFoto.textContent = 'Tomar foto';
-                                btnReintentar.style.display = 'inline-block';
-                            }
-                        });
-                    } catch (err) {
-                        console.error('[SCAN][QUAGGA] Error al intentar decodificar:', err);
-                        mostrarNotificacion({message:'Error al intentar decodificar la imagen',type:'error',duration:2000});
-                        btnFoto.disabled = false;
-                        btnFoto.textContent = 'Tomar foto';
-                        btnReintentar.style.display = 'inline-block';
-                    }
-                });
-                btnReintentar.addEventListener('click', () => {
-                    console.log('[SCAN][QUAGGA] Reintentando: mostrando video de nuevo.');
-                    canvas.style.display = 'none';
-                    video.style.display = 'block';
-                    btnFoto.disabled = false;
-                    btnFoto.textContent = 'Tomar foto';
-                    btnReintentar.style.display = 'none';
-                });
-                btnCerrar.addEventListener('click', () => {
-                    console.log('[SCAN][QUAGGA] Cancelando y cerrando visor.');
-                    if (stream) stream.getTracks().forEach(track => track.stop());
-                    scanDiv.remove();
-                });
-            });
-        }
     }
 
     // Reemplaza las funciones existentes window.ajustarCantidad y window.actualizarCantidad
