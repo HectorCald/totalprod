@@ -1713,6 +1713,9 @@ function eventosVerificacion() {
         const gramaje = parseFloat(registro.gramos) || 0;
         const seleccion = registro.proceso || 'Ninguno';
 
+        // AÑADE ESTA LÍNEA:
+        const producto = registro.producto;
+
         let multiplicadores = {
             etiquetado: '1',
             sellado: '1',
@@ -1723,14 +1726,25 @@ function eventosVerificacion() {
         // Primero buscar reglas por gramaje
         const reglasGramaje = reglasProduccion?.filter(r => {
             if (r.producto.startsWith('Regla ') && r.producto.includes('gr-')) {
-                const [minStr, maxStr] = r.producto
-                    .replace('Regla ', '')
-                    .replace('gr', '')
-                    .split('-');
+                // Extraer rango y producto (si existe)
+                const match = r.producto.match(/^Regla\s*(\d+)gr-(\d+)gr(?:\((.+)\))?$/i);
+                if (!match) return false;
 
-                const minGr = parseInt(minStr);
-                const maxGr = parseInt(maxStr);
-                return gramaje >= minGr && gramaje <= maxGr;
+                const minGr = parseInt(match[1]);
+                const maxGr = parseInt(match[2]);
+                const productoEspecifico = match[3]?.trim();
+
+                // Si hay producto específico, debe coincidir exactamente (ignora mayúsculas/minúsculas y espacios)
+                if (productoEspecifico) {
+                    return (
+                        gramaje >= minGr &&
+                        gramaje <= maxGr &&
+                        normalizarTexto(producto) === normalizarTexto(productoEspecifico)
+                    );
+                } else {
+                    // Si no hay producto específico, solo filtra por rango
+                    return gramaje >= minGr && gramaje <= maxGr;
+                }
             }
             return false;
         }) || [];

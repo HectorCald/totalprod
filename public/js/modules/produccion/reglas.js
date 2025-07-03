@@ -46,7 +46,7 @@ async function obtenerReglasBase() {
             duration: 3500
         });
         return false;
-    } 
+    }
 }
 async function obtenerProductos() {
     try {
@@ -186,7 +186,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id">${regla.id}</span>
                     <span class="nombre">${regla.producto}</span>
-                    <span class="etiquetas">${regla.etiq !=1 ? 'Etiquetado: x'+regla.etiq : ''}${regla.sell !=1 ? ' - Sellado: x'+regla.sell : ''}${regla.envs !=1 ? ' - Envasado: x'+regla.envs : ''}${regla.cern != preciosBase.cernido? ' - Cernido: '+regla.cern : ''}</span>
+                    <span class="etiquetas">${regla.etiq != 1 ? 'Etiquetado: x' + regla.etiq : ''}${regla.sell != 1 ? ' - Sellado: x' + regla.sell : ''}${regla.envs != 1 ? ' - Envasado: x' + regla.envs : ''}${regla.cern != preciosBase.cernido ? ' - Cernido: ' + regla.cern : ''}</span>
                 </div>
             </div>
         </div>
@@ -385,7 +385,7 @@ function eventosReglas() {
             </div>
         `;
             contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom='70px';
+            contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
 
             // Agregar evento al botón guardar
@@ -503,7 +503,7 @@ function eventosReglas() {
                             <input class="producto" type="text" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>
-                    <div class="sugerencias" id="productos-list"></div>
+                    <div class="sugerencias productos-list"></div>
                     ${mostrarCamposComunes()}
                 </div>
                 <div class="anuncio-botones">
@@ -541,8 +541,17 @@ function eventosReglas() {
                                 <input class="gr-maximo" type="number" autocomplete="off" placeholder=" " required>
                             </div>
                         </div>
+
                     </div>
                     ${mostrarCamposComunes()}
+                    <div class="entrada">
+                        <i class='bx bx-cube'></i>
+                        <div class="input">
+                            <p class="detalle">Producto</p>
+                            <input class="producto" type="text" autocomplete="off" placeholder=" " required>
+                        </div>
+                    </div>
+                    <div class="sugerencias productos-list"></div>
                 </div>
                 <div class="anuncio-botones">
                     <button class="btn-volver btn yellow"><i class='bx bx-arrow-back'></i> Volver</button>
@@ -552,6 +561,7 @@ function eventosReglas() {
 
             contenido.innerHTML = formularioHTML;
             configurarEventos('gramaje');
+            configurarAutocompletado(); // <-- AGREGA ESTA LÍNEA AQUÍ
             configuracionesEntrada();
         }
 
@@ -623,39 +633,52 @@ function eventosReglas() {
         }
 
         function configurarAutocompletado() {
-            const sugerenciasList = document.querySelector('#productos-list');
-            const productoInput = document.querySelector('.entrada .producto');
+            const sugerenciasList = document.querySelectorAll('.productos-list');
+            const productoInput = document.querySelectorAll('.entrada .producto');
 
-            productoInput.addEventListener('input', (e) => {
-                const valor = normalizarTexto(e.target.value);
-                sugerenciasList.innerHTML = '';
+            productoInput.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    const valor = normalizarTexto(e.target.value);
+                    const lista = sugerenciasList[index]; // usar la lista correspondiente
+                    lista.innerHTML = '';
 
-                if (valor) {
-                    const sugerencias = productosGlobal.filter(p =>
-                        normalizarTexto(p.producto).includes(valor)
-                    ).slice(0, 5);
+                    if (valor) {
+                        const sugerencias = productosGlobal.filter(p =>
+                            normalizarTexto(p.producto).includes(valor)
+                        ).slice(0, 5);
 
-                    if (sugerencias.length) {
-                        sugerenciasList.style.display = 'flex';
-                        sugerencias.forEach(p => {
-                            const div = document.createElement('div');
-                            div.classList.add('item');
-                            div.textContent = p.producto + ' ' + p.gramos + 'gr.';
-                            div.onclick = () => {
-                                productoInput.value = p.producto;
-                                sugerenciasList.style.display = 'none';
-                            };
-                            sugerenciasList.appendChild(div);
-                        });
+                        if (sugerencias.length) {
+                            lista.style.display = 'flex';
+                            sugerencias.forEach(p => {
+                                const div = document.createElement('div');
+                                div.classList.add('item');
+                                div.textContent = `${p.producto} ${p.gramos}gr.`;
+                                div.onclick = () => {
+                                    input.value = p.producto;
+                                    lista.style.display = 'none';
+                                };
+                                lista.appendChild(div);
+                            });
+                        } else {
+                            lista.style.display = 'none';
+                        }
+                    } else {
+                        lista.style.display = 'none';
                     }
-                } else {
-                    sugerenciasList.style.display = 'none';
-                }
+                });
+
+                // Opcional: ocultar sugerencias si pierde foco
+                input.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        sugerenciasList[index].style.display = 'none';
+                    }, 200);
+                });
             });
         }
 
+
         function configurarEventos(tipo) {
-            
+
             const btnVolver = contenido.querySelector('.btn-volver');
             const btnCrear = contenido.querySelector('.btn-crear-regla');
 
@@ -683,13 +706,14 @@ function eventosReglas() {
                 } else {
                     gramajeMin = document.querySelector('.gr-minimo').value;
                     gramajeMax = document.querySelector('.gr-maximo').value;
+                    producto = document.querySelector('.producto').value.trim();
                     if (!gramajeMin || !gramajeMax) {
                         throw new Error('Por favor ingrese ambos rangos de gramaje');
                     }
                     if (parseInt(gramajeMin) > parseInt(gramajeMax)) {
                         throw new Error('El gramaje mínimo debe ser menor o igual que el máximo');
                     }
-                    producto = `Regla ${gramajeMin}gr-${gramajeMax}gr`;
+                    producto = `Regla ${gramajeMin}gr-${gramajeMax}gr(${producto})`;
                 }
 
                 const etiquetado = document.querySelector('.multiplicador-etiquetado').value;
@@ -714,7 +738,7 @@ function eventosReglas() {
                         gramajeMax: gramajeMax ? parseInt(gramajeMax) : null
                     })
                 });
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Error en la petición al servidor');
