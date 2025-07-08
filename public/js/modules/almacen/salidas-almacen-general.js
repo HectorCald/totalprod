@@ -3,9 +3,10 @@ let etiquetas = [];
 let precios = [];
 let clientes = [];
 let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
-let modoTiraGlobal = false; // Variable global para controlar el modo tira
+let modoTiraGlobal = false;
 const DB_NAME = 'damabrava_db_img';
 const STORE_NAME = 'imagenes_cache';
+
 
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -434,6 +435,7 @@ async function updateHTMLWithData() {
     // Renderizar HTML
     productosContainer.innerHTML = productosHTML.join('');
 }
+
 
 function eventosSalidas() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
@@ -1204,26 +1206,78 @@ function eventosSalidas() {
         const fecha = new Date().toLocaleString('es-ES', {
             timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
         });
+
+        // --- NUEVO: Calcular tiras y sueltas para cada producto si aplica ---
+        let actualizacionesStock = [];
+        let sueltasPorProducto = {};
+        let cantidadesSalida = [];
+        let tirasSalida = [];
+        let sueltasSalida = [];
+        let productosSalida = [];
+        let preciosUnitariosSalida = [];
+        let subtotalSalida = 0;
+
+        carritoSalidas.forEach((item, id) => {
+            let cantidad = item.cantidad;
+            let cantidadxgrupo = item.cantidadxgrupo ? parseInt(item.cantidadxgrupo) : 0;
+            let modoUnitario = !modoTiraGlobal && cantidadxgrupo > 1;
+            let tiras = 0, sueltas = 0, totalUnidades = cantidad;
+            if (modoUnitario) {
+                tiras = Math.ceil(cantidad / cantidadxgrupo);
+                totalUnidades = tiras * cantidadxgrupo;
+                sueltas = totalUnidades - cantidad; // Sobrante
+                sueltasPorProducto[id] = sueltas;
+                cantidadesSalida.push(cantidad); // Pedido real
+                tirasSalida.push(tiras);
+                sueltasSalida.push(sueltas);
+                productosSalida.push(`${item.producto} - ${item.gramos}gr`);
+                preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
+                subtotalSalida += cantidad * item.subtotal;
+                // Actualizar stock: restar tiras completas, sumar sueltas
+                actualizacionesStock.push({
+                    id: id,
+                    cantidad: tiras, // ¡OJO! Aquí va la cantidad de tiras, no unidades
+                    sumarSueltas: sueltas
+                });
+            } else {
+                // Modo tira o productos sin agrupamiento
+                tiras = cantidad; // Aquí la cantidad ya es en tiras
+                sueltas = 0;
+                cantidadesSalida.push(cantidad);
+                tirasSalida.push(tiras);
+                sueltasSalida.push(0);
+                productosSalida.push(`${item.producto} - ${item.gramos}gr`);
+                preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
+                subtotalSalida += cantidad * item.subtotal;
+                actualizacionesStock.push({
+                    id: id,
+                    cantidad: tiras, // Aquí la cantidad es en tiras
+                    sumarSueltas: 0
+                });
+            }
+        });
+
+        const tipoMovimiento = modoTiraGlobal ? 'Tiras' : 'Unidades';
         const registroSalida = {
             fechaHora: fecha,
             tipo: 'Salida',
-            idProductos: Array.from(carritoSalidas.values()).map(item => item.id).join(';'),  // Nuevo
-            productos: Array.from(carritoSalidas.values()).map(item => `${item.producto} - ${item.gramos}gr`).join(';'),
-            cantidades: Array.from(carritoSalidas.values()).map(item => item.cantidad).join(';'),
+            idProductos: Array.from(carritoSalidas.values()).map(item => item.id).join(';'),
+            productos: productosSalida.join(';'),
+            cantidades: cantidadesSalida.join(';'),
+            tiras: tirasSalida.join(';'), // Nuevo campo
+            sueltas: sueltasSalida.join(';'), // Nuevo campo
             operario: `${usuarioInfo.nombre} ${usuarioInfo.apellido}`,
             clienteId: clienteSelect.value,
             nombre_movimiento: nombreMovimiento.value,
-            subtotal: Array.from(carritoSalidas.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0),
+            subtotal: subtotalSalida,
             descuento: parseFloat(document.querySelector('.descuento').value) || 0,
             aumento: parseFloat(document.querySelector('.aumento').value) || 0,
             total: 0,
             observaciones: document.querySelector('.observaciones').value || 'Ninguna',
-            precios_unitarios: Array.from(carritoSalidas.values())
-                .map(item => parseFloat(item.subtotal).toFixed(2))
-                .join(';'),
-            estado: estadoSelect.value  // Nuevo
+            precios_unitarios: preciosUnitariosSalida.join(';'),
+            estado: estadoSelect.value,
+            tipoMovimiento // Nuevo campo para backend
         };
-
         registroSalida.total = registroSalida.subtotal - registroSalida.descuento + registroSalida.aumento;
 
         try {
@@ -1244,12 +1298,7 @@ function eventosSalidas() {
                 throw new Error(data.error || 'Error en la respuesta del servidor');
             }
 
-            // Actualizar el stock en Almacen general
-            const actualizacionesStock = Array.from(carritoSalidas.values()).map(item => ({
-                id: item.id,
-                cantidad: item.cantidad
-            }));
-
+            // --- NUEVO: Actualizar el stock en Almacen general considerando sueltas ---
             const responseStock = await fetch('/actualizar-stock', {
                 method: 'POST',
                 headers: {

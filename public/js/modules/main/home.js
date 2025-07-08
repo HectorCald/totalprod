@@ -1736,4 +1736,3 @@ function crearGraficoAcopio() {
         console.error('Error al crear el gráfico de acopio:', error);
     }
 }
-

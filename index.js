@@ -19,7 +19,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT;
 const JWT_SECRET = 'secret-totalprod-hcco';
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -1737,10 +1737,10 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
         const { actualizaciones, tipo } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Obtener datos actuales de Almacen general
+        // Obtener datos actuales de Almacen general (incluye stock y uSueltas)
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,  // Usar el spreadsheetId del usuario
-            range: 'Almacen general!A:D'
+            range: 'Almacen general!A:M'
         });
 
         const rows = response.data.values || [];
@@ -1750,20 +1750,36 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
         for (const actualizacion of actualizaciones) {
             const rowIndex = rows.findIndex(row => row[0] === actualizacion.id);
             if (rowIndex !== -1) {
+                console.log(`[FILA] Producto: ${actualizacion.id} encontrado en fila (índice hoja): ${rowIndex + 1}`);
+                // Stock (columna D, índice 3)
                 const stockActual = parseInt(rows[rowIndex][3]) || 0;
                 const nuevoStock = tipo === 'salida'
                     ? stockActual - actualizacion.cantidad
                     : stockActual + actualizacion.cantidad;
-
+                console.log(`[STOCK] Producto: ${actualizacion.id} | Stock actual: ${stockActual} | Cantidad a ${tipo === 'salida' ? 'restar' : 'sumar'}: ${actualizacion.cantidad} | Nuevo stock: ${nuevoStock} | Actualizando en fila: D${rowIndex + 1}`);
                 updates.push({
                     range: `Almacen general!D${rowIndex + 1}`,
                     values: [[nuevoStock.toString()]]
                 });
+
+                // Sueltas (columna M, índice 12)
+                if (typeof actualizacion.sumarSueltas === 'number' && actualizacion.sumarSueltas > 0) {
+                    const sueltasActual = parseInt(rows[rowIndex][12]) || 0;
+                    const nuevasSueltas = sueltasActual + actualizacion.sumarSueltas;
+                    console.log(`[SUELTAS] Producto: ${actualizacion.id} | Sueltas actuales: ${sueltasActual} | Sumar sueltas: ${actualizacion.sumarSueltas} | Nuevas sueltas: ${nuevasSueltas} | Actualizando en fila: M${rowIndex + 1}`);
+                    updates.push({
+                        range: `Almacen general!M${rowIndex + 1}`,
+                        values: [[nuevasSueltas.toString()]]
+                    });
+                }
+            } else {
+                console.log(`[ERROR] Producto con ID ${actualizacion.id} no encontrado en Almacen general para actualizar stock/sueltas.`);
             }
         }
 
-        // Actualizar el stock en la hoja
+        // Actualizar el stock y sueltas en la hoja
         if (updates.length > 0) {
+            console.log(`[BATCH UPDATE] Actualizando rangos:`, updates.map(u => u.range));
             await sheets.spreadsheets.values.batchUpdate({
                 spreadsheetId,  // Usar el spreadsheetId del usuario
                 resource: {
@@ -1771,6 +1787,8 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
                     data: updates
                 }
             });
+        } else {
+            console.log('[INFO] No hay actualizaciones de stock/sueltas para procesar.');
         }
 
         res.json({ success: true });
@@ -2143,7 +2161,7 @@ app.get('/obtener-movimientos-almacen', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Movimientos alm-gral!A2:P' // Columns A through H
+            range: 'Movimientos alm-gral!A2:Q' // Columns A through H
         });
 
         const rows = response.data.values || [];
@@ -2165,7 +2183,8 @@ app.get('/obtener-movimientos-almacen', requireAuth, async (req, res) => {
             total: row[12] || '',
             observaciones: row[13] || '',
             precios_unitarios: row[14] || '',
-            estado: row[15] || ''
+            estado: row[15] || '',
+            tipoMovimiento: row[16] || ''
         }));
 
         res.json({
@@ -2190,7 +2209,7 @@ app.post('/registrar-movimiento', requireAuth, async (req, res) => {
         // Get current movements to calculate next ID
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Movimientos alm-gral!A2:P'  // Actualizado para incluir la nueva columna
+            range: 'Movimientos alm-gral!A2:Q'  // Actualizado para incluir la nueva columna
         });
 
         const rows = response.data.values || [];
@@ -2198,6 +2217,14 @@ app.post('/registrar-movimiento', requireAuth, async (req, res) => {
             Math.max(...rows.map(row => parseInt(row[0].split('-')[1]))) : 0;
         const newId = `MAG-${(lastId + 1).toString().padStart(3, '0')}`;
 
+        // Usar tipoMovimiento enviado por el frontend, o deducirlo
+        let tipoMovimiento = movimiento.tipoMovimiento;
+        if (!tipoMovimiento) {
+            tipoMovimiento = 'Tiras'; // Por compatibilidad, asume tiras si no viene
+        }
+        if (tipoMovimiento !== 'Tiras' && tipoMovimiento !== 'Unidades') {
+            tipoMovimiento = 'Tiras';
+        }
         // Prepare new movement row
         const newMovimiento = [
             newId,                    // ID
@@ -2215,7 +2242,8 @@ app.post('/registrar-movimiento', requireAuth, async (req, res) => {
             movimiento.total,         // TOTAL
             movimiento.observaciones, // OBSERVACIONES
             movimiento.precios_unitarios, // PRECIOS-UNITARIOS
-            movimiento.estado         // ESTADO (Nuevo)
+            movimiento.estado,        // ESTADO (Nuevo)
+            tipoMovimiento            // TIPO DE MOVIMIENTO (Q)
         ];
 
         // Add new movement
@@ -2319,10 +2347,10 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
         const { motivo } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Obtener el registro a anular
+        // Obtener el registro a anular (incluyendo tipoMovimiento, tiras y sueltas)
         const responseMovimiento = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Movimientos alm-gral!A2:P'
+            range: 'Movimientos alm-gral!A2:Q' // Incluye tipoMovimiento (Q), tiras (I), sueltas (J)
         });
 
         const movimientos = responseMovimiento.data.values || [];
@@ -2336,35 +2364,75 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
         const tipo = movimiento[2];
         const idProductos = movimiento[3].split(';');
         const cantidades = movimiento[5].split(';');
+        const tirasArr = (movimiento[9] || '').split(';').map(x => parseInt(x) || 0); // Columna J (índice 9)
+        const sueltasArr = (movimiento[10] || '').split(';').map(x => parseInt(x) || 0); // Columna K (índice 10)
+        const tipoMovimiento = (movimiento[16] || 'Tiras').trim(); // Columna Q (índice 16)
 
-        // Obtener stock actual
+        // Obtener stock y sueltas actuales, y cantidadxgrupo
         const responseStock = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Almacen general!A2:D'
+            range: 'Almacen general!A2:M'
         });
-
         const productos = responseStock.data.values || [];
 
-        // Actualizar stock
         for (let i = 0; i < idProductos.length; i++) {
             const idProducto = idProductos[i];
             const cantidad = parseInt(cantidades[i]);
+            const tiras = tirasArr[i] || 0;
+            const sueltas = sueltasArr[i] || 0;
             const productoIndex = productos.findIndex(row => row[0] === idProducto);
-
-            if (productoIndex !== -1) {
-                const stockActual = parseInt(productos[productoIndex][3]);
-                const nuevoStock = tipo.toLowerCase() === 'ingreso' ?
-                    stockActual - cantidad :
-                    stockActual + cantidad;
-
-                // Actualizar stock en la hoja
+            if (productoIndex === -1) {
+                console.log(`[ANULAR] Producto con ID ${idProducto} no encontrado en Almacen general.`);
+                continue;
+            }
+            const row = productos[productoIndex];
+            const stockActual = parseInt(row[3]) || 0;
+            const sueltasActual = parseInt(row[12]) || 0;
+            const cantidadxgrupo = parseInt(row[4]) || 1;
+            let nuevoStock = stockActual;
+            let nuevasSueltas = sueltasActual;
+            if (tipoMovimiento === 'Tiras') {
+                // Revertir tiras completas
+                if (tipo.toLowerCase() === 'ingreso') {
+                    nuevoStock = stockActual - cantidad;
+                    console.log(`[ANULAR][TIRAS][INGRESO] Producto: ${idProducto} | Stock actual: ${stockActual} - ${cantidad} = ${nuevoStock}`);
+                } else {
+                    nuevoStock = stockActual + cantidad;
+                    console.log(`[ANULAR][TIRAS][SALIDA] Producto: ${idProducto} | Stock actual: ${stockActual} + ${cantidad} = ${nuevoStock}`);
+                }
+            } else if (tipoMovimiento === 'Unidades') {
+                if (tipo.toLowerCase() === 'ingreso') {
+                    // Se ingresaron unidades: tiras = Math.floor(cantidad / cantidadxgrupo), sueltas = cantidad % cantidadxgrupo
+                    const tiras = Math.floor(cantidad / cantidadxgrupo);
+                    const sueltas = cantidad % cantidadxgrupo;
+                    nuevoStock = stockActual - tiras;
+                    nuevasSueltas = sueltasActual - sueltas;
+                    if (nuevasSueltas < 0) nuevasSueltas = 0;
+                    console.log(`[ANULAR][UNIDADES][INGRESO] Producto: ${idProducto} | Stock actual: ${stockActual} - ${tiras} = ${nuevoStock} | Sueltas: ${sueltasActual} - ${sueltas} = ${nuevasSueltas}`);
+                } else {
+                    // Se sacaron unidades: tiras = Math.ceil(cantidad / cantidadxgrupo), sueltasNecesarias = tiras * cantidadxgrupo - cantidad
+                    const tiras = Math.ceil(cantidad / cantidadxgrupo);
+                    const sueltasNecesarias = tiras * cantidadxgrupo - cantidad;
+                    nuevoStock = stockActual + tiras;
+                    nuevasSueltas = sueltasActual - sueltasNecesarias;
+                    if (nuevasSueltas < 0) nuevasSueltas = 0;
+                    console.log(`[ANULAR][UNIDADES][SALIDA] Producto: ${idProducto} | Stock actual: ${stockActual} + ${tiras} = ${nuevoStock} | Sueltas: ${sueltasActual} - ${sueltasNecesarias} = ${nuevasSueltas}`);
+                }
+            }
+            // Actualizar stock
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: `Almacen general!D${productoIndex + 2}`,
+                valueInputOption: 'RAW',
+                resource: { values: [[nuevoStock.toString()]] }
+            });
+            // Actualizar sueltas si corresponde
+            if (tipoMovimiento === 'Unidades') {
                 await sheets.spreadsheets.values.update({
                     spreadsheetId,
-                    range: `Almacen general!D${productoIndex + 2}`,
+                    range: `Almacen general!M${productoIndex + 2}`,
                     valueInputOption: 'RAW',
-                    resource: {
-                        values: [[nuevoStock.toString()]]
-                    }
+                    resource: { values: [[nuevasSueltas.toString()]] }
                 });
             }
         }

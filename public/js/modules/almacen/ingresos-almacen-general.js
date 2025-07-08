@@ -1272,6 +1272,7 @@ function eventosIngresos() {
         const fecha = new Date().toLocaleString('es-ES', {
             timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
         });
+        const tipoMovimiento = modoTiraGlobal ? 'Tiras' : 'Unidades';
         const registroIngreso = {
             fechaHora: fecha,
             tipo: 'Ingreso',
@@ -1289,7 +1290,8 @@ function eventosIngresos() {
             precios_unitarios: Array.from(carritoSalidas.values())
                 .map(item => parseFloat(item.subtotal).toFixed(2))
                 .join(';'),
-            estado: ''  // Nuevo
+            estado: '',  // Nuevo
+            tipoMovimiento // Nuevo campo para backend
         };
 
         registroIngreso.total = registroIngreso.subtotal - registroIngreso.descuento + registroIngreso.aumento;
@@ -1312,10 +1314,27 @@ function eventosIngresos() {
             }
 
             // Actualizar el stock en Almacen general
-            const actualizacionesStock = Array.from(carritoSalidas.values()).map(item => ({
-                id: item.id,
-                cantidad: item.cantidad
-            }));
+            const actualizacionesStock = Array.from(carritoSalidas.values()).map(item => {
+                const cantidad = item.cantidad;
+                const cantidadxgrupo = item.cantidadxgrupo ? parseInt(item.cantidadxgrupo) : 0;
+                const modoUnitario = !modoTiraGlobal && cantidadxgrupo > 1;
+                if (modoUnitario) {
+                    const tiras = Math.floor(cantidad / cantidadxgrupo);
+                    const sueltas = cantidad % cantidadxgrupo;
+                    return {
+                        id: item.id,
+                        cantidad: tiras, // tiras completas al stock
+                        sumarSueltas: sueltas // unidades sueltas
+                    };
+                } else {
+                    // Modo tira o productos sin agrupamiento
+                    return {
+                        id: item.id,
+                        cantidad: cantidad, // todo va al stock
+                        sumarSueltas: 0
+                    };
+                }
+            });
 
             const responseStock = await fetch('/actualizar-stock', {
                 method: 'POST',

@@ -1206,4 +1206,3 @@ function eventosAlmacenAcopio() {
     }
     aplicarFiltros();
 }
-

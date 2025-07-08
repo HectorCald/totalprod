@@ -74,7 +74,6 @@ async function obtenerAlmacenAcopio() {
 }
 
 
-
 export async function mostrarHacerPedido() {
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
