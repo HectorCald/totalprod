@@ -1222,23 +1222,48 @@ function eventosSalidas() {
             let cantidadxgrupo = item.cantidadxgrupo ? parseInt(item.cantidadxgrupo) : 0;
             let modoUnitario = !modoTiraGlobal && cantidadxgrupo > 1;
             let tiras = 0, sueltas = 0, totalUnidades = cantidad;
+            let stockSueltas = 0;
+            // Buscar el stock de sueltas actual del producto
+            const productoAlmacen = productos.find(p => p.id === id);
+            if (productoAlmacen && productoAlmacen.uSueltas) {
+                stockSueltas = parseInt(productoAlmacen.uSueltas) || 0;
+            }
             if (modoUnitario) {
-                tiras = Math.ceil(cantidad / cantidadxgrupo);
-                totalUnidades = tiras * cantidadxgrupo;
-                sueltas = totalUnidades - cantidad; // Sobrante
-                sueltasPorProducto[id] = sueltas;
-                cantidadesSalida.push(cantidad); // Pedido real
-                tirasSalida.push(tiras);
-                sueltasSalida.push(sueltas);
-                productosSalida.push(`${item.producto} - ${item.gramos}gr`);
-                preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
-                subtotalSalida += cantidad * item.subtotal;
-                // Actualizar stock: restar tiras completas, sumar sueltas
-                actualizacionesStock.push({
-                    id: id,
-                    cantidad: tiras, // ¡OJO! Aquí va la cantidad de tiras, no unidades
-                    sumarSueltas: sueltas
-                });
+                if (cantidad <= stockSueltas) {
+                    // Solo sacar de sueltas
+                    tiras = 0;
+                    sueltas = cantidad;
+                    cantidadesSalida.push(cantidad);
+                    tirasSalida.push(0);
+                    sueltasSalida.push(cantidad);
+                    productosSalida.push(`${item.producto} - ${item.gramos}gr`);
+                    preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
+                    subtotalSalida += cantidad * item.subtotal;
+                    actualizacionesStock.push({
+                        id: id,
+                        cantidad: 0, // No se tocan tiras
+                        restarSueltas: cantidad // Nuevo campo para backend
+                    });
+                } else {
+                    // Sacar todas las sueltas posibles, el resto en tiras
+                    let faltante = cantidad - stockSueltas;
+                    tiras = Math.ceil(faltante / cantidadxgrupo);
+                    let totalUnidadesTiras = tiras * cantidadxgrupo;
+                    let sobrante = totalUnidadesTiras - faltante;
+                    // El nuevo stock de sueltas será el sobrante
+                    cantidadesSalida.push(cantidad);
+                    tirasSalida.push(tiras);
+                    sueltasSalida.push(stockSueltas + sobrante);
+                    productosSalida.push(`${item.producto} - ${item.gramos}gr`);
+                    preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
+                    subtotalSalida += cantidad * item.subtotal;
+                    actualizacionesStock.push({
+                        id: id,
+                        cantidad: tiras, // Tiras a restar
+                        restarSueltas: stockSueltas, // Restar todas las sueltas posibles
+                        sumarSueltas: sobrante // Sumar el sobrante de la tira
+                    });
+                }
             } else {
                 // Modo tira o productos sin agrupamiento
                 tiras = cantidad; // Aquí la cantidad ya es en tiras
