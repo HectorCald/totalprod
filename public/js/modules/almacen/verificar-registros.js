@@ -755,9 +755,9 @@ function eventosVerificacion() {
             // Lógica de filtrado existente
             if (filtroEstadoActual && filtroEstadoActual !== 'Todos') {
                 if (filtroEstadoActual === 'Pendientes') {
-                    mostrar = !registroData.fecha_verificacion && registroData.estado === 'Pendiente';
+                    mostrar = !registroData.fecha_verificacion || registroData.estado === 'Pendiente';
                 } else if (filtroEstadoActual === 'Verificados') {
-                    mostrar = !!registroData.fecha_verificacion && registroData.estado === 'Verificado';
+                    mostrar = !registroData.fecha_verificacion || registroData.estado === 'Verificado';
                 } else if (filtroEstadoActual === 'Ingresados') {
                     mostrar = registroData.estado === 'Ingresado';
                 }
