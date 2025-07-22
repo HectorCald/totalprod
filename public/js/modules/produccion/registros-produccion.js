@@ -2,178 +2,13 @@ let registrosProduccion = [];
 let productosGlobal = [];
 
 const DB_NAME = 'damabrava_db';
-const DB_NAME_IMG = 'damabrava_db_img'
-const STORE_NAME = 'imagenes_cache';
-const REGISTROS_PRODUCCION_STORE = 'registros_produccion';
-
-async function initDB() {
-    return new Promise((resolve, reject) => {
-        // Primero intentar obtener la versión actual de la base de datos
-        const request = indexedDB.open(DB_NAME);
-
-        request.onerror = () => reject(request.error);
-
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            const currentVersion = db.version;
-            db.close();
-
-            // Abrir la base de datos con la versión actual + 1
-            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-
-            upgradeRequest.onerror = () => reject(upgradeRequest.error);
-            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-
-            upgradeRequest.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(REGISTROS_PRODUCCION_STORE)) {
-                    db.createObjectStore(REGISTROS_PRODUCCION_STORE, { keyPath: 'id' });
-                }
-            };
-        };
-    });
-}
-function initDB2() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME_IMG, 1);
-
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            }
-        };
-    });
-}
-
-async function obtenerRegistrosLocal() {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readonly');
-        const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const registros = request.result.map(item => item.data);
-                resolve(registros);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo registros del caché:', error);
-        return [];
-    }
-}
-async function guardarImagenLocal(id, imageUrl) {
-    try {
-        console.log(`⌛ Guardando imagen ${id}...`);
-        const db = await initDB2();
-
-        // Primero verificar si existe
-        const tx1 = db.transaction(STORE_NAME, 'readonly');
-        const store1 = tx1.objectStore(STORE_NAME);
-
-        const existente = await new Promise((resolve) => {
-            const request = store1.get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
-        });
-
-        if (existente &&
-            existente.url === imageUrl &&
-            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
-            console.log(`📦 Imagen ya en caché: ${id}`);
-            return existente;
-        }
-
-        // Si necesita actualizarse, procesar y guardar en una nueva transacción
-        const blob = await urlToBlob(imageUrl);
-        const base64 = await blobToBase64(blob);
-
-        const imagenCache = {
-            id,
-            url: imageUrl,
-            data: base64,
-            timestamp: Date.now()
-        };
-
-        // Nueva transacción para guardar
-        const tx2 = db.transaction(STORE_NAME, 'readwrite');
-        const store2 = tx2.objectStore(STORE_NAME);
-
-        return new Promise((resolve, reject) => {
-            const request = store2.put(imagenCache);
-
-            // Esperar a que complete la transacción
-            tx2.oncomplete = () => {
-                console.log(`✅ Imagen ${id} guardada exitosamente`);
-                resolve(imagenCache);
-            };
-
-            tx2.onerror = () => {
-                console.error(`Error en transacción para ${id}:`, tx2.error);
-                reject(tx2.error);
-            };
-
-            tx2.onabort = () => {
-                console.error(`Transacción abortada para ${id}`);
-                reject(new Error('Transacción abortada'));
-            };
-        });
-
-    } catch (error) {
-        console.error(`❌ Error guardando imagen ${id}:`, error);
-        return null;
-    }
-}
-async function obtenerImagenLocal(id) {
-    try {
-        const db = await initDB2();
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-
-        return new Promise((resolve, reject) => {
-            const request = store.get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo imagen del cache:', error);
-        return null;
-    }
-}
-async function urlToBlob(url) {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return blob;
-}
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
-function necesitaActualizacion(imagenCache, nuevaUrl) {
-    if (!imagenCache) return true;
-    if (imagenCache.url !== nuevaUrl) return true;
-
-    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
-    const unDia = 24 * 60 * 60 * 1000;
-    if (Date.now() - imagenCache.timestamp > unDia) return true;
-
-    return false;
-}
+const MIS_REGISTROS_PRODUCCION_DB = 'mis_registros_produccion';
+const PRODUCTO_ALM_DB = 'prductos_alm';
 
 
 async function obtenerMisRegistros() {
     try {
-        const registrosCache = await obtenerRegistrosLocal();
+        const registrosCache = await obtenerLocal(MIS_REGISTROS_PRODUCCION_DB, DB_NAME);
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCache.length > 0) {
             registrosProduccion = registrosCache.sort((a, b) => {
@@ -203,9 +38,9 @@ async function obtenerMisRegistros() {
             // Siempre actualizar el caché con los nuevos datos
             (async () => {
                 try {
-                    const db = await initDB();
-                    const tx = db.transaction(REGISTROS_PRODUCCION_STORE, 'readwrite');
-                    const store = tx.objectStore(REGISTROS_PRODUCCION_STORE);
+                    const db = await initDB(MIS_REGISTROS_PRODUCCION_DB, DB_NAME);
+                    const tx = db.transaction(MIS_REGISTROS_PRODUCCION_DB, 'readwrite');
+                    const store = tx.objectStore(MIS_REGISTROS_PRODUCCION_DB);
 
                     // Limpiar todos los registros existentes
                     await store.clear();
@@ -226,62 +61,76 @@ async function obtenerMisRegistros() {
             })();
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener registros de producción',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener registros:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener registros de producción',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerProductos() {
     try {
-        const response = await fetch('/obtener-productos');
-        const data = await response.json();
+        const productosCache = await obtenerLocal(PRODUCTO_ALM_DB, DB_NAME);
 
-        if (data.success) {
-            // Guardar los productos en la variable global y ordenarlos por ID
-            productosGlobal = data.productos.sort((a, b) => {
+        if (productosCache.length > 0) {
+            console.log('productoscache')
+            productosGlobal = productosCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA; // Orden descendente por número de ID
+                return idB - idA;
             });
-
-            // Procesar y guardar todas las imágenes antes de retornar
-            await Promise.all(productosGlobal.map(async producto => {
-                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
-                    const imagenCache = await obtenerImagenLocal(producto.id);
-                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
-                        await guardarImagenLocal(producto.id, producto.imagen);
-                    }
-                }
-            }));
-
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos del almacén',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            console.log('almacen cache')
         }
+
+        try {
+            const response = await fetch('/obtener-productos');
+            const data = await response.json();
+            if (data.success) {
+                productosGlobal = data.productos.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+                if (JSON.stringify(productosCache) !== JSON.stringify(productosGlobal)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(PRODUCTO_ALM_DB, DB_NAME);
+                            const tx = db.transaction(PRODUCTO_ALM_DB, 'readwrite');
+                            const store = tx.objectStore(PRODUCTO_ALM_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of productosGlobal) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                else {
+                    console.log('no son diferentes')
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+
     } catch (error) {
         console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos del almacén',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
@@ -343,17 +192,18 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
+
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 export async function mostrarMisRegistros() {
     renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
     const [registrosProduccion, productos] = await Promise.all([
-        obtenerMisRegistros(),
-        await obtenerProductos()
+        obtenerProductos(),
+        await obtenerMisRegistros()
     ]);
 }
 function updateHTMLWithData() {
@@ -364,9 +214,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'observado' : 'pendiente'}">${registro.fecha_verificacion && registro.observaciones === 'Sin observaciones' ? 'Verificado' : registro.observaciones !== 'Sin observaciones' && registro.fecha_verificacion ? 'Observado' : 'Pendiente'}</span></span>
-                    <span class="nombre"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
-                    <span class="fecha">${registro.fecha}</span>
+                    <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.estado === 'Pendiente' ? 'red' : registro.estado === 'Verificado' ? 'green' : registro.estado === 'Ingresado' ? 'blue' : ''}">${registro.estado === 'Pendiente' ? 'Pendiente' : registro.estado === 'Verificado' ? 'Verificado' : registro.estado === 'Ingresado' ? 'Ingresado' : ''}</span></span>
+                    <span class="detalle"><strong>${registro.producto} - ${registro.gramos}gr.</strong></span>
+                    <span class="pie">${registro.fecha}</span>
                 </div>
             </div>
         </div>
@@ -560,22 +410,6 @@ function eventosMisRegistros() {
     inputBusqueda.addEventListener('focus', function () {
         this.select();
     });
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
-
-
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
     btnNueva.forEach(btn => {
         btn.addEventListener('click', mostrarFormularioProduccion);
     });

@@ -7,9 +7,36 @@ let preciosBase = {
     sellado: 0,
     cernido: 0
 };
+const DB_NAME = 'damabrava_db';
+const PRODUCTO_ALM_DB = 'prductos_alm';
+const REGLAS_BASE_DB = 'reglas_produccion_base';
+const REGLAS_PRODUCCION_DB = 'reglas_produccion';
+
 
 async function obtenerReglasBase() {
     try {
+
+        const reglasCache = await obtenerLocal(REGLAS_BASE_DB, DB_NAME);
+
+        // Si hay nombres en caché, actualizar la UI inmediatamente
+        if (reglasCache.length > 0) {
+            reglasBase = reglasCache
+                .sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+
+            // Actualizar preciosBase con valores del servidor si es necesario
+            reglasBase.forEach(regla => {
+                if (regla.nombre === 'Etiquetado') preciosBase.etiquetado = parseFloat(regla.precio);
+                if (regla.nombre === 'Envasado') preciosBase.envasado = parseFloat(regla.precio);
+                if (regla.nombre === 'Sellado') preciosBase.sellado = parseFloat(regla.precio);
+                if (regla.nombre === 'Cernido') preciosBase.cernido = parseFloat(regla.precio);
+            });
+            console.log('Actulizando reglas base de cache')
+        }
+
         const response = await fetch('/obtener-reglas-base');
         const data = await response.json();
 
@@ -22,61 +49,68 @@ async function obtenerReglasBase() {
                 });
 
             // Actualizar preciosBase con valores del servidor si es necesario
-            data.reglasBase.forEach(regla => {
+            reglasBase.forEach(regla => {
                 if (regla.nombre === 'Etiquetado') preciosBase.etiquetado = parseFloat(regla.precio);
                 if (regla.nombre === 'Envasado') preciosBase.envasado = parseFloat(regla.precio);
                 if (regla.nombre === 'Sellado') preciosBase.sellado = parseFloat(regla.precio);
                 if (regla.nombre === 'Cernido') preciosBase.cernido = parseFloat(regla.precio);
             });
 
+            // Verificar si hay diferencias entre el caché y los nuevos datos
+            if (JSON.stringify(reglasCache) !== JSON.stringify(reglasBase)) {
+                console.log('diferentes (reglas base)')
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(REGLAS_BASE_DB, DB_NAME);
+                        const tx = db.transaction(REGLAS_BASE_DB, 'readwrite');
+                        const store = tx.objectStore(REGLAS_BASE_DB);
+
+                        // Limpiar todos los nombres existentes
+                        await store.clear();
+
+                        // Guardar los nuevos nombres
+                        for (const item of reglasBase) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                    } catch (error) {
+                        console.error('Error actualizando el caché de nombres:', error);
+                    }
+                })();
+            }
+
+            // Actualizar el caché en segundo plano
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener reglas base',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener reglas base:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener reglas base',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    }
-}
-async function obtenerProductos() {
-    try {
-        const response = await fetch('/obtener-productos');
-        const data = await response.json();
-
-        if (data.success) {
-            productosGlobal = data.productos;
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
-        }
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerReglas() {
     try {
-        await obtenerReglasBase();
+        const reglasProduccionCache = await obtenerLocal(REGLAS_PRODUCCION_DB, DB_NAME);
+
+        if (reglasProduccionCache.length > 0) {
+            reglasProduccion = reglasProduccionCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('Actulizando reglas de cache')
+            updateHTMLWithData();
+        }
+
+
         const response = await fetch('/obtener-reglas');
         const data = await response.json();
 
@@ -88,29 +122,125 @@ async function obtenerReglas() {
                     const idB = parseInt(b.id.split('-')[1]);
                     return idB - idA; // Orden descendente por número de ID
                 });
+
+            if (JSON.stringify(reglasProduccionCache) !== JSON.stringify(reglasProduccion)) {
+                console.log('Diferencias (reglas)');
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(REGLAS_PRODUCCION_DB, DB_NAME);
+                        const tx = db.transaction(REGLAS_PRODUCCION_DB, 'readwrite');
+                        const store = tx.objectStore(REGLAS_PRODUCCION_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of reglasProduccion) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
+
             return true;
 
         } else {
-            mostrarNotificacion({
-                message: 'Error la reglas',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error las reglas', error);
-        mostrarNotificacion({
-            message: 'Error las reglas',
-            type: 'error',
-            duration: 3500
-        });
+        return false;
+    }
+}
+async function obtenerProductos() {
+    try {
+        const productosCache = await obtenerLocal(PRODUCTO_ALM_DB, DB_NAME);
+
+        if (productosCache.length > 0) {
+            productosGlobal = productosCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('Actulizando de cache productos')
+        }
+
+        try {
+            const response = await fetch('/obtener-productos');
+            const data = await response.json();
+            if (data.success) {
+                productosGlobal = data.productos.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+                if (JSON.stringify(productosCache) !== JSON.stringify(productosGlobal)) {
+                    console.log('Diferencias (productos)');
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(PRODUCTO_ALM_DB, DB_NAME);
+                            const tx = db.transaction(PRODUCTO_ALM_DB, 'readwrite');
+                            const store = tx.objectStore(PRODUCTO_ALM_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of productosGlobal) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché de productos actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                else {
+                    console.log('no son diferentes')
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
         return false;
     }
 }
 
 
+export async function mostrarReglas() {
+    renderInitialHTML();
+    mostrarAnuncio();
 
+    const [registrosProduccion, productos] = await Promise.all([
+        await obtenerReglas(),
+        await obtenerProductos()
+    ]);
+
+    updateHTMLWithData();
+}
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -161,20 +291,9 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
-}
-export async function mostrarReglas() {
-    renderInitialHTML();
-    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-
-    const [registrosProduccion, productos] = await Promise.all([
-        await obtenerReglas(),
-        await obtenerProductos()
-    ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
     // Update productos
@@ -184,9 +303,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-book'></i>
                 <div class="info-header">
-                    <span class="id">${regla.id}</span>
-                    <span class="nombre">${regla.producto}</span>
-                    <span class="etiquetas">${regla.etiq != 1 ? 'Etiquetado: x' + regla.etiq : ''}${regla.sell != 1 ? ' - Sellado: x' + regla.sell : ''}${regla.envs != 1 ? ' - Envasado: x' + regla.envs : ''}${regla.cern != preciosBase.cernido ? ' - Cernido: ' + regla.cern : ''}</span>
+                    <span class="id-flotante"><span>${regla.id}</span></span>
+                    <span class="detalle"><strong>${regla.producto}</strong></span>
+                    <span class="pie">${regla.etiq != 1 ? 'Etiquetado: x' + regla.etiq : ''}${regla.sell != 1 ? ' - Sellado: x' + regla.sell : ''}${regla.envs != 1 ? ' - Envasado: x' + regla.envs : ''}${regla.cern != preciosBase.cernido ? ' - Cernido: ' + regla.cern : ''}</span>
                 </div>
             </div>
         </div>
@@ -221,15 +340,6 @@ function eventosReglas() {
         }
     });
 
-
-
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
     function aplicarFiltros() {
         const busqueda = normalizarTexto(inputBusqueda.value);
         const items = document.querySelectorAll('.registro-item');

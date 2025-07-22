@@ -1,35 +1,78 @@
-let proovedores = [];
+let proveedores = [];
 
-async function obtenerProovedores() {
+const DB_NAME = 'damabrava_db';
+const PROVEEDOR_DB = 'proveedores';
+
+async function obtenerProveedores() {
+    console.log('obteniendo proovedores')
     try {
-        const response = await fetch('/obtener-proovedores');
-        const data = await response.json();
 
-        if (data.success) {
-            proovedores = data.proovedores.sort((a, b) => {
-                const nombreA = a.nombre.toLowerCase();
-                const nombreB = b.nombre.toLowerCase();
-                return nombreA.localeCompare(nombreB);
+        const proveedoresCache = await obtenerLocal(PROVEEDOR_DB, DB_NAME);
+
+        if (proveedoresCache.length > 0) {
+            proveedores = proveedoresCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener proovedores',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            updateHTMLWithData();
+            console.log('actulizando desde el cache')
         }
+
+            try {
+
+                const response = await fetch('/obtener-proovedores');
+                const data = await response.json();
+
+                if (data.success) {
+                    proveedores = data.proovedores.sort((a, b) => {
+                        const idA = parseInt(a.id.split('-')[1]);
+                        const idB = parseInt(b.id.split('-')[1]);
+                        return idB - idA;
+                    });
+
+                    if (JSON.stringify(proveedoresCache) !== JSON.stringify(proveedores)) {
+                        console.log('Diferencias encontradas, actualizando UI');
+                        updateHTMLWithData();
+
+                        (async () => {
+                        try {
+                            const db = await initDB(PROVEEDOR_DB, DB_NAME);
+                            const tx = db.transaction(PROVEEDOR_DB, 'readwrite');
+                            const store = tx.objectStore(PROVEEDOR_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of proveedores) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }  })();
+                    }
+                    else {
+                        console.log('no son diferentes')
+                    }
+
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (error) {
+                throw error;
+            }
+
     } catch (error) {
-        console.error('Error al obtener proovedores:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener proovedores',
-            type: 'error',
-            duration: 3500
-        });
+        console.error('Error al obtener proveedores:', error);
         return false;
-    } finally {
-        ocultarCarga();
     }
 }
 
@@ -81,31 +124,28 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 export async function mostrarProovedores() {
     renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
-
     const [proovedor] = await Promise.all([
-        await obtenerProovedores()
+        await obtenerProveedores()
     ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
 
     const productosContainer = document.querySelector('.productos-container');
-    const productosHTML = proovedores.map(proovedor => `
+    const productosHTML = proveedores.map(proovedor => `
         <div class="registro-item" data-id="${proovedor.id}">
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${proovedor.id}<span class="neutro">${proovedor.zona ? proovedor.zona: 'No tiene zona'}</span></span>
-                    <span class="nombre"><strong>${proovedor.nombre}</strong></span>
-                    <span class="fecha">${proovedor.telefono}-${proovedor.direccion ? proovedor.direccion: 'No tiene dirección'}</span>
+                    <span class="id-flotante"><span>${proovedor.id}</span><span class="flotante-item neutro">${proovedor.zona ? proovedor.zona: 'No tiene zona'}</span></span>
+                    <span class="detalle"><strong>${proovedor.nombre}</strong></span>
+                    <span class="pie">${proovedor.telefono}-${proovedor.direccion ? proovedor.direccion: 'No tiene dirección'}</span>
                 </div>
             </div>
         </div>
@@ -175,7 +215,7 @@ function eventosProovedores() {
             let hayResultados = false;
 
             items.forEach(item => {
-                const proovedor = proovedores.find(c => c.id === item.dataset.id);
+                const proovedor = proveedores.find(c => c.id === item.dataset.id);
                 const coincide = proovedor && (
                     normalizarTexto(proovedor.nombre).includes(busqueda) ||
                     normalizarTexto(proovedor.telefono).includes(busqueda) ||
@@ -198,13 +238,6 @@ function eventosProovedores() {
             // Control del mensaje "no encontrado"
             mensajeNoEncontrado.style.display = hayResultados ? 'none' : 'block';
         }, 300);
-    }
-    function normalizarTexto(texto) {
-        return (texto || '').toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[-_\s]+/g, '');
     }
 
 

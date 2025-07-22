@@ -1,8 +1,23 @@
 let registrosConteos = [];
-
+const DB_NAME = 'damabrava_db';
+const REGISTROS_CONTEO_DB = 'registros_conteo';
 
 async function obtenerRegistrosConteo() {
     try {
+
+        const registrosConteoCache = await obtenerLocal(REGISTROS_CONTEO_DB, DB_NAME);
+
+        if (registrosConteoCache.length > 0) {
+            registrosConteos = registrosConteoCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            renderInitialHTML();
+            updateHTMLWithData();
+            console.log('actulizando desde el cache')
+        }
+
         const response = await fetch('/obtener-registros-conteo');
         const data = await response.json();
 
@@ -12,26 +27,59 @@ async function obtenerRegistrosConteo() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+
+            if (JSON.stringify(registrosConteos) !== JSON.stringify(registrosConteoCache)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(REGISTROS_CONTEO_DB, DB_NAME);
+                        const tx = db.transaction(REGISTROS_CONTEO_DB, 'readwrite');
+                        const store = tx.objectStore(REGISTROS_CONTEO_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of registrosConteos) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener registros de conteo',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener registros:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener registros de conteo',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 
+
+export async function registrosConteoAlmacen() {
+    renderInitialHTML();
+    mostrarAnuncio();
+
+    const [obtnerRegistros] = await Promise.all([
+        await obtenerRegistrosConteo(),
+    ]);
+}
 function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
     const initialHTML = `  
@@ -80,20 +128,9 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
-}
-export async function registrosConteoAlmacen() {
-    renderInitialHTML();
-    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-
-    const [obtnerRegistros] = await Promise.all([
-        await obtenerRegistrosConteo(),
-    ]);
-
-    updateHTMLWithData();
-    eventosRegistrosConteo();
 }
 function updateHTMLWithData() {
 
@@ -103,14 +140,15 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-package'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}</span>
-                    <span class="nombre">${registro.nombre}</span>
-                    <span class="fecha">${registro.fecha}</span>
+                    <span class="id-flotante"><span>${registro.id}</span></span>
+                    <span class="detalle"><span>${registro.nombre}</span></span>
+                    <span class="pie">${registro.fecha}</span>
                 </div>
             </div>
         </div>
     `).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosRegistrosConteo();
 }
 
 
@@ -176,12 +214,6 @@ function eventosRegistrosConteo() {
             window.info(registroId);
         });
     });
-    function normalizarTexto(texto) {
-        return texto.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-zA-Z0-9\s]/g, '');
-    }
     function aplicarFiltros() {
 
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];

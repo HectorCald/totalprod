@@ -1,35 +1,74 @@
 let personal = [];
 
+const DB_NAME = 'damabrava_db';
+const PERSONAL_DB = 'personal';
+
 async function obtenerPersonal() {
     try {
-        const response = await fetch('/obtener-personal');
-        const data = await response.json();
+        
+        const personalCache = await obtenerLocal(PERSONAL_DB, DB_NAME);
 
-        if (data.success) {
-            personal = data.personal.sort((a, b) => {
-                const nombreA = a.nombre.toLowerCase();
-                const nombreB = b.nombre.toLowerCase();
-                return nombreA.localeCompare(nombreB);
+        if (personalCache.length > 0) {
+            personal = personalCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener personal',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            updateHTMLWithData();
+            console.log('actulizando desde el cache')
         }
+            try {
+                
+                const response = await fetch('/obtener-personal');
+                const data = await response.json();
+
+                if (data.success) {
+                    personal = data.personal.sort((a, b) => {
+                        const idA = parseInt(a.id.split('-')[1]);
+                        const idB = parseInt(b.id.split('-')[1]);
+                        return idB - idA;
+                    });
+
+                    if (JSON.stringify(personalCache) !== JSON.stringify(personal)) {
+                        console.log('Diferencias encontradas, actualizando UI');
+                        updateHTMLWithData();
+                        (async () => {
+                        try {
+                            const db = await initDB(PERSONAL_DB, DB_NAME);
+                            const tx = db.transaction(PERSONAL_DB, 'readwrite');
+                            const store = tx.objectStore(PERSONAL_DB);
+        
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+        
+                            // Guardar los nuevos registros
+                            for (const item of personal) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+        
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }})();
+                    }
+                    else{
+                        console.log('no son diferentes')
+                    }
+
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (error) {
+                throw error;
+            }
     } catch (error) {
         console.error('Error al obtener personal:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener personal',
-            type: 'error',
-            duration: 3500
-        });
         return false;
-    } finally {
-        ocultarCarga();
     }
 }
 
@@ -558,4 +597,3 @@ function eventosPersonal() {
 
     aplicarFiltros();
 }
-

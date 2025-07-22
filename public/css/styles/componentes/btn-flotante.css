@@ -64,12 +64,12 @@
     }
 }
 
-.btn-flotante-salidas .cantidad,
-.btn-flotante-ingresos .cantidad,
+.btn-flotante-salidas .carrito-cantidad-flotante,
+.btn-flotante-ingresos .carrito-cantidad-flotante,
 .btn-flotante-pedidos .cantidad {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -4px;
+    right: -4px;
     background: red;
     color: white;
     border-radius: 50%;

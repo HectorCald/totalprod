@@ -4,6 +4,8 @@ let configuracionHorario = {
     horaFin: '',
     estado: ''
 };
+const DB_NAME = 'damabrava_db';
+const PRODUCTOS_FORM_db = 'productos_form';
 
 async function verificarHorarioProduccion() {
     try {
@@ -59,34 +61,70 @@ async function verificarHorarioProduccion() {
     }
 }
 
+
 async function obtenerProductos() {
     try {
         mostrarProgreso('.pro-obtner')
+
+        const productosFormCache = await obtenerLocal(PRODUCTOS_FORM_db, DB_NAME);
+
+        if (productosFormCache.length > 0) {
+            productosGlobal = productosFormCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actulizando desde el cache')
+        }
+
         const response = await fetch('/obtener-productos-form');
         const data = await response.json();
 
         if (data.success) {
-            productosGlobal = data.productos;
+            productosGlobal = data.productos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+
+            if (JSON.stringify(productosFormCache) !== JSON.stringify(productosGlobal)) {
+                console.log('Diferencias encontradas, actualizando UI');
+
+                (async () => {
+                    try {
+                        const db = await initDB(PRODUCTOS_FORM_db, DB_NAME);
+                        const tx = db.transaction(PRODUCTOS_FORM_db, 'readwrite');
+                        const store = tx.objectStore(PRODUCTOS_FORM_db);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productosGlobal) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos',
-            type: 'error',
-            duration: 3500
-        });
-        if (error.message === 'cancelled') {
-            console.log('Operación cancelada por el usuario');
-            return;
-        }
         return false;
     } finally {
         ocultarProgreso('.pro-obtner')
@@ -128,7 +166,7 @@ export async function mostrarFormularioProduccion() {
                     <i class="ri-scales-line"></i>
                     <div class="input">
                         <p class="detalle">Gramaje</p>
-                        <input class="gramaje" type="number" inputmode="numeric" pattern="[0-9]*" placeholder=" " required>
+                        <input class="gramaje" type="number" inputmode="numeric" pattern="[0-9]*" placeholder=" " readonly required>
                     </div>
                 </div>
                 <div class="entrada">

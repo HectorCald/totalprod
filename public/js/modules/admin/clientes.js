@@ -1,39 +1,85 @@
 let clientes = [];
 
+const DB_NAME = 'damabrava_db';
+const CLIENTES_DB = 'clientes';
+
 async function obtenerClientes() {
     try {
-        const response = await fetch('/obtener-clientes');
-        const data = await response.json();
 
-        if (data.success) {
-            clientes = data.clientes.sort((a, b) => {
-                const nombreA = a.nombre.toLowerCase();
-                const nombreB = b.nombre.toLowerCase();
-                return nombreA.localeCompare(nombreB);
+        const clientesCache = await obtenerLocal(CLIENTES_DB, DB_NAME);
+
+        if (clientesCache.length > 0) {
+            clientes = clientesCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener clientes',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            renderInitialHTML();
+            updateHTMLWithData();
+            console.log('actualizando desde el cache(Clientes)')
+        }
+        try {
+
+            const response = await fetch('/obtener-clientes');
+            const data = await response.json();
+
+            if (data.success) {
+                clientes = data.clientes.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+
+                if (JSON.stringify(clientesCache) !== JSON.stringify(clientes)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(CLIENTES_DB, DB_NAME);
+                            const tx = db.transaction(CLIENTES_DB, 'readwrite');
+                            const store = tx.objectStore(CLIENTES_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of clientes) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
         }
     } catch (error) {
         console.error('Error al obtener clientes:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener clientes',
-            type: 'error',
-            duration: 3500
-        });
         return false;
-    } finally {
-        ocultarCarga();
     }
 }
 
 
+export async function mostrarClientes() {
+    renderInitialHTML();
+    mostrarAnuncio();
+
+    const [clientes] = await Promise.all([
+        await obtenerClientes()
+    ]);
+}
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -81,19 +127,9 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
-}
-export async function mostrarClientes() {
-    renderInitialHTML();
-    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100)
-
-    const [clientes] = await Promise.all([
-        await obtenerClientes()
-    ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
 
@@ -103,9 +139,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${cliente.id}<span class="neutro">${cliente.zona? cliente.zona: 'No tiene zona'}</span></span>
-                    <span class="nombre"><strong>${cliente.nombre}</strong></span>
-                    <span class="fecha">${cliente.telefono}-${cliente.direccion ? cliente.direccion : 'No tiene dirección'}</span>
+                    <span class="id-flotante"><span>${cliente.id}</span><span class="flotante-item neutro">${cliente.zona? cliente.zona: 'No tiene zona'}</span></span>
+                    <span class="detalle"><strong>${cliente.nombre}</strong></span>
+                    <span class="pie">${cliente.telefono}-${cliente.direccion ? cliente.direccion : 'No tiene dirección'}</span>
                 </div>
             </div>
         </div>
@@ -193,13 +229,6 @@ function eventosClientes() {
             // Control del mensaje "no encontrado"
             mensajeNoEncontrado.style.display = hayResultados ? 'none' : 'block';
         }, 300);
-    }
-    function normalizarTexto(texto) {
-        return (texto || '').toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[-_\s]+/g, '');
     }
 
     
@@ -568,6 +597,5 @@ function eventosClientes() {
             }
         });
     }
-
     aplicarFiltros();
 }

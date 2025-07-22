@@ -1,34 +1,76 @@
 let pagosGlobal = [];
 
+const DB_NAME = 'damabrava_db';
+const PAGOS_DB = 'pagos';
+
 
 async function obtenerPagos() {
     try {
-        const response = await fetch('/obtener-pagos');
-        const data = await response.json();
 
-        if (data.success) {
-            // Ordenar pagos de más reciente a más antiguo por ID
-            pagosGlobal = data.pagos.sort((a, b) => {
+        const pagosCache = await obtenerLocal(PAGOS_DB, DB_NAME);
+
+        if (pagosCache.length > 0) {
+            pagosGlobal = pagosCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA; // Orden descendente
+                return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener pagos',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            renderInitialHTML();
+            updateHTMLWithData();
+            console.log('actualizando desde el cache(Pagos)')
         }
+
+        try {
+
+            const response = await fetch('/obtener-pagos');
+            const data = await response.json();
+
+            if (data.success) {
+                pagosGlobal = data.pagos.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+
+                if (JSON.stringify(pagosCache) !== JSON.stringify(pagosGlobal)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+
+                    (async () => {
+                        try {
+                            const db = await initDB(PAGOS_DB, DB_NAME);
+                            const tx = db.transaction(PAGOS_DB, 'readwrite');
+                            const store = tx.objectStore(PAGOS_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of pagosGlobal) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+
     } catch (error) {
-        console.error('Error al obtener pagos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener pagos',
-            type: 'error',
-            duration: 3500
-        });
+        console.error('Error al obtener los pagos:', error);
         return false;
     }
 }
@@ -113,19 +155,17 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 export async function mostrarPagos() {
     renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
     const [pagos] = await Promise.all([
         await obtenerPagos()
     ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -134,9 +174,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.estado === 'Pendiente' ? 'pendiente' : registro.estado === 'Pagado' ? 'pagado' : 'anulado'}">${registro.estado}</span></span>
-                    <span class="nombre"><strong>${registro.nombre_pago} (${registro.beneficiario})</strong></span>
-                    <span class="fecha">${registro.fecha}<span class="neutro">Bs. ${registro.total}</span></span>
+                    <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.estado === 'Pendiente' ? 'red' : registro.estado === 'Pagado' ? 'green' : 'orange'}">${registro.estado === 'Pendiente' ? 'Pendiente' : registro.estado === 'Pagado' ? 'Pagado' : 'Anulado'}</span></span>
+                    <span class="detalle" style="font-size: 12px;"><strong>${registro.nombre_pago} (${registro.beneficiario})</strong></span>
+                    <span class="pie">${registro.fecha}<span class="flotante-item neutro">Bs. ${registro.total}</span></span>
                 </div>
             </div>
         </div>
@@ -185,9 +225,6 @@ function eventosPagos() {
     let filtroEstadoActual = 'Todos';
     let filtroTipoActual = 'Todos'; // Nuevo
 
-    // Nuevo
-
-    // Agregar listener para el select de tipo
     selectTipo.addEventListener('change', function () {
         filtroTipoActual = this.value;
         aplicarFiltros();
@@ -196,21 +233,6 @@ function eventosPagos() {
         scrollToCenter(this, this.parentElement);
     });
 
-
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
     function aplicarFiltros() {
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
         const busqueda = normalizarTexto(inputBusqueda.value);
@@ -993,7 +1015,5 @@ function eventosPagos() {
             }
         });
     }
-
     aplicarFiltros();
 }
-

@@ -1,72 +1,94 @@
 let registrosAlmacen = [];
 let proovedores = [];
 let clientes = [];
+
+
 const DB_NAME = 'damabrava_db';
-const REGISTROS_ALMACEN_STORE = 'registros_almacen';
+const REGISTROS_ALM_DB = 'registros_almacen';
+const PROVEEDOR_DB = 'proveedores';
+const CLIENTE_DB = 'clientes';
 
 
-async function initDB() {
-    return new Promise((resolve, reject) => {
-        // Primero intentar obtener la versión actual de la base de datos
-        const request = indexedDB.open(DB_NAME);
-
-        request.onerror = () => reject(request.error);
-
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            const currentVersion = db.version;
-            db.close();
-
-            // Abrir la base de datos con la versión actual + 1
-            const upgradeRequest = indexedDB.open(DB_NAME, currentVersion + 1);
-
-            upgradeRequest.onerror = () => reject(upgradeRequest.error);
-            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-
-            upgradeRequest.onupgradeneeded = (event) => {
-                const db = event.target.result;
-
-                // Crear o actualizar los object stores
-                if (!db.objectStoreNames.contains(REGISTROS_ALMACEN_STORE)) {
-                    db.createObjectStore(REGISTROS_ALMACEN_STORE, { keyPath: 'id' });
-                }
-            };
-        };
-    });
-}
 async function obtenerProovedores() {
     try {
+        const proovedoresCache = await obtenerLocal(PROVEEDOR_DB, DB_NAME);
+
+        if (proovedoresCache.length > 0) {
+            proovedores = proovedoresCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actulizando desde el cache')
+        }
+
         const response = await fetch('/obtener-proovedores');
         const data = await response.json();
 
         if (data.success) {
+            // Store proovedores in global variable
             proovedores = data.proovedores.sort((a, b) => {
-                const nombreA = a.nombre.toLowerCase();
-                const nombreB = b.nombre.toLowerCase();
-                return nombreA.localeCompare(nombreB);
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA; // Descending order
             });
+
+            if (JSON.stringify(proovedoresCache) !== JSON.stringify(proovedores)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(PROVEEDOR_DB, DB_NAME);
+                        const tx = db.transaction(PROVEEDOR_DB, 'readwrite');
+                        const store = tx.objectStore(PROVEEDOR_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of proovedores) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener proovedores',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener proovedores:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener proovedores',
-            type: 'error',
-            duration: 3500
-        });
         return false;
-    } finally {
     }
 }
 async function obtenerClientes() {
     try {
+
+        const clientesCache = await obtenerLocal(CLIENTE_DB, DB_NAME);
+
+        if (clientesCache.length > 0) {
+            clientes = clientesCache.sort((a, b) => {
+                const nombreA = a.nombre.toLowerCase();
+                const nombreB = b.nombre.toLowerCase();
+                return nombreA.localeCompare(nombreB);
+            });
+            console.log('actulizando desde el cache')
+        }
+
+
         const response = await fetch('/obtener-clientes');
         const data = await response.json();
 
@@ -76,28 +98,52 @@ async function obtenerClientes() {
                 const nombreB = b.nombre.toLowerCase();
                 return nombreA.localeCompare(nombreB);
             });
+
+            if (JSON.stringify(clientesCache) !== JSON.stringify(clientes)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(CLIENTE_DB, DB_NAME);
+                        const tx = db.transaction(CLIENTE_DB, 'readwrite');
+                        const store = tx.objectStore(CLIENTE_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of clientes) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener clientes',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener clientes:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener clientes',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerRegistrosAlmacen() {
     try {
-        const registrosCacheAlmacen = await obtenerRegistrosLocal();
+        const registrosCacheAlmacen = await obtenerLocal(REGISTROS_ALM_DB, DB_NAME);
 
         // Si hay registros en caché, actualizar la UI inmediatamente
         if (registrosCacheAlmacen.length > 0) {
@@ -106,6 +152,7 @@ async function obtenerRegistrosAlmacen() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+            renderInitialHTML();
             updateHTMLWithData();
         }
 
@@ -123,33 +170,36 @@ async function obtenerRegistrosAlmacen() {
             // Verificar si hay diferencias entre el caché y los nuevos datos
             if (JSON.stringify(registrosCacheAlmacen) !== JSON.stringify(registrosAlmacen)) {
                 console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
                 updateHTMLWithData();
-            }
 
-            (async () => {
-                try {
-                    const db = await initDB();
-                    const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
-                    const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
+                (async () => {
+                    try {
+                        const db = await initDB(REGISTROS_ALM_DB, DB_NAME);
+                        const tx = db.transaction(REGISTROS_ALM_DB, 'readwrite');
+                        const store = tx.objectStore(REGISTROS_ALM_DB);
 
-                    // Limpiar todos los registros existentes
-                    await store.clear();
+                        // Limpiar todos los registros existentes
+                        await store.clear();
 
-                    // Guardar los nuevos registros
-                    for (const registro of registrosAlmacen) {
-                        await store.put({
-                            id: registro.id,
-                            data: registro,
-                            timestamp: Date.now()
-                        });
+                        // Guardar los nuevos registros
+                        for (const registro of registrosAlmacen) {
+                            await store.put({
+                                id: registro.id,
+                                data: registro,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
                     }
 
-                    console.log('Caché actualizado correctamente');
-                } catch (error) {
-                    console.error('Error actualizando el caché:', error);
-                }
+                })();
+            }
 
-            })();
+
 
             return true;
         } else {
@@ -167,6 +217,15 @@ async function obtenerRegistrosAlmacen() {
 }
 
 
+export async function mostrarMovimientosAlmacen() {
+    renderInitialHTML();
+    mostrarAnuncio();
+    const [obtnerRegistros, clientes, proovedores] = await Promise.all([
+        obtenerProovedores(),
+        obtenerClientes(),
+        await obtenerRegistrosAlmacen(),
+    ]);
+}
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -226,40 +285,116 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
-}
-export async function mostrarMovimientosAlmacen() {
-    renderInitialHTML();
-    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-
-    const [obtnerRegistros, clientes, proovedores] = await Promise.all([
-        obtenerRegistrosAlmacen(),
-        await obtenerClientes(),
-        await obtenerProovedores()
-    ]);
 }
 function updateHTMLWithData() {
-
     const productosContainer = document.querySelector('.productos-container');
-    const productosHTML = registrosAlmacen.map(registro => `
+    // Mostrar solo los primeros 200 registros
+    const registrosLimitados = registrosAlmacen.slice(0, 200);
+    const productosHTML = registrosLimitados.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.tipo}">${registro.tipo}</span></span>
-                    <span class="nombre"><strong>${registro.nombre_movimiento}</strong></span>
-                    <span class="fecha">${registro.fecha_hora} <span class="neutro">Bs. ${registro.total}</span></span>
+                    <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.tipo === 'Ingreso' ? 'green' : registro.tipo === 'Salida' ? 'red' : 'orange'}">${registro.tipo}</span></span>
+                    <span class="detalle"><strong>${registro.nombre_movimiento}</strong></span>
+                    <span class="pie">${registro.fecha_hora} <span class="neutro">Bs. ${registro.total}</span></span>
                 </div>
             </div>
         </div>
     `).join('');
-    productosContainer.innerHTML = productosHTML;
+    // Botones para cargar más si hay más de 250
+    const showMoreButton = registrosAlmacen.length > 250 ? `
+        <div class="show-more-container" style="text-align: center; display: flex; gap: 5px; justify-content: center;align-items:center;width:100%;min-height:70px;height:100%">
+            <button class="btn show-more" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                <i class='bx bx-show' style="min-width:20px"></i> Mostrar +50
+            </button>
+            <button class="btn show-all" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                <i class='bx bx-list-ul'style="min-width:20px"></i> Mostrar todos
+            </button>
+        </div>
+    ` : '';
+    productosContainer.innerHTML = productosHTML + showMoreButton;
     eventosRegistrosAlmacen();
+    // Enlazar eventos a los nuevos botones
+    const showMoreBtn = document.querySelector('.show-more');
+    const showAllBtn = document.querySelector('.show-all');
+    if (showMoreBtn) showMoreBtn.addEventListener('click', cargarMasRegistrosAlmacen);
+    if (showAllBtn) showAllBtn.addEventListener('click', cargarTodosLosRegistrosAlmacen);
 }
 
 
+function cargarMasRegistrosAlmacen() {
+    const productosContainer = document.querySelector('.productos-container');
+    const currentItems = document.querySelectorAll('.registro-item').length;
+    const nextBatch = registrosAlmacen.slice(currentItems, currentItems + 50);
+    if (nextBatch.length > 0) {
+        const newItemsHTML = nextBatch.map(registro => `
+            <div class="registro-item" data-id="${registro.id}">
+                <div class="header">
+                    <i class='bx bx-file'></i>
+                    <div class="info-header">
+                        <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.tipo === 'Ingreso' ? 'green' : registro.tipo === 'Salida' ? 'red' : 'orange'}">${registro.tipo}</span></span>
+                        <span class="detalle"><strong>${registro.nombre_movimiento}</strong></span>
+                        <span class="pie">${registro.fecha_hora} <span class="neutro">Bs. ${registro.total}</span></span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        // Quitar el show more container
+        const showMoreContainer = document.querySelector('.show-more-container');
+        if (showMoreContainer) showMoreContainer.remove();
+        // Agregar nuevos items
+        productosContainer.insertAdjacentHTML('beforeend', newItemsHTML);
+        // Agregar show more de nuevo si quedan más
+        if (currentItems + nextBatch.length < registrosAlmacen.length) {
+            productosContainer.insertAdjacentHTML('beforeend', `
+                <div class="show-more-container" style="text-align: center; display: flex; gap: 5px; justify-content: center;align-items:center;width:100%;min-height:70px;height:100%">
+                    <button class="btn show-more" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                        <i class='bx bx-show' style="min-width:20px"></i> Mostrar +50
+                    </button>
+                    <button class="btn show-all" style="background-color: var(--primary-color); color: white; padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;width:100%;height:100%">
+                        <i class='bx bx-list-ul'style="min-width:20px"></i> Mostrar todos
+                    </button>
+                </div>
+            `);
+            // Reenlazar eventos
+            const showMoreBtn = document.querySelector('.show-more');
+            const showAllBtn = document.querySelector('.show-all');
+            if (showMoreBtn) showMoreBtn.addEventListener('click', cargarMasRegistrosAlmacen);
+            if (showAllBtn) showAllBtn.addEventListener('click', cargarTodosLosRegistrosAlmacen);
+        }
+        // Reenlazar eventos a los nuevos items
+        eventosRegistrosAlmacen();
+    }
+}
+function cargarTodosLosRegistrosAlmacen() {
+    const productosContainer = document.querySelector('.productos-container');
+    const currentItems = document.querySelectorAll('.registro-item').length;
+    const remainingRecords = registrosAlmacen.slice(currentItems);
+    if (remainingRecords.length > 0) {
+        const newItemsHTML = remainingRecords.map(registro => `
+            <div class="registro-item" data-id="${registro.id}">
+                <div class="header">
+                    <i class='bx bx-file'></i>
+                    <div class="info-header">
+                        <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.tipo === 'Ingreso' ? 'green' : registro.tipo === 'Salida' ? 'red' : 'orange'}">${registro.tipo}</span></span>
+                        <span class="detalle"><strong>${registro.nombre_movimiento}</strong></span>
+                        <span class="pie">${registro.fecha_hora} <span class="neutro">Bs. ${registro.total}</span></span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        // Quitar el show more container
+        const showMoreContainer = document.querySelector('.show-more-container');
+        if (showMoreContainer) showMoreContainer.remove();
+        // Agregar todos los items restantes
+        productosContainer.insertAdjacentHTML('beforeend', newItemsHTML);
+        eventosRegistrosAlmacen();
+    }
+}
 function eventosRegistrosAlmacen() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const btnPDF = document.querySelectorAll('.exportar-pdf');
@@ -357,13 +492,6 @@ function eventosRegistrosAlmacen() {
         });
     });
 
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
     function aplicarFiltros() {
         const filtroTipo = filtroNombreActual;
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
@@ -457,13 +585,6 @@ function eventosRegistrosAlmacen() {
             }
         }, 200);
     }
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
@@ -512,7 +633,7 @@ function eventosRegistrosAlmacen() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">Información del registro</h1>
+            <h1 class="titulo">Información</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno verificar-registro">
@@ -558,6 +679,7 @@ function eventosRegistrosAlmacen() {
             ${tienePermiso('anulacion') && registro.tipo != 'Anulado' ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
             ${tienePermiso('eliminacion') && registro.tipo === 'Anulado' ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
             <button class="btn-copia btn blue" data-id="${registro.id}"><i class='bx bx-copy'></i>Copiar</button>
+            ${registro.tipo === 'Ingreso' ? `<button class="btn-anexar-produccion btn green" data-id="${registro.id}"><i class='bx bx-box'></i>Anexar</button>` : ''}
         </div>
     `;
         contenido.innerHTML = registrationHTML;
@@ -572,6 +694,10 @@ function eventosRegistrosAlmacen() {
         if (tienePermiso('eliminacion') && registro.tipo === 'Anulado') {
             const btnEliminar = contenido.querySelector('.btn-eliminar');
             btnEliminar.addEventListener('click', () => eliminar(registro));
+        }
+        if (registro.tipo === 'Ingreso') {
+            const btnAnexar = contenido.querySelector('.btn-anexar-produccion');
+            btnAnexar.addEventListener('click', () => anexar(registro));
         }
 
         const btnCopia = contenido.querySelector('.btn-copia');
@@ -825,6 +951,73 @@ function eventosRegistrosAlmacen() {
                 });
             }
         }
+        function anexar(registro) {
+            const contenido = document.querySelector('.anuncio-tercer .contenido');
+            const registrationHTML = `
+                <div class="encabezado">
+                    <h1 class="titulo">Anexar a Producción</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Ingrese el ID del registro de producción al que desea anexar este movimiento:</p>
+                    <div class="entrada">
+                        <i class='bx bx-id-card'></i>
+                        <div class="input">
+                            <p class="detalle">ID Producción(Ej: RP-513)</p>
+                            <input class="id-produccion-anexar" type="text" autocomplete="off" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-anexar-produccion btn green"><i class='bx bx-check-circle'></i> Anexar</button>
+                </div>
+            `;
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '70px';
+            mostrarAnuncioTercer();
+        
+            const btnAnexar = contenido.querySelector('.btn-anexar-produccion');
+            btnAnexar.addEventListener('click', async () => {
+                const idProduccion = contenido.querySelector('.id-produccion-anexar').value.trim();
+                if (!idProduccion) {
+                    mostrarNotificacion({
+                        message: 'Debe ingresar el ID de producción',
+                        type: 'warning',
+                        duration: 3000
+                    });
+                    return;
+                }
+                const signal = await mostrarProgreso('.pro-obtner')
+                try {
+                    const response = await fetch(`/anexar-movimiento-produccion/${registro.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idProduccion })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        mostrarNotificacion({
+                            message: 'Movimiento anexado correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        await obtenerRegistrosAlmacen();
+                        cerrarAnuncioManual('anuncioTercer');
+                        updateHTMLWithData();
+                    } else {
+                        throw new Error(data.error || 'Error al anexar el movimiento');
+                    }
+                } catch (error) {
+                    mostrarNotificacion({
+                        message: error.message || 'Error al anexar el movimiento',
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarProgreso('.pro-obtner')
+                }
+            });
+        }
     }
     btnExcel.forEach(btn => {
         btn.addEventListener('click', () => exportarArchivos('almacen', registrosAExportar));
@@ -833,46 +1026,4 @@ function eventosRegistrosAlmacen() {
         btn.addEventListener('click', () => exportarArchivosPDF('almacen', registrosAExportar));
     });
     aplicarFiltros();
-}
-
-
-async function obtenerRegistrosLocal() {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readonly');
-        const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
-
-        return new Promise((resolve, reject) => {
-            const request = store.getAll();
-            request.onsuccess = () => {
-                const registros = request.result.map(item => item.data);
-                resolve(registros);
-            };
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo registros de alamcen del caché:', error);
-        return [];
-    }
-}
-async function guardarRegistrosLocal(registros) {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(REGISTROS_ALMACEN_STORE, 'readwrite');
-        const store = tx.objectStore(REGISTROS_ALMACEN_STORE);
-
-        // Guardar cada registro individualmente
-        for (const registro of registros) {
-            await store.put({
-                id: registro.id,
-                data: registro,
-                timestamp: Date.now()
-            });
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error guardando registros en caché:', error);
-        return false;
-    }
 }

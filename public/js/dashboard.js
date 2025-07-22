@@ -9,7 +9,8 @@ import {
     inicializarDashboard, limpiarProteccionNavegacion,
     usuarioInfo, mostrarProgreso,
     ocultarProgreso, initPullToRefresh,
-    registrarNotificacion, exportarArchivosPDF
+    registrarNotificacion, exportarArchivosPDF, initDB, obtenerLocal,
+    normalizarTexto, scrollToCenter
 } from './modules/componentes/componentes.js'
 
 import { crearNav } from './modules/main/nav.js'
@@ -24,9 +25,6 @@ import { mostrarReglas } from './modules/produccion/reglas.js'
 
 import { mostrarVerificacion } from './modules/almacen/verificar-registros.js'
 import { mostrarAlmacenGeneral } from './modules/almacen/almacen-general.js'
-import { mostrarSalidas } from './modules/almacen/salidas-almacen-general.js';
-import { mostrarIngresos } from './modules/almacen/ingresos-almacen-general.js';
-import { mostrarConteo } from './modules/almacen/conteo-almacen.js';
 import { registrosConteoAlmacen } from './modules/almacen/registros-conteos.js';
 import { mostrarMovimientosAlmacen } from './modules/almacen/registros-almacen.js';
 
@@ -80,6 +78,11 @@ window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
 window.mostrarProgreso = mostrarProgreso
 window.ocultarProgreso = ocultarProgreso
 window.initPullToRefresh = initPullToRefresh
+window.initDB=initDB
+window.obtenerLocal=obtenerLocal
+window.normalizarTexto=normalizarTexto
+window.scrollToCenter=scrollToCenter
+
 
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
@@ -88,10 +91,7 @@ window.mostrarReglas = mostrarReglas
 
 window.mostrarVerificacion = mostrarVerificacion
 window.mostrarAlmacenGeneral = mostrarAlmacenGeneral
-window.mostrarSalidas = mostrarSalidas
-window.mostrarIngresos = mostrarIngresos
 window.mostrarMovimientosAlmacen = mostrarMovimientosAlmacen
-window.mostrarConteo = mostrarConteo
 window.registrosConteoAlmacen = registrosConteoAlmacen
 
 window.mostrarHacerPedido = mostrarHacerPedido

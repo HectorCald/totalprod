@@ -1,231 +1,298 @@
-let productos = [];
+export let productos = [];
 let productosAcopio = [];
 let etiquetas = [];
 let precios = [];
-const DB_NAME = 'damabrava_db_img';
-const DB_NAME_CACHE = 'damabrava_db';
-const STORE_NAME = 'imagenes_cache';
-const PRODUCTOS_STORE = 'productos_almacen_cache';
-const ETIQUETAS_STORE = 'etiquetas_almacen_cache';
+let clientes = [];
+let proveedores = [];
+let tipoEvento = [];
+let modoGlobal = localStorage.getItem("modoGlobal");
 
-function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
+let carritoSalidas = new Map(JSON.parse(localStorage.getItem('damabrava_carrito') || '[]'));
+let carritoIngresos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_ingresos') || '[]'));
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
 
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-            }
-        };
-    });
-}
+const DB_NAME = 'damabrava_db';
+const PRODUCTO_ALM_DB = 'prductos_alm';
+const PRODUCTOS_AC_DB = 'productos_acopio';
+const PRECIOS_ALM_DB = 'precios_alm';
+const ETIQUETAS_ALM_DB = 'etiquetas_almacen';
+const CLIENTES_DB = 'clientes';
+const PROVEEDOR_DB = 'proveedores';
 
-function initDBCache() {
-    return new Promise((resolve, reject) => {
-        // Primero intentar obtener la versión actual de la base de datos
-        const request = indexedDB.open(DB_NAME_CACHE);
 
-        request.onerror = () => reject(request.error);
-
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            const currentVersion = db.version;
-            db.close();
-
-            // Abrir la base de datos con la versión actual + 1
-            const upgradeRequest = indexedDB.open(DB_NAME_CACHE, currentVersion + 1);
-
-            upgradeRequest.onerror = () => reject(upgradeRequest.error);
-            upgradeRequest.onsuccess = () => resolve(upgradeRequest.result);
-
-            upgradeRequest.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(PRODUCTOS_STORE)) {
-                    db.createObjectStore(PRODUCTOS_STORE, { keyPath: 'id' });
-                }
-                if (!db.objectStoreNames.contains(ETIQUETAS_STORE)) {
-                    db.createObjectStore(ETIQUETAS_STORE, { keyPath: 'id' });
-                }
-            };
-        };
-    });
-}
-
-async function guardarImagenLocal(id, imageUrl) {
+async function obtenerProveedores() {
     try {
-        console.log(`⌛ Guardando imagen ${id}...`);
-        const db = await initDB();
 
-        // Primero verificar si existe
-        const tx1 = db.transaction(STORE_NAME, 'readonly');
-        const store1 = tx1.objectStore(STORE_NAME);
+        const proveedoresCache = await obtenerLocal(PROVEEDOR_DB, DB_NAME);
 
-        const existente = await new Promise((resolve) => {
-            const request = store1.get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
-        });
-
-        if (existente &&
-            existente.url === imageUrl &&
-            Date.now() - existente.timestamp < 24 * 60 * 60 * 1000) {
-            console.log(`📦 Imagen ya en caché: ${id}`);
-            return existente;
-        }
-
-        // Si necesita actualizarse, procesar y guardar en una nueva transacción
-        const blob = await urlToBlob(imageUrl);
-        const base64 = await blobToBase64(blob);
-
-        const imagenCache = {
-            id,
-            url: imageUrl,
-            data: base64,
-            timestamp: Date.now()
-        };
-
-        // Nueva transacción para guardar
-        const tx2 = db.transaction(STORE_NAME, 'readwrite');
-        const store2 = tx2.objectStore(STORE_NAME);
-
-        return new Promise((resolve, reject) => {
-            const request = store2.put(imagenCache);
-
-            // Esperar a que complete la transacción
-            tx2.oncomplete = () => {
-                console.log(`✅ Imagen ${id} guardada exitosamente`);
-                resolve(imagenCache);
-            };
-
-            tx2.onerror = () => {
-                console.error(`Error en transacción para ${id}:`, tx2.error);
-                reject(tx2.error);
-            };
-
-            tx2.onabort = () => {
-                console.error(`Transacción abortada para ${id}`);
-                reject(new Error('Transacción abortada'));
-            };
-        });
-
-    } catch (error) {
-        console.error(`❌ Error guardando imagen ${id}:`, error);
-        return null;
-    }
-}
-async function obtenerImagenLocal(id) {
-    try {
-        const db = await initDB();
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-
-        return new Promise((resolve, reject) => {
-            const request = store.get(id);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    } catch (error) {
-        console.error('Error obteniendo imagen del cache:', error);
-        return null;
-    }
-}
-async function urlToBlob(url) {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return blob;
-}
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
-function necesitaActualizacion(imagenCache, nuevaUrl) {
-    if (!imagenCache) return true;
-    if (imagenCache.url !== nuevaUrl) return true;
-
-    // Opcional: verificar si el cache es muy antiguo (ej: más de 1 día)
-    const unDia = 24 * 60 * 60 * 1000;
-    if (Date.now() - imagenCache.timestamp > unDia) return true;
-
-    return false;
-}
-
-
-
-async function obtenerEtiquetas() {
-    try {
-        const response = await fetch('/obtener-etiquetas');
-        const data = await response.json();
-        if (data.success) {
-            const etiquetasProcesadas = data.etiquetas.sort((a, b) => {
+        if (proveedoresCache.length > 0) {
+            proveedores = proveedoresCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            etiquetas = etiquetasProcesadas;
+            console.log('actualizando desde el cache(Proveedores)')
+        }
+
+        try {
+
+            const response = await fetch('/obtener-proovedores');
+            const data = await response.json();
+
+            if (data.success) {
+                proveedores = data.proovedores.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+
+                if (JSON.stringify(proveedoresCache) !== JSON.stringify(proveedores)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+
+                    (async () => {
+                        try {
+                            const db = await initDB(PROVEEDOR_DB, DB_NAME);
+                            const tx = db.transaction(PROVEEDOR_DB, 'readwrite');
+                            const store = tx.objectStore(PROVEEDOR_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of proveedores) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error al obtener proveedores:', error);
+        return false;
+    }
+}
+async function obtenerClientes() {
+    try {
+        const clientesCache = await obtenerLocal(CLIENTES_DB, DB_NAME);
+
+        if (clientesCache.length > 0) {
+            clientes = clientesCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actualizando desde el cache(Clientes)')
+        }
+        try {
+
+            const response = await fetch('/obtener-clientes');
+            const data = await response.json();
+
+            if (data.success) {
+                clientes = data.clientes.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+
+                if (JSON.stringify(clientesCache) !== JSON.stringify(clientes)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(CLIENTES_DB, DB_NAME);
+                            const tx = db.transaction(CLIENTES_DB, 'readwrite');
+                            const store = tx.objectStore(CLIENTES_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of clientes) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+    } catch (error) {
+        console.error('Error al obtener clientes:', error);
+        return false;
+    }
+}
+async function obtenerEtiquetas() {
+    try {
+
+        const etiquetasAlmacenCache = await obtenerLocal(ETIQUETAS_ALM_DB, DB_NAME);
+
+        if (etiquetasAlmacenCache.length > 0) {
+            etiquetas = etiquetasAlmacenCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actualizando desde el cache(Etiquetas almacen)')
+        }
+
+        const response = await fetch('/obtener-etiquetas');
+        const data = await response.json();
+        if (data.success) {
+            etiquetas = data.etiquetas.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+            if (JSON.stringify(etiquetasAlmacenCache) !== JSON.stringify(etiquetas)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(ETIQUETAS_ALM_DB, DB_NAME);
+                        const tx = db.transaction(ETIQUETAS_ALM_DB, 'readwrite');
+                        const store = tx.objectStore(ETIQUETAS_ALM_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of etiquetas) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener etiquetas',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener etiquetas:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener etiquetas',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerPrecios() {
     try {
-        const response = await fetch('/obtener-precios');
-        const data = await response.json();
 
-        if (data.success) {
-            precios = data.precios.sort((a, b) => {
+        const preciosAlmCachce = await obtenerLocal(PRECIOS_ALM_DB, DB_NAME);
+
+        if (preciosAlmCachce.length > 0) {
+            precios = preciosAlmCachce.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener precios',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+            console.log('actualizando desde el cache(Precios)')
         }
+        try {
+            const response = await fetch('/obtener-precios');
+            const data = await response.json();
+
+            if (data.success) {
+                precios = data.precios.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+                if (JSON.stringify(preciosAlmCachce) !== JSON.stringify(precios)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(PRECIOS_ALM_DB, DB_NAME);
+                            const tx = db.transaction(PRECIOS_ALM_DB, 'readwrite');
+                            const store = tx.objectStore(PRECIOS_ALM_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of precios) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (error) {
+            throw error;
+        }
+
     } catch (error) {
-        console.error('Error al obtener precios:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener precios',
-            type: 'error',
-            duration: 3500
-        });
         return false;
+    } finally {
+
     }
 }
 async function obtenerAlmacenAcopio() {
     try {
-        const response = await fetch('/obtener-productos-acopio');
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
 
+        const productosAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
+
+        if (productosAcopioCache.length > 0) {
+            productosAcopio = productosAcopioCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actualizando desde el cache(acopio)')
+        }
+        const response = await fetch('/obtener-productos-acopio');
         const data = await response.json();
 
         if (data.success) {
@@ -234,57 +301,106 @@ async function obtenerAlmacenAcopio() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+
+            if (JSON.stringify(productosAcopioCache) !== JSON.stringify(productosAcopio)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                (async () => {
+                    try {
+                        const db = await initDB(PRODUCTOS_AC_DB, DB_NAME);
+                        const tx = db.transaction(PRODUCTOS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(PRODUCTOS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productosAcopio) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
             return true;
         } else {
-            throw new Error(data.error || 'Error al obtener los productos');
+            return false;
         }
+
+
     } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener los productos de acopio',
-            type: 'error',
-            duration: 3500
-        });
+        console.error('Error al obtener los pagos:', error);
         return false;
     }
 }
 async function obtenerAlmacenGeneral() {
     try {
-        // Siempre obtener productos del servidor
-        const response = await fetch('/obtener-productos');
-        const data = await response.json();
-        if (data.success) {
-            const productosProcesados = data.productos.sort((a, b) => {
+        const productosCache = await obtenerLocal(PRODUCTO_ALM_DB, DB_NAME);
+
+        if (productosCache.length > 0) {
+            productos = productosCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            productos = productosProcesados;
-            // Solo caché de imágenes
-            await Promise.all(productosProcesados.map(async producto => {
-                if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
-                    const imagenCache = await obtenerImagenLocal(producto.id);
-                    if (!imagenCache || necesitaActualizacion(imagenCache, producto.imagen)) {
-                        await guardarImagenLocal(producto.id, producto.imagen);
+            renderInitialHTML();
+            updateHTMLWithData();
+            console.log('actualizando desde el cache(almacen)')
+        }
+
+        try {
+            const response = await fetch('/obtener-productos');
+            const data = await response.json();
+            if (data.success) {
+                productos = data.productos.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+                if (JSON.stringify(productosCache) !== JSON.stringify(productos)) {
+                    console.log('Diferencias encontradas, actualizando UI');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+
+                    try {
+                        const db = await initDB(PRODUCTO_ALM_DB, DB_NAME);
+                        const tx = db.transaction(PRODUCTO_ALM_DB, 'readwrite');
+                        const store = tx.objectStore(PRODUCTO_ALM_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productos) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
                     }
                 }
-            }));
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos del almacén',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
         }
+
     } catch (error) {
         console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos del almacén',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
@@ -292,21 +408,19 @@ async function obtenerAlmacenGeneral() {
 
 
 export async function mostrarAlmacenGeneral() {
-    renderInitialHTML(); // Render initial HTML immediately
+    tipoEvento = localStorage.getItem('tipoEventoAlmacenLocal') || 'almacen';
+    renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
-
 
     // Luego cargar el resto de datos en segundo plano
-    const [almacenGeneral, etiquetasResult, preciosResult, almacenAcopio] = await Promise.all([
+    const [proovedores, clientes, etiquetas, precios, acopio, almacen] = await Promise.all([
+        obtenerProveedores(),
+        obtenerClientes(),
+        obtenerEtiquetas(),
+        obtenerPrecios(),
+        obtenerAlmacenAcopio(),
         await obtenerAlmacenGeneral(),
-        await obtenerEtiquetas(),
-        await obtenerPrecios(),
-        await obtenerAlmacenAcopio(),
     ]);
-    updateHTMLWithData();
 }
 function renderInitialHTML() {
 
@@ -317,7 +431,7 @@ function renderInitialHTML() {
             <h1 class="titulo">Almacén General</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio');"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="pull-to-refresh">
                 <i class='bx bx-refresh'></i>
                 <span>Desliza para recargar</span>
@@ -327,16 +441,21 @@ function renderInitialHTML() {
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-producto" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                 </div>
-                ${tienePermiso('creacion') ? `
+                
                 <div class="acciones-grande">
+                ${tienePermiso('creacion') && tipoEvento === 'almacen' ? `
                     <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Nuevo</span></button>
                     <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  <span>Etiquetas</span></button>
                     <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> <span>Precios</span></button>
-                </div>
+                     ` : ''}
+                ${tipoEvento === 'conteo' ? `
+                    <button class="vista-previa btn orange"><i class='bx bx-show'></i> <span>Vista previa</span></button>
                 ` : ''}
+                </div>
+               
             </div>
             <div class="filtros-opciones etiquetas-filter">
                 <button class="btn-filtro todos activado">Todos</button>
@@ -344,7 +463,7 @@ function renderInitialHTML() {
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
             </div>
-            <div class="filtros-opciones cantidad-filter2">
+            <div class="filtros-opciones cantidad-filter">
                 <button class="btn-filtro"><i class='bx bx-sort-down'></i></button>
                 <button class="btn-filtro"><i class='bx bx-sort-up'></i></button>
                 <button class="btn-filtro activado"><i class='bx bx-sort-a-z'></i></button>
@@ -353,7 +472,22 @@ function renderInitialHTML() {
                 <select class="precios-select" style="width:auto">
                     <option value="">Precios</option>
                 </select>
+                <select name="tipoEventos" id="eventoTipo" class="select">
+                    <option value="almacen">Almacen</option>
+                    <option value="conteo">Conteo</option>
+                    <option value="salidas">Salida</option>
+                    <option value="ingresos">Ingreso</option>
+                </select>
+                ${tipoEvento === 'salidas' || tipoEvento === 'ingresos' ? `
+                    <div class="input switch-container" style="display:flex;align-items:center;gap:6px;">
+                        <label class="switch" style="position:relative;">
+                            <input type="checkbox" class="botones-cancelacion switch-tira-global">
+                            <span class="slider round slider-thumb"></span>
+                        </label>
             </div>
+                ` : ''}
+            </div>
+
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
                     <div class="skeleton-producto">
@@ -373,20 +507,34 @@ function renderInitialHTML() {
                 <p style="text-align: center; color: #555;">¡Ups!, No se encontraron productos segun tu busqueda o filtrado.</p>
             </div>
         </div>
-
-        ${tienePermiso('creacion') ? `
+        <button class="btn-flotante-salidas">
+            <i class="fas fa-arrow-down"></i>
+            <span class="carrito-cantidad-flotante"></span>
+        </button>
+        <button class="btn-flotante-ingresos">
+            <i class="fas fa-arrow-down"></i>
+            <span class="carrito-cantidad-flotante"></span>
+        </button>
         <div class="anuncio-botones">
+        ${tienePermiso('creacion') && tipoEvento === 'almacen' ? `
             <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Nuevo</button>
             <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> Etiquetas</button>
             <button class="btn-precios btn especial"><i class='bx bx-dollar'></i> Precios</button>
-        </div>
         ` : ''}
+         ${tipoEvento === 'conteo' ? `
+                    <button class="vista-previa btn orange"><i class='bx bx-show'></i> <span>Vista previa</span></button>
+                    ` : ''}
+        
+        </div>
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '10px';
-    if (tienePermiso('creacion')) {
+    if (tienePermiso('creacion') || tipoEvento === 'conteo') {
         contenido.style.paddingBottom = '70px';
     }
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 async function updateHTMLWithData() {
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
@@ -414,13 +562,6 @@ async function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = await Promise.all(productos.map(async producto => {
         let imagenMostrar = '<i class=\'bx bx-package\'></i>';
-        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
-            const imagenCache = await obtenerImagenLocal(producto.id);
-            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
-                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
-                                onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
-            }
-        }
         // Formatear precio a dos decimales
         let precioMostrar = '';
         if (producto.precios) {
@@ -430,45 +571,83 @@ async function updateHTMLWithData() {
         } else {
             precioMostrar = '0.00';
         }
-        return `
+
+        if (tipoEvento === 'conteo') {
+            return `
             <div class="registro-item" data-id="${producto.id}">
                 <div class="header">
                     ${imagenMostrar}
                     <div class="info-header">
-                        <div class="id">${producto.id}
-                            <div class="precio-cantidad">
-                                <span class="valor stock">${producto.stock} Und.</span>
-                                <span class="valor precio">Bs. ${precioMostrar}</span>
-                            </div>
-                        </div>
-                        <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
-                        <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+                        <span class="id-flotante"><span>${producto.id}</span><span style="display:none">${producto.stock} Und.</span><input type="number" class="entrada-conteo" value="${producto.stock}" min="0"></span>
+                        </span>
+                        <span class="detalle"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                        <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
                     </div>
                 </div>
             </div>
         `;
+        } else if (tipoEvento === 'almacen') {
+            return `
+            <div class="registro-item" data-id="${producto.id}">
+                <div class="header">
+                    ${imagenMostrar}
+                    <div class="info-header">
+                        <span class="id-flotante"><span>${producto.id}</span><span style="display:flex;gap:5px"><span class="flotante-item orange">${producto.stock} Und.</span><span class="flotante-item green">Bs. ${precioMostrar}</span></span></span>
+                        <span class="detalle"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                        <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        } else if (tipoEvento === 'salidas' || tipoEvento === 'ingresos') {
+
+            return `
+                <div class="registro-item" data-id="${producto.id}">
+                    <div class="header">
+                        ${imagenMostrar}
+                        <div class="info-header">
+                            <span class="id-flotante"><span>${producto.id}</span></span>
+                            <span class="detalle"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                            <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
     }));
 
     // Renderizar HTML
     productosContainer.innerHTML = productosHTML.join('');
-
     eventosAlmacenGeneral();
 }
 
 
 function eventosAlmacenGeneral() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
-    const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter2 .btn-filtro');
+    const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
     const selectPrecios = document.querySelector('.precios-select');
-
-    const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
-    const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
-    const btnPrecios = document.querySelectorAll('.btn-precios');
 
     const items = document.querySelectorAll('.registro-item');
 
-    const inputBusqueda = document.querySelector('.buscar-producto');
+    const inputBusqueda = document.querySelector('.search');
     const contenedor = document.querySelector('.anuncio .relleno');
+
+    const select = document.getElementById('eventoTipo');
+
+    select.value = tipoEvento;
+    select.addEventListener('change', () => {
+        localStorage.setItem('tipoEventoAlmacenLocal', select.value);
+        tipoEvento = select.value; // <-- ACTUALIZA la variable global
+        renderInitialHTML();
+        updateHTMLWithData();
+    });
+    select.addEventListener('click', (e) => {
+        scrollToCenter(e.target, e.target.parentElement);
+    });
+
+    let filtroEtiquetaAlmacen = localStorage.getItem('filtroEtiquetaAlmacen') || 'Todos';
+
+
     contenedor.addEventListener('scroll', () => {
         const yaExiste = contenedor.querySelector('.scroll-top');
 
@@ -488,27 +667,13 @@ function eventosAlmacenGeneral() {
         }
     });
 
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
     function aplicarFiltros() {
         const registros = document.querySelectorAll('.registro-item');
         const busqueda = normalizarTexto(inputBusqueda.value);
         const precioSeleccionado = selectPrecios.selectedIndex >= 0 && selectPrecios.options[selectPrecios.selectedIndex] ?
             selectPrecios.options[selectPrecios.selectedIndex].text : '';
-        const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro.activado');
-        const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter2 .btn-filtro:nth-child(5)');
+        const botonCantidadActivo = document.querySelector('.filtros-opciones.cantidad-filter .btn-filtro.activado');
+        const botonSueltas = document.querySelector('.filtros-opciones.cantidad-filter .btn-filtro:nth-child(5)');
         const mostrarSueltas = botonSueltas.classList.contains('activado');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
@@ -545,8 +710,8 @@ function eventosAlmacenGeneral() {
                 }
 
                 // Filtro de etiquetas
-                if (mostrar && filtroNombreActual !== 'Todos') {
-                    mostrar = mostrar && etiquetasProducto.includes(filtroNombreActual);
+                if (mostrar && filtroEtiquetaAlmacen !== 'Todos') {
+                    mostrar = mostrar && etiquetasProducto.includes(filtroEtiquetaAlmacen);
                 }
 
                 // Filtro de búsqueda
@@ -652,19 +817,19 @@ function eventosAlmacenGeneral() {
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
-    let filtroNombreActual = localStorage.getItem('filtroEtiquetaAlmacen') || 'Todos';
+
     botonesEtiquetas.forEach(boton => {
         boton.classList.remove('activado');
-        if (boton.textContent.trim() === filtroNombreActual) {
+        if (boton.textContent.trim() === filtroEtiquetaAlmacen) {
             boton.classList.add('activado');
         }
         boton.addEventListener('click', () => {
             botonesEtiquetas.forEach(b => b.classList.remove('activado'));
             boton.classList.add('activado');
-            filtroNombreActual = boton.textContent.trim();
+            filtroEtiquetaAlmacen = boton.textContent.trim();
             aplicarFiltros();
             scrollToCenter(boton, boton.parentElement);
-            localStorage.setItem('filtroEtiquetaAlmacen', filtroNombreActual);
+            localStorage.setItem('filtroEtiquetaAlmacen', filtroEtiquetaAlmacen);
         });
     });
     botonesCantidad.forEach(boton => {
@@ -684,6 +849,8 @@ function eventosAlmacenGeneral() {
             aplicarFiltros();
         });
     });
+
+
     selectPrecios.addEventListener('click', (e) => {
         scrollToCenter(e.target, e.target.parentElement);
     });
@@ -694,66 +861,54 @@ function eventosAlmacenGeneral() {
 
 
 
-
-    items.forEach(item => {
-        item.addEventListener('click', function () {
-            const registroId = this.dataset.id;
-            window.info(registroId);
+    if (tipoEvento === 'almacen') {
+        const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
+        const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
+        const btnPrecios = document.querySelectorAll('.btn-precios');
+        items.forEach(item => {
+            item.addEventListener('click', function () {
+                const registroId = this.dataset.id;
+                window.info(registroId);
+            });
         });
-    });
-
-    if (tienePermiso('creacion')) {
-        btnCrearProducto.forEach(btn => {
-            btn.addEventListener('click', crearProducto);
-        });
-        btnEtiquetas.forEach(btn => {
-            btn.addEventListener('click', gestionarEtiquetas);
-        });
-        btnPrecios.forEach(btn => {
-            btn.addEventListener('click', gestionarPrecios);
-        });
-    }
-
-
-    window.info = async function (registroId) {
-        const producto = productos.find(r => r.id === registroId);
-        if (!producto) return;
-
-
-        let imagenMostrar = '<i class=\'bx bx-package\'></i>';
-        if (producto.imagen && producto.imagen.includes('https://res.cloudinary.com')) {
-            const imagenCache = await obtenerImagenLocal(producto.id);
-            if (imagenCache && !necesitaActualizacion(imagenCache, producto.imagen)) {
-                imagenMostrar = `<img class="imagen" src="${imagenCache.data}" alt="${producto.producto}" 
-                            onerror="this.parentElement.innerHTML='<i class=\\'bx bx-package\\'></i>'">`;
-            }
+        if (tienePermiso('creacion')) {
+            btnCrearProducto.forEach(btn => {
+                btn.addEventListener('click', crearProducto);
+            });
+            btnEtiquetas.forEach(btn => {
+                btn.addEventListener('click', gestionarEtiquetas);
+            });
+            btnPrecios.forEach(btn => {
+                btn.addEventListener('click', gestionarPrecios);
+            });
         }
 
-        // Procesar los precios
-        const preciosFormateados = producto.precios.split(';')
-            .filter(precio => precio.trim()) // Eliminar elementos vacíos
-            .map(precio => {
-                const [ciudad, valor] = precio.split(',');
-                return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${parseFloat(valor).toFixed(2)}</span>`;
-            })
-            .join('');
-        const etiquetasFormateados = producto.etiquetas.split(';')
-            .filter(precio => precio.trim()) // Eliminar elementos vacíos
-            .map(precio => {
-                const [valor] = precio.split(';');
-                return `<span class="valor"><strong><i class='bx bx-tag'></i> ${valor}</span>`;
-            })
-            .join('');
-        const contenido = document.querySelector('.anuncio-second .contenido');
-        const registrationHTML = `
+        window.info = async function (registroId) {
+            const producto = productos.find(r => r.id === registroId);
+            if (!producto) return;
+
+            // Procesar los precios
+            const preciosFormateados = producto.precios.split(';')
+                .filter(precio => precio.trim()) // Eliminar elementos vacíos
+                .map(precio => {
+                    const [ciudad, valor] = precio.split(',');
+                    return `<span class="valor"><strong><i class='bx bx-store'></i> ${ciudad}: </strong>Bs. ${parseFloat(valor).toFixed(2)}</span>`;
+                })
+                .join('');
+            const etiquetasFormateados = producto.etiquetas.split(';')
+                .filter(precio => precio.trim()) // Eliminar elementos vacíos
+                .map(precio => {
+                    const [valor] = precio.split(';');
+                    return `<span class="valor"><strong><i class='bx bx-tag'></i> ${valor}</span>`;
+                })
+                .join('');
+            const contenido = document.querySelector('.anuncio-second .contenido');
+            const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">${producto.producto}</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            <div class="imagen-producto-registro">
-                ${imagenMostrar}
-            </div>
             <p class="normal">Información general</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -787,27 +942,27 @@ function eventosAlmacenGeneral() {
         </div>` : ''}
     `;
 
-        contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '10px';
-        mostrarAnuncioSecond();
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '10px';
+            mostrarAnuncioSecond();
 
 
-        if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
-            contenido.style.paddingBottom = '70px';
-        }
+            if (tienePermiso('edicion') || tienePermiso('eliminacion')) {
+                contenido.style.paddingBottom = '70px';
+            }
 
 
-        if (tienePermiso('edicion')) {
-            const btnEditar = contenido.querySelector('.btn-editar');
-            btnEditar.addEventListener('click', () => editar(producto));
-        }
-        if (tienePermiso('eliminacion')) {
-            const btnEliminar = contenido.querySelector('.btn-eliminar');
-            btnEliminar.addEventListener('click', () => eliminar(producto));
-        }
-        function eliminar(producto) {
-            const contenido = document.querySelector('.anuncio-tercer .contenido');
-            const registrationHTML = `
+            if (tienePermiso('edicion')) {
+                const btnEditar = contenido.querySelector('.btn-editar');
+                btnEditar.addEventListener('click', () => editar(producto));
+            }
+            if (tienePermiso('eliminacion')) {
+                const btnEliminar = contenido.querySelector('.btn-eliminar');
+                btnEliminar.addEventListener('click', () => eliminar(producto));
+            }
+            function eliminar(producto) {
+                const contenido = document.querySelector('.anuncio-tercer .contenido');
+                const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Eliminar producto</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
@@ -841,79 +996,79 @@ function eventosAlmacenGeneral() {
                 <button class="btn-eliminar-producto btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
             </div>
         `;
-            contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '80px';
-            mostrarAnuncioTercer();
+                contenido.innerHTML = registrationHTML;
+                contenido.style.paddingBottom = '80px';
+                mostrarAnuncioTercer();
 
-            // Agregar evento al botón guardar
-            const btnEliminarProducto = contenido.querySelector('.btn-eliminar-producto');
-            btnEliminarProducto.addEventListener('click', confirmarEliminacionProducto);
+                // Agregar evento al botón guardar
+                const btnEliminarProducto = contenido.querySelector('.btn-eliminar-producto');
+                btnEliminarProducto.addEventListener('click', confirmarEliminacionProducto);
 
-            async function confirmarEliminacionProducto() {
-                const motivo = document.querySelector('.motivo').value.trim();
+                async function confirmarEliminacionProducto() {
+                    const motivo = document.querySelector('.motivo').value.trim();
 
-                if (!motivo) {
-                    mostrarNotificacion({
-                        message: 'Debe ingresar el motivo de la eliminación',
-                        type: 'warning',
-                        duration: 3500
-                    });
-                    return;
-                }
-
-                try {
-                    const signal = await mostrarProgreso('.pro-delete')
-                    const response = await fetch(`/eliminar-producto/${registroId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ motivo })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        await obtenerAlmacenGeneral();
-                        updateHTMLWithData();
-                        cerrarAnuncioManual('anuncioSecond');
+                    if (!motivo) {
                         mostrarNotificacion({
-                            message: 'Producto eliminado correctamente',
-                            type: 'success',
-                            duration: 3000
+                            message: 'Debe ingresar el motivo de la eliminación',
+                            type: 'warning',
+                            duration: 3500
                         });
-                        registrarNotificacion(
-                            'Administración',
-                            'Eliminación',
-                            usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
-                    } else {
-                        throw new Error(data.error || 'Error al eliminar el producto');
-                    }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
                         return;
                     }
-                    console.error('Error:', error);
-                    mostrarNotificacion({
-                        message: error.message || 'Error al eliminar el producto',
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-delete')
+
+                    try {
+                        const signal = await mostrarProgreso('.pro-delete')
+                        const response = await fetch(`/eliminar-producto/${registroId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ motivo })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            await obtenerAlmacenGeneral();
+                            updateHTMLWithData();
+                            cerrarAnuncioManual('anuncioSecond');
+                            mostrarNotificacion({
+                                message: 'Producto eliminado correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            registrarNotificacion(
+                                'Administración',
+                                'Eliminación',
+                                usuarioInfo.nombre + ' elimino el producto ' + producto.producto + ' Id: ' + producto.id + ' su motivo fue: ' + motivo)
+                        } else {
+                            throw new Error(data.error || 'Error al eliminar el producto');
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        console.error('Error:', error);
+                        mostrarNotificacion({
+                            message: error.message || 'Error al eliminar el producto',
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-delete')
+                    }
                 }
             }
-        }
-        function editar(producto) {
+            function editar(producto) {
 
-            // Procesar las etiquetas actuales del producto
-            const etiquetasProducto = producto.etiquetas.split(';').filter(e => e.trim());
-            const etiquetasHTML = etiquetasProducto.map(etiqueta => `
+                // Procesar las etiquetas actuales del producto
+                const etiquetasProducto = producto.etiquetas.split(';').filter(e => e.trim());
+                const etiquetasHTML = etiquetasProducto.map(etiqueta => `
             <div class="etiqueta-item" data-valor="${etiqueta}">
                 <i class='bx bx-purchase-tag'></i>
                 <span>${etiqueta}</span>
@@ -921,29 +1076,29 @@ function eventosAlmacenGeneral() {
             </div>
             `).join('');
 
-            // Procesar los precios del producto
-            // Procesar los precios del producto
-            const preciosFormateados = producto.precios.split(';')
-                .filter(precio => precio.trim())
-                .map(precio => {
-                    const [ciudad, valor] = precio.split(',');
-                    return `<div class="entrada">
+                // Procesar los precios del producto
+                // Procesar los precios del producto
+                const preciosFormateados = producto.precios.split(';')
+                    .filter(precio => precio.trim())
+                    .map(precio => {
+                        const [ciudad, valor] = precio.split(',');
+                        return `<div class="entrada">
                                 <i class='bx bx-store'></i>
                                 <div class="input">
                                     <p class="detalle">${ciudad}</p>
                                     <input class="precio-input" data-ciudad="${ciudad}" type="number" value="${valor}" autocomplete="off" placeholder=" " required>
                                 </div>
                             </div>`;
-                })
-                .join('');
+                    })
+                    .join('');
 
-            // Lista de etiquetas disponibles (excluyendo las ya seleccionadas)
-            const etiquetasDisponibles = etiquetas
-                .map(e => e.etiqueta)
-                .filter(e => !etiquetasProducto.includes(e));
+                // Lista de etiquetas disponibles (excluyendo las ya seleccionadas)
+                const etiquetasDisponibles = etiquetas
+                    .map(e => e.etiqueta)
+                    .filter(e => !etiquetasProducto.includes(e));
 
-            const contenido = document.querySelector('.anuncio-tercer .contenido');
-            const registrationHTML = `
+                const contenido = document.querySelector('.anuncio-tercer .contenido');
+                const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Editar producto</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
@@ -1026,8 +1181,8 @@ function eventosAlmacenGeneral() {
                         <p class="detalle">Selecciona nueva etiqueta</p>
                         <select class="select-etiqueta" required>
                         ${etiquetasDisponibles.map(etiqueta =>
-                `<option value="${etiqueta}">${etiqueta}</option>`
-            ).join('')}
+                    `<option value="${etiqueta}">${etiqueta}</option>`
+                ).join('')}
                         </select>
                         <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
                     </div>
@@ -1073,175 +1228,175 @@ function eventosAlmacenGeneral() {
             </div>
         `;
 
-            contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '70px';
+                contenido.innerHTML = registrationHTML;
+                contenido.style.paddingBottom = '70px';
 
-            // Eventos para manejar etiquetas
-            const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
-            const selectEtiqueta = contenido.querySelector('.select-etiqueta');
-            const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
+                // Eventos para manejar etiquetas
+                const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
+                const selectEtiqueta = contenido.querySelector('.select-etiqueta');
+                const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
 
-            btnAgregarEtiqueta.addEventListener('click', () => {
-                const etiquetaSeleccionada = selectEtiqueta.value;
-                if (etiquetaSeleccionada) {
-                    const nuevaEtiqueta = document.createElement('div');
-                    nuevaEtiqueta.className = 'etiqueta-item';
-                    nuevaEtiqueta.dataset.valor = etiquetaSeleccionada;
-                    nuevaEtiqueta.innerHTML = `
+                btnAgregarEtiqueta.addEventListener('click', () => {
+                    const etiquetaSeleccionada = selectEtiqueta.value;
+                    if (etiquetaSeleccionada) {
+                        const nuevaEtiqueta = document.createElement('div');
+                        nuevaEtiqueta.className = 'etiqueta-item';
+                        nuevaEtiqueta.dataset.valor = etiquetaSeleccionada;
+                        nuevaEtiqueta.innerHTML = `
                     <i class='bx bx-purchase-tag'></i>
                     <span>${etiquetaSeleccionada}</span>
                     <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
                 `;
-                    etiquetasActuales.appendChild(nuevaEtiqueta);
-                    selectEtiqueta.querySelector(`option[value="${etiquetaSeleccionada}"]`).remove();
-                    selectEtiqueta.value = '';
-                }
-            });
+                        etiquetasActuales.appendChild(nuevaEtiqueta);
+                        selectEtiqueta.querySelector(`option[value="${etiquetaSeleccionada}"]`).remove();
+                        selectEtiqueta.value = '';
+                    }
+                });
 
-            // Eventos para quitar etiquetas
-            etiquetasActuales.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-quitar-etiqueta')) {
-                    const etiquetaItem = e.target.closest('.etiqueta-item');
-                    const valorEtiqueta = etiquetaItem.dataset.valor;
-                    const option = document.createElement('option');
-                    option.value = valorEtiqueta;
-                    option.textContent = valorEtiqueta;
-                    selectEtiqueta.appendChild(option);
-                    etiquetaItem.remove();
-                }
-            });
+                // Eventos para quitar etiquetas
+                etiquetasActuales.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-quitar-etiqueta')) {
+                        const etiquetaItem = e.target.closest('.etiqueta-item');
+                        const valorEtiqueta = etiquetaItem.dataset.valor;
+                        const option = document.createElement('option');
+                        option.value = valorEtiqueta;
+                        option.textContent = valorEtiqueta;
+                        selectEtiqueta.appendChild(option);
+                        etiquetaItem.remove();
+                    }
+                });
 
-            mostrarAnuncioTercer();
+                mostrarAnuncioTercer();
 
-            // Agregar evento al botón guardar
-            const btnEditarProducto = contenido.querySelector('.btn-editar-producto');
-            btnEditarProducto.addEventListener('click', confirmarEdicionProducto);
+                // Agregar evento al botón guardar
+                const btnEditarProducto = contenido.querySelector('.btn-editar-producto');
+                btnEditarProducto.addEventListener('click', confirmarEdicionProducto);
 
-            async function confirmarEdicionProducto() {
-                try {
-                    // Crear FormData para enviar la imagen y los datos
-                    const formData = new FormData();
+                async function confirmarEdicionProducto() {
+                    try {
+                        // Crear FormData para enviar la imagen y los datos
+                        const formData = new FormData();
 
-                    // Obtener todos los campos del formulario
-                    const producto = document.querySelector('.editar-producto .producto').value.trim();
-                    const gramos = document.querySelector('.editar-producto .gramaje').value.trim();
-                    const stock = document.querySelector('.editar-producto .stock').value.trim();
-                    const cantidadxgrupo = document.querySelector('.editar-producto .cantidad-grupo').value.trim();
-                    const lista = document.querySelector('.editar-producto .lista').value.trim();
-                    const codigo_barras = document.querySelector('.editar-producto .codigo-barras').value.trim();
-                    const uSueltas = document.querySelector('.editar-producto .unidades-sueltas').value.trim();
-                    const motivo = document.querySelector('.editar-producto .motivo').value.trim();
-                    const alm_acopio_id = document.querySelector('.editar-producto .alm-acopio-producto').value;
-                    const alm_acopio_producto = alm_acopio_id ?
-                        productosAcopio.find(p => p.id === alm_acopio_id)?.producto :
-                        '';
+                        // Obtener todos los campos del formulario
+                        const producto = document.querySelector('.editar-producto .producto').value.trim();
+                        const gramos = document.querySelector('.editar-producto .gramaje').value.trim();
+                        const stock = document.querySelector('.editar-producto .stock').value.trim();
+                        const cantidadxgrupo = document.querySelector('.editar-producto .cantidad-grupo').value.trim();
+                        const lista = document.querySelector('.editar-producto .lista').value.trim();
+                        const codigo_barras = document.querySelector('.editar-producto .codigo-barras').value.trim();
+                        const uSueltas = document.querySelector('.editar-producto .unidades-sueltas').value.trim();
+                        const motivo = document.querySelector('.editar-producto .motivo').value.trim();
+                        const alm_acopio_id = document.querySelector('.editar-producto .alm-acopio-producto').value;
+                        const alm_acopio_producto = alm_acopio_id ?
+                            productosAcopio.find(p => p.id === alm_acopio_id)?.producto :
+                            '';
 
-                    // Validar motivo
-                    if (!motivo) {
+                        // Validar motivo
+                        if (!motivo) {
+                            mostrarNotificacion({
+                                message: 'Debe ingresar el motivo de la edición',
+                                type: 'warning',
+                                duration: 3500
+                            });
+                            return;
+                        }
+
+                        // Obtener etiquetas seleccionadas
+                        const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.etiquetas-actuales .etiqueta-item'))
+                            .map(item => item.dataset.valor)
+                            .join(';');
+
+                        // Obtener precios
+                        const preciosInputs = document.querySelectorAll('.editar-producto .precio-input');
+                        const preciosActualizados = Array.from(preciosInputs)
+                            .map(input => `${input.dataset.ciudad},${input.value}`)
+                            .join(';');
+
+                        // Agregar todos los campos al FormData
+                        formData.append('producto', producto);
+                        formData.append('gramos', gramos);
+                        formData.append('stock', stock);
+                        formData.append('cantidadxgrupo', cantidadxgrupo);
+                        formData.append('lista', lista);
+                        formData.append('codigo_barras', codigo_barras);
+                        formData.append('etiquetas', etiquetasSeleccionadas);
+                        formData.append('precios', preciosActualizados);
+                        formData.append('uSueltas', uSueltas);
+                        formData.append('alm_acopio_id', alm_acopio_id);
+                        formData.append('alm_acopio_producto', alm_acopio_producto);
+                        formData.append('motivo', motivo);
+
+                        // Procesar imagen si existe
+                        const imagenInput = document.querySelector('.editar-producto .imagen-producto');
+                        if (imagenInput.files && imagenInput.files[0]) {
+                            formData.append('imagen', imagenInput.files[0]);
+                        }
+
+                        const signal = await mostrarProgreso('.pro-edit')
+
+                        const response = await fetch(`/actualizar-producto/${registroId}`, {
+                            method: 'PUT',
+                            body: formData // Ya no necesitamos headers porque FormData los establece automáticamente
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            await obtenerAlmacenGeneral();
+                            info(registroId)
+                            updateHTMLWithData();
+                            mostrarNotificacion({
+                                message: 'Producto actualizado correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            registrarNotificacion(
+                                'Administración',
+                                'Edición',
+                                usuarioInfo.nombre + ' editó el producto ' + producto + ' su motivo fue: ' + motivo
+                            );
+                        } else {
+                            throw new Error(data.error || 'Error al actualizar el producto');
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        console.error('Error:', error);
                         mostrarNotificacion({
-                            message: 'Debe ingresar el motivo de la edición',
-                            type: 'warning',
+                            message: error.message || 'Error al actualizar el producto',
+                            type: 'error',
                             duration: 3500
                         });
-                        return;
+                    } finally {
+                        ocultarProgreso('.pro-edit')
                     }
-
-                    // Obtener etiquetas seleccionadas
-                    const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.etiquetas-actuales .etiqueta-item'))
-                        .map(item => item.dataset.valor)
-                        .join(';');
-
-                    // Obtener precios
-                    const preciosInputs = document.querySelectorAll('.editar-producto .precio-input');
-                    const preciosActualizados = Array.from(preciosInputs)
-                        .map(input => `${input.dataset.ciudad},${input.value}`)
-                        .join(';');
-
-                    // Agregar todos los campos al FormData
-                    formData.append('producto', producto);
-                    formData.append('gramos', gramos);
-                    formData.append('stock', stock);
-                    formData.append('cantidadxgrupo', cantidadxgrupo);
-                    formData.append('lista', lista);
-                    formData.append('codigo_barras', codigo_barras);
-                    formData.append('etiquetas', etiquetasSeleccionadas);
-                    formData.append('precios', preciosActualizados);
-                    formData.append('uSueltas', uSueltas);
-                    formData.append('alm_acopio_id', alm_acopio_id);
-                    formData.append('alm_acopio_producto', alm_acopio_producto);
-                    formData.append('motivo', motivo);
-
-                    // Procesar imagen si existe
-                    const imagenInput = document.querySelector('.editar-producto .imagen-producto');
-                    if (imagenInput.files && imagenInput.files[0]) {
-                        formData.append('imagen', imagenInput.files[0]);
-                    }
-
-                    const signal = await mostrarProgreso('.pro-edit')
-
-                    const response = await fetch(`/actualizar-producto/${registroId}`, {
-                        method: 'PUT',
-                        body: formData // Ya no necesitamos headers porque FormData los establece automáticamente
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        await obtenerAlmacenGeneral();
-                        info(registroId)
-                        updateHTMLWithData();
-                        mostrarNotificacion({
-                            message: 'Producto actualizado correctamente',
-                            type: 'success',
-                            duration: 3000
-                        });
-                        registrarNotificacion(
-                            'Administración',
-                            'Edición',
-                            usuarioInfo.nombre + ' editó el producto ' + producto + ' su motivo fue: ' + motivo
-                        );
-                    } else {
-                        throw new Error(data.error || 'Error al actualizar el producto');
-                    }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
-                    console.error('Error:', error);
-                    mostrarNotificacion({
-                        message: error.message || 'Error al actualizar el producto',
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-edit')
                 }
             }
         }
-    }
 
-    function crearProducto() {
+        function crearProducto() {
 
-        const preciosFormateados = precios.map(precio => {
-            return `<div class="entrada">
+            const preciosFormateados = precios.map(precio => {
+                return `<div class="entrada">
                         <i class='bx bx-store'></i>
                         <div class="input">
                             <p class="detalle">${precio.precio}</p>
                             <input class="precio-input" data-ciudad="${precio.precio}" type="number" value="" autocomplete="off" placeholder=" " required>
                         </div>
                     </div>`;
-        }).join('');
+            }).join('');
 
-        // Lista de todas las etiquetas disponibles
-        const etiquetasDisponibles = etiquetas.map(e => e.etiqueta);
+            // Lista de todas las etiquetas disponibles
+            const etiquetasDisponibles = etiquetas.map(e => e.etiqueta);
 
-        const contenido = document.querySelector('.anuncio-second .contenido');
-        const registrationHTML = `
+            const contenido = document.querySelector('.anuncio-second .contenido');
+            const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Nuevo producto</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
@@ -1310,8 +1465,8 @@ function eventosAlmacenGeneral() {
                     <select class="select-etiqueta" required>
                         <option value=""></option>
                         ${etiquetasDisponibles.map(etiqueta =>
-            `<option value="${etiqueta}">${etiqueta}</option>`
-        ).join('')}
+                `<option value="${etiqueta}">${etiqueta}</option>`
+            ).join('')}
                     </select>
                     <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
                 </div>
@@ -1339,142 +1494,142 @@ function eventosAlmacenGeneral() {
         </div>
     `;
 
-        contenido.innerHTML = registrationHTML;
-        contenido.style.paddingBottom = '70px'
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '70px'
 
-        // Eventos para manejar etiquetas
-        const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
-        const selectEtiqueta = contenido.querySelector('.select-etiqueta');
-        const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
+            // Eventos para manejar etiquetas
+            const btnAgregarEtiqueta = contenido.querySelector('.btn-agregar-etiqueta');
+            const selectEtiqueta = contenido.querySelector('.select-etiqueta');
+            const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
 
-        btnAgregarEtiqueta.addEventListener('click', () => {
-            const etiquetaSeleccionada = selectEtiqueta.value;
-            if (etiquetaSeleccionada) {
-                const nuevaEtiqueta = document.createElement('div');
-                nuevaEtiqueta.className = 'etiqueta-item';
-                nuevaEtiqueta.dataset.valor = etiquetaSeleccionada;
-                nuevaEtiqueta.innerHTML = `
+            btnAgregarEtiqueta.addEventListener('click', () => {
+                const etiquetaSeleccionada = selectEtiqueta.value;
+                if (etiquetaSeleccionada) {
+                    const nuevaEtiqueta = document.createElement('div');
+                    nuevaEtiqueta.className = 'etiqueta-item';
+                    nuevaEtiqueta.dataset.valor = etiquetaSeleccionada;
+                    nuevaEtiqueta.innerHTML = `
                 <i class='bx bx-purchase-tag'></i>
                 <span>${etiquetaSeleccionada}</span>
                 <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
             `;
-                etiquetasActuales.appendChild(nuevaEtiqueta);
-                selectEtiqueta.querySelector(`option[value="${etiquetaSeleccionada}"]`).remove();
-                selectEtiqueta.value = '';
-            }
-        });
-
-        // Eventos para quitar etiquetas
-        etiquetasActuales.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-quitar-etiqueta')) {
-                const etiquetaItem = e.target.closest('.etiqueta-item');
-                const valorEtiqueta = etiquetaItem.dataset.valor;
-                const option = document.createElement('option');
-                option.value = valorEtiqueta;
-                option.textContent = valorEtiqueta;
-                selectEtiqueta.appendChild(option);
-                etiquetaItem.remove();
-            }
-        });
-
-        mostrarAnuncioSecond();
-
-        // Agregar evento al botón guardar
-        const btnCrear = contenido.querySelector('.btn-crear-producto');
-        btnCrear.addEventListener('click', confirmarCreacion);
-
-        async function confirmarCreacion() {
-            const producto = document.querySelector('.nuevo-producto .producto').value.trim();
-            const gramos = document.querySelector('.nuevo-producto .gramaje').value.trim();
-            const stock = document.querySelector('.nuevo-producto .stock').value.trim();
-            const cantidadxgrupo = document.querySelector('.nuevo-producto .cantidad-grupo').value.trim();
-            const lista = document.querySelector('.nuevo-producto .lista').value.trim();
-            const codigo_barras = document.querySelector('.nuevo-producto .codigo-barras').value.trim();
-            const acopioSelect = document.querySelector('.nuevo-producto .alm-acopio-producto');
-
-            // Obtener precios formateados (ciudad,valor;ciudad,valor)
-            const preciosSeleccionados = Array.from(document.querySelectorAll('.nuevo-producto .precio-input'))
-                .map(input => `${input.dataset.ciudad},${input.value || '0'}`)
-                .join(';');
-
-            // Obtener etiquetas del contenedor (etiqueta;etiqueta)
-            const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.nuevo-producto .etiquetas-actuales .etiqueta-item'))
-                .map(item => item.dataset.valor)
-                .join(';');
-
-            // Obtener info del producto de acopio
-            const acopio_id = acopioSelect.value;
-            const alm_acopio_producto = acopio_id ?
-                productosAcopio.find(p => p.id === acopio_id)?.producto :
-                'No hay índice seleccionado';
-
-            if (!producto || !gramos || !stock || !cantidadxgrupo || !lista) {
-                mostrarNotificacion({
-                    message: 'Por favor complete todos los campos obligatorios',
-                    type: 'warning',
-                    duration: 3500
-                });
-                return;
-            }
-
-            try {
-                const signal = await mostrarProgreso('.pro-new')
-                const response = await fetch('/crear-producto', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        producto,
-                        gramos,
-                        stock,
-                        cantidadxgrupo,
-                        lista,
-                        codigo_barras,
-                        precios: preciosSeleccionados,
-                        etiquetas: etiquetasSeleccionadas,
-                        acopio_id,
-                        alm_acopio_producto
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await obtenerAlmacenGeneral();
-                    updateHTMLWithData();
-                    info(data.id)
-                    mostrarNotificacion({
-                        message: 'Producto creado correctamente',
-                        type: 'success',
-                        duration: 3000
-                    });
-                    registrarNotificacion(
-                        'Administración',
-                        'Creación',
-                        usuarioInfo.nombre + ' creo un nuevo producto: ' + producto + ' ' + gramos + 'gr.')
-                } else {
-                    throw new Error(data.error || 'Error al crear el producto');
+                    etiquetasActuales.appendChild(nuevaEtiqueta);
+                    selectEtiqueta.querySelector(`option[value="${etiquetaSeleccionada}"]`).remove();
+                    selectEtiqueta.value = '';
                 }
-            } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
+            });
+
+            // Eventos para quitar etiquetas
+            etiquetasActuales.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-quitar-etiqueta')) {
+                    const etiquetaItem = e.target.closest('.etiqueta-item');
+                    const valorEtiqueta = etiquetaItem.dataset.valor;
+                    const option = document.createElement('option');
+                    option.value = valorEtiqueta;
+                    option.textContent = valorEtiqueta;
+                    selectEtiqueta.appendChild(option);
+                    etiquetaItem.remove();
+                }
+            });
+
+            mostrarAnuncioSecond();
+
+            // Agregar evento al botón guardar
+            const btnCrear = contenido.querySelector('.btn-crear-producto');
+            btnCrear.addEventListener('click', confirmarCreacion);
+
+            async function confirmarCreacion() {
+                const producto = document.querySelector('.nuevo-producto .producto').value.trim();
+                const gramos = document.querySelector('.nuevo-producto .gramaje').value.trim();
+                const stock = document.querySelector('.nuevo-producto .stock').value.trim();
+                const cantidadxgrupo = document.querySelector('.nuevo-producto .cantidad-grupo').value.trim();
+                const lista = document.querySelector('.nuevo-producto .lista').value.trim();
+                const codigo_barras = document.querySelector('.nuevo-producto .codigo-barras').value.trim();
+                const acopioSelect = document.querySelector('.nuevo-producto .alm-acopio-producto');
+
+                // Obtener precios formateados (ciudad,valor;ciudad,valor)
+                const preciosSeleccionados = Array.from(document.querySelectorAll('.nuevo-producto .precio-input'))
+                    .map(input => `${input.dataset.ciudad},${input.value || '0'}`)
+                    .join(';');
+
+                // Obtener etiquetas del contenedor (etiqueta;etiqueta)
+                const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.nuevo-producto .etiquetas-actuales .etiqueta-item'))
+                    .map(item => item.dataset.valor)
+                    .join(';');
+
+                // Obtener info del producto de acopio
+                const acopio_id = acopioSelect.value;
+                const alm_acopio_producto = acopio_id ?
+                    productosAcopio.find(p => p.id === acopio_id)?.producto :
+                    'No hay índice seleccionado';
+
+                if (!producto || !gramos || !stock || !cantidadxgrupo || !lista) {
+                    mostrarNotificacion({
+                        message: 'Por favor complete todos los campos obligatorios',
+                        type: 'warning',
+                        duration: 3500
+                    });
                     return;
                 }
-                console.error('Error:', error);
-                mostrarNotificacion({
-                    message: error.message || 'Error al crear el producto',
-                    type: 'error',
-                    duration: 3500
-                });
-            } finally {
-                ocultarProgreso('.pro-new')
+
+                try {
+                    const signal = await mostrarProgreso('.pro-new')
+                    const response = await fetch('/crear-producto', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            producto,
+                            gramos,
+                            stock,
+                            cantidadxgrupo,
+                            lista,
+                            codigo_barras,
+                            precios: preciosSeleccionados,
+                            etiquetas: etiquetasSeleccionadas,
+                            acopio_id,
+                            alm_acopio_producto
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await obtenerAlmacenGeneral();
+                        updateHTMLWithData();
+                        info(data.id)
+                        mostrarNotificacion({
+                            message: 'Producto creado correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        registrarNotificacion(
+                            'Administración',
+                            'Creación',
+                            usuarioInfo.nombre + ' creo un nuevo producto: ' + producto + ' ' + gramos + 'gr.')
+                    } else {
+                        throw new Error(data.error || 'Error al crear el producto');
+                    }
+                } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    console.error('Error:', error);
+                    mostrarNotificacion({
+                        message: error.message || 'Error al crear el producto',
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarProgreso('.pro-new')
+                }
             }
         }
-    }
-    function gestionarEtiquetas() {
-        const contenido = document.querySelector('.anuncio-second .contenido');
-        const etiquetasHTML = etiquetas.map(etiqueta => `
+        function gestionarEtiquetas() {
+            const contenido = document.querySelector('.anuncio-second .contenido');
+            const etiquetasHTML = etiquetas.map(etiqueta => `
                 <div class="etiqueta-item" data-id="${etiqueta.id}">
                     <i class='bx bx-purchase-tag'></i>
                     <span>${etiqueta.etiqueta}</span>
@@ -1482,7 +1637,7 @@ function eventosAlmacenGeneral() {
                 </div>
             `).join('');
 
-        const registrationHTML = `
+            const registrationHTML = `
             <div class="encabezado">
                 <h1 class="titulo">Gestionar Etiquetas</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
@@ -1507,134 +1662,134 @@ function eventosAlmacenGeneral() {
             </div>
             `;
 
-        contenido.innerHTML = registrationHTML;
-        mostrarAnuncioSecond();
+            contenido.innerHTML = registrationHTML;
+            mostrarAnuncioSecond();
 
 
-        const btnAgregarTemp = contenido.querySelector('.btn-agregar-etiqueta-temp');
-        const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
+            const btnAgregarTemp = contenido.querySelector('.btn-agregar-etiqueta-temp');
+            const etiquetasActuales = contenido.querySelector('.etiquetas-actuales');
 
 
-        btnAgregarTemp.addEventListener('click', async () => {
-            const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
-            if (nuevaEtiqueta) {
-                try {
-                    const signal = await mostrarProgreso('.pro-tag')
-                    const response = await fetch('/agregar-etiqueta', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ etiqueta: nuevaEtiqueta })
-                    });
-
-                    if (!response.ok) throw new Error('Error al agregar etiqueta');
-
-                    const data = await response.json();
-                    if (data.success) {
-                        await obtenerEtiquetas();
-                        updateHTMLWithData();
-                        gestionarEtiquetas();
-                        document.querySelector('.nueva-etiqueta').value = '';
-                        mostrarNotificacion({
-                            message: 'Etiqueta agregada correctamente',
-                            type: 'success',
-                            duration: 3000
+            btnAgregarTemp.addEventListener('click', async () => {
+                const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
+                if (nuevaEtiqueta) {
+                    try {
+                        const signal = await mostrarProgreso('.pro-tag')
+                        const response = await fetch('/agregar-etiqueta', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ etiqueta: nuevaEtiqueta })
                         });
+
+                        if (!response.ok) throw new Error('Error al agregar etiqueta');
+
+                        const data = await response.json();
+                        if (data.success) {
+                            await obtenerEtiquetas();
+                            updateHTMLWithData();
+                            gestionarEtiquetas();
+                            document.querySelector('.nueva-etiqueta').value = '';
+                            mostrarNotificacion({
+                                message: 'Etiqueta agregada correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        mostrarNotificacion({
+                            message: error.message,
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-tag')
                     }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
-                    mostrarNotificacion({
-                        message: error.message,
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-tag')
                 }
-            }
-        });
-        etiquetasActuales.addEventListener('click', async (e) => {
-            if (e.target.closest('.btn-quitar-etiqueta')) {
-                try {
-                    const signal = await mostrarProgreso('.pro-tag')
-                    const etiquetaItem = e.target.closest('.etiqueta-item');
-                    const etiquetaId = etiquetaItem.dataset.id;
-                    // Obtener el nombre de la etiqueta eliminada
-                    const etiquetaEliminada = etiquetaItem.querySelector('span').textContent.trim();
+            });
+            etiquetasActuales.addEventListener('click', async (e) => {
+                if (e.target.closest('.btn-quitar-etiqueta')) {
+                    try {
+                        const signal = await mostrarProgreso('.pro-tag')
+                        const etiquetaItem = e.target.closest('.etiqueta-item');
+                        const etiquetaId = etiquetaItem.dataset.id;
+                        // Obtener el nombre de la etiqueta eliminada
+                        const etiquetaEliminada = etiquetaItem.querySelector('span').textContent.trim();
 
-                    const response = await fetch(`/eliminar-etiqueta/${etiquetaId}`, {
-                        method: 'DELETE'
-                    });
+                        const response = await fetch(`/eliminar-etiqueta/${etiquetaId}`, {
+                            method: 'DELETE'
+                        });
 
-                    if (!response.ok) throw new Error('Error al eliminar etiqueta');
+                        if (!response.ok) throw new Error('Error al eliminar etiqueta');
 
-                    const data = await response.json();
-                    if (data.success) {
-                        // Eliminar la etiqueta de todos los productos que la contengan
-                        let productosModificados = 0;
-                        for (const producto of productos) {
-                            if (producto.etiquetas && producto.etiquetas.includes(etiquetaEliminada)) {
-                                // Quitar la etiqueta del string
-                                const nuevasEtiquetas = producto.etiquetas
-                                    .split(';')
-                                    .map(e => e.trim())
-                                    .filter(e => e && e !== etiquetaEliminada)
-                                    .join(';');
-                                if (nuevasEtiquetas !== producto.etiquetas) {
-                                    productosModificados++;
-                                    // Enviar todos los campos relevantes del producto para evitar borrar otros datos
-                                    const body = {
-                                        producto: producto.producto,
-                                        gramos: producto.gramos,
-                                        stock: producto.stock,
-                                        cantidadxgrupo: producto.cantidadxgrupo,
-                                        lista: producto.lista,
-                                        codigo_barras: producto.codigo_barras,
-                                        etiquetas: nuevasEtiquetas,
-                                        precios: producto.precios,
-                                        uSueltas: producto.uSueltas,
-                                        alm_acopio_id: producto.acopio_id || producto.alm_acopio_id || '',
-                                        alm_acopio_producto: producto.alm_acopio_producto || '',
-                                        motivo: 'Eliminación de etiqueta global'
-                                    };
-                                    await fetch(`/actualizar-producto/${producto.id}`, {
-                                        method: 'PUT',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(body)
-                                    });
+                        const data = await response.json();
+                        if (data.success) {
+                            // Eliminar la etiqueta de todos los productos que la contengan
+                            let productosModificados = 0;
+                            for (const producto of productos) {
+                                if (producto.etiquetas && producto.etiquetas.includes(etiquetaEliminada)) {
+                                    // Quitar la etiqueta del string
+                                    const nuevasEtiquetas = producto.etiquetas
+                                        .split(';')
+                                        .map(e => e.trim())
+                                        .filter(e => e && e !== etiquetaEliminada)
+                                        .join(';');
+                                    if (nuevasEtiquetas !== producto.etiquetas) {
+                                        productosModificados++;
+                                        // Enviar todos los campos relevantes del producto para evitar borrar otros datos
+                                        const body = {
+                                            producto: producto.producto,
+                                            gramos: producto.gramos,
+                                            stock: producto.stock,
+                                            cantidadxgrupo: producto.cantidadxgrupo,
+                                            lista: producto.lista,
+                                            codigo_barras: producto.codigo_barras,
+                                            etiquetas: nuevasEtiquetas,
+                                            precios: producto.precios,
+                                            uSueltas: producto.uSueltas,
+                                            alm_acopio_id: producto.acopio_id || producto.alm_acopio_id || '',
+                                            alm_acopio_producto: producto.alm_acopio_producto || '',
+                                            motivo: 'Eliminación de etiqueta global'
+                                        };
+                                        await fetch(`/actualizar-producto/${producto.id}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(body)
+                                        });
+                                    }
                                 }
                             }
+                            await obtenerEtiquetas();
+                            await obtenerAlmacenGeneral();
+                            updateHTMLWithData();
+                            gestionarEtiquetas();
+                            mostrarNotificacion({
+                                message: 'Etiqueta eliminada correctamente' + (productosModificados ? ` y eliminada de ${productosModificados} productos` : ''),
+                                type: 'success',
+                                duration: 3000
+                            });
                         }
-                        await obtenerEtiquetas();
-                        await obtenerAlmacenGeneral();
-                        updateHTMLWithData();
-                        gestionarEtiquetas();
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
                         mostrarNotificacion({
-                            message: 'Etiqueta eliminada correctamente' + (productosModificados ? ` y eliminada de ${productosModificados} productos` : ''),
-                            type: 'success',
-                            duration: 3000
+                            message: error.message,
+                            type: 'error',
+                            duration: 3500
                         });
+                    } finally {
+                        ocultarProgreso('.pro-tag')
                     }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
-                    mostrarNotificacion({
-                        message: error.message,
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-tag')
                 }
-            }
-        });
-    }
-    function gestionarPrecios() {
-        const preciosActuales = precios.map(precio => `
+            });
+        }
+        function gestionarPrecios() {
+            const preciosActuales = precios.map(precio => `
         <div class="precio-item" data-id="${precio.id}">
             <i class='bx bx-dollar'></i>
             <span>${precio.precio}</span>
@@ -1642,8 +1797,8 @@ function eventosAlmacenGeneral() {
         </div>
     `).join('');
 
-        const contenido = document.querySelector('.anuncio-second .contenido');
-        const registrationHTML = `
+            const contenido = document.querySelector('.anuncio-second .contenido');
+            const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Gestionar precios</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
@@ -1674,89 +1829,89 @@ function eventosAlmacenGeneral() {
         </div>
     `;
 
-        contenido.innerHTML = registrationHTML;
-        mostrarAnuncioSecond();
+            contenido.innerHTML = registrationHTML;
+            mostrarAnuncioSecond();
 
-        // Event listeners
-        const btnAgregarPrecio = contenido.querySelector('.btn-agregar-precio');
-        btnAgregarPrecio.addEventListener('click', async () => {
-            const nuevoPrecioInput = document.querySelector('.nuevo-precio');
-            const nuevoPrecio = nuevoPrecioInput.value.trim();
+            // Event listeners
+            const btnAgregarPrecio = contenido.querySelector('.btn-agregar-precio');
+            btnAgregarPrecio.addEventListener('click', async () => {
+                const nuevoPrecioInput = document.querySelector('.nuevo-precio');
+                const nuevoPrecio = nuevoPrecioInput.value.trim();
 
-            if (!nuevoPrecio) {
-                mostrarNotificacion({
-                    message: 'Debe ingresar un precio',
-                    type: 'warning',
-                    duration: 3500
-                });
-                return;
-            }
-
-            try {
-                const signal = await mostrarProgreso('.pro-price')
-                const response = await fetch('/agregar-precio', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ precio: nuevoPrecio })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await obtenerPrecios();
-                    updateHTMLWithData();
-                    gestionarPrecios();
-                    nuevoPrecioInput.value = '';
-
+                if (!nuevoPrecio) {
                     mostrarNotificacion({
-                        message: 'Precio agregado correctamente',
-                        type: 'success',
-                        duration: 3000
+                        message: 'Debe ingresar un precio',
+                        type: 'warning',
+                        duration: 3500
                     });
-                } else {
-                    throw new Error(data.error || 'Error al agregar el precio');
-                }
-            } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
                     return;
                 }
-                console.error('Error:', error);
-                mostrarNotificacion({
-                    message: error.message || 'Error al agregar el precio',
-                    type: 'error',
-                    duration: 3500
+
+                try {
+                    const signal = await mostrarProgreso('.pro-price')
+                    const response = await fetch('/agregar-precio', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ precio: nuevoPrecio })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await obtenerPrecios();
+                        updateHTMLWithData();
+                        gestionarPrecios();
+                        nuevoPrecioInput.value = '';
+
+                        mostrarNotificacion({
+                            message: 'Precio agregado correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                    } else {
+                        throw new Error(data.error || 'Error al agregar el precio');
+                    }
+                } catch (error) {
+                    if (error.message === 'cancelled') {
+                        console.log('Operación cancelada por el usuario');
+                        return;
+                    }
+                    console.error('Error:', error);
+                    mostrarNotificacion({
+                        message: error.message || 'Error al agregar el precio',
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarProgreso('.pro-price')
+                }
+            });
+            const inputExcel = contenido.querySelector('#excel-precios');
+            let file = null;
+
+
+
+            inputExcel.addEventListener('click', () => {
+                // Crear un nuevo input temporal
+                const tempInput = document.createElement('input');
+                tempInput.type = 'file';
+                tempInput.accept = '.xlsx,.xls';
+
+                // Cuando se seleccione un archivo
+                tempInput.addEventListener('change', (e) => {
+                    file = e.target.files[0];
+                    actualizarPlanilla(file.name);
                 });
-            } finally {
-                ocultarProgreso('.pro-price')
-            }
-        });
-        const inputExcel = contenido.querySelector('#excel-precios');
-        let file = null;
 
-
-
-        inputExcel.addEventListener('click', () => {
-            // Crear un nuevo input temporal
-            const tempInput = document.createElement('input');
-            tempInput.type = 'file';
-            tempInput.accept = '.xlsx,.xls';
-
-            // Cuando se seleccione un archivo
-            tempInput.addEventListener('change', (e) => {
-                file = e.target.files[0];
-                actualizarPlanilla(file.name);
+                // Simular click en el input temporal
+                tempInput.click();
             });
 
-            // Simular click en el input temporal
-            tempInput.click();
-        });
-
-        async function actualizarPlanilla(fileName = '') {
-            const contenido = document.querySelector('.anuncio-tercer .contenido');
-            const registrationHTML = `
+            async function actualizarPlanilla(fileName = '') {
+                const contenido = document.querySelector('.anuncio-tercer .contenido');
+                const registrationHTML = `
         <div class="encabezado">
             <h1 class="titulo">Subir planilla de precios</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
@@ -1789,119 +1944,119 @@ function eventosAlmacenGeneral() {
         </div>
     `;
 
-            contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '70px';
+                contenido.innerHTML = registrationHTML;
+                contenido.style.paddingBottom = '70px';
 
-            mostrarAnuncioTercer();
+                mostrarAnuncioTercer();
 
-            // Modifica la parte del frontend donde registras la notificación
-            const btnProcesar = contenido.querySelector('.btn-procesar-planilla');
-            btnProcesar.addEventListener('click', async () => {
-                const motivo = contenido.querySelector('.motivo').value.trim();
-                if (!motivo) {
-                    mostrarNotificacion({
-                        message: 'Debe ingresar un motivo',
-                        type: 'warning',
-                        duration: 3500
-                    });
-                    return;
-                }
-
-                try {
-                    const signal = await mostrarProgreso('.pro-price')
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('motivo', motivo);
-
-                    const response = await fetch('/actualizar-precios-planilla', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
+                // Modifica la parte del frontend donde registras la notificación
+                const btnProcesar = contenido.querySelector('.btn-procesar-planilla');
+                btnProcesar.addEventListener('click', async () => {
+                    const motivo = contenido.querySelector('.motivo').value.trim();
+                    if (!motivo) {
                         mostrarNotificacion({
-                            message: 'Precios actualizados correctamente',
-                            type: 'success',
-                            duration: 3000
+                            message: 'Debe ingresar un motivo',
+                            type: 'warning',
+                            duration: 3500
                         });
-                        registrarNotificacion(
-                            'Administración',
-                            'Edición',
-                            `${usuarioInfo.nombre} actualizó los precios mediante planilla. Motivo: ${motivo}`
-                        );
-                        await mostrarAlmacenGeneral();
-                    } else {
-                        throw new Error(data.error || 'Error al procesar la planilla');
-                    }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
                         return;
                     }
-                    mostrarNotificacion({
-                        message: error.message,
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-price')
+
+                    try {
+                        const signal = await mostrarProgreso('.pro-price')
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('motivo', motivo);
+
+                        const response = await fetch('/actualizar-precios-planilla', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            mostrarNotificacion({
+                                message: 'Precios actualizados correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            registrarNotificacion(
+                                'Administración',
+                                'Edición',
+                                `${usuarioInfo.nombre} actualizó los precios mediante planilla. Motivo: ${motivo}`
+                            );
+                            await mostrarAlmacenGeneral();
+                        } else {
+                            throw new Error(data.error || 'Error al procesar la planilla');
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        mostrarNotificacion({
+                            message: error.message,
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-price')
+                    }
+                });
+
+            };
+            contenido.addEventListener('click', async (e) => {
+                if (e.target.closest('.btn-eliminar-precio')) {
+                    const precioItem = e.target.closest('.precio-item');
+                    const precioId = precioItem.dataset.id;
+
+                    try {
+                        const signal = await mostrarProgreso('.pro-price')
+                        const response = await fetch(`/eliminar-precio/${precioId}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Error al eliminar el precio');
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            await obtenerPrecios();
+                            updateHTMLWithData();
+                            gestionarPrecios();
+                            precioItem.remove();
+                            mostrarNotificacion({
+                                message: 'Precio eliminado correctamente',
+                                type: 'success',
+                                duration: 3000
+                            });
+                        } else {
+                            throw new Error(data.error || 'Error al eliminar el precio');
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        console.error('Error:', error);
+                        mostrarNotificacion({
+                            message: error.message || 'Error al eliminar el precio',
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-price')
+                    }
                 }
             });
 
-        };
-        contenido.addEventListener('click', async (e) => {
-            if (e.target.closest('.btn-eliminar-precio')) {
-                const precioItem = e.target.closest('.precio-item');
-                const precioId = precioItem.dataset.id;
-
-                try {
-                    const signal = await mostrarProgreso('.pro-price')
-                    const response = await fetch(`/eliminar-precio/${precioId}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Error al eliminar el precio');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        await obtenerPrecios();
-                        updateHTMLWithData();
-                        gestionarPrecios();
-                        precioItem.remove();
-                        mostrarNotificacion({
-                            message: 'Precio eliminado correctamente',
-                            type: 'success',
-                            duration: 3000
-                        });
-                    } else {
-                        throw new Error(data.error || 'Error al eliminar el precio');
-                    }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
-                    console.error('Error:', error);
-                    mostrarNotificacion({
-                        message: error.message || 'Error al eliminar el precio',
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-price')
-                }
-            }
-        });
-
-        const btnHojaVinculada = contenido.querySelector('#hoja-vinculada');
-        btnHojaVinculada.addEventListener('click', async () => {
-            const contenidoTercer = document.querySelector('.anuncio-tercer .contenido');
-            const registrationHTML = `
+            const btnHojaVinculada = contenido.querySelector('#hoja-vinculada');
+            btnHojaVinculada.addEventListener('click', async () => {
+                const contenidoTercer = document.querySelector('.anuncio-tercer .contenido');
+                const registrationHTML = `
                 <div class="encabezado">
                     <h1 class="titulo">Actualizar desde hoja vinculada</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
@@ -1926,62 +2081,1384 @@ function eventosAlmacenGeneral() {
                     <button class="btn-procesar-hoja btn blue"><i class="bx bx-check"></i> Procesar hoja vinculada</button>
                 </div>
             `;
-            contenidoTercer.innerHTML = registrationHTML;
-            contenidoTercer.style.paddingBottom = '70px';
-            mostrarAnuncioTercer();
+                contenidoTercer.innerHTML = registrationHTML;
+                contenidoTercer.style.paddingBottom = '70px';
+                mostrarAnuncioTercer();
 
-            const btnProcesar = contenidoTercer.querySelector('.btn-procesar-hoja');
-            btnProcesar.addEventListener('click', async () => {
-                const motivo = contenidoTercer.querySelector('.motivo').value.trim();
-                if (!motivo) {
-                    mostrarNotificacion({
-                        message: 'Debe ingresar un motivo',
-                        type: 'warning',
-                        duration: 3500
-                    });
-                    return;
-                }
+                const btnProcesar = contenidoTercer.querySelector('.btn-procesar-hoja');
+                btnProcesar.addEventListener('click', async () => {
+                    const motivo = contenidoTercer.querySelector('.motivo').value.trim();
+                    if (!motivo) {
+                        mostrarNotificacion({
+                            message: 'Debe ingresar un motivo',
+                            type: 'warning',
+                            duration: 3500
+                        });
+                        return;
+                    }
+                    try {
+                        const signal = await mostrarProgreso('.pro-price');
+                        const response = await fetch('/actualizar-precios-hoja-vinculada', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ motivo })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            mostrarNotificacion({
+                                message: 'Precios actualizados correctamente desde hoja vinculada',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            registrarNotificacion(
+                                'Administración',
+                                'Edición',
+                                `${usuarioInfo.nombre} actualizó los precios mediante hoja vinculada. Motivo: ${motivo}`
+                            );
+                            await mostrarAlmacenGeneral();
+                        } else {
+                            throw new Error(data.error || 'Error al procesar la hoja vinculada');
+                        }
+                    } catch (error) {
+                        if (error.message === 'cancelled') {
+                            console.log('Operación cancelada por el usuario');
+                            return;
+                        }
+                        mostrarNotificacion({
+                            message: error.message,
+                            type: 'error',
+                            duration: 3500
+                        });
+                    } finally {
+                        ocultarProgreso('.pro-price');
+                    }
+                });
+            });
+
+        }
+    } else if (tipoEvento === 'conteo') {
+        const vistaPrevia = document.querySelectorAll('.vista-previa');
+
+        document.querySelectorAll('.stock-fisico').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const productoId = e.target.closest('.registro-item').dataset.id;
+                const nuevoValor = parseInt(e.target.value);
+
+                // Obtener datos existentes o crear nuevo objeto
+                let stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
+
+                // Actualizar valor
+                stockFisico[productoId] = nuevoValor;
+
+                // Guardar en localStorage
+                localStorage.setItem('damabrava_stock_fisico', JSON.stringify(stockFisico));
+            });
+        });
+        const stockGuardado = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
+        Object.entries(stockGuardado).forEach(([id, valor]) => {
+            const input = document.querySelector(`.registro-item[data-id="${id}"] .stock-fisico`);
+            if (input) {
+                input.value = valor;
+            }
+        });
+        vistaPrevia.forEach(btn => {
+            btn.addEventListener('click', vistaPreviaConteo);
+        })
+        function vistaPreviaConteo() {
+            const stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
+            const contenido = document.querySelector('.anuncio-second .contenido');
+
+            const registrationHTML = `
+        <div class="encabezado">
+            <h1 class="titulo">Vista Previa del Conteo</h1>
+            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+        </div>
+        <div class="relleno">
+            <p class="normal">Resumen del conteo</p>
+            ${productos.map(producto => {
+                const stockActual = parseInt(producto.stock);
+                const stockContado = parseInt(stockFisico[producto.id] || producto.stock);
+                const diferencia = stockContado - stockActual;
+                const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
+
+                return `
+                <div class="campo-vertical">
+                    <span><strong><i class='bx bx-package'></i> Producto:</strong> ${producto.producto} - ${producto.gramos}gr.</span>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; gap:5px">
+                        <span><strong><i class='bx bx-box'></i> Sistema: ${stockActual}</strong> </span>
+                        <span><strong><i class='bx bx-calculator'></i> Fisico: ${stockContado}</strong> </span>
+                        <span style="color: ${colorDiferencia}"><strong><i class='bx bx-transfer'></i> Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia}</strong></span>
+                    </div>
+                </div>
+                `;
+            }).join('')}
+            <div class="entrada">
+                <i class='bx bx-comment-detail'></i>
+                <div class="input">
+                    <p class="detalle">Observaciones</p>
+                    <input class="Observaciones" type="text" placeholder=" " required>
+                </div>
+            </div>
+            <div class="entrada">
+                <i class='bx bx-label'></i>  
+                <div class="input">
+                    <p class="detalle">Nombre del conteo</p>
+                    <input class="nombre-conteo" type="text" placeholder=" " required>
+                </div>
+            </div>
+        </div>
+        <div class="anuncio-botones">
+            <button id="registrar-conteo" class="btn orange"><i class='bx bx-save'></i> Registrar</button>
+            <button id="restaurar-conteo" class="btn especial"><i class='bx bx-reset'></i> Restaurar</button>
+        </div>
+    `;
+
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '70px';
+            mostrarAnuncioSecond();
+
+            // Agregar evento al botón de registrar
+            // Modificar la función del botón registrar en vistaPreviaConteo
+            document.getElementById('registrar-conteo').addEventListener('click', async () => {
                 try {
-                    const signal = await mostrarProgreso('.pro-price');
-                    const response = await fetch('/actualizar-precios-hoja-vinculada', {
+                    const signal = await mostrarProgreso('.pro-registro');
+                    const stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
+                    const observaciones = document.querySelector('.Observaciones').value;
+                    const nombre = document.querySelector('.nombre-conteo').value;
+
+                    // Preparar los datos en el formato requerido
+                    const idProductos = productos.map(p => p.id).join(';');
+                    const productosFormateados = productos.map(p => `${p.producto} - ${p.gramos}gr`).join(';');
+                    const sistemaCantidades = productos.map(p => p.stock).join(';');
+                    const fisicoCantidades = productos.map(p => stockFisico[p.id] || p.stock).join(';');
+                    const diferencias = productos.map(p => {
+                        const fisico = parseInt(stockFisico[p.id] || p.stock);
+                        const sistema = parseInt(p.stock);
+                        return fisico - sistema;
+                    }).join(';');
+
+                    const response = await fetch('/registrar-conteo', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ motivo })
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nombre: nombre || "Conteo",
+                            idProductos: idProductos,
+                            productos: productosFormateados,
+                            sistema: sistemaCantidades,
+                            fisico: fisicoCantidades,
+                            diferencia: diferencias,
+                            observaciones
+                        })
+
                     });
+
                     const data = await response.json();
+
                     if (data.success) {
                         mostrarNotificacion({
-                            message: 'Precios actualizados correctamente desde hoja vinculada',
+                            message: 'Conteo registrado correctamente',
                             type: 'success',
                             duration: 3000
                         });
                         registrarNotificacion(
                             'Administración',
-                            'Edición',
-                            `${usuarioInfo.nombre} actualizó los precios mediante hoja vinculada. Motivo: ${motivo}`
-                        );
-                        await mostrarAlmacenGeneral();
+                            'Creación',
+                            usuarioInfo.nombre + ' hizo un nuevo registro de conteo fisico con el nombre de ' + nombre + ' observaciones: ' + observaciones)
+                        localStorage.removeItem('damabrava_stock_fisico');
+                        cerrarAnuncioManual('anuncioSecond');
                     } else {
-                        throw new Error(data.error || 'Error al procesar la hoja vinculada');
+                        throw new Error(data.error || 'Error al registrar el conteo');
                     }
                 } catch (error) {
                     if (error.message === 'cancelled') {
                         console.log('Operación cancelada por el usuario');
                         return;
                     }
+                    console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message,
+                        message: error.message || 'Error al procesar la operación',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-price');
+                    ocultarProgreso('.pro-registro');
                 }
             });
+            const restaurarConteo = document.getElementById('restaurar-conteo');
+            restaurarConteo.addEventListener('click', restaurarConteoAlmacen);
+            function restaurarConteoAlmacen() {
+                // Mostrar confirmación antes de restaurar
+
+                // Limpiar el localStorage
+                localStorage.removeItem('damabrava_stock_fisico');
+
+                // Restaurar todos los inputs al valor original del stock
+                document.querySelectorAll('.registro-item').forEach(registro => {
+                    const productoId = registro.dataset.id;
+                    const producto = productos.find(p => p.id === productoId);
+                    const input = registro.querySelector('.stock-fisico');
+
+                    if (producto && input) {
+                        input.value = producto.stock;
+                    }
+                });
+
+                // Mostrar notificación de éxito
+                mostrarNotificacion({
+                    message: 'Valores restaurados correctamente',
+                    type: 'success',
+                    duration: 3000
+                });
+                cerrarAnuncioManual('anuncioSecond');
+            }
+        }
+    } else if (tipoEvento === 'salidas') {
+        const botonFlotante = document.querySelector('.btn-flotante-salidas')
+        const switchTiraGlobal = document.querySelector('.switch-tira-global');
+
+        if (modoGlobal === null) modoGlobal = true; // Por defecto activo
+        else modoGlobal = modoGlobal === "true";    // Convierte a booleano
+
+        switchTiraGlobal.checked = modoGlobal;
+
+
+        switchTiraGlobal.checked = modoGlobal;
+        if (switchTiraGlobal) {
+            switchTiraGlobal.addEventListener('change', (e) => {
+                modoGlobal = e.target.checked;
+                localStorage.setItem("modoGlobal", e.target.checked);
+
+                // 1. Guarda las cantidades actuales
+                const cantidadesPrevias = Array.from(carritoSalidas.values()).map(item => ({
+                    id: item.id,
+                    cantidad: item.cantidad
+                }));
+
+                // 2. Limpia el carrito
+                carritoSalidas.clear();
+                localStorage.setItem('damabrava_carrito', JSON.stringify([]));
+
+                // 3. Vuelve a agregar los productos con las cantidades previas
+                for (const { id, cantidad } of cantidadesPrevias) {
+                    for (let i = 0; i < cantidad; i++) {
+                        agregarAlCarrito(id);
+                    }
+                }
+
+                // 4. Actualiza la UI del carrito si está abierto
+                const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+                if (anuncioSecond && anuncioSecond.innerHTML.includes('Carrito de Salidas')) {
+                    mostrarCarritoSalidas();
+                }
+
+                mostrarNotificacion({
+                    message: modoGlobal ? 'Modo Tira activado' : 'Modo Unidad activado',
+                    type: modoGlobal ? 'success' : 'info',
+                    duration: 2000
+                });
+            });
+        }
+        botonFlotante.addEventListener('click', mostrarCarritoSalidas);
+        const items = document.querySelectorAll('.registro-item');
+
+        items.forEach(item => {
+            item.addEventListener('click', () => agregarAlCarrito(item.dataset.id));
         });
 
+
+
+        function agregarAlCarrito(productoId) {
+            const producto = productos.find(p => p.id === productoId);
+            if (!producto) return;
+
+            // Si no hay stock, no agregues
+            if (producto.stock <= 0) {
+                mostrarNotificacion({
+                    message: 'Sin stock disponible',
+                    type: 'warning',
+                    duration: 2000
+                });
+                return;
+            }
+
+            // Calcula el precio actual según el modo y ciudad seleccionada
+            const cantidadxgrupo = producto.cantidadxgrupo || 1;
+            const selectPrecios = document.querySelector('.precios-select');
+            const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex]?.text || '';
+            const preciosProducto = producto.precios.split(';');
+            const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+            const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            const precioFinal = modoGlobal ? precioActual * cantidadxgrupo : precioActual;
+            const stockDisponible = modoGlobal ? producto.stock : producto.stock * cantidadxgrupo;
+
+            // Si ya está en el carrito, suma 1 (si hay stock suficiente)
+            if (carritoSalidas.has(productoId)) {
+                const item = carritoSalidas.get(productoId);
+                if (item.cantidad < stockDisponible) {
+                    item.cantidad += 1;
+                    item.subtotal = precioFinal;
+                }
+            } else {
+                carritoSalidas.set(productoId, {
+                    ...producto,
+                    cantidad: 1,
+                    stockFinal: stockDisponible,
+                    subtotal: precioFinal
+                });
+            }
+
+            // Guarda en localStorage
+            localStorage.setItem('damabrava_carrito', JSON.stringify(Array.from(carritoSalidas.entries())));
+
+            // Muestra el botón flotante si hay productos
+            const botonFlotante = document.querySelector('.btn-flotante-salidas');
+            if (botonFlotante) {
+                botonFlotante.style.display = carritoSalidas.size > 0 ? 'block' : 'none';
+            }
+
+            // Si el carrito está abierto, refresca el HTML del carrito
+            const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+            if (anuncioSecond && anuncioSecond.innerHTML.includes('Carrito de Salidas')) {
+                mostrarCarritoSalidas();
+            }
+            actualizarBotonFlotante();
+            const itemDiv = document.querySelector(`.registro-item[data-id="${productoId}"]`);
+            if (itemDiv) {
+                itemDiv.classList.add('disabled');
+            }
+        }
+        window.eliminarDelCarrito = (id) => {
+            // 1. Eliminar del Map
+            carritoSalidas.delete(id);
+
+            // 2. Eliminar del DOM
+            const itemToRemove = document.querySelector(`.carrito-item[data-id="${id}"]`);
+            if (itemToRemove) {
+                itemToRemove.remove();
+            }
+
+            // 3. Actualizar localStorage
+            localStorage.setItem('damabrava_carrito', JSON.stringify(Array.from(carritoSalidas.entries())));
+
+            // 4. Actualizar el botón flotante
+            const botonFlotante = document.querySelector('.btn-flotante-salidas');
+            if (botonFlotante) {
+                botonFlotante.style.display = carritoSalidas.size > 0 ? 'block' : 'none';
+            }
+
+            // 5. Actualizar totales del carrito
+            actualizarTotalesCarrito();
+            actualizarBotonFlotante();
+
+            if (carritoSalidas.size < 1) {
+                ocultarAnuncioSecond();
+            }
+            // Si ya no está en el carrito, quita la clase disabled
+            const itemDiv = document.querySelector(`.registro-item[data-id="${id}"]`);
+            if (itemDiv) {
+                itemDiv.classList.remove('disabled');
+            }
+        };
+        function actualizarTotalesCarrito() {
+            const subtotal = Array.from(carritoSalidas.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
+            const totalElement = document.querySelector('.total-final');
+            const subtotalElement = document.querySelector('.campo-vertical span:first-child');
+            if (subtotalElement && totalElement) {
+                subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}`;
+                totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}`;
+                const descuentoInput = document.querySelector('.descuento');
+                const aumentoInput = document.querySelector('.aumento');
+                if (descuentoInput && aumentoInput) {
+                    const descuentoValor = parseFloat(descuentoInput.value) || 0;
+                    const aumentoValor = parseFloat(aumentoInput.value) || 0;
+                    const totalCalculado = subtotal - descuentoValor + aumentoValor;
+                    totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+                }
+            }
+        }
+        window.ajustarCantidad = (id, delta) => {
+            const item = carritoSalidas.get(id);
+            if (!item) return;
+
+            // Lógica de stock máximo y mínimo
+            const min = 1;
+            const max = item.stockFinal || item.stock || 1;
+            let nuevaCantidad = item.cantidad + delta;
+            if (nuevaCantidad < min) nuevaCantidad = min;
+            if (nuevaCantidad > max) nuevaCantidad = max;
+
+            if (nuevaCantidad === item.cantidad) return; // No hay cambio
+
+            item.cantidad = nuevaCantidad;
+
+            // Actualiza el subtotal si es necesario (por si el precio depende de la cantidad)
+            // item.subtotal = ... (si tu lógica lo requiere, normalmente no cambia)
+
+            // Actualiza el localStorage
+            localStorage.setItem('damabrava_carrito', JSON.stringify(Array.from(carritoSalidas.entries())));
+
+            // Solo actualiza los valores del DOM de ese producto
+            const itemDiv = document.querySelector(`.carrito-item[data-id="${id}"]`);
+            if (itemDiv) {
+                // Actualiza el input de cantidad
+                const input = itemDiv.querySelector('input[type="number"]');
+                if (input) input.value = item.cantidad;
+
+                // Actualiza el stock disponible
+                const stockDisponible = (item.stockFinal || item.stock || 1) - item.cantidad;
+                const stockSpan = itemDiv.querySelector('.stock-disponible');
+                if (stockSpan) stockSpan.textContent = `${stockDisponible} Und.`;
+
+                // Actualiza el subtotal y total de ese producto
+                const unitario = itemDiv.querySelector('.unitario');
+                if (unitario) unitario.textContent = `Bs. ${(item.subtotal).toFixed(2)}`;
+                const subtotal = itemDiv.querySelector('.subtotal');
+                if (subtotal) subtotal.textContent = `Bs. ${(item.cantidad * item.subtotal).toFixed(2)}`;
+            }
+
+            // Actualiza los totales generales del carrito
+            actualizarTotalesCarrito();
+        };
+        function actualizarBotonFlotante() {
+            const botonFlotante = document.querySelector('.btn-flotante-salidas');
+            const spanCantidad = botonFlotante ? botonFlotante.querySelector('.carrito-cantidad-flotante') : null;
+            const cantidad = carritoSalidas.size;
+
+            if (botonFlotante) {
+                botonFlotante.style.display = cantidad > 0 ? 'block' : 'none';
+                if (spanCantidad) {
+                    spanCantidad.textContent = cantidad;
+                    spanCantidad.style.display = cantidad > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        function marcarItemsAgregadosAlCarrito() {
+            document.querySelectorAll('.registro-item').forEach(itemDiv => {
+                const id = itemDiv.dataset.id;
+                if (carritoSalidas.has(id)) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.classList.remove('disabled');
+                }
+            });
+        }
+
+
+
+
+        function mostrarCarritoSalidas() {
+            const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+            if (!anuncioSecond) return;
+
+            const subtotal = Array.from(carritoSalidas.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
+            let descuento = 0;
+            let aumento = 0;
+
+            anuncioSecond.innerHTML = `
+            <div class="encabezado">
+                <h1 class="titulo">Carrito de Salidas</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+                <button class="btn filtros limpiar"><i class="fas fa-broom"></i></button>
+            </div>
+            <div class="relleno">
+                <div class="carrito-items">
+                    ${Array.from(carritoSalidas.values()).map(item => `
+                        <div class="carrito-item" data-id="${item.id}">
+                            <div class="item-info">
+                                <h3>${item.producto} - ${item.gramos}gr</h3>
+                                <div class="cantidad-control">
+                                    <button class="btn-cantidad" style="color:var(--error)" onclick="ajustarCantidad('${item.id}', -1)">-</button>
+                                    <input type="number" value="${item.cantidad}" min="1" max="${item.stockFinal || item.stock}" onchange="ajustarCantidad('${item.id}', this.value - ${item.cantidad})">
+                                    <button class="btn-cantidad"style="color:var(--success)" onclick="ajustarCantidad('${item.id}', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="subtotal-delete">
+                                <div class="info-valores">
+                                    <p class="stock-disponible">${item.stockFinal - item.cantidad} Und.</p>
+                                    <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
+                                    <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
+                                </div>
+                                <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
+                                    <i class="bx bx-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="carrito-total">
+                        <div class="leyenda">
+                            <div class="item">
+                                <span class="punto orange"></span>
+                                <p>Stock actual</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto blue-light"></span>
+                                <p>Precio unitario</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto verde"></span>
+                                <p>Subtotal</p>
+                            </div>
+                        </div>
+                        <div class="campo-vertical">
+                            <span><strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                            <span class="total-final"><strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-label'></i>
+                            <div class="input">
+                                <p class="detalle">Nombre del movimiento</p>
+                                <input class="nombre-movimiento" type="text" value="NOTA DE ENTREGA" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-purchase-tag-alt'></i>
+                                <div class="input">
+                                    <p class="detalle">Descuento</p>
+                                    <input class="descuento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-plus'></i>
+                                <div class="input">
+                                    <p class="detalle">Aumento</p>
+                                    <input class="aumento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-user'></i>
+                                <div class="input">
+                                    <p class="detalle">Cliente</p>
+                                    <select class="select-cliente" required>
+                                        <option value=""></option>
+                                        ${clientes.map(cliente => `
+                                            <option value="${cliente.id}">${cliente.nombre}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-money'></i>
+                                <div class="input">
+                                    <p class="detalle">Estado</p>
+                                    <select class="select" required>
+                                        <option value="" disabled selected></option>
+                                        <option value="pagado">Pagado</option>
+                                        <option value="no-pagado">No pagado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-comment-detail'></i>
+                            <div class="input">
+                                <p class="detalle">Observaciones</p>
+                                <input class="observaciones" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="anuncio-botones">
+                <button class="btn-procesar-salida btn green" onclick="registrarSalida()"><i class='bx bx-export'></i> Procesar Salida</button>
+            </div>
+        `;
+            anuncioSecond.style.paddingBottom = '70px'
+            mostrarAnuncioSecond();
+
+            const clienteSelect = anuncioSecond.querySelector('.select-cliente');
+            const nombreMovimientoInput = anuncioSecond.querySelector('.nombre-movimiento');
+
+            if (clienteSelect && nombreMovimientoInput) {
+                clienteSelect.addEventListener('change', function () {
+                    const clienteId = clienteSelect.value; // El value es solo el id
+
+                    // Buscar el cliente en tu array de clientes
+                    const cliente = clientes.find(c => String(c.id) === String(clienteId));
+                    if (cliente && cliente.salidas_num !== undefined) {
+                        // Sumar uno al número de salida
+                        const nuevoNum = Number(cliente.salidas_num) + 1;
+                        nombreMovimientoInput.value = `NOTA DE ENTREGA Nº ${nuevoNum}`;
+                    } else {
+                        nombreMovimientoInput.value = '';
+                    }
+                });
+            }
+
+
+
+            const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
+            botonLimpiar.addEventListener('click', () => {
+
+                carritoSalidas.forEach((item, id) => {
+                    const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
+                    if (headerItem) {
+                        const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
+                        const stockSpan = headerItem.querySelector('.stock');
+                        if (cantidadSpan) cantidadSpan.textContent = '';
+                        if (stockSpan) stockSpan.textContent = `${item.stock} Und.`;
+                    }
+                });
+
+                carritoSalidas.clear();
+                ocultarAnuncioSecond();
+                marcarItemsAgregadosAlCarrito();
+                mostrarNotificacion({
+                    message: 'Carrito limpiado exitosamente',
+                    type: 'success',
+                    duration: 2000
+                });
+                document.querySelector('.btn-flotante-salidas').style.display = 'none';
+            });
+        }
+        async function registrarSalida() {
+            const clienteSelect = document.querySelector('.select-cliente');
+            const nombreMovimiento = document.querySelector('.nombre-movimiento');
+            const estadoSelect = document.querySelector('.select');  // Nuevo
+            const observacionesValor = document.querySelector('.observaciones').value;
+
+            if (!clienteSelect.value) {
+                mostrarNotificacion({
+                    message: 'Seleccione un cliente antes de continuar',
+                    type: 'error',
+                    duration: 3000
+                });
+                return;
+            } else if (!nombreMovimiento.value) {
+                mostrarNotificacion({
+                    message: 'Ingrese un nombre para el movimiento',
+                    type: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            const fecha = new Date().toLocaleString('es-ES', {
+                timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+            });
+
+            // --- NUEVO: Calcular tiras y sueltas para cada producto si aplica ---
+            let actualizacionesStock = [];
+            let productosSalida = [];
+            let cantidadesSalida = [];
+            let tirasSalida = [];
+            let sueltasSalida = [];
+            let preciosUnitariosSalida = [];
+            let subtotalSalida = 0;
+
+            carritoSalidas.forEach((item, id) => {
+                let cantidad = item.cantidad; // Esta es la cantidad de tiras o unidades dependiendo del modo al agregar
+                let cantidadxgrupo = item.cantidadxgrupo ? parseInt(item.cantidadxgrupo) : 1;
+
+                // Si el modo es tira, la cantidad es en tiras.
+                // Si el modo es unidad, la cantidad es en unidades, y hay que ver a cuantas tiras y sueltas corresponde.
+                let tirasParaRestar = 0;
+                let sueltasParaRestar = 0;
+                let sueltasParaSumar = 0;
+
+                if (modoGlobal) { // La cantidad es en Tiras
+                    tirasParaRestar = cantidad;
+                } else { // La cantidad es en Unidades
+                    const productoAlmacen = productos.find(p => p.id === id);
+                    let stockSueltasActual = productoAlmacen.uSueltas || 0;
+
+                    if (cantidad <= stockSueltasActual) { // Se pueden despachar solo de sueltas
+                        sueltasParaRestar = cantidad;
+                    } else { // Se necesita abrir tiras
+                        sueltasParaRestar = stockSueltasActual;
+                        let unidadesFaltantes = cantidad - stockSueltasActual;
+                        tirasParaRestar = Math.ceil(unidadesFaltantes / cantidadxgrupo);
+                        let unidadesDeTirasAbiertas = tirasParaRestar * cantidadxgrupo;
+                        sueltasParaSumar = unidadesDeTirasAbiertas - unidadesFaltantes;
+                    }
+                }
+
+                actualizacionesStock.push({
+                    id: id,
+                    cantidad: tirasParaRestar,
+                    restarSueltas: sueltasParaRestar,
+                    sumarSueltas: sueltasParaSumar
+                });
+
+                productosSalida.push(`${item.producto} - ${item.gramos}gr`);
+                cantidadesSalida.push(cantidad);
+                tirasSalida.push(tirasParaRestar);
+                sueltasSalida.push(sueltasParaRestar > 0 ? sueltasParaRestar : 0);
+                preciosUnitariosSalida.push(parseFloat(item.subtotal).toFixed(2));
+                subtotalSalida += cantidad * item.subtotal;
+            });
+
+            const tipoMovimiento = modoGlobal ? 'Tiras' : 'Unidades';
+            const registroSalida = {
+                fechaHora: fecha,
+                tipo: 'Salida',
+                idProductos: Array.from(carritoSalidas.values()).map(item => item.id).join(';'),
+                productos: productosSalida.join(';'),
+                cantidades: cantidadesSalida.join(';'),
+                tiras: tirasSalida.join(';'), // Nuevo campo
+                sueltas: sueltasSalida.join(';'), // Nuevo campo
+                operario: `${usuarioInfo.nombre} ${usuarioInfo.apellido}`,
+                clienteId: clienteSelect.value,
+                nombre_movimiento: nombreMovimiento.value,
+                subtotal: subtotalSalida,
+                descuento: parseFloat(document.querySelector('.descuento').value) || 0,
+                aumento: parseFloat(document.querySelector('.aumento').value) || 0,
+                total: 0,
+                observaciones: document.querySelector('.observaciones').value || 'Ninguna',
+                precios_unitarios: preciosUnitariosSalida.join(';'),
+                estado: estadoSelect.value,
+                tipoMovimiento // Nuevo campo para backend
+            };
+            registroSalida.total = registroSalida.subtotal - registroSalida.descuento + registroSalida.aumento;
+
+            try {
+                const signal = await mostrarProgreso('.pro-salida')
+                // Primero registramos el movimiento
+                const response = await fetch('/registrar-movimiento', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('damabrava_token')}`
+                    },
+                    body: JSON.stringify(registroSalida)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Error en la respuesta del servidor');
+                }
+
+                // --- NUEVO: Actualizar el stock en Almacen general considerando sueltas ---
+                const responseStock = await fetch('/actualizar-stock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('damabrava_token')}`
+                    },
+                    body: JSON.stringify({
+                        actualizaciones: actualizacionesStock,
+                        tipo: 'salida'
+                    })
+                });
+
+                const dataStock = await responseStock.json();
+
+                if (!responseStock.ok || !dataStock.success) {
+                    throw new Error(dataStock.error || 'Error al actualizar el stock');
+                }
+
+                // Limpiar carrito y actualizar UI
+                carritoSalidas.clear();
+                await obtenerClientes()
+                await obtenerAlmacenGeneral()
+                document.querySelector('.btn-flotante-salidas').style.display = 'none';
+                ocultarAnuncioSecond();
+
+                mostrarNotificacion({
+                    message: 'Salida registrada exitosamente',
+                    type: 'success',
+                    duration: 3000
+                });
+                if (observacionesValor !== '') {
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' registro una salida al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
+                }
+            } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
+                console.error('Error:', error);
+                mostrarNotificacion({
+                    message: error.message || 'Error al procesar la operación',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                ocultarProgreso('.pro-salida')
+            }
+        }
+        window.registrarSalida = registrarSalida;
+        actualizarBotonFlotante();
+        marcarItemsAgregadosAlCarrito();
+    } else if (tipoEvento === 'ingresos') {
+        const botonFlotanteIngresos = document.querySelector('.btn-flotante-ingresos')
+        const switchTiraGlobal = document.querySelector('.switch-tira-global');
+
+        if (modoGlobal === null) modoGlobal = true; // Por defecto activo
+        else modoGlobal = modoGlobal === "true";    // Convierte a booleano
+
+        switchTiraGlobal.checked = modoGlobal;
+
+
+        switchTiraGlobal.checked = modoGlobal;
+        if (switchTiraGlobal) {
+            switchTiraGlobal.addEventListener('change', (e) => {
+                modoGlobal = e.target.checked;
+                localStorage.setItem("modoGlobal", e.target.checked);
+
+                // 1. Guarda las cantidades actuales
+                const cantidadesPrevias = Array.from(carritoIngresos.values()).map(item => ({
+                    id: item.id,
+                    cantidad: item.cantidad
+                }));
+
+                // 2. Limpia el carrito
+                carritoIngresos.clear();
+                localStorage.setItem('damabrava_carrito', JSON.stringify([]));
+
+                // 3. Vuelve a agregar los productos con las cantidades previas
+                for (const { id, cantidad } of cantidadesPrevias) {
+                    for (let i = 0; i < cantidad; i++) {
+                        agregarAlCarrito(id);
+                    }
+                }
+
+                // 4. Actualiza la UI del carrito si está abierto
+                const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+                if (anuncioSecond && anuncioSecond.innerHTML.includes('Carrito de Salidas')) {
+                    mostrarCarritoSalidas();
+                }
+
+                mostrarNotificacion({
+                    message: modoGlobal ? 'Modo Tira activado' : 'Modo Unidad activado',
+                    type: modoGlobal ? 'success' : 'info',
+                    duration: 2000
+                });
+            });
+        }
+        botonFlotanteIngresos.addEventListener('click', mostrarCarritoIngresos);
+        const items = document.querySelectorAll('.registro-item');
+
+        items.forEach(item => {
+            item.addEventListener('click', () => agregarAlCarrito(item.dataset.id));
+        });
+
+
+
+        function agregarAlCarrito(productoId) {
+            const producto = productos.find(p => p.id === productoId);
+            if (!producto) return;
+
+            // Calcula el precio actual según el modo y ciudad seleccionada
+            const cantidadxgrupo = producto.cantidadxgrupo || 1;
+            const selectPrecios = document.querySelector('.precios-select');
+            const ciudadSeleccionada = selectPrecios.options[selectPrecios.selectedIndex]?.text || '';
+            const preciosProducto = producto.precios.split(';');
+            const precioSeleccionado = preciosProducto.find(p => p.split(',')[0] === ciudadSeleccionada);
+            const precioActual = precioSeleccionado ? parseFloat(precioSeleccionado.split(',')[1]) : 0;
+            const precioFinal = modoGlobal ? precioActual * cantidadxgrupo : precioActual;
+            const stockDisponible = modoGlobal ? producto.stock : producto.stock * cantidadxgrupo;
+
+            // Si ya está en el carrito, suma 1 (si hay stock suficiente)
+            if (carritoIngresos.has(productoId)) {
+                const item = carritoIngresos.get(productoId);
+                if (item.cantidad < stockDisponible) {
+                    item.cantidad += 1;
+                    item.subtotal = precioFinal;
+                }
+            } else {
+                carritoIngresos.set(productoId, {
+                    ...producto,
+                    cantidad: 1,
+                    stockFinal: stockDisponible,
+                    subtotal: precioFinal
+                });
+            }
+
+            // Guarda en localStorage
+            localStorage.setItem('damabrava_carrito_ingresos', JSON.stringify(Array.from(carritoIngresos.entries())));
+
+            // Muestra el botón flotante si hay productos
+            const botonFlotante = document.querySelector('.btn-flotante-ingresos');
+            if (botonFlotante) {
+                botonFlotante.style.display = carritoIngresos.size > 0 ? 'block' : 'none';
+            }
+
+            // Si el carrito está abierto, refresca el HTML del carrito
+            const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+            if (anuncioSecond && anuncioSecond.innerHTML.includes('Carrito de Ingresos')) {
+                mostrarCarritoIngresos();
+            }
+            actualizarBotonFlotante();
+            const itemDiv = document.querySelector(`.registro-item[data-id="${productoId}"]`);
+            if (itemDiv) {
+                itemDiv.classList.add('disabled');
+            }
+        }
+        window.eliminarDelCarrito = (id) => {
+            // 1. Eliminar del Map
+            carritoIngresos.delete(id);
+
+            // 2. Eliminar del DOM
+            const itemToRemove = document.querySelector(`.carrito-item[data-id="${id}"]`);
+            if (itemToRemove) {
+                itemToRemove.remove();
+            }
+
+            // 3. Actualizar localStorage
+            localStorage.setItem('damabrava_carrito_ingresos', JSON.stringify(Array.from(carritoIngresos.entries())));
+
+            // 4. Actualizar el botón flotante
+            const botonFlotante = document.querySelector('.btn-flotante-ingresos');
+            if (botonFlotante) {
+                botonFlotante.style.display = carritoIngresos.size > 0 ? 'block' : 'none';
+            }
+
+            // 5. Actualizar totales del carrito
+            actualizarTotalesCarrito();
+            actualizarBotonFlotante();
+
+            if (carritoIngresos.size < 1) {
+                ocultarAnuncioSecond();
+            }
+            // Si ya no está en el carrito, quita la clase disabled
+            const itemDiv = document.querySelector(`.registro-item[data-id="${id}"]`);
+            if (itemDiv) {
+                itemDiv.classList.remove('disabled');
+            }
+        };
+        function actualizarTotalesCarrito() {
+            const subtotal = Array.from(carritoIngresos.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
+            const totalElement = document.querySelector('.total-final');
+            const subtotalElement = document.querySelector('.campo-vertical span:first-child');
+            if (subtotalElement && totalElement) {
+                subtotalElement.innerHTML = `<strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}`;
+                totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}`;
+                const descuentoInput = document.querySelector('.descuento');
+                const aumentoInput = document.querySelector('.aumento');
+                if (descuentoInput && aumentoInput) {
+                    const descuentoValor = parseFloat(descuentoInput.value) || 0;
+                    const aumentoValor = parseFloat(aumentoInput.value) || 0;
+                    const totalCalculado = subtotal - descuentoValor + aumentoValor;
+                    totalElement.innerHTML = `<strong>Total Final: </strong>Bs. ${totalCalculado.toFixed(2)}`;
+                }
+            }
+        }
+        window.ajustarCantidad = (id, delta) => {
+            const item = carritoIngresos.get(id);
+            if (!item) return;
+
+            // Lógica de mínimo (no puede ser menor a 1)
+            const min = 1;
+            let nuevaCantidad = item.cantidad + delta;
+            if (nuevaCantidad < min) nuevaCantidad = min;
+
+            if (nuevaCantidad === item.cantidad) return; // No hay cambio
+
+            item.cantidad = nuevaCantidad;
+
+            // Actualiza el localStorage
+            localStorage.setItem('damabrava_carrito_ingresos', JSON.stringify(Array.from(carritoIngresos.entries())));
+
+            // Solo actualiza los valores del DOM de ese producto
+            const itemDiv = document.querySelector(`.carrito-item[data-id="${id}"]`);
+            if (itemDiv) {
+                // Actualiza el input de cantidad
+                const input = itemDiv.querySelector('input[type="number"]');
+                if (input) input.value = item.cantidad;
+
+                // Actualiza el stock disponible correctamente según el modo
+                const stockSpan = itemDiv.querySelector('.stock-disponible');
+                const stockActual = Number(item.stock) || 0;
+                const cantidadxgrupo = Number(item.cantidadxgrupo) || 1;
+                let stockDisponible;
+                if (modoGlobal) {
+                    stockDisponible = `${stockActual + item.cantidad} Tiras`;
+                } else {
+                    stockDisponible = `${(stockActual * cantidadxgrupo) + item.cantidad} Unidades`;
+                }
+                if (stockSpan) stockSpan.textContent = stockDisponible;
+
+                // Actualiza el subtotal y total de ese producto
+                const unitario = itemDiv.querySelector('.unitario');
+                if (unitario) unitario.textContent = `Bs. ${(item.subtotal).toFixed(2)}`;
+                const subtotal = itemDiv.querySelector('.subtotal');
+                if (subtotal) subtotal.textContent = `Bs. ${(item.cantidad * item.subtotal).toFixed(2)}`;
+            }
+
+            // Actualiza los totales generales del carrito
+            actualizarTotalesCarrito();
+        };
+        function actualizarBotonFlotante() {
+            const botonFlotante = document.querySelector('.btn-flotante-ingresos');
+            const spanCantidad = botonFlotante ? botonFlotante.querySelector('.carrito-cantidad-flotante') : null;
+            const cantidad = carritoIngresos.size;
+
+            if (botonFlotante) {
+                botonFlotante.style.display = cantidad > 0 ? 'block' : 'none';
+                if (spanCantidad) {
+                    spanCantidad.textContent = cantidad;
+                    spanCantidad.style.display = cantidad > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        function marcarItemsAgregadosAlCarrito() {
+            document.querySelectorAll('.registro-item').forEach(itemDiv => {
+                const id = itemDiv.dataset.id;
+                if (carritoIngresos.has(id)) {
+                    itemDiv.classList.add('disabled');
+                } else {
+                    itemDiv.classList.remove('disabled');
+                }
+            });
+        }
+        function mostrarCarritoIngresos() {
+            const anuncioSecond = document.querySelector('.anuncio-second .contenido');
+            if (!anuncioSecond) return;
+
+            const subtotal = Array.from(carritoIngresos.values()).reduce((sum, item) => sum + (item.cantidad * item.subtotal), 0);
+            let descuento = 0;
+            let aumento = 0;
+
+            anuncioSecond.innerHTML = `
+            <div class="encabezado">
+                <h1 class="titulo">Carrito de Ingresos</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+                <button class="btn filtros limpiar"><i class="fas fa-broom"></i></button>
+            </div>
+            <div class="relleno">
+                <div class="carrito-items">
+                    ${Array.from(carritoIngresos.values()).map(item => `
+                        <div class="carrito-item" data-id="${item.id}">
+                            <div class="item-info">
+                                <h3>${item.producto} - ${item.gramos}gr</h3>
+                                <div class="cantidad-control">
+                                    <button class="btn-cantidad" style="color:var(--error)" onclick="ajustarCantidad('${item.id}', -1)">-</button>
+                                    <input type="number" value="${item.cantidad}" min="1" max="${item.stockFinal || item.stock}" onchange="ajustarCantidad('${item.id}', this.value - ${item.cantidad})">
+                                    <button class="btn-cantidad"style="color:var(--success)" onclick="ajustarCantidad('${item.id}', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="subtotal-delete">
+                                <div class="info-valores">
+                                    <p class="stock-disponible">${Number(item.stock || 0) + Number(item.cantidad)} Und.</p>
+                                    <p class="unitario">Bs. ${(item.subtotal).toFixed(2)}</p>
+                                    <p class="subtotal">Bs. ${(item.cantidad * item.subtotal).toFixed(2)}</p>
+                                </div>
+                                <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
+                                    <i class="bx bx-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="carrito-total">
+                        <div class="leyenda">
+                            <div class="item">
+                                <span class="punto orange"></span>
+                                <p>Stock actual</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto blue-light"></span>
+                                <p>Precio unitario</p>
+                            </div>
+                            <div class="item">
+                                <span class="punto verde"></span>
+                                <p>Subtotal</p>
+                            </div>
+                        </div>
+                        <div class="campo-vertical">
+                            <span><strong>Subtotal: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                            <span class="total-final"><strong>Total Final: </strong>Bs. ${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-label'></i>
+                            <div class="input">
+                                <p class="detalle">Nombre del movimiento</p>
+                                <input class="nombre-movimiento" type="text" value="NOTA DE ENTREGA" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-purchase-tag-alt'></i>
+                                <div class="input">
+                                    <p class="detalle">Descuento</p>
+                                    <input class="descuento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-plus'></i>
+                                <div class="input">
+                                    <p class="detalle">Aumento</p>
+                                    <input class="aumento" type="number" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-user'></i>
+                            <div class="input">
+                                <p class="detalle">Proveedor</p>
+                                <select class="select-cliente" required>
+                                    <option value=""></option>
+                                    ${clientes.map(cliente => `
+                                        <option value="${cliente.id}">${cliente.nombre}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-comment-detail'></i>
+                            <div class="input">
+                                <p class="detalle">Observaciones</p>
+                                <input class="observaciones" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="anuncio-botones">
+                <button class="btn-procesar-salida btn green" onclick="registrarIngreso()"><i class='bx bx-export'></i> Procesar Ingreso</button>
+            </div>
+        `;
+            anuncioSecond.style.paddingBottom = '70px'
+            mostrarAnuncioSecond();
+
+            const clienteSelect = anuncioSecond.querySelector('.select-cliente');
+            const nombreMovimientoInput = anuncioSecond.querySelector('.nombre-movimiento');
+
+            if (clienteSelect && nombreMovimientoInput) {
+                clienteSelect.addEventListener('change', function () {
+                    const clienteId = clienteSelect.value; // El value es solo el id
+
+                    // Buscar el cliente en tu array de clientes
+                    const cliente = clientes.find(c => String(c.id) === String(clienteId));
+                    if (cliente && cliente.ingresos_num !== undefined) {
+                        // Sumar uno al número de salida
+                        const nuevoNum = Number(cliente.ingresos_num) + 1;
+                        nombreMovimientoInput.value = `NOTA DE INGRESO Nº ${nuevoNum}`;
+                    } else {
+                        nombreMovimientoInput.value = '';
+                    }
+                });
+            }
+
+
+
+            const botonLimpiar = anuncioSecond.querySelector('.btn.filtros.limpiar');
+            botonLimpiar.addEventListener('click', () => {
+
+                carritoIngresos.forEach((item, id) => {
+                    const headerItem = document.querySelector(`.registro-item[data-id="${id}"]`);
+                    if (headerItem) {
+                        const cantidadSpan = headerItem.querySelector('.carrito-cantidad');
+                        const stockSpan = headerItem.querySelector('.stock');
+                        if (cantidadSpan) cantidadSpan.textContent = '';
+                        if (stockSpan) stockSpan.textContent = `${item.stock} Und.`;
+                    }
+                });
+
+                carritoIngresos.clear();
+                ocultarAnuncioSecond();
+                marcarItemsAgregadosAlCarrito();
+                mostrarNotificacion({
+                    message: 'Carrito limpiado exitosamente',
+                    type: 'success',
+                    duration: 2000
+                });
+                document.querySelector('.btn-flotante-ingresos').style.display = 'none';
+            });
+        }
+
+        async function registrarIngreso() {
+            const clienteSelect = document.querySelector('.select-cliente');
+            const nombreMovimiento = document.querySelector('.nombre-movimiento');
+            const estadoSelect = document.querySelector('.select');  // Nuevo
+            const observacionesValor = document.querySelector('.observaciones').value;
+
+            if (!clienteSelect.value) {
+                mostrarNotificacion({
+                    message: 'Seleccione un proveedor antes de continuar',
+                    type: 'error',
+                    duration: 3000
+                });
+                return;
+            } else if (!nombreMovimiento.value) {
+                mostrarNotificacion({
+                    message: 'Ingrese un nombre para el movimiento',
+                    type: 'error',
+                    duration: 3000
+                });
+                return;
+            }
+            const fecha = new Date().toLocaleString('es-ES', {
+                timeZone: 'America/La_Paz' // Puedes cambiar esto según tu país o ciudad
+            });
+
+            // --- NUEVO: Calcular tiras y sueltas para cada producto si aplica ---
+            let actualizacionesStock = [];
+            let productosIngresos = [];
+            let cantidadesIngresos = [];
+            let tirasIngresos = [];
+            let sueltasIngresos = [];
+            let preciosUnitariosIngresos = [];
+            let subtotalIngresos = 0;
+
+            carritoIngresos.forEach((item, id) => {
+                let cantidad = item.cantidad; // Esta es la cantidad de tiras o unidades dependiendo del modo al agregar
+                let cantidadxgrupo = item.cantidadxgrupo ? parseInt(item.cantidadxgrupo) : 1;
+
+                // Si el modo es tira, la cantidad es en tiras.
+                // Si el modo es unidad, la cantidad es en unidades, y hay que ver a cuantas tiras y sueltas corresponde.
+                let tirasParaRestar = 0;
+                let sueltasParaRestar = 0;
+                let sueltasParaSumar = 0;
+
+                if (modoGlobal) { // La cantidad es en Tiras
+                    tirasParaRestar = cantidad;
+                } else { // La cantidad es en Unidades
+                    const productoAlmacen = productos.find(p => p.id === id);
+                    let stockSueltasActual = productoAlmacen.uSueltas || 0;
+
+                    if (cantidad <= stockSueltasActual) { // Se pueden despachar solo de sueltas
+                        sueltasParaRestar = cantidad;
+                    } else { // Se necesita abrir tiras
+                        sueltasParaRestar = stockSueltasActual;
+                        let unidadesFaltantes = cantidad - stockSueltasActual;
+                        tirasParaRestar = Math.ceil(unidadesFaltantes / cantidadxgrupo);
+                        let unidadesDeTirasAbiertas = tirasParaRestar * cantidadxgrupo;
+                        sueltasParaSumar = unidadesDeTirasAbiertas - unidadesFaltantes;
+                    }
+                }
+
+                if (modoGlobal) {
+                    // Modo tira: sumar tiras
+                    actualizacionesStock.push({
+                        id: item.id,
+                        cantidad: item.cantidad, // tiras
+                        sumarSueltas: 0
+                    });
+                } else {
+                    // Modo unidad: sumar unidades a sueltas
+                    actualizacionesStock.push({
+                        id: item.id,
+                        cantidad: 0,
+                        sumarSueltas: item.cantidad // unidades
+                    });
+                }
+
+                productosIngresos.push(`${item.producto} - ${item.gramos}gr`);
+                cantidadesIngresos.push(cantidad);
+                tirasIngresos.push(tirasParaRestar);
+                sueltasIngresos.push(sueltasParaRestar > 0 ? sueltasParaRestar : 0);
+                preciosUnitariosIngresos.push(parseFloat(item.subtotal).toFixed(2));
+                subtotalIngresos += cantidad * item.subtotal;
+            });
+
+            const tipoMovimiento = modoGlobal ? 'Tiras' : 'Unidades';
+            const registroIngreso = {
+                fechaHora: fecha,
+                tipo: 'Ingreso',
+                idProductos: Array.from(carritoIngresos.values()).map(item => item.id).join(';'),
+                productos: productosIngresos.join(';'),
+                cantidades: cantidadesIngresos.join(';'),
+                tiras: tirasIngresos.join(';'), // Nuevo campo
+                sueltas: sueltasIngresos.join(';'), // Nuevo campo
+                operario: `${usuarioInfo.nombre} ${usuarioInfo.apellido}`,
+                clienteId: clienteSelect.value,
+                nombre_movimiento: nombreMovimiento.value,
+                subtotal: subtotalIngresos,
+                descuento: parseFloat(document.querySelector('.descuento').value) || 0,
+                aumento: parseFloat(document.querySelector('.aumento').value) || 0,
+                total: 0,
+                observaciones: document.querySelector('.observaciones').value || 'Ninguna',
+                precios_unitarios: preciosUnitariosIngresos.join(';'),
+                estado: estadoSelect.value,
+                tipoMovimiento // Nuevo campo para backend
+            };
+            registroIngreso.total = registroIngreso.subtotal - registroIngreso.descuento + registroIngreso.aumento;
+
+            try {
+                const signal = await mostrarProgreso('.pro-ingreso')
+                // Primero registramos el movimiento
+                const response = await fetch('/registrar-movimiento', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('damabrava_token')}`
+                    },
+                    body: JSON.stringify(registroIngreso)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Error en la respuesta del servidor');
+                }
+
+                // --- NUEVO: Actualizar el stock en Almacen general considerando sueltas ---
+                const responseStock = await fetch('/actualizar-stock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('damabrava_token')}`
+                    },
+                    body: JSON.stringify({
+                        actualizaciones: actualizacionesStock,
+                        tipo: 'ingreso'
+                    })
+                });
+
+                const dataStock = await responseStock.json();
+
+                if (!responseStock.ok || !dataStock.success) {
+                    throw new Error(dataStock.error || 'Error al actualizar el stock');
+                }
+
+                // Limpiar carrito y actualizar UI
+                carritoIngresos.clear();
+                await obtenerClientes();
+                await obtenerAlmacenGeneral()
+                document.querySelector('.btn-flotante-ingresos').style.display = 'none';
+                ocultarAnuncioSecond();
+
+                mostrarNotificacion({
+                    message: 'Ingreso registrado exitosamente',
+                    type: 'success',
+                    duration: 3000
+                });
+                if (observacionesValor !== '') {
+                    registrarNotificacion(
+                        'Administración',
+                        'Creación',
+                        usuarioInfo.nombre + ' registro un ingreso al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
+                }
+            } catch (error) {
+                if (error.message === 'cancelled') {
+                    console.log('Operación cancelada por el usuario');
+                    return;
+                }
+                console.error('Error:', error);
+                mostrarNotificacion({
+                    message: error.message || 'Error al procesar la operación',
+                    type: 'error',
+                    duration: 3500
+                });
+            } finally {
+                ocultarProgreso('.pro-ingreso')
+            }
+        }
+
+        window.registrarIngreso = registrarIngreso;
+        actualizarBotonFlotante();
+        marcarItemsAgregadosAlCarrito();
     }
 
+
+    if (tipoEvento === 'almacen' || tipoEvento === 'conteo') {
+        // Oculta el botón flotante del carrito si existe
+        const botonFlotante = document.querySelector('.btn-flotante-salidas');
+        if (botonFlotante) {
+            botonFlotante.style.display = 'none';
+        }
+        const botonFlotanteIngresos = document.querySelector('.btn-flotante-ingresos');
+        if (botonFlotanteIngresos) {
+            botonFlotante.style.display = 'none';
+        }
+    }
     aplicarFiltros();
 }
-

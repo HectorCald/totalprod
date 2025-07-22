@@ -482,7 +482,7 @@ async function updateHTMLWithData() {
         const tienePromocion = producto.promocion && producto.promocion.trim() !== '';
         const estrellaPromocion = tienePromocion ? '<i class="fa fa-star" style="color: #ffd700 !important; position: absolute; bottom: 10px; right: 10px; font-size: 15px; z-index: 10;"></i>' : '';
         const precioPromocional = tienePromocion && producto.precio_promocion ?
-            `<span class="valor precio">Bs. ${(!isNaN(parseFloat(producto.precio_promocion)) ? parseFloat(producto.precio_promocion).toFixed(2) : '0.00')}</span>` : '';
+            `<span class="flotante-item green">Bs. ${(!isNaN(parseFloat(producto.precio_promocion)) ? parseFloat(producto.precio_promocion).toFixed(2) : '0.00')}</span>` : '';
 
         return `
             <div class="registro-item" data-id="${producto.id}" style="position: relative;">
@@ -490,14 +490,9 @@ async function updateHTMLWithData() {
                 <div class="header">
                     ${imagenMostrar}
                     <div class="info-header">
-                        <div class="id">${producto.id}
-                            <div class="precio-cantidad">
-                                <span class="valor stock">${producto.stock} Und.</span>
-                                ${precioPromocional || `<span class="valor precio">${precioMostrar}</span>`}
-                            </div>
-                        </div>
-                        <span class="nombre"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
-                        <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+                        <div class="id-flotante"><span>${producto.id}</span>${precioPromocional || `<span class="flotante-item green">${precioMostrar}</span>`}</div>
+                        <span class="detalle"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
+                        <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
                     </div>
                 </div>
             </div>

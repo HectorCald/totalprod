@@ -1359,3 +1359,89 @@ export function initPullToRefresh(container, refreshCallback) {
     // Retornar función para limpiar event listeners
     return cleanup;
 }
+
+
+export async function initDB(STORE, DB) {
+    const ALL_STORES = [
+        'prductos_alm',
+        'pedidos_acopio',
+        'precios_alm',
+        'etiquetas_almacen',
+        'etiquetas_acopio',
+        'clientes',
+        'proveedores',
+        'nombres_usuarios',
+        'ordenes_produccion',
+        'registros_acopio',
+        'tareas_acopio',
+        'registros_tareas_acopio',
+        'tareas_acopio',
+        'etiquetas_web',
+        'precios_alm',
+        'precios_web',
+        'pagos',
+        'personal',
+        'productos_acopio',
+        'registros_almacen',
+        'registros-conteo',
+        'productos_form',
+        'mis_registros_produccion',
+        'registros_produccion',
+        'nombres_produccion',
+        'reglas_produccion_base',
+        'reglas_produccion',
+    ];
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB, 1); // Siempre usa versión 1
+
+        request.onerror = () => reject(request.error);
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            ALL_STORES.forEach(storeName => {
+                if (!db.objectStoreNames.contains(storeName)) {
+                    db.createObjectStore(storeName, { keyPath: 'id' });
+                }
+            });
+        };
+    });
+}
+export async function obtenerLocal(STORE, DB) {
+    try {
+        const db = await initDB(STORE, DB);
+        const tx = db.transaction(STORE, 'readonly');
+        const store = tx.objectStore(STORE);
+        return new Promise((resolve, reject) => {
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const items = request.result.map(item => item.data);
+                resolve(items);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.error('Error obtener desde el cache', error);
+        return [];
+    }
+}
+
+
+export function normalizarTexto(texto) {
+    return (texto || '').toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[-_\s]+/g, '');
+}
+
+export function scrollToCenter(boton, contenedorPadre) {
+    const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
+    contenedorPadre.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+    });
+}

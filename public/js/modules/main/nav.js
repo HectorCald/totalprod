@@ -105,30 +105,6 @@ const pluginsMenu = {
         detalle: 'Gestiona el almacen general.',
         onclick: 'onclick="mostrarAlmacenGeneral()"'
     },
-    'ingresosAlmacen': {
-        clase: 'opcion-btn',
-        vista: 'almacen-view',
-        icono: 'fa-arrow-down',
-        texto: 'Ingresos almacén',
-        detalle: 'Ingresos del almacen general.',
-        onclick: 'onclick="mostrarIngresos()"'
-    },
-    'salidasAlmacen': {
-        clase: 'opcion-btn',
-        vista: 'regAlmacen-view',
-        icono: 'fa-arrow-up',
-        texto: 'Salidas almacén',
-        detalle: 'Salidas del almacen general.',
-        onclick: 'onclick="mostrarSalidas()"'
-    },
-    'conteoFisico': {
-        clase: 'opcion-btn',
-        vista: 'almacen-view',
-        icono: 'fa-clipboard-list',
-        texto: 'Conteo fisico',
-        detalle: 'Realiza conteos del almacen',
-        onclick: 'onclick="mostrarConteo()"'
-    },
     'verificarAlmacen': {
         clase: 'opcion-btn',
         vista: 'verificarRegistros-view',
@@ -240,7 +216,7 @@ const atajosPorRol = {
             clase: 'opcion-btn',
             vista: 'cuentasProduccion-view',
             icono: 'fa-solid fa-book',
-            texto: 'Reglas precios',
+            texto: 'Reglas',
             detalle: 'Todas las reglas para precios.',
             onclick: 'onclick="mostrarReglas();"',
             soloAdmin: true
@@ -313,30 +289,6 @@ const atajosPorRol = {
             texto: 'Almacen general',
             detalle: 'Gestiona el almacen general.',
             onclick: 'onclick="mostrarAlmacenGeneral()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-arrow-down',
-            texto: 'Ingresos',
-            detalle: 'Ingresos del almacen general.',
-            onclick: 'onclick="mostrarIngresos()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'regAlmacen-view',
-            icono: 'fa-arrow-up',
-            texto: 'Salidas',
-            detalle: 'Salidas del almacen general.',
-            onclick: 'onclick="mostrarSalidas()"'
-        },
-        {
-            clase: 'opcion-btn',
-            vista: 'almacen-view',
-            icono: 'fa-clipboard-list',
-            texto: 'Conteo fisico',
-            detalle: 'Realiza conteos del almacen',
-            onclick: 'onclick="mostrarConteo()"'
         },
         {
             clase: 'opcion-btn',

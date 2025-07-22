@@ -19,7 +19,7 @@
 
 .tabla-responsive th,
 .tabla-responsive td {
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     border: 1px solid var(--cero-color);
     white-space: nowrap;

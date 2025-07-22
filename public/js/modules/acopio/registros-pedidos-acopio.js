@@ -284,20 +284,19 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${pedido.id}<span class="estado ${pedido.estado.toLowerCase().replace(/\s+/g, '-')}">${pedido.estado}</span></span>
-                    <span class="nombre">
-                        <strong>${pedido.producto}</strong>
+                    <span class="id-flotante"><span>${pedido.id}</span><span class="flotante-item ${pedido.estado==='Pendiente' ? 'gray' : pedido.estado==='Recibido' ? 'green' : pedido.estado==='Ingresado' ? 'blue' : pedido.estado==='Rechazado' ? 'red' : 'orange'} ">${pedido.estado}</span></span>
+                    <span class="detalle"><strong>${pedido.producto}</strong>
                         ${pedido.estado.toLowerCase() === 'pendiente' ?
-            `<span class="cantidad-pedida">(${pedido.cantidadPedida})</span>` :
-            pedido.estado.toLowerCase() === 'recibido' ?
-                `<span class="cantidad-pedida">(${pedido.cantidadEntregadaUnd || 'No registrado'})</span>` :
-                pedido.estado.toLowerCase() === 'ingresado' ?
-                    `<span class="cantidad-pedida">(${pedido.cantidadIngresada || 'No registrado'} Kg.) </span>` :
+                    `<span class="cantidad-pedida">(${pedido.cantidadPedida})</span>` :
+                    pedido.estado.toLowerCase() === 'recibido' ?
+                        `<span class="cantidad-pedida">(${pedido.cantidadEntregadaUnd || 'No registrado'})</span>` :
+                        pedido.estado.toLowerCase() === 'ingresado' ?
+                            `<span class="cantidad-pedida">(${pedido.cantidadIngresada || 'No registrado'} Kg.) </span>` :
                     pedido.estado.toLowerCase() === 'no llego' ?
                         `<span class="cantidad-pedida">(${pedido.cantidadEntregadaUnd || 'No registrado'}) </span>` : ''
         }
                     </span>
-                    <span class="fecha" data-fecha="${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}">${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}</span>
+                    <span class="pie" data-fecha="${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}">${pedido.estado === 'Pendiente' ? pedido.fecha : pedido.estado === 'Recibido' ? pedido.fechaEntrega : pedido.estado === 'Ingresado' ? pedido.fechaIngreso : ''}</span>
                 </div>
             </div>
         </div>
@@ -343,13 +342,7 @@ function eventosPedidos() {
     let filtroFechaInstance = null;
     let filtroEstadoActual = 'Todos';
 
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
+
     function scrollToCenter(boton, contenedorPadre) {
         const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
         contenedorPadre.scrollTo({

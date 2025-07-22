@@ -175,19 +175,10 @@ function updateHTMLWithData() {
                 <div class="header">
                     <i class='bx bx-package'></i>
                     <div class="info-header">
-                        <span class="id">${producto.id}
-                            <div class="precio-cantidad">
-                                <span class="valor stock">${totalBruto.toFixed(2)} Kg.</span>
-                            </div>
-                        </span>
-                        <span class="nombre"><strong>${producto.producto}</strong></span>
-                        <span class="etiquetas">${producto.etiquetas.split(';').join(' • ')}</span>
+                        <span class="id-flotante"><span>${producto.id}</span><span class="flotante-item orange">${totalBruto.toFixed(2)} Kg.</span></span>
+                        <span class="detalle"><strong>${producto.producto}</strong></span>
+                        <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
                     </div>
-                </div>
-                <div class="registro-acciones">
-                    <button class="btn-pedido btn-icon green" data-id="${producto.id}">
-                        <i class='bx bx-cart-add'></i>
-                    </button>
                 </div>
             </div>
         `;
@@ -242,13 +233,7 @@ function eventosPedidos(producto, pedido) {
         aplicarFiltros();
     });
 
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[-_\s]+/g, '');
-    }
+
     function aplicarFiltros() {
         const registros = document.querySelectorAll('.registro-item');
         const busqueda = normalizarTexto(inputBusqueda.value);
@@ -320,13 +305,9 @@ function eventosPedidos(producto, pedido) {
             mensajeNoEncontrado.style.display = productosFiltrados.length === 0 ? 'block' : 'none';
         }, 200);
     }
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
+
+
+
     botonesCantidad.forEach((boton, index) => {
         boton.addEventListener('click', () => {
             // Si es botón de peso (Bruto/Prima)
@@ -703,5 +684,3 @@ function eventosPedidos(producto, pedido) {
 
     aplicarFiltros();
 }
-
-

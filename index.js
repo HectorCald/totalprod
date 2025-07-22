@@ -911,7 +911,7 @@ app.get('/obtener-registros-produccion', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Produccion!A2:O' // Columnas desde A hasta N (14 columnas)
+            range: 'Produccion!A2:P' // Columnas desde A hasta N (14 columnas)
         });
 
         const rows = response.data.values || [];
@@ -933,7 +933,7 @@ app.get('/obtener-registros-produccion', requireAuth, async (req, res) => {
             c_real: row[12] || '',
             fecha_verificacion: row[13] || '',
             observaciones: row[14] || '',
-            pagado: row[15] || '',
+            estado: row[15] || '',
         }));
 
         res.json({
@@ -992,7 +992,11 @@ app.post('/registrar-produccion', requireAuth, async (req, res) => {
             envasados,         // ENVS. TERM.
             vencimiento,       // FECHA VENC.
             nombre,            // NOMBRE
-            email              // USER
+            email,              // USER
+            '',        //c_real
+            '',         //fecha_verificacion
+            '', //observaciones
+            'Pendiente'          //estado
         ];
 
         await sheets.spreadsheets.values.append({
@@ -1040,7 +1044,7 @@ app.get('/obtener-mis-registros-produccion', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Produccion!A2:O'
+            range: 'Produccion!A2:P'
         });
 
         const rows = response.data.values || [];
@@ -1064,7 +1068,7 @@ app.get('/obtener-mis-registros-produccion', requireAuth, async (req, res) => {
                 c_real: row[12] || '',
                 fecha_verificacion: row[13] || '',
                 observaciones: row[14] || '',
-                pagado: row[15] || '',
+                estado: row[15] || '',
             }));
 
         res.json({
@@ -1113,6 +1117,40 @@ app.get('/obtener-productos-form', requireAuth, async (req, res) => {
             success: false,
             error: 'Error al obtener los productos'
         });
+    }
+});
+app.put('/cambiar-estado-registro/:id', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id } = req.params;
+        const { estado } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener los registros de producción
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Produccion!A2:P'
+        });
+
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Registro no encontrado' });
+        }
+
+        // Supón que la columna P (índice 15) es para el estado (ajusta si es otra)
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Produccion!P${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: [[estado]] }
+        });
+
+        res.json({ success: true, message: 'Estado actualizado correctamente' });
+    } catch (error) {
+        console.error('Error al cambiar estado del registro:', error);
+        res.status(500).json({ success: false, error: 'Error al cambiar el estado del registro' });
     }
 });
 
@@ -1266,7 +1304,7 @@ app.put('/verificar-registro-produccion/:id', requireAuth, async (req, res) => {
         // Get production record
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Produccion!A2:O'
+            range: 'Produccion!A2:P'
         });
 
         const rows = response.data.values || [];
@@ -1361,7 +1399,8 @@ app.put('/verificar-registro-produccion/:id', requireAuth, async (req, res) => {
             ...registro.slice(0, 12),    // Keep existing data
             cantidad_real,               // Real quantity
             currentDate,                 // Verification date
-            observaciones               // Observations
+            observaciones,               // Observations
+            'Verificado'
         ];
 
         await sheets.spreadsheets.values.update({
@@ -1750,27 +1789,83 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
         for (const actualizacion of actualizaciones) {
             const rowIndex = rows.findIndex(row => row[0] === actualizacion.id);
             if (rowIndex !== -1) {
-                console.log(`[FILA] Producto: ${actualizacion.id} encontrado en fila (índice hoja): ${rowIndex + 1}`);
                 // Stock (columna D, índice 3)
-                const stockActual = parseInt(rows[rowIndex][3]) || 0;
-                const nuevoStock = tipo === 'salida'
-                    ? stockActual - actualizacion.cantidad
-                    : stockActual + actualizacion.cantidad;
-                console.log(`[STOCK] Producto: ${actualizacion.id} | Stock actual: ${stockActual} | Cantidad a ${tipo === 'salida' ? 'restar' : 'sumar'}: ${actualizacion.cantidad} | Nuevo stock: ${nuevoStock} | Actualizando en fila: D${rowIndex + 1}`);
-                updates.push({
-                    range: `Almacen general!D${rowIndex + 1}`,
-                    values: [[nuevoStock.toString()]]
-                });
+                let stockActual = parseInt(rows[rowIndex][3]) || 0;
+                let sueltasActual = parseInt(rows[rowIndex][12]) || 0;
+                let cantidadxgrupo = parseInt(rows[rowIndex][4]) || 1; // Columna E
 
-                // Sueltas (columna M, índice 12)
-                if (typeof actualizacion.sumarSueltas === 'number' && actualizacion.sumarSueltas > 0) {
-                    const sueltasActual = parseInt(rows[rowIndex][12]) || 0;
-                    const nuevasSueltas = sueltasActual + actualizacion.sumarSueltas;
-                    console.log(`[SUELTAS] Producto: ${actualizacion.id} | Sueltas actuales: ${sueltasActual} | Sumar sueltas: ${actualizacion.sumarSueltas} | Nuevas sueltas: ${nuevasSueltas} | Actualizando en fila: M${rowIndex + 1}`);
-                    updates.push({
-                        range: `Almacen general!M${rowIndex + 1}`,
-                        values: [[nuevasSueltas.toString()]]
-                    });
+                // --- CONVERSIÓN DE SUELTAS A TIRAS ---
+                if (cantidadxgrupo > 1 && sueltasActual >= cantidadxgrupo) {
+                    const tirasFormables = Math.floor(sueltasActual / cantidadxgrupo);
+                    if (tirasFormables > 0) {
+                        sueltasActual -= tirasFormables * cantidadxgrupo;
+                        stockActual += tirasFormables;
+                        updates.push({
+                            range: `Almacen general!D${rowIndex + 1}`,
+                            values: [[stockActual.toString()]]
+                        });
+                        updates.push({
+                            range: `Almacen general!M${rowIndex + 1}`,
+                            values: [[sueltasActual.toString()]]
+                        });
+                        console.log(`[CONVERSIÓN] Producto: ${actualizacion.id} | Formadas ${tirasFormables} tiras de ${cantidadxgrupo} sueltas | Nuevo stock: ${stockActual} | Nuevas sueltas: ${sueltasActual}`);
+                    }
+                }
+
+                // --- SALIDA ---
+                if (tipo === 'salida') {
+                    // 1. Restar sueltas si corresponde
+                    if (typeof actualizacion.restarSueltas === 'number' && actualizacion.restarSueltas > 0) {
+                        let restar = Math.min(actualizacion.restarSueltas, sueltasActual);
+                        sueltasActual -= restar;
+                        updates.push({
+                            range: `Almacen general!M${rowIndex + 1}`,
+                            values: [[sueltasActual.toString()]]
+                        });
+                        console.log(`[SALIDA][SUELTAS] Producto: ${actualizacion.id} | Sueltas actuales: ${rows[rowIndex][12]} | Restar sueltas: ${restar} | Nuevas sueltas: ${sueltasActual}`);
+                    }
+                    // 2. Restar tiras si corresponde
+                    if (typeof actualizacion.cantidad === 'number' && actualizacion.cantidad > 0) {
+                        let nuevoStock = stockActual - actualizacion.cantidad;
+                        if (nuevoStock < 0) nuevoStock = 0;
+                        updates.push({
+                            range: `Almacen general!D${rowIndex + 1}`,
+                            values: [[nuevoStock.toString()]]
+                        });
+                        console.log(`[SALIDA][TIRAS] Producto: ${actualizacion.id} | Stock actual: ${stockActual} | Restar tiras: ${actualizacion.cantidad} | Nuevo stock: ${nuevoStock}`);
+                        stockActual = nuevoStock; // Para consistencia si se usa después
+                    }
+                    // 3. Sumar sueltas si corresponde (por abrir tiras)
+                    if (typeof actualizacion.sumarSueltas === 'number' && actualizacion.sumarSueltas > 0) {
+                        sueltasActual += actualizacion.sumarSueltas;
+                        updates.push({
+                            range: `Almacen general!M${rowIndex + 1}`,
+                            values: [[sueltasActual.toString()]]
+                        });
+                        console.log(`[SALIDA][SUMAR SUELTAS] Producto: ${actualizacion.id} | Sumar sueltas: ${actualizacion.sumarSueltas} | Nuevas sueltas: ${sueltasActual}`);
+                    }
+                }
+                // --- INGRESO ---
+                else if (tipo === 'ingreso') {
+                    // Sumar tiras
+                    if (typeof actualizacion.cantidad === 'number' && actualizacion.cantidad > 0) {
+                        let nuevoStock = stockActual + actualizacion.cantidad;
+                        updates.push({
+                            range: `Almacen general!D${rowIndex + 1}`,
+                            values: [[nuevoStock.toString()]]
+                        });
+                        console.log(`[INGRESO][TIRAS] Producto: ${actualizacion.id} | Stock actual: ${stockActual} | Sumar tiras: ${actualizacion.cantidad} | Nuevo stock: ${nuevoStock}`);
+                        stockActual = nuevoStock;
+                    }
+                    // Sumar sueltas
+                    if (typeof actualizacion.sumarSueltas === 'number' && actualizacion.sumarSueltas > 0) {
+                        sueltasActual += actualizacion.sumarSueltas;
+                        updates.push({
+                            range: `Almacen general!M${rowIndex + 1}`,
+                            values: [[sueltasActual.toString()]]
+                        });
+                        console.log(`[INGRESO][SUMAR SUELTAS] Producto: ${actualizacion.id} | Sumar sueltas: ${actualizacion.sumarSueltas} | Nuevas sueltas: ${sueltasActual}`);
+                    }
                 }
             } else {
                 console.log(`[ERROR] Producto con ID ${actualizacion.id} no encontrado en Almacen general para actualizar stock/sueltas.`);
@@ -1843,6 +1938,64 @@ app.put('/actualizar-observaciones-registro/:id', requireAuth, async (req, res) 
         });
     }
 });
+app.post('/ingresar-almacen-directo', requireAuth, async (req, res) => {
+    try {
+        const { spreadsheetId } = req.user;
+        const { id, tiras, unidades } = req.body;
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // 1. Obtener productos actuales
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Almacen general!A2:O'
+        });
+
+        const productos = response.data.values || [];
+        const rowIndex = productos.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Producto no encontrado' });
+        }
+
+        // 2. Obtener valores actuales
+        const row = productos[rowIndex];
+        let stock = Number(row[3]) || 0; // Suponiendo que la columna D es stock
+        let uSueltas = Number(row[12]) || 0; // Suponiendo que la columna N es uSueltas
+        const cantidadxgrupo = Number(row[4]) || 1; // Suponiendo que la columna I es cantidadxgrupo
+
+        // 3. Sumar tiras y unidades
+        stock += Number(tiras) || 0;
+        uSueltas += Number(unidades) || 0;
+
+        // 4. Convertir sueltas a tiras si corresponde
+        if (cantidadxgrupo > 1 && uSueltas >= cantidadxgrupo) {
+            const tirasExtra = Math.floor(uSueltas / cantidadxgrupo);
+            stock += tirasExtra;
+            uSueltas = uSueltas % cantidadxgrupo;
+        }
+
+        // 5. Actualizar la hoja (stock y uSueltas)
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Almacen general!D${rowIndex + 2}:D${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: [[stock]] }
+        });
+        await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Almacen general!M${rowIndex + 2}:M${rowIndex + 2}`,
+            valueInputOption: 'USER_ENTERED',
+            resource: { values: [[uSueltas]] }
+        });
+
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('Error en /ingresar-almacen-directo:', error);
+        return res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+});
+
+
 
 app.put('/actualizar-promocion/:id', requireAuth, async (req, res) => {
     try {
@@ -2257,6 +2410,61 @@ app.post('/registrar-movimiento', requireAuth, async (req, res) => {
             }
         });
 
+        if (movimiento.tipo === 'Salida' && movimiento.clienteId) {
+            try {
+                // 1. Obtén todos los clientes
+                const clientesResp = await sheets.spreadsheets.values.get({
+                    spreadsheetId,
+                    range: 'Clientes!A2:Z'
+                });
+                const clientesRows = clientesResp.data.values || [];
+                // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                if (rowIndex !== -1) {
+                    // 3. Obtén el valor actual de la columna F (índice 5)
+                    const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);
+                    const newVal = currentVal + 1;
+                    // 4. Actualiza la celda en la hoja
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `Clientes!F${rowIndex + 2}`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: { values: [[newVal]] }
+                    });
+                }
+            } catch (err) {
+                console.error('Error actualizando salidas_num del cliente:', err);
+                // No detiene el flujo principal, solo loguea el error
+            }
+        }
+        if (movimiento.tipo === 'Ingreso' && movimiento.clienteId) {
+            try {
+                // 1. Obtén todos los clientes
+                const clientesResp = await sheets.spreadsheets.values.get({
+                    spreadsheetId,
+                    range: 'Clientes!A2:Z'
+                });
+                const clientesRows = clientesResp.data.values || [];
+                // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                if (rowIndex !== -1) {
+                    // 3. Obtén el valor actual de la columna F (índice 5)
+                    const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);
+                    const newVal = currentVal + 1;
+                    // 4. Actualiza la celda en la hoja
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `Clientes!G${rowIndex + 2}`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: { values: [[newVal]] }
+                    });
+                }
+            } catch (err) {
+                console.error('Error actualizando salidas_num del cliente:', err);
+                // No detiene el flujo principal, solo loguea el error
+            }
+        }
+
         res.json({
             success: true,
             message: 'Movimiento registrado correctamente',
@@ -2466,6 +2674,63 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
             success: false,
             error: error.message || 'Error al anular el movimiento'
         });
+    }
+});
+app.put('/anexar-movimiento-produccion/:id', requireAuth, async (req, res) => {
+    const { spreadsheetId } = req.user;
+    const { id } = req.params;
+    const { idProduccion } = req.body;
+
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+
+        // Obtener todos los registros de almacén
+        const response = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: 'Movimientos alm-gral!A2:Q'
+        });
+        const rows = response.data.values || [];
+        const rowIndex = rows.findIndex(row => row[0] === id);
+
+        if (rowIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Registro no encontrado' });
+        }
+
+        // 1. Cambiar el nombre del movimiento
+        const nuevoNombre = `Producción (${idProduccion})`;
+
+        // 2. Determinar tipo y cantidad
+        const tipoMovimiento = rows[rowIndex][16] || ''; // tipoMovimiento: 'Tiras' o 'Unidades'
+        const cantidad = rows[rowIndex][5] || '0'; // columna F (cantidades)
+        let nuevaCantidad = '';
+        if (tipoMovimiento.toLowerCase().includes('tira')) {
+            nuevaCantidad = `Tiras(${cantidad}) Unidades(0)`;
+        } else {
+            nuevaCantidad = `Tiras(0) Unidades(${cantidad})`;
+        }
+
+        // 3. Actualizar nombre_movimiento y cantidades en la hoja
+        await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId,
+            resource: {
+                valueInputOption: 'USER_ENTERED',
+                data: [
+                    {
+                        range: `Movimientos alm-gral!I${rowIndex + 2}`,
+                        values: [[nuevoNombre]]
+                    },
+                    {
+                        range: `Movimientos alm-gral!F${rowIndex + 2}`,
+                        values: [[nuevaCantidad]]
+                    }
+                ]
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error al anexar movimiento:', error);
+        res.status(500).json({ success: false, error: 'Error al anexar el movimiento' });
     }
 });
 
@@ -2946,7 +3211,7 @@ app.get('/obtener-clientes', requireAuth, async (req, res) => {
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
-            range: 'Clientes!A2:F'
+            range: 'Clientes!A2:G'
         });
 
         const rows = response.data.values || [];
@@ -2956,7 +3221,8 @@ app.get('/obtener-clientes', requireAuth, async (req, res) => {
             telefono: row[2] || '',
             direccion: row[3] || '',
             zona: row[4] || '',
-            pedidos_id: row[5] || '',
+            salidas_num: row[5] || '',
+            ingresos_num: row[6] || ''
         }));
 
         res.json({

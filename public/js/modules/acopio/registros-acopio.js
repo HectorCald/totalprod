@@ -125,9 +125,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-file'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.tipo}">${registro.tipo}</span></span>
-                    <span class="nombre"><strong>${registro.nombreMovimiento}</strong></span>
-                    <span class="fecha">${registro.fecha}</span>
+                    <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.tipo.includes('Ingreso') ? 'green' : registro.tipo.includes('Salida') ? 'red' : 'orange'}">${registro.tipo}</span></span>
+                    <span class="detalle"><strong>${registro.nombreMovimiento}</strong></span>
+                    <span class="pie">${registro.fecha}</span>
                 </div>
             </div>
         </div>
@@ -250,13 +250,7 @@ function eventosRegistrosAcopio() {
     });
 
 
-    function normalizarTexto(texto) {
-        return texto.toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
-            .replace(/[-_\s]+/g, ''); // Eliminar guiones, guiones bajos y espacios
-    }
+
     function aplicarFiltros() {
         const filtroTipo = filtroNombreActual;
         const filtroMateria = filtroMateriaActual;
@@ -344,13 +338,7 @@ function eventosRegistrosAcopio() {
             }
         }, 200);
     }
-    function scrollToCenter(boton, contenedorPadre) {
-        const scrollLeft = boton.offsetLeft - (contenedorPadre.offsetWidth / 2) + (boton.offsetWidth / 2);
-        contenedorPadre.scrollTo({
-            left: scrollLeft,
-            behavior: 'smooth'
-        });
-    }
+
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
