@@ -757,11 +757,9 @@ export async function crearHome() {
     crearNotificaciones(usuarioInfo);
     
 
-    Promise.all(promesas).then(() => {
-        mostrarHome(view);
-        requestAnimationFrame(() => {
-            view.style.opacity = '1';
-        });
+    mostrarHome(view);
+    requestAnimationFrame(() => {
+        view.style.opacity = '1';
     });
 }
 export function mostrarHome(view) {
