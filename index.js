@@ -1405,7 +1405,7 @@ app.put('/verificar-registro-produccion/:id', requireAuth, async (req, res) => {
 
         await sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: `Produccion!A${rowIndex + 2}:O${rowIndex + 2}`,
+            range: `Produccion!A${rowIndex + 2}:P${rowIndex + 2}`,
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [updatedRow]
