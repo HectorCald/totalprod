@@ -497,7 +497,7 @@ function renderInitialHTML() {
                 <button class="btn-filtro activado">Todos</button>
                 <button class="btn-filtro">Pendientes</button>
                 <button class="btn-filtro">Verificados</button>
-                <button class="btn-filtro">Observados</button>
+                <button class="btn-filtro">Ingresados</button>
             </div>
             <div class="productos-container">
                 ${Array(10).fill().map(() => `
@@ -755,11 +755,11 @@ function eventosVerificacion() {
             // Lógica de filtrado existente
             if (filtroEstadoActual && filtroEstadoActual !== 'Todos') {
                 if (filtroEstadoActual === 'Pendientes') {
-                    mostrar = !registroData.fecha_verificacion;
+                    mostrar = !registroData.fecha_verificacion && registroData.estado === 'Pendiente';
                 } else if (filtroEstadoActual === 'Verificados') {
-                    mostrar = !!registroData.fecha_verificacion;
-                } else if (filtroEstadoActual === 'Observados') {
-                    mostrar = registroData.fecha_verificacion && registroData.observaciones !== 'Sin observaciones';
+                    mostrar = !!registroData.fecha_verificacion && registroData.estado === 'Verificado';
+                } else if (filtroEstadoActual === 'Ingresados') {
+                    mostrar = registroData.estado === 'Ingresado';
                 }
             }
 
