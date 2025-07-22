@@ -777,31 +777,6 @@ export function mostrarHome(view) {
         </div>
     `;
 
-
-    // Determinar qué registros mostrar según el rol
-    let registrosFiltrados = [];
-    let tipoRegistro = '';
-
-    switch (usuarioInfo.rol) {
-        case 'Producción':
-            registrosFiltrados = registrosProduccion;
-            tipoRegistro = 'producción';
-            break;
-        case 'Almacen':
-            registrosFiltrados = registrosMovimientos;
-            tipoRegistro = 'almacén';
-            break;
-        case 'Acopio':
-            registrosFiltrados = movimientosAcopio;
-            tipoRegistro = 'almacén';
-            break;
-        case 'Administración':
-            registrosFiltrados = [];
-            tipoRegistro = 'todos';
-            break;
-    }
-
-
     const home = `
         <h1 class="titulo"><i class='bx bx-home'></i> Inicio</h1>
         <div class="seccion1">
