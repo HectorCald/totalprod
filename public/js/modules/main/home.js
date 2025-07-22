@@ -755,12 +755,7 @@ export async function crearHome() {
     crearPerfil(usuarioInfo);
     actualizarPermisos(usuarioInfo);
     crearNotificaciones(usuarioInfo);
-
-    const promesas = [
-        usuarioInfo.rol === 'Producción' ? obtenerMisRegistros() : null,
-        usuarioInfo.rol === 'Almacen' ? obtenerMovimientosAlmacen() : null,
-        usuarioInfo.rol === 'Acopio' ? obtenerMovimientosAcopio() : null,
-    ].filter(Boolean); // Filtramos los null
+    
 
     Promise.all(promesas).then(() => {
         mostrarHome(view);
