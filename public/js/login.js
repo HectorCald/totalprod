@@ -38,7 +38,7 @@ function iniciarSesion() {
             const cleanEmail = email.trim();
 
             try {
-                mostrarCarga();
+                mostrarCarga('.carga-procesar');
                 const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
@@ -57,7 +57,7 @@ function iniciarSesion() {
                 const data = await response.json();
 
                 if (data.success) {
-                    ocultarCarga();
+                    ocultarCarga('.carga-procesar');
                     
                     if (rememberMe) {
                         localStorage.setItem('credentials', JSON.stringify({
@@ -86,7 +86,7 @@ function iniciarSesion() {
                             type: 'info',  // Cambiamos el tipo a info
                             duration: 5000  // Aumentamos la duración para este tipo de mensaje
                         });
-                        ocultarCarga();
+                        ocultarCarga('.carga-procesar');
                     } else {
 
                         mostrarNotificacion({
@@ -94,7 +94,7 @@ function iniciarSesion() {
                             type: 'error',
                             duration: 4000
                         });
-                        ocultarCarga();
+                        ocultarCarga('.carga-procesar');
                     }
                 }
             } catch (error) {
@@ -104,7 +104,7 @@ function iniciarSesion() {
                     type: 'error',
                     duration: 4000
                 });
-                ocultarCarga();
+                ocultarCarga('.carga-procesar');
             }
         });
 

@@ -234,13 +234,13 @@ function renderInitialHTML() {
             <h1 class="titulo">Registros almacen</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="busqueda">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro-almacen" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -404,7 +404,7 @@ function eventosRegistrosAlmacen() {
 
     const items = document.querySelectorAll('.registro-item');
 
-    const inputBusqueda = document.querySelector('.buscar-registro-almacen');
+    const inputBusqueda = document.querySelector('.search');
     const botonCalendario = document.querySelector('.btn-calendario');
 
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -636,7 +636,7 @@ function eventosRegistrosAlmacen() {
             <h1 class="titulo">Información</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno verificar-registro">
+        <div class="relleno">
             <p class="normal">Información básica</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
