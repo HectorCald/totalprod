@@ -6,9 +6,7 @@ import {
     exportarArchivos, cerrarAnuncioManual,
     mostrarAnuncioTercer, ocultarAnuncioTercer,
     scrollToTop, tienePermiso, actualizarPermisos,
-    inicializarDashboard, limpiarProteccionNavegacion,
-    usuarioInfo, mostrarProgreso,
-    ocultarProgreso, initPullToRefresh,
+    inicializarDashboard, limpiarProteccionNavegacion,usuarioInfo,
     registrarNotificacion, exportarArchivosPDF, initDB, obtenerLocal,
     normalizarTexto, scrollToCenter
 } from './modules/componentes/componentes.js'
@@ -75,9 +73,6 @@ window.exportarArchivosPDF = exportarArchivosPDF
 window.registrarNotificacion = registrarNotificacion
 window.inicializarDashboard = inicializarDashboard
 window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
-window.mostrarProgreso = mostrarProgreso
-window.ocultarProgreso = ocultarProgreso
-window.initPullToRefresh = initPullToRefresh
 window.initDB=initDB
 window.obtenerLocal=obtenerLocal
 window.normalizarTexto=normalizarTexto

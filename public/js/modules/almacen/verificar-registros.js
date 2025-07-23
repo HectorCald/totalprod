@@ -467,7 +467,7 @@ function renderInitialHTML() {
             <h1 class="titulo">Registros producción</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="pull-to-refresh">
                 <i class='bx bx-refresh'></i>
                 <span>Desliza para recargar</span>
@@ -477,7 +477,7 @@ function renderInitialHTML() {
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -600,7 +600,7 @@ function eventosVerificacion() {
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
 
     const items = document.querySelectorAll('.registro-item');
-    const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
+    const inputBusqueda = document.querySelector('.search');
     const botonCalendario = document.querySelector('.btn-calendario');
 
 
@@ -741,7 +741,6 @@ function eventosVerificacion() {
     function aplicarFiltros() {
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Primero, filtrar todos los registros
@@ -922,27 +921,21 @@ function eventosVerificacion() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">
-                <h1 class="titulo">${registro.producto}</h1>
+                <h1 class="titulo">Información</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal">Información del producto</p>
+                <p class="normal">Detalles del registro</p>
                 <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
-                </div>
-
-                <p class="normal">Información básica</p>
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-user'></i> Operador: </strong>${registro.nombre}</span>
-                    <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
+                    <span class="valor"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
+                    <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
                 </div>
 
                 <p class="normal">Detalles de producción</p>
                 <div class="campo-vertical">
-                    <span class="valor"><strong><i class='bx bx-cog'></i> Selección/Cernido: </strong>${registro.proceso}</span>
+                    <span class="valor"><strong><i class="bx bx-box"></i> Producto: </strong>${registro.producto} - ${registro.gramos}gr.</span>
+                    <span class="valor"><strong><i class='bx bx-receipt'></i> Lote: </strong>${registro.lote}</span>
+                    <span class="valor"><strong><i class='bx bx-cog'></i> Proceso: </strong>${registro.proceso}</span>
                     <span class="valor"><strong><i class='bx bx-bowl-hot'></i> Microondas: </strong>${registro.microondas}</span>
                     <span class="valor"><strong><i class='bx bx-check-shield'></i> Envases terminados: </strong>${registro.envases_terminados}</span>
                     <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha de vencimiento: </strong>${registro.fecha_vencimiento}</span>
@@ -1000,7 +993,6 @@ function eventosVerificacion() {
         mostrarAnuncioSecond();
 
         const btnVerificar = contenido.querySelector('.btn-verificar');
-        const btnArreglado = contenido.querySelector('.btn-arreglado');
         const btnIngresarAlmacen = contenido.querySelector('.btn-ingresar-almacen');
 
         if (tienePermiso('edicion') && !registro.fecha_verificacion) {
@@ -1018,9 +1010,6 @@ function eventosVerificacion() {
         if (btnVerificar) {
             btnVerificar.addEventListener('click', () => verificar(registro));
         }
-        if (btnArreglado) {
-            btnArreglado.addEventListener('click', () => arreglado(registro));
-        }
         if (btnIngresarAlmacen) {
             btnIngresarAlmacen.addEventListener('click', () => ingresarAlmacen(registro));
         }
@@ -1037,10 +1026,8 @@ function eventosVerificacion() {
                 <p class="normal">Información básica</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
+                    <span class="nombre"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
+                    <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto} - ${registro.gramos}gr.</span>
                 </div>
                 <p class="normal">Motivo de la eliminación</p>
                 <div class="entrada">
@@ -1083,7 +1070,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch(`/eliminar-registro-produccion/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -1110,18 +1097,10 @@ function eventosVerificacion() {
                             'Administración',
                             'Eliminación',
                             usuarioInfo.nombre + ' elimino el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Eliminación',
-                            usuarioInfo.nombre + ' elimino tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
                     } else {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el registro',
@@ -1129,7 +1108,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete')
+                    ocultarCarga('.carga-procesar')
                 }
             }
         }
@@ -1137,94 +1116,94 @@ function eventosVerificacion() {
 
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
-            <div class="encabezado">
-                <h1 class="titulo">Editar registro</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
-            </div>
-            <div class="relleno editar-produccion">
-                <p class="normal">Información basica</p>
-                    <div class="entrada">
-                        <i class='bx bx-cube'></i>
-                        <div class="input">
-                            <p class="detalle">Producto</p>
-                            <input class="producto" type="text" value="${registro.producto}" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="sugerencias" id="productos-list"></div>
-                    <div class="campo-horizontal">
+                <div class="encabezado">
+                    <h1 class="titulo">Editar registro</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Información basica</p>
                         <div class="entrada">
-                            <i class="ri-scales-line"></i>
+                            <i class='bx bx-cube'></i>
                             <div class="input">
-                                <p class="detalle">Gramaje</p>
-                                <input class="gramaje" type="number" value="${registro.gramos}" autocomplete="off" placeholder=" " required>
+                                <p class="detalle">Producto</p>
+                                <input class="producto" type="text" value="${registro.producto}" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="sugerencias" id="productos-list"></div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class="ri-scales-line"></i>
+                                <div class="input">
+                                    <p class="detalle">Gramaje</p>
+                                    <input class="gramaje" type="number" value="${registro.gramos}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-barcode'></i>
+                                <div class="input">
+                                    <p class="detalle">Lote</p>
+                                    <input class="lote" type="number" autocomplete="off" value="${registro.lote}" placeholder=" " required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    <p class="normal">Información del proceso</p>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-cog'></i>
+                                <div class="input">
+                                    <p class="detalle">Proceso</p>
+                                    <select class="select" required>
+                                        <option value="${registro.proceso}" selected>${registro.proceso}</option>
+                                        <option value="Seleccion">Selección</option>
+                                        <option value="Cernido">Cernido</option>
+                                        <option value="Ninguno">Ninguno</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-bowl-hot'></i>
+                                <div class="input">
+                                    <p class="detalle">Microondas</p>
+                                    <input class="microondas" type="text" value="${registro.microondas}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                        </div>
+                    <p class="normal">Información del acabado</p>
+                        <div class="entrada">
+                            <i class='bx bx-check-shield'></i>
+                            <div class="input">
+                                <p class="detalle">Terminados</p>
+                                <input class="terminados" type="number" value="${registro.envases_terminados}" autocomplete="off" placeholder=" " required>
                             </div>
                         </div>
                         <div class="entrada">
-                            <i class='bx bx-barcode'></i>
+                            <i class='bx bx-calendar'></i>
                             <div class="input">
-                                <p class="detalle">Lote</p>
-                                <input class="lote" type="number" autocomplete="off" value="${registro.lote}" placeholder=" " required>
+                                <p class="detalle">vencimiento</p>
+                                <input class="vencimiento" type="month" value="${registro.fecha_vencimiento}" placeholder=" " required>
                             </div>
                         </div>
-                    </div>
-                    
-                <p class="normal">Información del proceso</p>
-                    <div class="campo-horizontal">
+                    <p class="normal">Motivo de la edición</p>
                         <div class="entrada">
-                            <i class='bx bx-cog'></i>
+                            <i class='bx bx-comment-detail'></i>
                             <div class="input">
-                                <p class="detalle">Proceso</p>
-                                <select class="select" required>
-                                    <option value="${registro.proceso}" selected>${registro.proceso}</option>
-                                    <option value="Seleccion">Selección</option>
-                                    <option value="Cernido">Cernido</option>
-                                    <option value="Ninguno">Ninguno</option>
-                                </select>
+                                <p class="detalle">Motivo</p>
+                                <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
                             </div>
                         </div>
-                        <div class="entrada">
-                            <i class='bx bx-bowl-hot'></i>
-                            <div class="input">
-                                <p class="detalle">Microondas</p>
-                                <input class="microondas" type="text" value="${registro.microondas}" autocomplete="off" placeholder=" " required>
+                        <div class="info-sistema">
+                            <i class='bx bx-info-circle'></i>
+                            <div class="detalle-info">
+                                <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
                             </div>
                         </div>
-                    </div>
-                <p class="normal">Información del acabado</p>
-                    <div class="entrada">
-                        <i class='bx bx-check-shield'></i>
-                        <div class="input">
-                            <p class="detalle">Terminados</p>
-                            <input class="terminados" type="number" value="${registro.envases_terminados}" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-calendar'></i>
-                        <div class="input">
-                            <p class="detalle">vencimiento</p>
-                            <input class="vencimiento" type="month" value="${registro.fecha_vencimiento}" placeholder=" " required>
-                        </div>
-                    </div>
-                <p class="normal">Motivo de la edición</p>
-                    <div class="entrada">
-                        <i class='bx bx-comment-detail'></i>
-                        <div class="input">
-                            <p class="detalle">Motivo</p>
-                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="info-sistema">
-                        <i class='bx bx-info-circle'></i>
-                        <div class="detalle-info">
-                            <p>Estás por editar un registro del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
-                        </div>
-                    </div>
 
-            </div>
-            <div class="anuncio-botones">
-                <button class="btn-editar-registro btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
-            </div>
-        `;
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-editar-registro btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
+                </div>
+            `;
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
@@ -1276,14 +1255,14 @@ function eventosVerificacion() {
 
             async function confirmarEdicion() {
                 const idProdducto = window.idPro;
-                const producto = document.querySelector('.editar-produccion .producto').value;
-                const gramos = document.querySelector('.editar-produccion .gramaje').value;
-                const lote = document.querySelector('.editar-produccion .lote').value;
-                const proceso = document.querySelector('.editar-produccion .select').value;
-                const microondas = document.querySelector('.editar-produccion .microondas').value;
-                const envases_terminados = document.querySelector('.editar-produccion .terminados').value;
-                const fecha_vencimiento = document.querySelector('.editar-produccion .vencimiento').value;
-                const motivo = document.querySelector('.editar-produccion .motivo').value;
+                const producto = document.querySelector('.producto').value;
+                const gramos = document.querySelector('.gramaje').value;
+                const lote = document.querySelector('.lote').value;
+                const proceso = document.querySelector('.select').value;
+                const microondas = document.querySelector('.microondas').value;
+                const envases_terminados = document.querySelector('.terminados').value;
+                const fecha_vencimiento = document.querySelector('.vencimiento').value;
+                const motivo = document.querySelector('.motivo').value;
                 if (!motivo) { // Solo el campo "Motivo" es obligatorio
                     mostrarNotificacion({
                         message: 'Debe ingresar el motivo de la edición',
@@ -1294,7 +1273,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-edit')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch(`/editar-registro-produccion/${registroId}`, {
                         method: 'PUT',
                         headers: {
@@ -1332,18 +1311,10 @@ function eventosVerificacion() {
                             'Administración',
                             'Edición',
                             usuarioInfo.nombre + ' edito el registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Edición',
-                            usuarioInfo.nombre + ' edito tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
                     } else {
                         throw new Error(data.error || 'Error al actualizar el registro');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el registro',
@@ -1351,7 +1322,105 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit')
+                    ocultarCarga('.carga-procesar')
+                }
+            }
+        }
+        function anular(registro) {
+            const contenido = document.querySelector('.anuncio-tercer .contenido');
+            const registrationHTML = `
+                <div class="encabezado">
+                    <h1 class="titulo">Anular verificación</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Información del registro</p>
+                    <div class="campo-vertical">
+                        <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto} - ${registro.gramos}gr.</span>
+                        <span class="nombre"><strong><i class='bx bx-hash'></i> Cantidad verificada: </strong>${registro.c_real}</span>
+                    </div>
+
+                    <p class="normal">Motivo de la anulación</p>
+                    <div class="entrada">
+                        <i class='bx bx-comment-detail'></i>
+                        <div class="input">
+                            <p class="detalle">Motivo</p>
+                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                        </div>
+                    </div>
+                    <div class="info-sistema">
+                        <i class='bx bx-info-circle'></i>
+                        <div class="detalle-info">
+                            <p>Estás por anular verificación de un registro del sistema. Esta acción no lo eliminará, pero quitara la fecha y la cantidad verificada, esto prodria afectar al peso de dicho producto en almacen acopio.</p>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="anuncio-botones">
+                    <button class="btn-anular-verificacion btn red"><i class='bx bx-x-circle'></i> Anular verificación</button>
+                </div>
+            `;
+            contenido.innerHTML = registrationHTML;
+            contenido.style.paddingBottom = '70px';
+            mostrarAnuncioTercer();
+
+            const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');
+            btnAnularVerificacion.addEventListener('click', confirmarAnulacion);
+
+            async function confirmarAnulacion() {
+                const motivo = document.querySelector('.motivo').value.trim();
+
+                if (!motivo) {
+                    mostrarNotificacion({
+                        message: 'Debe ingresar el motivo de la anulación',
+                        type: 'warning',
+                        duration: 3500
+                    });
+                    return;
+                }
+
+                try {
+                    mostrarCarga('.carga-procesar')
+                    const response = await fetch(`/anular-verificacion-produccion/${registro.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ motivo })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await obtenerRegistrosProduccion();
+                        info(registroId);
+                        updateHTMLWithData();
+                        mostrarNotificacion({
+                            message: 'Verificación anulada correctamente',
+                            type: 'success',
+                            duration: 3000
+                        });
+                        registrarNotificacion(
+                            'Administración',
+                            'Información',
+                            usuarioInfo.nombre + ' anulo el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
+
+                    } else {
+                        throw new Error(data.error || 'Error al anular la verificación');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarNotificacion({
+                        message: error.message || 'Error al anular la verificación',
+                        type: 'error',
+                        duration: 3500
+                    });
+                } finally {
+                    ocultarCarga('.carga-procesar')
                 }
             }
         }
@@ -1363,14 +1432,11 @@ function eventosVerificacion() {
                     <h1 class="titulo">Verificar registro</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <div class="relleno verificar-registro">
+                <div class="relleno">
                 <p class="normal">Información básica</p>
                     <div class="campo-vertical">
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>
-                        <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                        <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
-                        <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
+                        <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto} - ${registro.gramos}gr.</span>
+                        <span class="nombre"><strong><i class='bx bx-hash'></i> Cantidad terminada: </strong>${registro.envases_terminados}</span>
                     </div>
                     <p class="normal">Verificación</p>
                     <div class="entrada">
@@ -1413,8 +1479,8 @@ function eventosVerificacion() {
             btnIngresarAlmacen.addEventListener('click', confirmarIngresoAlmacen);
 
             async function confirmarVerificacion() {
-                const cantidadRealInput = document.querySelector('.verificar-registro .cantidad_real');
-                const observacionesInput = document.querySelector('.verificar-registro .observaciones');
+                const cantidadRealInput = document.querySelector('.cantidad_real');
+                const observacionesInput = document.querySelector('.observaciones');
 
                 if (!cantidadRealInput || !observacionesInput) {
                     mostrarNotificacion({
@@ -1438,7 +1504,7 @@ function eventosVerificacion() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-verificado')
+                    mostrarCarga('.carga-procesar')
                     const registro = registrosProduccion.find(r => r.id === registroId);
 
                     const response = await fetch(`/verificar-registro-produccion/${registroId}`, {
@@ -1466,7 +1532,7 @@ function eventosVerificacion() {
                                 duration: 3500
                             });
                         }
-                        ocultarProgreso('.pro-verificado')
+                        ocultarCarga('.carga-procesar')
                         return;
                     }
 
@@ -1495,10 +1561,6 @@ function eventosVerificacion() {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
 
                     console.error('Error:', error);
                     mostrarNotificacion({
@@ -1507,163 +1569,8 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-verificado')
+                    ocultarCarga('.carga-procesar')
                 }
-            }
-        }
-        function anular(registro) {
-            const contenido = document.querySelector('.anuncio-tercer .contenido');
-            const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Anular verificación</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno verificar-registro">
-            <p class="normal">Información del registro</p>
-            <div class="campo-vertical">
-                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>
-                <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${registro.gramos}gr.</span>
-                <span class="valor"><strong><i class='bx bx-package'></i> Envases: </strong>${registro.envases_terminados} Und.</span>
-                <span class="valor"><strong><i class='bx bx-hash'></i> Vencimiento: </strong>${registro.fecha_vencimiento}</span>
-            </div>
-
-            <p class="normal">Motivo de la anulación</p>
-            <div class="entrada">
-                <i class='bx bx-comment-detail'></i>
-                <div class="input">
-                    <p class="detalle">Motivo</p>
-                    <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
-                </div>
-            </div>
-            <div class="info-sistema">
-                <i class='bx bx-info-circle'></i>
-                <div class="detalle-info">
-                    <p>Estás por anular verificación de un registro del sistema. Esta acción no lo eliminará, pero quitara la fecha y la cantidad verificada, esto prodria afectar al peso de dicho producto en almacen acopio.</p>
-                </div>
-            </div>
-
-        </div>
-        <div class="anuncio-botones">
-            <button class="btn-anular-verificacion btn red"><i class='bx bx-x-circle'></i> Anular verificación</button>
-        </div>
-    `;
-            contenido.innerHTML = registrationHTML;
-            contenido.style.paddingBottom = '70px';
-            mostrarAnuncioTercer();
-
-            const btnAnularVerificacion = contenido.querySelector('.btn-anular-verificacion');
-            btnAnularVerificacion.addEventListener('click', confirmarAnulacion);
-
-            async function confirmarAnulacion() {
-                const motivo = document.querySelector('.motivo').value.trim();
-
-                if (!motivo) {
-                    mostrarNotificacion({
-                        message: 'Debe ingresar el motivo de la anulación',
-                        type: 'warning',
-                        duration: 3500
-                    });
-                    return;
-                }
-
-                try {
-                    const signal = await mostrarProgreso('.pro-anulado')
-                    const response = await fetch(`/anular-verificacion-produccion/${registro.id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ motivo })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        await obtenerRegistrosProduccion();
-                        info(registroId);
-                        updateHTMLWithData();
-                        mostrarNotificacion({
-                            message: 'Verificación anulada correctamente',
-                            type: 'success',
-                            duration: 3000
-                        });
-                        registrarNotificacion(
-                            'Administración',
-                            'Información',
-                            usuarioInfo.nombre + ' anulo el registro de producciòn: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-                        registrarNotificacion(
-                            registro.user,
-                            'Información',
-                            usuarioInfo.nombre + ' anulo tu registro de producción: ' + registro.producto + ' Id: ' + registro.id + ' su motivo fue: ' + motivo)
-
-                    } else {
-                        throw new Error(data.error || 'Error al anular la verificación');
-                    }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
-                    console.error('Error:', error);
-                    mostrarNotificacion({
-                        message: error.message || 'Error al anular la verificación',
-                        type: 'error',
-                        duration: 3500
-                    });
-                } finally {
-                    ocultarProgreso('.pro-anulado')
-                }
-            }
-        }
-        async function arreglado(registro) {
-            try {
-                const signal = await mostrarProgreso('.pro-edit')
-                const response = await fetch(`/actualizar-observaciones-registro/${registro.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        observaciones: 'Sin observaciones'
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    await obtenerRegistrosProduccion();
-                    info(registroId);
-                    updateHTMLWithData();
-                    mostrarNotificacion({
-                        message: 'Se marcó como arreglado correctamente',
-                        type: 'success',
-                        duration: 3000
-                    });
-                } else {
-                    throw new Error(data.error || 'Error al marcar como arreglado');
-                }
-            } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
-                console.error('Error:', error);
-                mostrarNotificacion({
-                    message: error.message || 'Error al marcar como arreglado',
-                    type: 'error',
-                    duration: 3500
-                });
-            } finally {
-                ocultarProgreso('.pro-edit')
             }
         }
         function ingresarAlmacen(registro) {
@@ -1745,11 +1652,10 @@ function eventosVerificacion() {
                     <h1 class="titulo">Ingresar a almacen</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>    
                 </div>
-                <div class="relleno verificar-registro">
+                <div class="relleno">
                     <p class="normal">Información del registro</p>
                     <div class="campo-vertical">
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${registro.producto}</span>   
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Gramaje: </strong>${registro.gramos}gr.</span>
+                        <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto} - ${registro.gramos}gr.</span>
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Envases verificados: </strong>${registro.c_real} Und.</span>
                     </div>
                     <p class="normal">Tiras y unidades</p>
@@ -1792,8 +1698,8 @@ function eventosVerificacion() {
             mostrarAnuncioTercer();
 
             async function confirmarIngresoAlmacen() {
-                const tirasInput = document.querySelector('.verificar-registro .tiras');
-                const unidadesInput = document.querySelector('.verificar-registro .unidades');
+                const tirasInput = document.querySelector('.tiras');
+                const unidadesInput = document.querySelector('.unidades');
 
                 const tiras = Number(tirasInput?.value) || 0;
                 let unidades = Number(unidadesInput?.value) || 0;
@@ -1850,7 +1756,7 @@ function eventosVerificacion() {
                 };
 
                 try {
-                    const signal = await mostrarProgreso('.pro-registro');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch('/ingresar-almacen-directo', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1936,7 +1842,7 @@ function eventosVerificacion() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-registro');
+                    ocultarCarga('.carga-procesar');
                 }
             }
 

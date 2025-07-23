@@ -2,7 +2,7 @@ let configuracionesGlobal = null;
 
 async function obtenerConfiguraciones() {
     try {
-        mostrarCarga();
+        mostrarCarga('.carga-obtener');
         const response = await fetch('/obtener-configuraciones');
         const data = await response.json();
         if (data.success) {
@@ -17,7 +17,7 @@ async function obtenerConfiguraciones() {
             duration: 3500
         });
     } finally {
-        ocultarCarga();
+        ocultarCarga('.carga-obtener');
     }
 }
 
@@ -117,7 +117,7 @@ function eventosConfiguraciones() {
         }
 
         try {
-            mostrarCarga();
+            mostrarCarga('.carga-procesar');
             const response = await fetch('/actualizar-configuraciones', {
                 method: 'PUT',
                 headers: {
@@ -132,7 +132,7 @@ function eventosConfiguraciones() {
 
             const data = await response.json();
             if (data.success) {
-                ocultarCarga();
+                ocultarCarga('.carga-procesar');
                 mostrarNotificacion({
                     message: 'Configuraciones actualizadas correctamente',
                     type: 'success',
@@ -152,7 +152,7 @@ function eventosConfiguraciones() {
                 duration: 3500
             });
         } finally {
-            ocultarCarga();
+            ocultarCarga('.carga-procesar');
         }
     });
 }

@@ -1437,7 +1437,7 @@ app.put('/anular-verificacion-produccion/:id', requireAuth, async (req, res) => 
         // 1. Get the production record
         const prodResponse = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Produccion!A2:O'
+            range: 'Produccion!A2:P'
         });
 
         const rows = prodResponse.data.values || [];
@@ -1501,12 +1501,13 @@ app.put('/anular-verificacion-produccion/:id', requireAuth, async (req, res) => 
             ...registro.slice(0, 12), // Keep original data
             '', // Clear c_real
             '', // Clear fecha_verificacion
-            motivo // Add anulación motivo
+            '', // Clear observaciones
+            'Pendiente'
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId,
-            range: `Produccion!A${rowIndex + 2}:O${rowIndex + 2}`,
+            range: `Produccion!A${rowIndex + 2}:P${rowIndex + 2}`,
             valueInputOption: 'USER_ENTERED',
             resource: {
                 values: [updatedRow]
@@ -3221,7 +3222,7 @@ app.get('/obtener-clientes', requireAuth, async (req, res) => {
             nombre: row[1] || '',
             telefono: row[2] || '',
             direccion: row[3] || '',
-            zona: row[4] || '',
+            ciudad: row[4] || '',
             salidas_num: row[5] || '',
             ingresos_num: row[6] || ''
         }));
@@ -3241,13 +3242,13 @@ app.get('/obtener-clientes', requireAuth, async (req, res) => {
 app.post('/agregar-cliente', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
-        const { nombre, telefono, direccion, zona } = req.body;
+        const { nombre, telefono, direccion, ciudad } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener clientes actuales para calcular el siguiente ID
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Clientes!A2:E'
+            range: 'Clientes!A2:G'
         });
 
         const rows = response.data.values || [];
@@ -3259,13 +3260,15 @@ app.post('/agregar-cliente', requireAuth, async (req, res) => {
             nombre,
             telefono || '',
             direccion || '',
-            zona || ''
+            ciudad || '',
+            '0',
+            '0'
         ];
 
         // Agregar el nuevo cliente
         await sheets.spreadsheets.values.append({
             spreadsheetId,
-            range: 'Clientes!A2:E',
+            range: 'Clientes!A2:G',
             valueInputOption: 'RAW',
             insertDataOption: 'INSERT_ROWS',
             resource: { values: [newClient] }
@@ -3305,7 +3308,7 @@ app.delete('/eliminar-cliente/:id', requireAuth, async (req, res) => {
         // Obtener clientes actuales
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: 'Clientes!A2:E'
+            range: 'Clientes!A2:G'
         });
 
         const rows = response.data.values || [];
@@ -3347,7 +3350,7 @@ app.delete('/eliminar-cliente/:id', requireAuth, async (req, res) => {
 app.put('/editar-cliente/:id', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
     const { id } = req.params;
-    const { nombre, telefono, direccion, zona, motivo } = req.body;
+    const { nombre, telefono, direccion, ciudad, motivo } = req.body;
 
     try {
         const sheets = google.sheets({ version: 'v4', auth });
@@ -3374,7 +3377,7 @@ app.put('/editar-cliente/:id', requireAuth, async (req, res) => {
             nombre,     // Nombre
             telefono,   // Teléfono
             direccion,  // Dirección
-            zona        // Zona
+            ciudad        // Ciudad
         ];
 
         await sheets.spreadsheets.values.update({
@@ -3418,7 +3421,7 @@ app.get('/obtener-proovedores', requireAuth, async (req, res) => {
             nombre: row[1] || '',
             telefono: row[2] || '',
             direccion: row[3] || '',
-            zona: row[4] || ''
+            ciudad: row[4] || ''
         }));
 
         res.json({
@@ -3436,7 +3439,7 @@ app.get('/obtener-proovedores', requireAuth, async (req, res) => {
 app.post('/agregar-proovedor', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
-        const { nombre, telefono, direccion, zona } = req.body;
+        const { nombre, telefono, direccion, ciudad } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener clientes actuales para calcular el siguiente ID
@@ -3454,7 +3457,7 @@ app.post('/agregar-proovedor', requireAuth, async (req, res) => {
             nombre,
             telefono || '',
             direccion || '',
-            zona || ''
+            ciudad || ''
         ];
 
         // Agregar el nuevo cliente
@@ -3543,7 +3546,7 @@ app.delete('/eliminar-proovedor/:id', requireAuth, async (req, res) => {
 app.put('/editar-proovedor/:id', requireAuth, async (req, res) => {
     const { spreadsheetId } = req.user;
     const { id } = req.params;
-    const { nombre, telefono, direccion, zona, motivo } = req.body;
+    const { nombre, telefono, direccion, ciudad, motivo } = req.body;
 
     try {
         const sheets = google.sheets({ version: 'v4', auth });
@@ -3570,7 +3573,7 @@ app.put('/editar-proovedor/:id', requireAuth, async (req, res) => {
             nombre,     // Nombre
             telefono,   // Teléfono
             direccion,  // Dirección
-            zona        // Zona
+            ciudad        // Ciudad
         ];
 
         await sheets.spreadsheets.values.update({

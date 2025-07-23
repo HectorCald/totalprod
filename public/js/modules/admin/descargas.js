@@ -5,7 +5,7 @@ let precios = [];
 
 async function obtenerDatos() {
     try {
-        mostrarProgreso('.pro-obtner')
+        mostrarCarga('.carga-obtener')
         const [productosResponse, preciosResponse] = await Promise.all([
             fetch('/obtener-productos'),
             fetch('/obtener-precios')
@@ -24,7 +24,7 @@ async function obtenerDatos() {
         console.error('Error al obtener datos:', error);
         return false;
     } finally {
-        ocultarProgreso('.pro-obtner')
+        ocultarCarga('.carga-obtener')
     }
 }
 function filtrarProductos() {
@@ -433,4 +433,3 @@ async function precargarImagenes(productos) {
     await Promise.allSettled(promesasImagenes);
     return imagenesCargadas;
 }
-

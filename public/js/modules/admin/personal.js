@@ -14,8 +14,9 @@ async function obtenerPersonal() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+            renderInitialHTML();
             updateHTMLWithData();
-            console.log('actulizando desde el cache')
+            console.log('actualizando desde el cache(personal)')
         }
             try {
                 
@@ -31,6 +32,7 @@ async function obtenerPersonal() {
 
                     if (JSON.stringify(personalCache) !== JSON.stringify(personal)) {
                         console.log('Diferencias encontradas, actualizando UI');
+                        renderInitialHTML();
                         updateHTMLWithData();
                         (async () => {
                         try {
@@ -55,10 +57,6 @@ async function obtenerPersonal() {
                             console.error('Error actualizando el caché:', error);
                         }})();
                     }
-                    else{
-                        console.log('no son diferentes')
-                    }
-
                     return true;
                 } else {
                     return false;
@@ -178,30 +176,6 @@ const pluginsMenu = {
         detalle: 'Gestiona el almacen general.',
         onclick: 'onclick="mostrarAlmacenGeneral()"'
     },
-    'ingresosAlmacen': {
-        clase: 'opcion-btn',
-        vista: 'almacen-view',
-        icono: 'fa-arrow-down',
-        texto: 'Ingresos almacén',
-        detalle: 'Ingresos del almacen general.',
-        onclick: 'onclick="mostrarIngresos()"'
-    },
-    'salidasAlmacen': {
-        clase: 'opcion-btn',
-        vista: 'regAlmacen-view',
-        icono: 'fa-arrow-up',
-        texto: 'Salidas almacén',
-        detalle: 'Salidas del almacen general.',
-        onclick: 'onclick="mostrarSalidas()"'
-    },
-    'conteoFisico': {
-        clase: 'opcion-btn',
-        vista: 'almacen-view',
-        icono: 'fa-clipboard-list',
-        texto: 'Conteo fisico',
-        detalle: 'Realiza conteos del almacen',
-        onclick: 'onclick="mostrarConteo()"'
-    },
     'verificarAlmacen': {
         clase: 'opcion-btn',
         vista: 'verificarRegistros-view',
@@ -286,15 +260,10 @@ const pluginsMenu = {
 export async function mostrarPersonal() {
     renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
     const [personalObtenido] = await Promise.all([
         await obtenerPersonal()
     ]);
-
-    updateHTMLWithData();
 }
 function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
@@ -308,7 +277,7 @@ function renderInitialHTML() {
                 <i class='bx bx-search'></i>
                 <div class="input">
                     <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-proovedor" placeholder="">
+                    <input type="text" class="search" placeholder="">
                 </div>
             </div>
             <div class="productos-container">
@@ -332,7 +301,10 @@ function renderInitialHTML() {
         </div>
     `;
     contenido.innerHTML = initialHTML;
-    contenido.style.paddingBottom = '10px'; // Aseguramos que haya espacio para los botones
+    contenido.style.paddingBottom = '10px';
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -342,7 +314,7 @@ function updateHTMLWithData() {
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
                     <span class="id-flotante"><span class="id">${persona.id}</span><span class="flotante-item blue">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
-                    <span class="detalle"><strong>${persona.nombre}</strong></span>
+                    <span class="detalle">${persona.nombre}</span>
                     <span class="pie">${persona.email}<span style="margin-left:auto">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-end"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>`}</span></span>
                 </div>
             </div>
@@ -354,7 +326,7 @@ function updateHTMLWithData() {
 
 
 function eventosPersonal() {
-    const inputBusqueda = document.querySelector('.buscar-proovedor');
+    const inputBusqueda = document.querySelector('.search');
     const items = document.querySelectorAll('.registro-item');
     const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
@@ -393,7 +365,6 @@ function eventosPersonal() {
     });
     function aplicarFiltros() {
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Animación de ocultar todos
@@ -430,13 +401,6 @@ function eventosPersonal() {
             // Control del mensaje "no encontrado"
             mensajeNoEncontrado.style.display = hayResultados ? 'none' : 'block';
         }, 300);
-    }
-    function normalizarTexto(texto) {
-        return (texto || '').toString()
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[-_\s]+/g, '');
     }
 
 
@@ -548,7 +512,7 @@ function eventosPersonal() {
                 .join(',');
 
             try {
-                const signal = await mostrarProgreso('.pro-user');
+                mostrarCarga('.carga-procesar');
                 const response = await fetch(`/actualizar-usuario-admin/${usuario.id}`, {
                     method: 'PUT',
                     headers: {
@@ -571,18 +535,10 @@ function eventosPersonal() {
                         type: 'success',
                         duration: 3000
                     });
-                    registrarNotificacion(
-                        'Administración',
-                        'Edición',
-                        usuarioInfo.nombre + ' realizo cambios en el perfil de: ' + usuario.nombre + ' que es parte del personal de la empresa')
                 } else {
                     throw new Error('Error al actualizar el usuario');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -590,7 +546,7 @@ function eventosPersonal() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-user');
+                ocultarCarga('.carga-procesar');
             }
         });
     };

@@ -16,7 +16,7 @@ function obtenerAtajosGuardados() {
 }
 async function obtenerUsuario() {
     try {
-        ocultarCarga();
+        mostrarCarga('.carga-obtener');
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
 
@@ -53,6 +53,7 @@ async function obtenerUsuario() {
 
             // Guardar en localStorage después de obtener del servidor
             localStorage.setItem('damabrava_usuario', JSON.stringify(usuarioInfo));
+            ocultarCarga('.carga-obtener');
             return true;
         } else {
             // Si falla el servidor, intentar recuperar del localStorage
@@ -790,9 +791,7 @@ export function mostrarHome(view) {
     `;
 
     view.innerHTML = home;
-    const screenStart = document.querySelector('.pro-start')
-    screenStart.classList.remove('slide-in-flotante')
-    screenStart.classList.add('slide-out-flotante');
+    ocultarCarga('.carga-obtener');
     const funciones = document.querySelectorAll('.funcion');
     const opciones = document.querySelectorAll('.opcion');
 

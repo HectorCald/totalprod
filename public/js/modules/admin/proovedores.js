@@ -82,20 +82,20 @@ function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
     const initialHTML = `  
         <div class="encabezado">
-            <h1 class="titulo">Proovedores</h1>
+            <h1 class="titulo">Proveedores</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
         <div class="busqueda">
             <div class="entrada">
                 <i class='bx bx-search'></i>
                 <div class="input">
                     <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-proovedor" placeholder="">
+                    <input type="text" class="search" placeholder="">
                 </div>
             </div>
             <div class="acciones-grande">
-                <button class="btn-crear-proovedor btn orange"> <i class='bx bx-plus'></i> <span>Crear nuevo proovedor</span></button>
+                <button class="btn-crear-proovedor btn orange"> <i class='bx bx-plus'></i> <span>Crear nuevo proveedor</span></button>
             </div>
         </div>
             
@@ -115,11 +115,11 @@ function renderInitialHTML() {
             </div>
             <div class="no-encontrado" style="display: none; text-align: center; color: #555; font-size: 1.1rem;padding:20px">
                 <i class='bx bx-id-card' style="font-size: 50px;opacity:0.5"></i>
-                <p style="text-align: center; color: #555;">¡Ups!, No se encontraron proovedores segun tu busqueda o filtrado.</p>
+                <p style="text-align: center; color: #555;">¡Ups!, No se encontraron proveedores segun tu busqueda o filtrado.</p>
             </div>
         </div>
         <div class="anuncio-botones">
-            <button class="btn-crear-proovedor btn orange"> <i class='bx bx-plus'></i> Crear nuevo proovedor</button>
+            <button class="btn-crear-proovedor btn orange"> <i class='bx bx-plus'></i> Crear nuevo proveedor</button>
         </div>
     `;
     contenido.innerHTML = initialHTML;
@@ -143,8 +143,8 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id-flotante"><span>${proovedor.id}</span><span class="flotante-item neutro">${proovedor.zona ? proovedor.zona: 'No tiene zona'}</span></span>
-                    <span class="detalle"><strong>${proovedor.nombre}</strong></span>
+                    <span class="id-flotante"><span>${proovedor.id}</span><span class="flotante-item blue">${proovedor.ciudad ? proovedor.ciudad: 'No tiene ciudad'}</span></span>
+                    <span class="detalle">${proovedor.nombre}</span>
                     <span class="pie">${proovedor.telefono}-${proovedor.direccion ? proovedor.direccion: 'No tiene dirección'}</span>
                 </div>
             </div>
@@ -156,8 +156,7 @@ function updateHTMLWithData() {
 
 
 function eventosProovedores() {
-    const inputBusqueda = document.querySelector('.buscar-proovedor');
-
+    const inputBusqueda = document.querySelector('.search');
     const btnNuevoCliente = document.querySelectorAll('.btn-crear-proovedor');
     const items = document.querySelectorAll('.registro-item');
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -180,19 +179,13 @@ function eventosProovedores() {
         }
     });
 
-
-
-    btnNuevoCliente.forEach(btn => {
-        btn.addEventListener('click',  crearCliente);
-    })
-
+    
     items.forEach(item => {
         item.addEventListener('click', function () {
             const proovedorId = this.dataset.id;
             window.info(proovedorId);
         });
     });
-
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
@@ -201,7 +194,6 @@ function eventosProovedores() {
     });
     function aplicarFiltros() {
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Animación de ocultar todos
@@ -220,7 +212,7 @@ function eventosProovedores() {
                     normalizarTexto(proovedor.nombre).includes(busqueda) ||
                     normalizarTexto(proovedor.telefono).includes(busqueda) ||
                     normalizarTexto(proovedor.direccion).includes(busqueda) ||
-                    normalizarTexto(proovedor.zona).includes(busqueda)
+                    normalizarTexto(proovedor.ciudad).includes(busqueda)
                 );
 
                 item.style.display = coincide ? 'flex' : 'none';
@@ -242,29 +234,28 @@ function eventosProovedores() {
 
 
     window.info = function (proovedorId) {
-        const proovedor = proovedores.find(r => r.id === proovedorId);
+        const proovedor = proveedores.find(r => r.id === proovedorId);
         if (!proovedor) return;
 
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">
-                <h1 class="titulo">Info proovedor</h1>
+                <h1 class="titulo">Información</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal">Información del proovedor</p>
+                <p class="normal">Información</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${proovedor.id}</span>
                     <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${proovedor.nombre}</span>
                     <span class="nombre"><strong><i class='bx bx-phone'></i> Teléfono: </strong>${proovedor.telefono || 'No registrado'}</span>
                     <span class="nombre"><strong><i class='bx bx-map'></i> Dirección: </strong>${proovedor.direccion || 'No registrada'}</span>
-                    <span class="nombre"><strong><i class='bx bx-map-pin'></i> Zona: </strong>${proovedor.zona || 'No registrada'}</span>
+                    <span class="nombre"><strong><i class='bx bxs-city'></i> Ciudad: </strong>${proovedor.ciudad || 'No registrada'}</span>
                 </div>
             </div>
             <div class="anuncio-botones">
                 <button class="btn-editar btn blue" data-id="${proovedor.id}"><i class='bx bx-edit'></i>Editar</button>
                 <button class="btn-eliminar btn red" data-id="${proovedor.id}"><i class="bx bx-trash"></i>Eliminar</button>
-                <button class="btn-historial btn yellow" data-id="${proovedor.id}"><i class="bx bx-history"></i>Historial</button>
             </div>
         `;
         contenido.innerHTML = registrationHTML;
@@ -273,28 +264,26 @@ function eventosProovedores() {
 
         const btnEditar = contenido.querySelector('.btn-editar');
         const btnEliminar = contenido.querySelector('.btn-eliminar');
-        const btnHistorial = contenido.querySelector('.btn-historial');
 
         btnEditar.addEventListener('click', () => editar(proovedor));
         btnEliminar.addEventListener('click', () => eliminar(proovedor));
-        btnHistorial.addEventListener('click', () => verHistorial(proovedor));
 
         async function eliminar(proovedor) {
 
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
                 <div class="encabezado">
-                    <h1 class="titulo">Eliminar cliente</h1>
+                    <h1 class="titulo">Eliminar proveedor</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
-                    <p class="normal">Información del proovedor</p>
+                    <p class="normal">Información</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${proovedor.id}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${proovedor.nombre}</span>
                         <span class="nombre"><strong><i class='bx bx-phone'></i> Teléfono: </strong>${proovedor.telefono || 'No registrado'}</span>
                         <span class="nombre"><strong><i class='bx bx-map'></i> Dirección: </strong>${proovedor.direccion || 'No registrada'}</span>
-                        <span class="nombre"><strong><i class='bx bx-map-pin'></i> Zona: </strong>${proovedor.zona || 'No registrada'}</span>
+                        <span class="nombre"><strong><i class='bx bxs-city'></i> Ciudad: </strong>${proovedor.ciudad || 'No registrada'}</span>
                     </div>
                     <p class="normal">Motivo de la eliminación</p>
                     <div class="entrada">
@@ -307,7 +296,7 @@ function eventosProovedores() {
                     <div class="info-sistema">
                         <i class='bx bx-info-circle'></i>
                         <div class="detalle-info">
-                            <p>Vas a eliminar un proovedor del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
+                            <p>Vas a eliminar un proveedor del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
                         </div>
                     </div>
 
@@ -334,7 +323,7 @@ function eventosProovedores() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-proovedor/${proovedorId}`, {
                         method: 'DELETE'
                     });
@@ -344,30 +333,26 @@ function eventosProovedores() {
                         cerrarAnuncioManual('anuncioSecond');
                         updateHTMLWithData();
                         mostrarNotificacion({
-                            message: 'Proovedor eliminado correctamente',
+                            message: 'Proveedor eliminado correctamente',
                             type: 'success',
                             duration: 3000
                         });
                         registrarNotificacion(
                             'Administración',
                             'Eliminación',
-                            usuarioInfo.nombre + ' elimino al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo de: ' + motivo)
+                            usuarioInfo.nombre + ' elimino al proveedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo de: ' + motivo)
                     } else {
-                        throw new Error('Error al eliminar el proovedor');
+                        throw new Error('Error al eliminar el proveedor');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message || 'Error al eliminar el proovedor',
+                        message: error.message || 'Error al eliminar el proveedor',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
@@ -376,11 +361,11 @@ function eventosProovedores() {
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
             <div class="encabezado">
-                <h1 class="titulo">Editar cliente</h1>
+                <h1 class="titulo">Editar proveedor</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal">Información del cliente</p>
+                <p class="normal">Información</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -403,10 +388,10 @@ function eventosProovedores() {
                     </div>
                 </div>
                 <div class="entrada">
-                    <i class='bx bx-map-pin'></i>
+                    <i class='bx bxs-city'></i>
                     <div class="input">
-                        <p class="detalle">Zona</p>
-                        <input class="editar-zona" type="text" value="${proovedor.zona || ''}">
+                        <p class="detalle">Ciudad</p>
+                        <input class="editar-ciudad" type="text" value="${proovedor.ciudad || ''}">
                     </div>
                 </div>
                 <p class="normal">Motivo de la edición</p>
@@ -420,7 +405,7 @@ function eventosProovedores() {
                 <div class="info-sistema">
                     <i class='bx bx-info-circle'></i>
                     <div class="detalle-info">
-                        <p>Estás por editar un proovedor del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                        <p>Estás por editar un proveedor del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
                     </div>
                 </div>
 
@@ -438,7 +423,7 @@ function eventosProovedores() {
                 const nombre = document.querySelector('.editar-nombre').value.trim();
                 const telefono = document.querySelector('.editar-telefono').value.trim();
                 const direccion = document.querySelector('.editar-direccion').value.trim();
-                const zona = document.querySelector('.editar-zona').value.trim();
+                const ciudad = document.querySelector('.editar-ciudad').value.trim();
                 const motivo = document.querySelector('.motivo').value.trim();
 
                 if (!nombre) {
@@ -451,13 +436,13 @@ function eventosProovedores() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-edit');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/editar-proovedor/${proovedorId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ nombre, telefono, direccion, zona, motivo })
+                        body: JSON.stringify({ nombre, telefono, direccion, ciudad, motivo })
                     });
                     const data = await response.json();
                     if (data.success) {
@@ -465,7 +450,7 @@ function eventosProovedores() {
                         info(proovedorId);
                         updateHTMLWithData();
                         mostrarNotificacion({
-                            message: 'Proovedor actualizado correctamente',
+                            message: 'Proveedor actualizado correctamente',
                             type: 'success',
                             duration: 3000
                         });
@@ -474,40 +459,34 @@ function eventosProovedores() {
                             'Edición',
                             usuarioInfo.nombre + ' edito al proovedor: ' + proovedor.nombre + ' con el id: ' + proovedor.id + ' por el motivo: ' + motivo)
                     } else {
-                        throw new Error('Error al actualizar el proovedor');
+                        throw new Error('Error al actualizar el proveedor');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
-                        message: error.message || 'Error al actualizar el proovedor',
+                        message: error.message || 'Error al actualizar el proveedor',
                         type: 'error',
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
-        async function verHistorial(proovedor) {
-            ocultarAnuncioSecond();
-            mostrarMovimientosAlmacen(proovedor.nombre);
-        }
     }
 
-
+    btnNuevoCliente.forEach(btn => {
+        btn.addEventListener('click',  crearCliente);
+    })
     async function crearCliente() {
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
             <div class="encabezado">
-                <h1 class="titulo">Crear nuevo proovedor</h1>
+                <h1 class="titulo">Crear nuevo proveedor</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal">Información del proovedor</p>
+                <p class="normal">Información</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -530,27 +509,27 @@ function eventosProovedores() {
                     </div>
                 </div>
                 <div class="entrada">
-                    <i class='bx bx-map-pin'></i>
+                    <i class='bx bxs-city'></i>
                     <div class="input">
-                        <p class="detalle">Zona</p>
-                        <input class="nuevo-zona" type="text">
+                        <p class="detalle">Ciudad</p>
+                        <input class="nuevo-ciudad" type="text">
                     </div>
                 </div>
             </div>
             <div class="anuncio-botones">
-                <button class="btn-guardar-nuevo-proovedor btn orange"><i class="bx bx-save"></i> Guardar cliente</button>
+                <button class="btn-guardar-nuevo-proveedor btn orange"><i class="bx bx-save"></i> Guardar proveedor</button>
             </div>
         `;
         contenido.innerHTML = registrationHTML;
         contenido.style.paddingBottom = '70px';
         mostrarAnuncioSecond();
 
-        const btnGuardarNuevoProovedor = contenido.querySelector('.btn-guardar-nuevo-proovedor');
-        btnGuardarNuevoProovedor.addEventListener('click', async () => {
+        const btnGuardarNuevoProveedor = contenido.querySelector('.btn-guardar-nuevo-proveedor');
+        btnGuardarNuevoProveedor.addEventListener('click', async () => {
             const nombre = document.querySelector('.nuevo-nombre').value.trim();
             const telefono = document.querySelector('.nuevo-telefono').value.trim();
             const direccion = document.querySelector('.nuevo-direccion').value.trim();
-            const zona = document.querySelector('.nuevo-zona').value.trim();
+            const ciudad = document.querySelector('.nuevo-ciudad').value.trim();
 
             if (!nombre) {
                 mostrarNotificacion({
@@ -562,13 +541,13 @@ function eventosProovedores() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-user');
+                mostrarCarga('.carga-procesar');
                 const response = await fetch('/agregar-proovedor', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ nombre, telefono, direccion, zona })
+                    body: JSON.stringify({ nombre, telefono, direccion, ciudad })
                 });
                 const data = await response.json();
                 if (data.success) {
@@ -576,30 +555,22 @@ function eventosProovedores() {
                     info(data.id);
                     updateHTMLWithData();
                     mostrarNotificacion({
-                        message: 'Proovedor creado correctamente',
+                        message: 'Proveedor creado correctamente',
                         type: 'success',
                         duration: 3000
                     });
-                    registrarNotificacion(
-                        'Administración',
-                        'Creación',
-                        usuarioInfo.nombre + ' creo un nuevo proovedor: '+nombre)
                 } else {
-                    throw new Error('Error al crear el proovedor');
+                    throw new Error('Error al crear el proveedor');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
-                    message: error.message || 'Error al crear el proovedor',
+                    message: error.message || 'Error al crear el proveedor',
                     type: 'error',
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-user');
+                ocultarCarga('.carga-procesar');
             }
         });
     }

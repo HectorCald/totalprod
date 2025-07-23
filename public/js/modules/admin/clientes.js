@@ -88,13 +88,13 @@ function renderInitialHTML() {
             <h1 class="titulo">Clientes</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
         <div class="busqueda">
             <div class="entrada">
                 <i class='bx bx-search'></i>
                 <div class="input">
                     <p class="detalle">Buscar</p>
-                    <input type="text" class="buscar-cliente" placeholder="">
+                    <input type="text" class="search" placeholder="">
                 </div>
             </div>
             <div class="acciones-grande">
@@ -132,15 +132,14 @@ function renderInitialHTML() {
     }, 100)
 }
 function updateHTMLWithData() {
-
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = clientes.map(cliente => `
         <div class="registro-item" data-id="${cliente.id}">
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id-flotante"><span>${cliente.id}</span><span class="flotante-item neutro">${cliente.zona? cliente.zona: 'No tiene zona'}</span></span>
-                    <span class="detalle"><strong>${cliente.nombre}</strong></span>
+                    <span class="id-flotante"><span>${cliente.id}</span><span class="flotante-item blue">${cliente.ciudad? cliente.ciudad: 'No tiene ciudad'}</span></span>
+                    <span class="detalle">${cliente.nombre}</span>
                     <span class="pie">${cliente.telefono}-${cliente.direccion ? cliente.direccion : 'No tiene dirección'}</span>
                 </div>
             </div>
@@ -152,7 +151,7 @@ function updateHTMLWithData() {
 
 
 function eventosClientes() {
-    const inputBusqueda = document.querySelector('.buscar-cliente');
+    const inputBusqueda = document.querySelector('.search');
     const btnNuevoCliente = document.querySelectorAll('.btn-crear-cliente');
     const items = document.querySelectorAll('.registro-item');
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -182,8 +181,6 @@ function eventosClientes() {
             window.info(clienteId);
         });
     });
-
-
     inputBusqueda.addEventListener('input', (e) => {
         aplicarFiltros();
     });
@@ -192,7 +189,6 @@ function eventosClientes() {
     });
     function aplicarFiltros() {
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Animación de ocultar todos
@@ -211,7 +207,7 @@ function eventosClientes() {
                     normalizarTexto(cliente.nombre).includes(busqueda) ||
                     normalizarTexto(cliente.telefono).includes(busqueda) ||
                     normalizarTexto(cliente.direccion).includes(busqueda) ||
-                    normalizarTexto(cliente.zona).includes(busqueda)
+                    normalizarTexto(cliente.ciudad).includes(busqueda)
                 );
 
                 item.style.display = coincide ? 'flex' : 'none';
@@ -243,19 +239,18 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal">Información del cliente</p>
+                <p class="normal">Información</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${cliente.id}</span>
                     <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${cliente.nombre}</span>
                     <span class="nombre"><strong><i class='bx bx-phone'></i> Teléfono: </strong>${cliente.telefono || 'No registrado'}</span>
                     <span class="nombre"><strong><i class='bx bx-map'></i> Dirección: </strong>${cliente.direccion || 'No registrada'}</span>
-                    <span class="nombre"><strong><i class='bx bx-map-pin'></i> Zona: </strong>${cliente.zona || 'No registrada'}</span>
+                    <span class="nombre"><strong><i class='bx bxs-city'></i> Ciudad: </strong>${cliente.ciudad || 'No registrada'}</span>
                 </div>
             </div>
             <div class="anuncio-botones">
                 <button class="btn-editar btn blue" data-id="${cliente.id}"><i class='bx bx-edit'></i>Editar</button>
                 <button class="btn-eliminar btn red" data-id="${cliente.id}"><i class="bx bx-trash"></i>Eliminar</button>
-                <button class="btn-historial btn yellow" data-id="${cliente.id}"><i class="bx bx-history"></i>Historial</button>
             </div>
         `;
         contenido.innerHTML = registrationHTML;
@@ -264,11 +259,9 @@ function eventosClientes() {
 
         const btnEditar = contenido.querySelector('.btn-editar');
         const btnEliminar = contenido.querySelector('.btn-eliminar');
-        const btnHistorial = contenido.querySelector('.btn-historial');
 
         btnEditar.addEventListener('click', () => editar(cliente));
         btnEliminar.addEventListener('click', () => eliminar(cliente));
-        btnHistorial.addEventListener('click', () => verHistorial(cliente));
 
         async function eliminar(cliente) {
     
@@ -279,13 +272,13 @@ function eventosClientes() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno">
-                    <p class="normal">Información del cliente</p>
+                    <p class="normal">Información</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${cliente.id}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Nombre: </strong>${cliente.nombre}</span>
                         <span class="nombre"><strong><i class='bx bx-phone'></i> Teléfono: </strong>${cliente.telefono || 'No registrado'}</span>
                         <span class="nombre"><strong><i class='bx bx-map'></i> Dirección: </strong>${cliente.direccion || 'No registrada'}</span>
-                        <span class="nombre"><strong><i class='bx bx-map-pin'></i> Zona: </strong>${cliente.zona || 'No registrada'}</span>
+                        <span class="nombre"><strong><i class='bx bxs-city'></i> Ciudad: </strong>${cliente.ciudad || 'No registrada'}</span>
                     </div>
                     <p class="normal">Motivo de la eliminación</p>
                     <div class="entrada">
@@ -325,7 +318,7 @@ function eventosClientes() {
                 }
     
                 try {
-                    const signal = await mostrarProgreso('.pro-delete');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-cliente/${clienteId}`, {
                         method: 'DELETE'
                     });
@@ -347,10 +340,6 @@ function eventosClientes() {
                         throw new Error('Error al eliminar el cliente');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el cliente',
@@ -358,7 +347,7 @@ function eventosClientes() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
@@ -371,7 +360,7 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal">Información del cliente</p>
+                <p class="normal">Información</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -394,10 +383,10 @@ function eventosClientes() {
                     </div>
                 </div>
                 <div class="entrada">
-                    <i class='bx bx-map-pin'></i>
+                    <i class='bx bxs-city'></i>
                     <div class="input">
-                        <p class="detalle">Zona</p>
-                        <input class="editar-zona" type="text" value="${cliente.zona || ''}">
+                        <p class="detalle">Ciudad</p>
+                        <input class="editar-ciudad" type="text" value="${cliente.ciudad || ''}">
                     </div>
                 </div>
                 <p class="normal">Motivo de la edición</p>
@@ -429,7 +418,7 @@ function eventosClientes() {
                 const nombre = document.querySelector('.editar-nombre').value.trim();
                 const telefono = document.querySelector('.editar-telefono').value.trim();
                 const direccion = document.querySelector('.editar-direccion').value.trim();
-                const zona = document.querySelector('.editar-zona').value.trim();
+                const ciudad = document.querySelector('.editar-ciudad').value.trim();
                 const motivo = document.querySelector('.motivo').value.trim();
     
                 if (!nombre) {
@@ -442,13 +431,13 @@ function eventosClientes() {
                 }
     
                 try {
-                    const signal = await mostrarProgreso('.pro-edit');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/editar-cliente/${clienteId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ nombre, telefono, direccion, zona, motivo })
+                        body: JSON.stringify({ nombre, telefono, direccion, ciudad, motivo })
                     });
                     const data = await response.json();
                     if (data.success) {
@@ -468,10 +457,6 @@ function eventosClientes() {
                         throw new Error('Error al actualizar el cliente');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el cliente',
@@ -479,13 +464,9 @@ function eventosClientes() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit');
+                    ocultarCarga('.carga-procesar');
                 }
             });
-        }
-        async function verHistorial(cliente) {
-            ocultarAnuncioSecond();
-            mostrarMovimientosAlmacen(cliente.nombre);
         }
     }
     btnNuevoCliente.forEach(btn => {
@@ -499,7 +480,7 @@ function eventosClientes() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno">
-                <p class="normal">Información del cliente</p>
+                <p class="normal">Información</p>
                 <div class="entrada">
                     <i class='bx bx-user'></i>
                     <div class="input">
@@ -522,10 +503,10 @@ function eventosClientes() {
                     </div>
                 </div>
                 <div class="entrada">
-                    <i class='bx bx-map-pin'></i>
+                    <i class='bx bxs-city'></i>
                     <div class="input">
-                        <p class="detalle">Zona</p>
-                        <input class="nuevo-zona" type="text">
+                        <p class="detalle">Ciudad</p>
+                        <input class="nuevo-ciudad" type="text">
                     </div>
                 </div>
             </div>
@@ -542,7 +523,7 @@ function eventosClientes() {
             const nombre = document.querySelector('.nuevo-nombre').value.trim();
             const telefono = document.querySelector('.nuevo-telefono').value.trim();
             const direccion = document.querySelector('.nuevo-direccion').value.trim();
-            const zona = document.querySelector('.nuevo-zona').value.trim();
+            const ciudad = document.querySelector('.nuevo-ciudad').value.trim();
 
             if (!nombre) {
                 mostrarNotificacion({
@@ -554,13 +535,13 @@ function eventosClientes() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-user');
+                mostrarCarga('.carga-procesar');
                 const response = await fetch('/agregar-cliente', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ nombre, telefono, direccion, zona })
+                    body: JSON.stringify({ nombre, telefono, direccion, ciudad })
                 });
 
                 const data = await response.json();
@@ -574,18 +555,10 @@ function eventosClientes() {
                         type: 'success',
                         duration: 3000
                     });
-                    registrarNotificacion(
-                        'Administración',
-                        'Creación',
-                        usuarioInfo.nombre + ' creo un nuevo cliente: '+nombre)
                 } else {
                     throw new Error('Error al crear el cliente');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al crear el cliente',
@@ -593,7 +566,7 @@ function eventosClientes() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-user');
+                ocultarCarga('.carga-procesar');
             }
         });
     }

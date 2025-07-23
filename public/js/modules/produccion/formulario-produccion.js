@@ -9,7 +9,7 @@ const PRODUCTOS_FORM_db = 'productos_form';
 
 async function verificarHorarioProduccion() {
     try {
-        mostrarProgreso('.pro-obtner')
+        mostrarCarga('.carga-obtener')
         const response = await fetch('/obtener-configuraciones');
         const data = await response.json();
 
@@ -57,14 +57,14 @@ async function verificarHorarioProduccion() {
             horario: 'Error al verificar horario'
         };
     } finally {
-        ocultarProgreso('.pro-obtner')
+        ocultarCarga('.carga-obtener')
     }
 }
 
 
 async function obtenerProductos() {
     try {
-        mostrarProgreso('.pro-obtner')
+        mostrarCarga('.carga-obtener')
 
         const productosFormCache = await obtenerLocal(PRODUCTOS_FORM_db, DB_NAME);
 
@@ -127,7 +127,7 @@ async function obtenerProductos() {
         console.error('Error al obtener productos:', error);
         return false;
     } finally {
-        ocultarProgreso('.pro-obtner')
+        ocultarCarga('.carga-obtener')
     }
 }
 export async function mostrarFormularioProduccion() {
@@ -403,7 +403,7 @@ function evetosFormularioProduccion() {
             }
     
             try {
-                const signal = await mostrarProgreso('.pro-registro')
+                mostrarCarga('.carga-procesar')
                 const response = await fetch('/registrar-produccion', {
                     method: 'POST',
                     headers: {
@@ -439,10 +439,6 @@ function evetosFormularioProduccion() {
                     throw new Error(data.error || 'Error al registrar la producción');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error en registro:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar la producción',
@@ -450,7 +446,7 @@ function evetosFormularioProduccion() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-registro')
+                ocultarCarga('.carga-procesar')
             }
         });
     });

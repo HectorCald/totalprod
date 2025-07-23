@@ -76,19 +76,15 @@ async function obtenerPagos() {
 }
 async function cargarPagosParciales(pagoId) {
     try {
-        const signal = await mostrarProgreso('.pro-obtner')
+        mostrarCarga('.carga-obtener');
         const response = await fetch(`/obtener-pagos-parciales/${pagoId}`);
         const data = await response.json();
         return data;
     } catch (error) {
         console.error('Error:', error);
-        if (error.message === 'cancelled') {
-            console.log('Operación cancelada por el usuario');
-            return null;
-        }
         return null;
     } finally {
-        ocultarProgreso('.pro-obtner')
+        ocultarCarga('.carga-obtener');
     }
 }
 
@@ -100,13 +96,13 @@ function renderInitialHTML() {
             <h1 class="titulo">Pagos</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno pagos">
+        <div class="relleno">
             <div class="busqueda">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -175,7 +171,7 @@ function updateHTMLWithData() {
                 <i class='bx bx-file'></i>
                 <div class="info-header">
                     <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.estado === 'Pendiente' ? 'red' : registro.estado === 'Pagado' ? 'green' : 'orange'}">${registro.estado === 'Pendiente' ? 'Pendiente' : registro.estado === 'Pagado' ? 'Pagado' : 'Anulado'}</span></span>
-                    <span class="detalle" style="font-size: 12px;"><strong>${registro.nombre_pago} (${registro.beneficiario})</strong></span>
+                    <span class="detalle">${registro.nombre_pago} (${registro.beneficiario})</span>
                     <span class="pie">${registro.fecha}<span class="flotante-item neutro">Bs. ${registro.total}</span></span>
                 </div>
             </div>
@@ -190,14 +186,12 @@ function eventosPagos() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = pagosGlobal;
     const btnNuevoPago = document.querySelectorAll('.nuevo-pago-generico');
-
     const botonesNombre = document.querySelectorAll('.etiquetas-filter .btn-filtro');
     const botonesEstado = document.querySelectorAll('.filtros-opciones.estado .btn-filtro');
-    const selectTipo = document.querySelector('.pagos .tipo');
+    const selectTipo = document.querySelector('.tipo');
 
-
+    const inputBusqueda = document.querySelector('.search');
     const items = document.querySelectorAll('.registro-item');
-    const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
     const botonCalendario = document.querySelector('.btn-calendario');
 
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -236,7 +230,6 @@ function eventosPagos() {
     function aplicarFiltros() {
         const fechasSeleccionadas = filtroFechaInstance?.selectedDates || [];
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Primero, filtrar todos los registros
@@ -427,12 +420,10 @@ function eventosPagos() {
                     </button>
                 </div>
                 <div class="relleno verificar-registro">
-                    <p class="normal">Información del pago</p>
+                    <p class="normal">Información</p>
                     <div class="campo-vertical">
-                        <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${pago.nombre_pago}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
-                        <span class="nombre"><strong><i class='bx bx-envelope'></i> Email: </strong>${pago.id_beneficiario}</span>
                         <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${pago.fecha}</span>
                     </div>
     
@@ -491,12 +482,10 @@ function eventosPagos() {
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal">Información del pago</p>
+                <p class="normal">Información</p>
                 <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${pago.nombre_pago}</span>
                     <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
-                    <span class="nombre"><strong><i class='bx bx-envelope'></i> Email: </strong>${pago.id_beneficiario}</span>
                     <span class="fecha"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${pago.fecha}</span>
                 </div>
 
@@ -575,7 +564,7 @@ function eventosPagos() {
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
                 <div class="relleno verificar-registro">
-                    <p class="normal">Información del pago</p>
+                    <p class="normal">Información</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
                         <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
@@ -616,7 +605,7 @@ function eventosPagos() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-anulado');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/anular-pago/${pago.id}`, {
                         method: 'PUT',
                         headers: {
@@ -629,7 +618,7 @@ function eventosPagos() {
 
                     if (data.success) {
                         await obtenerPagos();
-                        ocultarProgreso('.pro-anulado');
+                        ocultarCarga('.carga-procesar');
                         info(pagoId);
                         updateHTMLWithData();
                         mostrarNotificacion({
@@ -645,10 +634,6 @@ function eventosPagos() {
                         throw new Error(data.error || 'Error al anular el pago');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular el pago',
@@ -656,7 +641,7 @@ function eventosPagos() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-anulado');
+                    ocultarCarga('.carga-procesar');
                 }
             }
         }
@@ -684,7 +669,7 @@ function eventosPagos() {
                 </button>
             </div>
             <div class="relleno verificar-registro">
-                <p class="normal">Información del pago</p>
+                <p class="normal">Información</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Comprobante: </strong>${pago.id}</span>
                     <span class="nombre"><strong><i class='bx bx-user'></i> Beneficiario: </strong>${pago.beneficiario}</span>
@@ -780,7 +765,7 @@ function eventosPagos() {
                         }
 
                         try {
-                            const signal = await mostrarProgreso('.pro-pago');
+                            mostrarCarga('.carga-procesar');
                             const response = await fetch('/registrar-pago-parcial', {
                                 method: 'POST',
                                 headers: {
@@ -802,7 +787,7 @@ function eventosPagos() {
                                 updateHTMLWithData();
                                 info(pagoId);
                                 cargarPagosParciales(pagoId);
-                                ocultarProgreso('.pro-pago');
+                                ocultarCarga('.carga-procesar');
                                 mostrarNotificacion({
                                     message: 'Pago registrado correctamente',
                                     type: 'success',
@@ -816,10 +801,6 @@ function eventosPagos() {
                                 throw new Error(data.error);
                             }
                         } catch (error) {
-                            if (error.message === 'cancelled') {
-                                console.log('Operación cancelada por el usuario');
-                                return;
-                            }
                             console.error('Error:', error);
                             mostrarNotificacion({
                                 message: error.message || 'Error al realizar el pago',
@@ -827,7 +808,7 @@ function eventosPagos() {
                                 duration: 3500
                             });
                         } finally {
-                            ocultarProgreso('.pro-pago');
+                            ocultarCarga('.carga-procesar');
                         }
                     });
                 }
@@ -957,7 +938,7 @@ function eventosPagos() {
         const btnGuardar = contenido.querySelector('.btn-guardar');
         btnGuardar.addEventListener('click', async () => {
             try {
-                const signal = await mostrarProgreso('.pro-pago');
+                mostrarCarga('.carga-procesar');
                 const formData = new FormData(document.getElementById('formNuevoPago'));
                 const data = Object.fromEntries(formData.entries());
 
@@ -985,7 +966,7 @@ function eventosPagos() {
 
                 if (result.success) {
                     await obtenerPagos();
-                    ocultarProgreso('.pro-pago');
+                    ocultarCarga('.carga-procesar');
                     info(result.id);
                     mostrarNotificacion({
                         message: 'Pago registrado correctamente',
@@ -1000,10 +981,6 @@ function eventosPagos() {
                     throw new Error(result.error);
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar el pago',
@@ -1011,7 +988,7 @@ function eventosPagos() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-pago');
+                ocultarCarga('.carga-procesar');
             }
         });
     }

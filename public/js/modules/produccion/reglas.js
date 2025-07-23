@@ -59,6 +59,7 @@ async function obtenerReglasBase() {
             // Verificar si hay diferencias entre el caché y los nuevos datos
             if (JSON.stringify(reglasCache) !== JSON.stringify(reglasBase)) {
                 console.log('diferentes (reglas base)')
+                renderInitialHTML();
                 updateHTMLWithData();
 
                 (async () => {
@@ -84,15 +85,74 @@ async function obtenerReglasBase() {
                     }
                 })();
             }
-
-            // Actualizar el caché en segundo plano
-
             return true;
         } else {
             return false;
         }
     } catch (error) {
         console.error('Error al obtener reglas base:', error);
+        return false;
+    }
+}
+async function obtenerProductos() {
+    try {
+        const productosCache = await obtenerLocal(PRODUCTO_ALM_DB, DB_NAME);
+
+        if (productosCache.length > 0) {
+            productosGlobal = productosCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+        }
+
+        try {
+            const response = await fetch('/obtener-productos');
+            const data = await response.json();
+            if (data.success) {
+                productosGlobal = data.productos.sort((a, b) => {
+                    const idA = parseInt(a.id.split('-')[1]);
+                    const idB = parseInt(b.id.split('-')[1]);
+                    return idB - idA;
+                });
+                if (JSON.stringify(productosCache) !== JSON.stringify(productosGlobal)) {
+                    console.log('Diferencias (productos)');
+                    renderInitialHTML();
+                    updateHTMLWithData();
+                    (async () => {
+                        try {
+                            const db = await initDB(PRODUCTO_ALM_DB, DB_NAME);
+                            const tx = db.transaction(PRODUCTO_ALM_DB, 'readwrite');
+                            const store = tx.objectStore(PRODUCTO_ALM_DB);
+
+                            // Limpiar todos los registros existentes
+                            await store.clear();
+
+                            // Guardar los nuevos registros
+                            for (const item of productosGlobal) {
+                                await store.put({
+                                    id: item.id,
+                                    data: item,
+                                    timestamp: Date.now()
+                                });
+                            }
+
+                            console.log('Caché de productos actualizado correctamente');
+                        } catch (error) {
+                            console.error('Error actualizando el caché:', error);
+                        }
+                    })();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
         return false;
     }
 }
@@ -106,7 +166,7 @@ async function obtenerReglas() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            console.log('Actulizando reglas de cache')
+            renderInitialHTML();
             updateHTMLWithData();
         }
 
@@ -125,6 +185,7 @@ async function obtenerReglas() {
 
             if (JSON.stringify(reglasProduccionCache) !== JSON.stringify(reglasProduccion)) {
                 console.log('Diferencias (reglas)');
+                renderInitialHTML();
                 updateHTMLWithData();
 
                 (async () => {
@@ -163,83 +224,17 @@ async function obtenerReglas() {
         return false;
     }
 }
-async function obtenerProductos() {
-    try {
-        const productosCache = await obtenerLocal(PRODUCTO_ALM_DB, DB_NAME);
-
-        if (productosCache.length > 0) {
-            productosGlobal = productosCache.sort((a, b) => {
-                const idA = parseInt(a.id.split('-')[1]);
-                const idB = parseInt(b.id.split('-')[1]);
-                return idB - idA;
-            });
-            console.log('Actulizando de cache productos')
-        }
-
-        try {
-            const response = await fetch('/obtener-productos');
-            const data = await response.json();
-            if (data.success) {
-                productosGlobal = data.productos.sort((a, b) => {
-                    const idA = parseInt(a.id.split('-')[1]);
-                    const idB = parseInt(b.id.split('-')[1]);
-                    return idB - idA;
-                });
-                if (JSON.stringify(productosCache) !== JSON.stringify(productosGlobal)) {
-                    console.log('Diferencias (productos)');
-                    updateHTMLWithData();
-                    (async () => {
-                        try {
-                            const db = await initDB(PRODUCTO_ALM_DB, DB_NAME);
-                            const tx = db.transaction(PRODUCTO_ALM_DB, 'readwrite');
-                            const store = tx.objectStore(PRODUCTO_ALM_DB);
-
-                            // Limpiar todos los registros existentes
-                            await store.clear();
-
-                            // Guardar los nuevos registros
-                            for (const item of productosGlobal) {
-                                await store.put({
-                                    id: item.id,
-                                    data: item,
-                                    timestamp: Date.now()
-                                });
-                            }
-
-                            console.log('Caché de productos actualizado correctamente');
-                        } catch (error) {
-                            console.error('Error actualizando el caché:', error);
-                        }
-                    })();
-                }
-                else {
-                    console.log('no son diferentes')
-                }
-                return true;
-            } else {
-                return false;
-            }
-        } catch (error) {
-            throw error;
-        }
-
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-        return false;
-    }
-}
 
 
 export async function mostrarReglas() {
     renderInitialHTML();
     mostrarAnuncio();
 
-    const [registrosProduccion, productos] = await Promise.all([
+    const [reglasBase, productos, reglas] = await Promise.all([
+        obtenerReglasBase(),
+        obtenerProductos(),
         await obtenerReglas(),
-        await obtenerProductos()
     ]);
-
-    updateHTMLWithData();
 }
 function renderInitialHTML() {
 
@@ -255,7 +250,7 @@ function renderInitialHTML() {
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro-verificacion" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                 </div>
                 <div class="acciones-grande">
@@ -317,7 +312,7 @@ function updateHTMLWithData() {
 
 function eventosReglas() {
     const items = document.querySelectorAll('.registro-item');
-    const inputBusqueda = document.querySelector('.buscar-registro-verificacion');
+    const inputBusqueda = document.querySelector('.search');
     const nuevaRegla = document.querySelectorAll('.nueva-regla');
     const btnPreciosBase = document.querySelectorAll('.precios-base');
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -342,7 +337,6 @@ function eventosReglas() {
 
     function aplicarFiltros() {
         const busqueda = normalizarTexto(inputBusqueda.value);
-        const items = document.querySelectorAll('.registro-item');
         const mensajeNoEncontrado = document.querySelector('.no-encontrado');
 
         // Primero, filtrar todos los registros
@@ -515,7 +509,7 @@ function eventosReglas() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-regla/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -541,11 +535,7 @@ function eventosReglas() {
                     } else {
                         throw new Error(data.error || 'Error al eliminar la regla');
                     }
-                } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
+                } catch (error) {   
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar la regla',
@@ -553,7 +543,7 @@ function eventosReglas() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete');
+                    ocultarCarga('.carga-procesar');
                 }
             }
         }
@@ -803,7 +793,7 @@ function eventosReglas() {
 
         async function confirmarCreacion(tipo) {
             try {
-                const signal = await mostrarProgreso('.pro-registro');
+                mostrarCarga('.carga-procesar');
                 let producto = '';
                 let gramajeMin = null;
                 let gramajeMax = null;
@@ -868,10 +858,6 @@ function eventosReglas() {
                     throw new Error(result.error || 'Error al guardar la regla');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -879,7 +865,7 @@ function eventosReglas() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-registro');
+                ocultarCarga('.carga-procesar');
             }
         }
     }
@@ -958,7 +944,7 @@ function eventosReglas() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-edit');
+                mostrarCarga('.carga-procesar');
                 const response = await fetch(`/actualizar-precios-base`, {
                     method: 'PUT',
                     headers: {
@@ -979,7 +965,7 @@ function eventosReglas() {
                 const data = await response.json();
 
                 if (data.success) {
-                    await obtenerReglas();
+                    await obtenerReglasBase();
                     updateHTMLWithData();
                     verPreciosBase();
                     mostrarNotificacion({
@@ -991,10 +977,6 @@ function eventosReglas() {
                     throw new Error(data.error || 'Error al actualizar los precios base');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -1002,7 +984,7 @@ function eventosReglas() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-edit');
+                ocultarCarga('.carga-procesar');
             }
         }
     }

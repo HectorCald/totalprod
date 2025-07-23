@@ -1,22 +1,6 @@
 
-.pro-edit,
-.pro-delete,
-.pro-anulado,
-.pro-verificado,
-.pro-pago,
-.pro-registro,
-.pro-user,
-.pro-obtner,
-.pro-new,
-.pro-price,
-.pro-tag,
-.pro-ingreso,
-.pro-salida,
-.pro-pedido,
-.pro-pack,
-.pro-peso,
-.pro-save,
-.pro-data {
+
+.carga-obtener {
     position: fixed;
     top: 0;
     left: 0;
@@ -24,7 +8,7 @@
     height: 100%;
     background-color: var(--fondo5);
     z-index: 10;
-    display: none;
+    display: flex;
     justify-content: center;
     flex-direction: column;
     align-items: center;
@@ -102,7 +86,7 @@
         }
     }
 }
-.pro-start {
+.carga-procesar {
     position: fixed;
     top: 0;
     left: 0;
@@ -110,7 +94,7 @@
     height: 100%;
     background-color: var(--fondo5);
     z-index: 10;
-    display: flex;
+    display: none;
     justify-content: center;
     flex-direction: column;
     align-items: center;
