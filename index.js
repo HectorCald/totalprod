@@ -2669,6 +2669,62 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
             }
         });
 
+
+        if (movimiento.tipo === 'Salida' && movimiento.clienteId) {
+            try {
+                // 1. Obtén todos los clientes
+                const clientesResp = await sheets.spreadsheets.values.get({
+                    spreadsheetId,
+                    range: 'Clientes!A2:Z'
+                });
+                const clientesRows = clientesResp.data.values || [];
+                // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                if (rowIndex !== -1) {
+                    // 3. Obtén el valor actual de la columna F (índice 5)
+                    const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);
+                    const newVal = currentVal - 1;
+                    // 4. Actualiza la celda en la hoja
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `Clientes!F${rowIndex + 2}`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: { values: [[newVal]] }
+                    });
+                }
+            } catch (err) {
+                console.error('Error actualizando salidas_num del cliente:', err);
+                // No detiene el flujo principal, solo loguea el error
+            }
+        }
+        if (movimiento.tipo === 'Ingreso' && movimiento.clienteId) {
+            try {
+                // 1. Obtén todos los clientes
+                const clientesResp = await sheets.spreadsheets.values.get({
+                    spreadsheetId,
+                    range: 'Clientes!A2:Z'
+                });
+                const clientesRows = clientesResp.data.values || [];
+                // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                if (rowIndex !== -1) {
+                    // 3. Obtén el valor actual de la columna F (índice 5)
+                    const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);
+                    const newVal = currentVal - 1;
+                    // 4. Actualiza la celda en la hoja
+                    await sheets.spreadsheets.values.update({
+                        spreadsheetId,
+                        range: `Clientes!G${rowIndex + 2}`,
+                        valueInputOption: 'USER_ENTERED',
+                        resource: { values: [[newVal]] }
+                    });
+                }
+            } catch (err) {
+                console.error('Error actualizando salidas_num del cliente:', err);
+                // No detiene el flujo principal, solo loguea el error
+            }
+        }
+
         res.json({ success: true });
     } catch (error) {
         console.error('Error al anular movimiento:', error);
