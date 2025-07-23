@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v8'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v9'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -44,6 +44,8 @@ const ASSETS_TO_CACHE = [
     '/js/modules/admin/proovedores.js',
     '/js/modules/admin/reportes.js',
     '/js/modules/almacen/almacen-general.js',
+    '/js/modules/almacen/ingresos-almacen.js',
+    '/js/modules/almacen/salidas-almacen.js',
     '/js/modules/almacen/registros-almacen.js',
     '/js/modules/almacen/registros-conteos.js',
     '/js/modules/almacen/verificar-registros.js',

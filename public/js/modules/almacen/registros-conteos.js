@@ -140,7 +140,7 @@ function updateHTMLWithData() {
                 <i class='bx bx-package'></i>
                 <div class="info-header">
                     <span class="id-flotante"><span>${registro.id}</span></span>
-                    <span class="detalle"><span>${registro.nombre}</span></span>
+                    <span class="detalle">${registro.nombre}</span>
                     <span class="pie">${registro.fecha}</span>
                 </div>
             </div>
@@ -302,40 +302,40 @@ function eventosRegistrosConteo() {
 
         const contenido = document.querySelector('.anuncio-second .contenido');
         const infoHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Detalles del conteo</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno verificar-registro">
-            <p class="normal">Información básica</p>
-            <div class="campo-vertical">
-                <span><strong><i class='bx bx-hash'></i> ID:</strong> ${registro.id}</span>
-                <span><strong><i class='bx bx-label'></i> Nombre:</strong> ${registro.nombre || 'Sin nombre'}</span>
-                <span><strong><i class='bx bx-calendar'></i> Fecha:</strong> ${registro.fecha}</span>
-                <span><strong><i class='bx bx-comment-detail'></i> Observaciones:</strong> ${registro.observaciones || 'Sin observaciones'}</span>
+            <div class="encabezado">
+                <h1 class="titulo">Información</h1>
+                <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
-            <p class="normal">Productos contados</p>
-            ${productos.map((producto, index) => {
-            const diferencia = parseInt(diferencias[index]);
-            const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
-            return `
-                    <div class="campo-vertical">
-                        <span><strong><i class='bx bx-package'></i> Producto:</strong> ${producto}</span>
-                        <div style="display: flex; justify-content: space-between; margin-top: 5px; gap:5px">
-                            <span><strong><i class='bx bx-box'></i> Sistema: ${sistema[index]}</strong></span>
-                            <span><strong><i class='bx bx-calculator'></i> Físico: ${fisico[index]}</strong></span>
-                            <span style="color: ${colorDiferencia}"><strong><i class='bx bx-transfer'></i> Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia}</strong></span>
+            <div class="relleno verificar-registro">
+                <p class="normal">Información básica</p>
+                <div class="campo-vertical">
+                    <span><strong><i class='bx bx-hash'></i> ID:</strong> ${registro.id}</span>
+                    <span><strong><i class='bx bx-label'></i> Nombre:</strong> ${registro.nombre || 'Sin nombre'}</span>
+                    <span><strong><i class='bx bx-calendar'></i> Fecha:</strong> ${registro.fecha}</span>
+                    <span><strong><i class='bx bx-comment-detail'></i> Observaciones:</strong> ${registro.observaciones || 'Sin observaciones'}</span>
+                </div>
+                <p class="normal">Productos contados</p>
+                ${productos.map((producto, index) => {
+                const diferencia = parseInt(diferencias[index]);
+                const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
+                return `
+                        <div class="campo-vertical">
+                            <span><strong><i class='bx bx-package'></i> Producto:</strong> ${producto}</span>
+                            <div style="display: flex; justify-content: space-between; margin-top: 5px; gap:5px">
+                                <span><strong><i class='bx bx-box'></i> Sistema: ${sistema[index]}</strong></span>
+                                <span><strong><i class='bx bx-calculator'></i> Físico: ${fisico[index]}</strong></span>
+                                <span style="color: ${colorDiferencia}"><strong><i class='bx bx-transfer'></i> Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia}</strong></span>
+                            </div>
                         </div>
-                    </div>
-                `;
-        }).join('')}
-        </div>
-        <div class="anuncio-botones">
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
-            <button class="btn-sobre-escribir btn yellow" data-id="${registro.id}"><i class='bx bx-revision'></i>Remplazar</button>
-        </div>
-    `;
+                    `;
+            }).join('')}
+            </div>
+            <div class="anuncio-botones">
+                ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${registro.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+                ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+                <button class="btn-sobre-escribir btn yellow" data-id="${registro.id}"><i class='bx bx-revision'></i>Remplazar</button>
+            </div>
+        `;
 
         contenido.innerHTML = infoHTML;
         contenido.style.paddingBottom = '70px';
@@ -406,7 +406,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-conteo/${registro.id}`, {
                         method: 'DELETE',
                         headers: {
@@ -434,10 +434,6 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el registro',
@@ -445,7 +441,7 @@ function eventosRegistrosConteo() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
@@ -525,7 +521,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-edit');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/editar-conteo/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -557,10 +553,6 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error || 'Error al actualizar el conteo');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al actualizar el conteo',
@@ -568,7 +560,7 @@ function eventosRegistrosConteo() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
@@ -631,7 +623,7 @@ function eventosRegistrosConteo() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-edit');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/sobreescribir-inventario/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -657,10 +649,6 @@ function eventosRegistrosConteo() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al sobreescribir el inventario',
@@ -668,7 +656,7 @@ function eventosRegistrosConteo() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit');
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }

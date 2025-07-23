@@ -395,7 +395,9 @@ export function mostrarNotificacion(options) {
     return crearNotificacion(options);
 }
 
-import { clientes } from '../almacen/ingresos-almacen.js';
+let clientes = [];
+const DB_NAME = 'damabrava_db';
+const CLIENTE_DB = 'clientes';
 export function configuracionesEntrada() {
     const inputs = document.querySelectorAll('.entrada .input input, .entrada .input select');
 
@@ -486,6 +488,71 @@ export function configuracionesEntrada() {
         });
     });
 
+}
+async function obtenerClientes() {
+    try {
+
+        const clientesCache = await obtenerLocal(CLIENTE_DB, DB_NAME);
+
+        if (clientesCache.length > 0) {
+            clientes = clientesCache.sort((a, b) => {
+                const nombreA = a.nombre.toLowerCase();
+                const nombreB = b.nombre.toLowerCase();
+                return nombreA.localeCompare(nombreB);
+            });
+            console.log('actulizando desde el cache')
+        }
+
+
+        const response = await fetch('/obtener-clientes');
+        const data = await response.json();
+
+        if (data.success) {
+            clientes = data.clientes.sort((a, b) => {
+                const nombreA = a.nombre.toLowerCase();
+                const nombreB = b.nombre.toLowerCase();
+                return nombreA.localeCompare(nombreB);
+            });
+
+            if (JSON.stringify(clientesCache) !== JSON.stringify(clientes)) {
+                console.log('Diferencias encontradas, actualizando UI');
+
+                (async () => {
+                    try {
+                        const db = await initDB(CLIENTE_DB, DB_NAME);
+                        const tx = db.transaction(CLIENTE_DB, 'readwrite');
+                        const store = tx.objectStore(CLIENTE_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of clientes) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.error('Error al obtener clientes:', error);
+        return false;
+    }
 }
 export function exportarArchivos(rExp, registrosAExportar) {
     function calcularTiempoTranscurrido(horaInicio, horaFin) {
@@ -804,6 +871,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
     });
 }
 export function exportarArchivosPDF(rExp, registrosAExportar) {
+    obtenerClientes();
     // Obtener registros visibles
     const registrosVisibles = Array.from(document.querySelectorAll('.registro-item'))
         .filter(item => item.style.display !== 'none')
@@ -876,11 +944,24 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 }
 
                 // Información básica y resumen financiero en la misma fila
+                // Buscar el nombre real del cliente usando el id
+                let nombreEntidad = registro.cliente_proovedor;
+                console.log('Buscando nombre de cliente para id:', registro.cliente_proovedor);
+
+                const clienteObj = clientes.find(c => String(c.id) === String(registro.cliente_proovedor));
+                console.log('Resultado búsqueda en clientes:', clienteObj);
+                if (clienteObj) {
+                    nombreEntidad = clienteObj.nombre;
+                    console.log('Nombre encontrado:', nombreEntidad);
+                } else {
+                    console.log('No se encontró cliente, usando valor por defecto:', nombreEntidad);
+                }
+
                 const infoBasica = [
                     ['ID', registro.id],
                     ['Fecha', fecha],
                     ['Operario', registro.operario],
-                    ['Cliente', registro.cliente_proovedor.split('(')[0].trim()]
+                    ['Cliente', nombreEntidad]
                 ];
                 const resumenFinanciero = [
                     ['Subtotal', `Bs. ${(parseFloat(registro.subtotal) || 0).toFixed(2)}`],
@@ -1039,14 +1120,6 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 doc.setFont('helvetica', 'italic');
                 doc.text('TotalProd App', 105, pageHeight - 20, { align: 'center' });
 
-                let nombreEntidad = registro.cliente_proovedor;
-                const cliente = clientes.find(c => String(c.id) === String(registro.cliente_proovedor));
-                if (cliente) {
-                    nombreEntidad = cliente.nombre;
-                } else {
-                    nombreEntidad = registro.cliente_proovedor;
-                }
-                
                 let nombreArchivo = '';
                 if (registro.tipo === 'Salida') {
                     // Buscar el número de entrega después de 'Nº'
@@ -1057,11 +1130,10 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     } else {
                         numeroEntrega = '';
                     }
-                    let primerNombreCliente = nombreEntidad;
+                    let primerNombreCliente = nombreEntidad.split(' ')[0];
                     nombreArchivo = `NT-${numeroEntrega}(${primerNombreCliente}).pdf`;
                 } else if (registro.tipo === 'Ingreso') {
-                    // Primer nombre del cliente
-                    let primerNombreCliente = registro.cliente_proovedor.split('(')[0].trim().split(' ')[0];
+                    let primerNombreCliente = nombreEntidad.split(' ')[0];
                     nombreArchivo = `NI-${registro.id}(${primerNombreCliente}).pdf`;
                 } else {
                     nombreArchivo = `NT-${registro.id}.pdf`;
@@ -1208,7 +1280,7 @@ export async function initDB(STORE, DB) {
         'personal',
         'productos_acopio',
         'registros_almacen',
-        'registros-conteo',
+        'registros_conteo',
         'productos_form',
         'mis_registros_produccion',
         'registros_produccion',
