@@ -292,6 +292,22 @@ const atajosPorRol = {
         },
         {
             clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-circle-up',
+            texto: 'Salidas (Almacen)',
+            detalle: 'Salidas del almacen.',
+            onclick: 'onclick="mostrarSalidasAlmacen()"'
+        },
+        {
+            clase: 'opcion-btn',
+            vista: 'almacen-view',
+            icono: 'fa-arrow-circle-down',
+            texto: 'Ingresos (Almacen)',
+            detalle: 'Ingresos al almacen.',
+            onclick: 'onclick="mostrarIngresosAlmacen()"'
+        },
+        {
+            clase: 'opcion-btn',
             vista: 'verificarRegistros-view',
             icono: 'fa-check-double',
             texto: 'Verificar',
@@ -301,7 +317,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
-            icono: 'fa-history',
+            icono: 'fa-clipboard-list',
             texto: 'Registros almacen',
             detalle: 'Todos los registros de almacen.',
             onclick: 'onclick="mostrarMovimientosAlmacen()"'
@@ -309,7 +325,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-history',
+            icono: 'fa-clipboard-list',
             texto: 'Registros conteo',
             detalle: 'Todos los registros de conteo.',
             onclick: 'onclick="registrosConteoAlmacen()"'

@@ -630,6 +630,16 @@ function eventosRegistrosAlmacen() {
         const registro = registrosAlmacen.find(r => r.id === registroId);
         if (!registro) return; // Changed from registrosProduccion
 
+        // Buscar el nombre real del cliente o proveedor
+        let nombreEntidad = registro.cliente_proovedor;
+        const cliente = clientes.find(c => String(c.id) === String(registro.cliente_proovedor));
+        if (cliente) {
+            nombreEntidad = cliente.nombre;
+        } else{
+            nombreEntidad = registro.cliente_proovedor;
+        }
+
+
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
@@ -642,7 +652,7 @@ function eventosRegistrosAlmacen() {
                 <span class="nombre"><strong><i class='bx bx-id-card'></i> Nombre: </strong>${registro.nombre_movimiento}</span>
                 <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha_hora.split(',')[0]}</span>
                 <span class="valor"><strong><i class='bx bx-time'></i> Hora: </strong>${registro.fecha_hora.split(',')[1]}</span>
-                <span class="valor"><strong><i class='bx bx-user'></i> Cliente/Proveedor: </strong>${registro.cliente_proovedor.split('(')[0].trim()}</span>
+                <span class="valor"><strong><i class='bx bx-user'></i> Cliente/Proveedor: </strong>${nombreEntidad}</span>
                 <span class="valor"><strong><i class='bx bx-user-circle'></i> Responsable: </strong>${registro.operario}</span>
             </div>
 
@@ -898,33 +908,22 @@ function eventosRegistrosAlmacen() {
             try {
                 const idProductos = registro.idProductos.split(';');
                 const cantidades = registro.cantidades.split(';');
-
-                // Solo guardamos IDs y cantidades
-                const storageKey = registro.tipo.toLowerCase() === 'ingreso' ? 'damabrava_carrito_ingresos' : 'damabrava_carrito';
-                const carritoCopia = new Map();
-
-                // Guardar solo IDs y cantidades
-                for (let i = 0; i < idProductos.length; i++) {
-                    carritoCopia.set(idProductos[i], {
-                        id: idProductos[i],
-                        cantidad: parseInt(cantidades[i])
-                    });
-                }
-
-                // Guardar en localStorage
-                localStorage.setItem(storageKey, JSON.stringify(Array.from(carritoCopia.entries())));
-
+                // Guarda solo el array de {id, cantidad} en un localStorage temporal
+                const productosACopiar = idProductos.map((id, i) => ({
+                    id,
+                    cantidad: parseInt(cantidades[i])
+                }));
+                localStorage.setItem('productosACopiar', JSON.stringify(productosACopiar));
                 mostrarNotificacion({
                     message: 'Productos copiados al carrito correctamente',
                     type: 'success',
                     duration: 3000
                 });
                 if (registro.tipo.toLowerCase() === 'ingreso') {
-                    mostrarIngresos();
+                    mostrarIngresosAlmacen();
                 } else {
-                    mostrarSalidas();
+                    mostrarSalidasAlmacen();
                 }
-
             } catch (error) {
                 console.error('Error al copiar productos:', error);
                 mostrarNotificacion({
@@ -958,7 +957,7 @@ function eventosRegistrosAlmacen() {
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '70px';
             mostrarAnuncioTercer();
-        
+
             const btnAnexar = contenido.querySelector('.btn-anexar-produccion');
             btnAnexar.addEventListener('click', async () => {
                 const idProduccion = contenido.querySelector('.id-produccion-anexar').value.trim();

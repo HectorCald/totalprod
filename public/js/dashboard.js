@@ -25,6 +25,8 @@ import { mostrarVerificacion } from './modules/almacen/verificar-registros.js'
 import { mostrarAlmacenGeneral } from './modules/almacen/almacen-general.js'
 import { registrosConteoAlmacen } from './modules/almacen/registros-conteos.js';
 import { mostrarMovimientosAlmacen } from './modules/almacen/registros-almacen.js';
+import { mostrarSalidasAlmacen } from './modules/almacen/salidas-almacen.js';
+import { mostrarIngresosAlmacen } from './modules/almacen/ingresos-almacen.js';
 
 import { mostrarHacerPedido } from './modules/acopio/hacer-pedido.js';
 import { mostrarAlmacenAcopio } from './modules/acopio/almacen-acopio.js';
@@ -88,6 +90,8 @@ window.mostrarVerificacion = mostrarVerificacion
 window.mostrarAlmacenGeneral = mostrarAlmacenGeneral
 window.mostrarMovimientosAlmacen = mostrarMovimientosAlmacen
 window.registrosConteoAlmacen = registrosConteoAlmacen
+window.mostrarSalidasAlmacen = mostrarSalidasAlmacen
+window.mostrarIngresosAlmacen = mostrarIngresosAlmacen
 
 window.mostrarHacerPedido = mostrarHacerPedido
 window.mostrarAlmacenAcopio = mostrarAlmacenAcopio

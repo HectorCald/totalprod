@@ -395,7 +395,7 @@ export function mostrarNotificacion(options) {
     return crearNotificacion(options);
 }
 
-
+import { clientes } from '../almacen/ingresos-almacen.js';
 export function configuracionesEntrada() {
     const inputs = document.querySelectorAll('.entrada .input input, .entrada .input select');
 
@@ -1039,8 +1039,14 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 doc.setFont('helvetica', 'italic');
                 doc.text('TotalProd App', 105, pageHeight - 20, { align: 'center' });
 
-                // Generar nombre del archivo
-                const fechaPDF = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+                let nombreEntidad = registro.cliente_proovedor;
+                const cliente = clientes.find(c => String(c.id) === String(registro.cliente_proovedor));
+                if (cliente) {
+                    nombreEntidad = cliente.nombre;
+                } else {
+                    nombreEntidad = registro.cliente_proovedor;
+                }
+                
                 let nombreArchivo = '';
                 if (registro.tipo === 'Salida') {
                     // Buscar el número de entrega después de 'Nº'
@@ -1051,8 +1057,7 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     } else {
                         numeroEntrega = '';
                     }
-                    // Primer nombre del cliente
-                    let primerNombreCliente = registro.cliente_proovedor.split('(')[0].trim().split(' ')[0];
+                    let primerNombreCliente = nombreEntidad;
                     nombreArchivo = `NT-${numeroEntrega}(${primerNombreCliente}).pdf`;
                 } else if (registro.tipo === 'Ingreso') {
                     // Primer nombre del cliente
