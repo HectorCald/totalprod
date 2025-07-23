@@ -110,6 +110,7 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    document.querySelector('.carga-obtener').style.display = 'flex';
     await inicializarDashboard();
     flotante();
     await crearHome();
