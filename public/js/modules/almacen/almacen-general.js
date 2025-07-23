@@ -578,7 +578,7 @@ async function updateHTMLWithData() {
                 <div class="header">
                     ${imagenMostrar}
                     <div class="info-header">
-                        <span class="id-flotante"><span>${producto.id}</span><span style="display:none">${producto.stock} Und.</span><input type="number" class="entrada-conteo" value="${producto.stock}" min="0"></span>
+                        <span class="id-flotante"><span>${producto.id}</span><span style="display:none">${producto.stock} Und.</span><input type="number" class="entrada-conteo stock-fisico" value="${producto.stock}" min="0"></span>
                         </span>
                         <span class="detalle"><strong>${producto.producto} - ${producto.gramos}gr.</strong></span>
                         <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
@@ -904,43 +904,38 @@ function eventosAlmacenGeneral() {
                 .join('');
             const contenido = document.querySelector('.anuncio-second .contenido');
             const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">${producto.producto}</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            <p class="normal">Información general</p>
-            <div class="campo-vertical">
-                <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
-                <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
-                <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
-                <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
-            </div>
+                <div class="encabezado">
+                    <h1 class="titulo">Información</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Detalles del producto</p>
+                    <div class="campo-vertical">
+                        <span class="valor"><strong><i class="bx bx-box"></i> Producto: </strong>${producto.producto} - ${producto.gramos}gr.</span>
+                        <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
+                        <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
+                        <span class="valor"><strong><i class='bx bx-hash'></i> Cantidad por grupo: </strong>${producto.cantidadxgrupo}</span>
+                        <span class="valor"><strong><i class='bx bx-list-ul'></i> Lista: </strong>${producto.lista}</span>
+                        <span class="valor"><strong><i class='bx bx-package'></i> Almacen acopio: </strong>${producto.alm_acopio_producto}</span>
+                        <span class="valor"><strong><i class='bx bx-package'></i> Unidades sueltas: </strong>${producto.uSueltas}</span>
+                    </div>
 
-            <p class="normal">Detalles adicionales</p>
-            <div class="campo-vertical">
-                <span class="valor"><strong><i class='bx bx-hash'></i> Cantidad por grupo: </strong>${producto.cantidadxgrupo}</span>
-                <span class="valor"><strong><i class='bx bx-list-ul'></i> Lista: </strong>${producto.lista}</span>
-                <span class="valor"><strong><i class='bx bx-package'></i> Almacen acopio: </strong>${producto.alm_acopio_producto}</span>
-                <span class="valor"><strong><i class='bx bx-package'></i> Unidades sueltas: </strong>${producto.uSueltas}</span>
-            </div>
+                    <p class="normal">Precios</p>
+                    <div class="campo-vertical">
+                        ${preciosFormateados}
+                    </div>
 
-            <p class="normal">Precios</p>
-            <div class="campo-vertical">
-                ${preciosFormateados}
-            </div>
-
-            <p class="normal">Etiquetas</p>
-            <div class="campo-vertical">
-                ${etiquetasFormateados}
-            </div>
-        </div>
-        ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
-        <div class="anuncio-botones">
-            ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
-            ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
-        </div>` : ''}
-    `;
+                    <p class="normal">Etiquetas</p>
+                    <div class="campo-vertical">
+                        ${etiquetasFormateados}
+                    </div>
+                </div>
+                ${tienePermiso('edicion') || tienePermiso('eliminacion') ? `
+                <div class="anuncio-botones">
+                    ${tienePermiso('edicion') ? `<button class="btn-editar btn blue" data-id="${producto.id}"><i class='bx bx-edit'></i>Editar</button>` : ''}
+                    ${tienePermiso('eliminacion') ? `<button class="btn-eliminar btn red" data-id="${producto.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
+                </div>` : ''}
+            `;
 
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '10px';
@@ -963,39 +958,36 @@ function eventosAlmacenGeneral() {
             function eliminar(producto) {
                 const contenido = document.querySelector('.anuncio-tercer .contenido');
                 const registrationHTML = `
-            <div class="encabezado">
-                <h1 class="titulo">Eliminar producto</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
-            </div>
-            <div class="relleno">
-                <p class="normal">Información general</p>
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Producto: </strong>${producto.producto}</span>
-                    <span class="valor"><strong><i class="ri-scales-line"></i> Gramaje: </strong>${producto.gramos}gr.</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
-                    <span class="valor"><strong><i class='bx bx-hash'></i> Codigo: </strong>${producto.codigo_barras}</span>
-                </div>
-                <p class="normal">Motivo de la eliminación</p>
-                <div class="entrada">
-                    <i class='bx bx-comment-detail'></i>
-                    <div class="input">
-                        <p class="detalle">Motivo</p>
-                        <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                    <div class="encabezado">
+                        <h1 class="titulo">Eliminar producto</h1>
+                        <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
                     </div>
-                </div>
-                <div class="info-sistema">
-                    <i class='bx bx-info-circle'></i>
-                    <div class="detalle-info">
-                        <p>Vas a eliminar un producto del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
-                    </div>
-                </div>
+                    <div class="relleno">
+                        <p class="normal">Detalles del producto</p>
+                        <div class="campo-vertical">
+                            <span class="valor"><strong><i class='bx bx-box'></i> Producto: </strong>${producto.producto} - ${producto.gramos}gr.</span>
+                            <span class="valor"><strong><i class='bx bx-package'></i> Stock: </strong>${producto.stock} Und.</span>
+                        </div>
+                        <p class="normal">Motivo de la eliminación</p>
+                        <div class="entrada">
+                            <i class='bx bx-comment-detail'></i>
+                            <div class="input">
+                                <p class="detalle">Motivo</p>
+                                <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="info-sistema">
+                            <i class='bx bx-info-circle'></i>
+                            <div class="detalle-info">
+                                <p>Vas a eliminar un producto del sistema. Esta acción no se puede deshacer y podría afectar a varios registros relacionados. Asegúrate de que deseas continuar.</p>
+                            </div>
+                        </div>
 
-            </div>
-            <div class="anuncio-botones">
-                <button class="btn-eliminar-producto btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
-            </div>
-        `;
+                    </div>
+                    <div class="anuncio-botones">
+                        <button class="btn-eliminar-producto btn red"><i class="bx bx-trash"></i> Confirmar eliminación</button>
+                    </div>
+                `;
                 contenido.innerHTML = registrationHTML;
                 contenido.style.paddingBottom = '80px';
                 mostrarAnuncioTercer();
@@ -1017,7 +1009,7 @@ function eventosAlmacenGeneral() {
                     }
 
                     try {
-                        const signal = await mostrarProgreso('.pro-delete')
+                        mostrarCarga('.carga-procesar')
                         const response = await fetch(`/eliminar-producto/${registroId}`, {
                             method: 'DELETE',
                             headers: {
@@ -1049,10 +1041,6 @@ function eventosAlmacenGeneral() {
                             throw new Error(data.error || 'Error al eliminar el producto');
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         console.error('Error:', error);
                         mostrarNotificacion({
                             message: error.message || 'Error al eliminar el producto',
@@ -1060,7 +1048,7 @@ function eventosAlmacenGeneral() {
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-delete')
+                        ocultarCarga('.carga-procesar')
                     }
                 }
             }
@@ -1069,12 +1057,12 @@ function eventosAlmacenGeneral() {
                 // Procesar las etiquetas actuales del producto
                 const etiquetasProducto = producto.etiquetas.split(';').filter(e => e.trim());
                 const etiquetasHTML = etiquetasProducto.map(etiqueta => `
-            <div class="etiqueta-item" data-valor="${etiqueta}">
-                <i class='bx bx-purchase-tag'></i>
-                <span>${etiqueta}</span>
-                <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
-            </div>
-            `).join('');
+                    <div class="etiqueta-item" data-valor="${etiqueta}">
+                        <i class='bx bx-purchase-tag'></i>
+                        <span>${etiqueta}</span>
+                        <button type="button" class="btn-quitar-etiqueta"><i class='bx bx-x'></i></button>
+                    </div>
+                    `).join('');
 
                 // Procesar los precios del producto
                 // Procesar los precios del producto
@@ -1099,134 +1087,134 @@ function eventosAlmacenGeneral() {
 
                 const contenido = document.querySelector('.anuncio-tercer .contenido');
                 const registrationHTML = `
-            <div class="encabezado">
-                <h1 class="titulo">Editar producto</h1>
-                <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
-            </div>
-            <div class="relleno editar-producto">
-                <p class="normal">Información basica</p>
-                    <div class="entrada">
-                        <i class='bx bx-cube'></i>
-                        <div class="input">
-                            <p class="detalle">Producto</p>
-                            <input class="producto" type="text" value="${producto.producto}" autocomplete="off" placeholder=" " required>
+                    <div class="encabezado">
+                        <h1 class="titulo">Editar producto</h1>
+                        <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                        <div class="relleno">
+                        <p class="normal">Información basica</p>
+                            <div class="entrada">
+                                <i class='bx bx-cube'></i>
+                                <div class="input">
+                                    <p class="detalle">Producto</p>
+                                    <input class="producto" type="text" value="${producto.producto}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class="ri-scales-line"></i>
+                                <div class="input">
+                                    <p class="detalle">Gramaje</p>
+                                    <input class="gramaje" type="number" value="${producto.gramos}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-package'></i>
+                                <div class="input">
+                                    <p class="detalle">Stock</p>
+                                    <input class="stock" type="number" value="${producto.stock}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                <div class="campo-horizontal">
-                    <div class="entrada">
-                        <i class="ri-scales-line"></i>
-                        <div class="input">
-                            <p class="detalle">Gramaje</p>
-                            <input class="gramaje" type="number" value="${producto.gramos}" autocomplete="off" placeholder=" " required>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-barcode'></i>
+                                <div class="input">
+                                    <p class="detalle">Código</p>
+                                    <input class="codigo-barras" type="text" value="${producto.codigo_barras}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-list-ul'></i>
+                                <div class="input">
+                                    <p class="detalle">Lista</p>
+                                    <input class="lista" type="text" value="${producto.lista}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-package'></i>
-                        <div class="input">
-                            <p class="detalle">Stock</p>
-                            <input class="stock" type="number" value="${producto.stock}" autocomplete="off" placeholder=" " required>
+                        <div class="campo-horizontal">
+                            <div class="entrada">
+                                <i class='bx bx-package'></i>
+                                <div class="input">
+                                    <p class="detalle">U. por Tira</p>
+                                    <input class="cantidad-grupo" type="number" value="${producto.cantidadxgrupo}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="entrada">
+                                <i class='bx bx-package'></i>
+                                <div class="input">
+                                    <p class="detalle">U. Sueltas</p>
+                                    <input class="unidades-sueltas" type="number" value="${producto.uSueltas}" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="campo-horizontal">
-                    <div class="entrada">
-                        <i class='bx bx-barcode'></i>
-                        <div class="input">
-                            <p class="detalle">Código</p>
-                            <input class="codigo-barras" type="text" value="${producto.codigo_barras}" autocomplete="off" placeholder=" " required>
+                            <div class="entrada">
+                                <div class="input">
+                                    <label class="custom-file-upload" for="imagenInput">
+                                        <i class='bx bx-image'></i>
+                                        Subir imagen
+                                    </label>
+                                    <input style="display:none"id="imagenInput" class="imagen-producto" type="file" accept="image/*">
+                                </div>
+                            </div>
+                        <p class="normal">Etiquetas</p>
+                        <div class="etiquetas-container">
+                            <div class="etiquetas-actuales">
+                                ${etiquetasHTML}
+                            </div>
                         </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-list-ul'></i>
-                        <div class="input">
-                            <p class="detalle">Lista</p>
-                            <input class="lista" type="text" value="${producto.lista}" autocomplete="off" placeholder=" " required>
+                        <div class="entrada">
+                            <i class='bx bx-purchase-tag'></i>
+                            <div class="input">
+                                <p class="detalle">Selecciona nueva etiqueta</p>
+                                <select class="select-etiqueta" required>
+                                ${etiquetasDisponibles.map(etiqueta =>
+                            `<option value="${etiqueta}">${etiqueta}</option>`
+                        ).join('')}
+                                </select>
+                                <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="campo-horizontal">
-                    <div class="entrada">
-                        <i class='bx bx-package'></i>
-                        <div class="input">
-                            <p class="detalle">U. por Tira</p>
-                            <input class="cantidad-grupo" type="number" value="${producto.cantidadxgrupo}" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="entrada">
-                        <i class='bx bx-package'></i>
-                        <div class="input">
-                            <p class="detalle">U. Sueltas</p>
-                            <input class="unidades-sueltas" type="number" value="${producto.uSueltas}" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                </div>
-                    <div class="entrada">
-                        <div class="input">
-                            <label class="custom-file-upload" for="imagenInput">
-                                <i class='bx bx-image'></i>
-                                Subir imagen
-                            </label>
-                            <input style="display:none"id="imagenInput" class="imagen-producto" type="file" accept="image/*">
-                        </div>
-                    </div>
-                <p class="normal">Etiquetas</p>
-                <div class="etiquetas-container">
-                    <div class="etiquetas-actuales">
-                        ${etiquetasHTML}
-                    </div>
-                </div>
-                <div class="entrada">
-                    <i class='bx bx-purchase-tag'></i>
-                    <div class="input">
-                        <p class="detalle">Selecciona nueva etiqueta</p>
-                        <select class="select-etiqueta" required>
-                        ${etiquetasDisponibles.map(etiqueta =>
-                    `<option value="${etiqueta}">${etiqueta}</option>`
-                ).join('')}
-                        </select>
-                        <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
-                    </div>
-                </div>
-    
-                <p class="normal">Precios</p>
-                    ${preciosFormateados}
-    
-                <p class="normal">Almacén acopio</p>
-                    <div class="entrada">
-                        <i class='bx bx-package'></i>
-                        <div class="input">
-                            <p class="detalle">Selecciona Almacén acopio</p>
-                            <select class="alm-acopio-producto" required>
-                                <option value=""></option>
-                                ${productosAcopio.map(productoAcopio => `
-                                    <option value="${productoAcopio.id}" ${productoAcopio.producto === producto.alm_acopio_producto ? 'selected' : ''}>
-                                        ${productoAcopio.producto}
-                                    </option>   
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
-    
-                <p class="normal">Motivo de la edición</p>
-                    <div class="entrada">
-                        <i class='bx bx-comment-detail'></i>
-                        <div class="input">
-                            <p class="detalle">Motivo</p>
-                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
-                        </div>
-                    </div>
-                    <div class="info-sistema">
-                        <i class='bx bx-info-circle'></i>
-                        <div class="detalle-info">
-                            <p>Estás por editar un producto del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
-                        </div>
-                    </div>
+            
+                        <p class="normal">Precios</p>
+                            ${preciosFormateados}
+            
+                        <p class="normal">Almacén acopio</p>
+                            <div class="entrada">
+                                <i class='bx bx-package'></i>
+                                <div class="input">
+                                    <p class="detalle">Selecciona Almacén acopio</p>
+                                    <select class="alm-acopio-producto" required>
+                                        <option value=""></option>
+                                        ${productosAcopio.map(productoAcopio => `
+                                            <option value="${productoAcopio.id}" ${productoAcopio.producto === producto.alm_acopio_producto ? 'selected' : ''}>
+                                                ${productoAcopio.producto}
+                                            </option>   
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+            
+                        <p class="normal">Motivo de la edición</p>
+                            <div class="entrada">
+                                <i class='bx bx-comment-detail'></i>
+                                <div class="input">
+                                    <p class="detalle">Motivo</p>
+                                    <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                                </div>
+                            </div>
+                            <div class="info-sistema">
+                                <i class='bx bx-info-circle'></i>
+                                <div class="detalle-info">
+                                    <p>Estás por editar un producto del sistema. Asegúrate de realizar los cambios correctamente, ya que podrían modificar información relacionada.</p>
+                                </div>
+                            </div>
 
-            </div>
-            <div class="anuncio-botones">
-                <button class="btn-editar-producto btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
-            </div>
-        `;
+                    </div>
+                    <div class="anuncio-botones">
+                        <button class="btn-editar-producto btn blue"><i class="bx bx-save"></i> Guardar cambios</button>
+                    </div>
+                `;
 
                 contenido.innerHTML = registrationHTML;
                 contenido.style.paddingBottom = '70px';
@@ -1278,15 +1266,15 @@ function eventosAlmacenGeneral() {
                         const formData = new FormData();
 
                         // Obtener todos los campos del formulario
-                        const producto = document.querySelector('.editar-producto .producto').value.trim();
-                        const gramos = document.querySelector('.editar-producto .gramaje').value.trim();
-                        const stock = document.querySelector('.editar-producto .stock').value.trim();
-                        const cantidadxgrupo = document.querySelector('.editar-producto .cantidad-grupo').value.trim();
-                        const lista = document.querySelector('.editar-producto .lista').value.trim();
-                        const codigo_barras = document.querySelector('.editar-producto .codigo-barras').value.trim();
-                        const uSueltas = document.querySelector('.editar-producto .unidades-sueltas').value.trim();
-                        const motivo = document.querySelector('.editar-producto .motivo').value.trim();
-                        const alm_acopio_id = document.querySelector('.editar-producto .alm-acopio-producto').value;
+                        const producto = document.querySelector('.producto').value.trim();
+                        const gramos = document.querySelector('.gramaje').value.trim();
+                        const stock = document.querySelector('.stock').value.trim();
+                        const cantidadxgrupo = document.querySelector('.cantidad-grupo').value.trim();
+                        const lista = document.querySelector('.lista').value.trim();
+                        const codigo_barras = document.querySelector('.codigo-barras').value.trim();
+                        const uSueltas = document.querySelector('.unidades-sueltas').value.trim();
+                        const motivo = document.querySelector('.motivo').value.trim();
+                        const alm_acopio_id = document.querySelector('.alm-acopio-producto').value;
                         const alm_acopio_producto = alm_acopio_id ?
                             productosAcopio.find(p => p.id === alm_acopio_id)?.producto :
                             '';
@@ -1307,12 +1295,12 @@ function eventosAlmacenGeneral() {
                             .join(';');
 
                         // Obtener precios
-                        const preciosInputs = document.querySelectorAll('.editar-producto .precio-input');
+                        const preciosInputs = document.querySelectorAll('.precio-input');
                         const preciosActualizados = Array.from(preciosInputs)
                             .map(input => `${input.dataset.ciudad},${input.value}`)
                             .join(';');
 
-                        // Agregar todos los campos al FormData
+                        // Agregar todos los campos al FormData 
                         formData.append('producto', producto);
                         formData.append('gramos', gramos);
                         formData.append('stock', stock);
@@ -1327,12 +1315,12 @@ function eventosAlmacenGeneral() {
                         formData.append('motivo', motivo);
 
                         // Procesar imagen si existe
-                        const imagenInput = document.querySelector('.editar-producto .imagen-producto');
+                        const imagenInput = document.querySelector('.imagen-producto');
                         if (imagenInput.files && imagenInput.files[0]) {
                             formData.append('imagen', imagenInput.files[0]);
                         }
 
-                        const signal = await mostrarProgreso('.pro-edit')
+                        mostrarCarga('.carga-procesar')
 
                         const response = await fetch(`/actualizar-producto/${registroId}`, {
                             method: 'PUT',
@@ -1363,10 +1351,6 @@ function eventosAlmacenGeneral() {
                             throw new Error(data.error || 'Error al actualizar el producto');
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         console.error('Error:', error);
                         mostrarNotificacion({
                             message: error.message || 'Error al actualizar el producto',
@@ -1374,7 +1358,7 @@ function eventosAlmacenGeneral() {
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-edit')
+                        ocultarCarga('.carga-procesar')
                     }
                 }
             }
@@ -1397,102 +1381,102 @@ function eventosAlmacenGeneral() {
 
             const contenido = document.querySelector('.anuncio-second .contenido');
             const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Nuevo producto</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno nuevo-producto">
-            <p class="normal">Información basica</p>
-                <div class="entrada">
-                    <i class='bx bx-cube'></i>
-                    <div class="input">
-                        <p class="detalle">Producto</p>
-                        <input class="producto" type="text"  autocomplete="off" placeholder=" " required>
-                    </div>
+                <div class="encabezado">
+                    <h1 class="titulo">Nuevo producto</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <div class="entrada">
-                    <i class="ri-scales-line"></i>
-                    <div class="input">
-                        <p class="detalle">Gramaje</p>
-                        <input class="gramaje" type="number"  autocomplete="off" placeholder=" " required>
-                    </div>
-                </div>
+                <div class="relleno">
+                    <p class="normal">Información basica</p>
+                        <div class="entrada">
+                            <i class='bx bx-cube'></i>
+                            <div class="input">
+                                <p class="detalle">Producto</p>
+                                <input class="producto" type="text"  autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class="ri-scales-line"></i>
+                            <div class="input">
+                                <p class="detalle">Gramaje</p>
+                                <input class="gramaje" type="number"  autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
 
-            <p class="normal">Detalles del producto</p>
-            <div class="campo-horizontal">
-                <div class="entrada">
-                    <i class='bx bx-package'></i>
-                    <div class="input">
-                        <p class="detalle">Stock</p>
-                        <input class="stock" type="number"  autocomplete="off" placeholder=" " required>
+                    <p class="normal">Detalles del producto</p>
+                    <div class="campo-horizontal">
+                        <div class="entrada">
+                            <i class='bx bx-package'></i>
+                            <div class="input">
+                                <p class="detalle">Stock</p>
+                                <input class="stock" type="number"  autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-barcode'></i>
+                            <div class="input">
+                                <p class="detalle">Código</p>
+                                <input class="codigo-barras" type="number" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="entrada">
-                    <i class='bx bx-barcode'></i>
-                    <div class="input">
-                        <p class="detalle">Código</p>
-                        <input class="codigo-barras" type="number" autocomplete="off" placeholder=" " required>
+                    <div class="campo-horizontal">
+                        <div class="entrada">
+                            <i class='bx bx-list-ul'></i>
+                            <div class="input">
+                                <p class="detalle">Lista</p>
+                                <input class="lista" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="entrada">
+                            <i class='bx bx-package'></i>
+                            <div class="input">
+                                <p class="detalle">U. por Tira</p>
+                                <input class="cantidad-grupo" type="number"  autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-             <div class="campo-horizontal">
-                <div class="entrada">
-                    <i class='bx bx-list-ul'></i>
-                    <div class="input">
-                        <p class="detalle">Lista</p>
-                        <input class="lista" type="text" autocomplete="off" placeholder=" " required>
+                        
+                        
+                    <p class="normal">Etiquetas</p>
+                    <div class="etiquetas-container">
+                        <div class="etiquetas-actuales">
+                        </div>
                     </div>
-                </div>
-                <div class="entrada">
-                    <i class='bx bx-package'></i>
-                    <div class="input">
-                        <p class="detalle">U. por Tira</p>
-                        <input class="cantidad-grupo" type="number"  autocomplete="off" placeholder=" " required>
-                    </div>
-                </div>
-            </div>
-                
-                
-            <p class="normal">Etiquetas</p>
-            <div class="etiquetas-container">
-                <div class="etiquetas-actuales">
-                </div>
-            </div>
-            <div class="entrada">
-                <i class='bx bx-purchase-tag'></i>
-                <div class="input">
-                    <p class="detalle">Selecciona nueva etiqueta</p>
-                    <select class="select-etiqueta" required>
-                        <option value=""></option>
-                        ${etiquetasDisponibles.map(etiqueta =>
+                    <div class="entrada">
+                        <i class='bx bx-purchase-tag'></i>
+                        <div class="input">
+                            <p class="detalle">Selecciona nueva etiqueta</p>
+                            <select class="select-etiqueta" required>
+                                <option value=""></option>
+                                ${etiquetasDisponibles.map(etiqueta =>
                 `<option value="${etiqueta}">${etiqueta}</option>`
-            ).join('')}
-                    </select>
-                    <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
-                </div>
-            </div>
+            ).join('')} 
+                            </select>
+                            <button type="button" class="btn-agregar-etiqueta"><i class='bx bx-plus'></i></button>
+                        </div>
+                    </div>
 
-            <p class="normal">Precios</p>
-                ${preciosFormateados}
+                    <p class="normal">Precios</p>
+                        ${preciosFormateados}
 
-            <p class="normal">Almacen acopio</p>
-            <div class="entrada">
-                <i class='bx bx-package'></i>
-                <div class="input">
-                    <p class="detalle">Selecciona Almacén acopio</p>
-                    <select class="alm-acopio-producto" required>
-                        <option value=""></option>
-                        ${productosAcopio.map(producto => `
-                            <option value="${producto.id}">${producto.producto}</option>
-                        `).join('')}
-                    </select>
+                    <p class="normal">Almacen acopio</p>
+                    <div class="entrada">
+                        <i class='bx bx-package'></i>
+                        <div class="input">
+                            <p class="detalle">Selecciona Almacén acopio</p>
+                            <select class="alm-acopio-producto" required>
+                                <option value=""></option>
+                                ${productosAcopio.map(producto => `
+                                    <option value="${producto.id}">${producto.producto}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="anuncio-botones">
-            <button class="btn-crear-producto btn orange"><i class="bx bx-plus"></i> Crear producto</button>
-        </div>
-    `;
+                <div class="anuncio-botones">
+                    <button class="btn-crear-producto btn orange"><i class="bx bx-plus"></i> Crear producto</button>
+                </div>
+            `;
 
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '70px'
@@ -1539,13 +1523,13 @@ function eventosAlmacenGeneral() {
             btnCrear.addEventListener('click', confirmarCreacion);
 
             async function confirmarCreacion() {
-                const producto = document.querySelector('.nuevo-producto .producto').value.trim();
-                const gramos = document.querySelector('.nuevo-producto .gramaje').value.trim();
-                const stock = document.querySelector('.nuevo-producto .stock').value.trim();
-                const cantidadxgrupo = document.querySelector('.nuevo-producto .cantidad-grupo').value.trim();
-                const lista = document.querySelector('.nuevo-producto .lista').value.trim();
-                const codigo_barras = document.querySelector('.nuevo-producto .codigo-barras').value.trim();
-                const acopioSelect = document.querySelector('.nuevo-producto .alm-acopio-producto');
+                const producto = document.querySelector('.producto').value.trim();
+                const gramos = document.querySelector('.gramaje').value.trim();
+                const stock = document.querySelector('.stock').value.trim();
+                const cantidadxgrupo = document.querySelector('.cantidad-grupo').value.trim();
+                const lista = document.querySelector('.lista').value.trim();
+                const codigo_barras = document.querySelector('.codigo-barras').value.trim();
+                const acopioSelect = document.querySelector('.alm-acopio-producto');
 
                 // Obtener precios formateados (ciudad,valor;ciudad,valor)
                 const preciosSeleccionados = Array.from(document.querySelectorAll('.nuevo-producto .precio-input'))
@@ -1573,7 +1557,7 @@ function eventosAlmacenGeneral() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-new')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch('/crear-producto', {
                         method: 'POST',
                         headers: {
@@ -1612,10 +1596,6 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al crear el producto');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al crear el producto',
@@ -1623,7 +1603,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-new')
+                    ocultarCarga('.carga-procesar')
                 }
             }
         }
@@ -1642,7 +1622,7 @@ function eventosAlmacenGeneral() {
                 <h1 class="titulo">Gestionar Etiquetas</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
-            <div class="relleno editar-produccion">
+            <div class="relleno">
                 <p class="normal">Etiquetas existentes</p>
                 <div class="etiquetas-container">
                     <div class="etiquetas-actuales">
@@ -1674,7 +1654,7 @@ function eventosAlmacenGeneral() {
                 const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
                 if (nuevaEtiqueta) {
                     try {
-                        const signal = await mostrarProgreso('.pro-tag')
+                        mostrarCarga('.carga-procesar')
                         const response = await fetch('/agregar-etiqueta', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1696,24 +1676,20 @@ function eventosAlmacenGeneral() {
                             });
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         mostrarNotificacion({
                             message: error.message,
                             type: 'error',
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-tag')
+                        ocultarCarga('.carga-procesar')
                     }
                 }
             });
             etiquetasActuales.addEventListener('click', async (e) => {
                 if (e.target.closest('.btn-quitar-etiqueta')) {
                     try {
-                        const signal = await mostrarProgreso('.pro-tag')
+                        mostrarCarga('.carga-procesar')
                         const etiquetaItem = e.target.closest('.etiqueta-item');
                         const etiquetaId = etiquetaItem.dataset.id;
                         // Obtener el nombre de la etiqueta eliminada
@@ -1773,61 +1749,57 @@ function eventosAlmacenGeneral() {
                             });
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         mostrarNotificacion({
                             message: error.message,
                             type: 'error',
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-tag')
+                        ocultarCarga('.carga-procesar')
                     }
                 }
             });
         }
         function gestionarPrecios() {
             const preciosActuales = precios.map(precio => `
-        <div class="precio-item" data-id="${precio.id}">
-            <i class='bx bx-dollar'></i>
-            <span>${precio.precio}</span>
-            <button class="btn-eliminar-precio"><i class='bx bx-x'></i></button>
-        </div>
-    `).join('');
+                <div class="precio-item" data-id="${precio.id}">
+                    <i class='bx bx-dollar'></i>
+                    <span>${precio.precio}</span>
+                    <button class="btn-eliminar-precio"><i class='bx bx-x'></i></button>
+                </div>
+            `).join('');
 
             const contenido = document.querySelector('.anuncio-second .contenido');
             const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Gestionar precios</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            <p class="normal">Precios actuales</p>
-            <div class="precios-container">
-                <div class="precios-actuales">
-                ${preciosActuales}
+                <div class="encabezado">
+                    <h1 class="titulo">Gestionar precios</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-            </div>
+                <div class="relleno">
+                    <p class="normal">Precios actuales</p>
+                    <div class="precios-container">
+                        <div class="precios-actuales">
+                        ${preciosActuales}
+                        </div>
+                    </div>
 
-            <p class="normal">Agregar nuevo precio</p>
-            <div class="entrada">
-                <i class='bx bx-dollar'></i>
-                <div class="input">
-                    <p class="detalle">Nuevo precio</p>
-                    <input class="nuevo-precio" type="text" autocomplete="off" placeholder=" " required>
-                    <button class="btn-agregar-precio"><i class='bx bx-plus'></i></button>
+                    <p class="normal">Agregar nuevo precio</p>
+                    <div class="entrada">
+                        <i class='bx bx-dollar'></i>
+                        <div class="input">
+                            <p class="detalle">Nuevo precio</p>
+                            <input class="nuevo-precio" type="text" autocomplete="off" placeholder=" " required>
+                            <button class="btn-agregar-precio"><i class='bx bx-plus'></i></button>
+                        </div>
+                    </div>
+                    <p class="normal">Actualización de precios</p>
+                    <div class="campo-horizontal">
+                        <buttom class="btn blue" id="excel-precios"><i class='bx bx-upload' style="color:white !important"></i>Subir excel</buttom>
+                        <buttom class="btn blue" id="hoja-vinculada"><i class='bx bx-refresh' style="color:white !important"></i>Vincular hoja</buttom>
+                    </div>
+                    
                 </div>
-            </div>
-            <p class="normal">Actualización de precios</p>
-            <div class="campo-horizontal">
-                <buttom class="btn blue" id="excel-precios"><i class='bx bx-upload' style="color:white !important"></i>Subir excel</buttom>
-                <buttom class="btn blue" id="hoja-vinculada"><i class='bx bx-refresh' style="color:white !important"></i>Vincular hoja</buttom>
-            </div>
-            
-        </div>
-    `;
+            `;
 
             contenido.innerHTML = registrationHTML;
             mostrarAnuncioSecond();
@@ -1848,7 +1820,7 @@ function eventosAlmacenGeneral() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-price')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch('/agregar-precio', {
                         method: 'POST',
                         headers: {
@@ -1874,10 +1846,6 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al agregar el precio');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al agregar el precio',
@@ -1885,7 +1853,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-price')
+                    ocultarCarga('.carga-procesar')
                 }
             });
             const inputExcel = contenido.querySelector('#excel-precios');
@@ -1912,37 +1880,37 @@ function eventosAlmacenGeneral() {
             async function actualizarPlanilla(fileName = '') {
                 const contenido = document.querySelector('.anuncio-tercer .contenido');
                 const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Subir planilla de precios</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            <p class="normal">Archivo seleccionado</p>
-            <div class="archivo-info">
-                <i class='bx bx-file'></i>
-                <span style="color: gray; font-size: 12px">${fileName}</span>
-            </div>
+                    <div class="encabezado">
+                        <h1 class="titulo">Subir planilla de precios</h1>
+                        <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="relleno">
+                        <p class="normal">Archivo seleccionado</p>
+                        <div class="archivo-info">
+                            <i class='bx bx-file'></i>
+                            <span style="color: gray; font-size: 12px">${fileName}</span>
+                        </div>
 
-            <p class="normal">Motivo de la actualización</p>
-            <div class="entrada">
-                <i class='bx bx-comment-detail'></i>
-                <div class="input">
-                    <p class="detalle">Motivo</p>
-                    <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
-                </div>
-            </div>
+                        <p class="normal">Motivo de la actualización</p>
+                        <div class="entrada">
+                            <i class='bx bx-comment-detail'></i>
+                            <div class="input">
+                                <p class="detalle">Motivo</p>
+                                <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
 
-            <div class="info-sistema">
-                <i class='bx bx-info-circle'></i>
-                <div class="detalle-info">
-                    <p>Esta acción actualizará los precios de los productos según la planilla. Asegúrese de que el formato sea correcto.</p>
-                </div>
-            </div>
-        </div>
-        <div class="anuncio-botones">
-            <button class="btn-procesar-planilla btn blue"><i class="bx bx-check"></i> Procesar planilla</button>
-        </div>
-    `;
+                        <div class="info-sistema">
+                            <i class='bx bx-info-circle'></i>
+                            <div class="detalle-info">
+                                <p>Esta acción actualizará los precios de los productos según la planilla. Asegúrese de que el formato sea correcto.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="anuncio-botones">
+                        <button class="btn-procesar-planilla btn blue"><i class="bx bx-check"></i> Procesar planilla</button>
+                    </div>
+                `;
 
                 contenido.innerHTML = registrationHTML;
                 contenido.style.paddingBottom = '70px';
@@ -1963,7 +1931,7 @@ function eventosAlmacenGeneral() {
                     }
 
                     try {
-                        const signal = await mostrarProgreso('.pro-price')
+                        mostrarCarga('.carga-procesar')
                         const formData = new FormData();
                         formData.append('file', file);
                         formData.append('motivo', motivo);
@@ -1991,17 +1959,13 @@ function eventosAlmacenGeneral() {
                             throw new Error(data.error || 'Error al procesar la planilla');
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         mostrarNotificacion({
                             message: error.message,
                             type: 'error',
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-price')
+                        ocultarCarga('.carga-procesar')
                     }
                 });
 
@@ -2012,7 +1976,7 @@ function eventosAlmacenGeneral() {
                     const precioId = precioItem.dataset.id;
 
                     try {
-                        const signal = await mostrarProgreso('.pro-price')
+                        mostrarCarga('.carga-procesar')
                         const response = await fetch(`/eliminar-precio/${precioId}`, {
                             method: 'DELETE'
                         });
@@ -2037,10 +2001,6 @@ function eventosAlmacenGeneral() {
                             throw new Error(data.error || 'Error al eliminar el precio');
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         console.error('Error:', error);
                         mostrarNotificacion({
                             message: error.message || 'Error al eliminar el precio',
@@ -2048,7 +2008,7 @@ function eventosAlmacenGeneral() {
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-price')
+                        ocultarCarga('.carga-procesar')
                     }
                 }
             });
@@ -2057,30 +2017,30 @@ function eventosAlmacenGeneral() {
             btnHojaVinculada.addEventListener('click', async () => {
                 const contenidoTercer = document.querySelector('.anuncio-tercer .contenido');
                 const registrationHTML = `
-                <div class="encabezado">
-                    <h1 class="titulo">Actualizar desde hoja vinculada</h1>
-                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
-                </div>
-                <div class="relleno">
-                    <p class="normal">Motivo de la actualización</p>
-                    <div class="entrada">
-                        <i class='bx bx-comment-detail'></i>
-                        <div class="input">
-                            <p class="detalle">Motivo</p>
-                            <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                    <div class="encabezado">
+                        <h1 class="titulo">Actualizar desde hoja vinculada</h1>
+                        <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    <div class="relleno">
+                        <p class="normal">Motivo de la actualización</p>
+                        <div class="entrada">
+                            <i class='bx bx-comment-detail'></i>
+                            <div class="input">
+                                <p class="detalle">Motivo</p>
+                                <input class="motivo" type="text" autocomplete="off" placeholder=" " required>
+                            </div>
+                        </div>
+                        <div class="info-sistema">
+                            <i class='bx bx-info-circle'></i>
+                            <div class="detalle-info">
+                                <p>Esta acción actualizará los precios de los productos según la hoja vinculada de Google Sheets (CATALOGO). Asegúrese de que el formato sea correcto (ID,Producto,Precios...etc).</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="info-sistema">
-                        <i class='bx bx-info-circle'></i>
-                        <div class="detalle-info">
-                            <p>Esta acción actualizará los precios de los productos según la hoja vinculada de Google Sheets (CATALOGO). Asegúrese de que el formato sea correcto (ID,Producto,Precios...etc).</p>
-                        </div>
+                    <div class="anuncio-botones">
+                        <button class="btn-procesar-hoja btn blue"><i class="bx bx-check"></i> Procesar hoja vinculada</button>
                     </div>
-                </div>
-                <div class="anuncio-botones">
-                    <button class="btn-procesar-hoja btn blue"><i class="bx bx-check"></i> Procesar hoja vinculada</button>
-                </div>
-            `;
+                `;
                 contenidoTercer.innerHTML = registrationHTML;
                 contenidoTercer.style.paddingBottom = '70px';
                 mostrarAnuncioTercer();
@@ -2097,7 +2057,7 @@ function eventosAlmacenGeneral() {
                         return;
                     }
                     try {
-                        const signal = await mostrarProgreso('.pro-price');
+                        mostrarCarga('.carga-procesar')
                         const response = await fetch('/actualizar-precios-hoja-vinculada', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -2120,17 +2080,13 @@ function eventosAlmacenGeneral() {
                             throw new Error(data.error || 'Error al procesar la hoja vinculada');
                         }
                     } catch (error) {
-                        if (error.message === 'cancelled') {
-                            console.log('Operación cancelada por el usuario');
-                            return;
-                        }
                         mostrarNotificacion({
                             message: error.message,
                             type: 'error',
                             duration: 3500
                         });
                     } finally {
-                        ocultarProgreso('.pro-price');
+                        ocultarCarga('.carga-procesar');
                     }
                 });
             });
@@ -2169,49 +2125,52 @@ function eventosAlmacenGeneral() {
             const contenido = document.querySelector('.anuncio-second .contenido');
 
             const registrationHTML = `
-        <div class="encabezado">
-            <h1 class="titulo">Vista Previa del Conteo</h1>
-            <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        <div class="relleno">
-            <p class="normal">Resumen del conteo</p>
-            ${productos.map(producto => {
-                const stockActual = parseInt(producto.stock);
-                const stockContado = parseInt(stockFisico[producto.id] || producto.stock);
-                const diferencia = stockContado - stockActual;
-                const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
-
-                return `
-                <div class="campo-vertical">
-                    <span><strong><i class='bx bx-package'></i> Producto:</strong> ${producto.producto} - ${producto.gramos}gr.</span>
-                    <div style="display: flex; justify-content: space-between; margin-top: 5px; gap:5px">
-                        <span><strong><i class='bx bx-box'></i> Sistema: ${stockActual}</strong> </span>
-                        <span><strong><i class='bx bx-calculator'></i> Fisico: ${stockContado}</strong> </span>
-                        <span style="color: ${colorDiferencia}"><strong><i class='bx bx-transfer'></i> Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia}</strong></span>
+                <div class="encabezado">
+                    <h1 class="titulo">Vista Previa del Conteo</h1>
+                    <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="relleno">
+                    <p class="normal">Resumen del conteo</p>
+                    ${productos
+                        .map(producto => {
+                            const stockActual = parseInt(producto.stock);
+                            const stockContado = parseInt(stockFisico[producto.id] || producto.stock);
+                            const diferencia = stockContado - stockActual;
+                            const colorDiferencia = diferencia > 0 ? '#4CAF50' : diferencia < 0 ? '#f44336' : '#2196F3';
+                            // Mostrar solo si la diferencia es distinta de 0
+                            if (diferencia === 0) return '';
+                            return `
+                            <div class="campo-vertical">
+                                <span><strong><i class='bx bx-package'></i> Producto:</strong> ${producto.producto} - ${producto.gramos}gr.</span>
+                                <div style="display: flex; justify-content: space-between; margin-top: 5px; gap:5px">
+                                    <span><strong><i class='bx bx-box'></i> Sistema: ${stockActual}</strong> </span>
+                                    <span><strong><i class='bx bx-calculator'></i> Fisico: ${stockContado}</strong> </span>
+                                    <span style="color: ${colorDiferencia}"><strong><i class='bx bx-transfer'></i> Diferencia: ${diferencia > 0 ? '+' : ''}${diferencia}</strong></span>
+                                </div>
+                            </div>
+                            `;
+                        })
+                        .join('')}
+                    <div class="entrada">
+                        <i class='bx bx-comment-detail'></i>
+                        <div class="input">
+                            <p class="detalle">Observaciones</p>
+                            <input class="Observaciones" type="text" placeholder=" " required>
+                        </div>
+                    </div>
+                    <div class="entrada">
+                        <i class='bx bx-label'></i>  
+                        <div class="input">
+                            <p class="detalle">Nombre del conteo</p>
+                            <input class="nombre-conteo" type="text" placeholder=" " required>
+                        </div>
                     </div>
                 </div>
-                `;
-            }).join('')}
-            <div class="entrada">
-                <i class='bx bx-comment-detail'></i>
-                <div class="input">
-                    <p class="detalle">Observaciones</p>
-                    <input class="Observaciones" type="text" placeholder=" " required>
+                <div class="anuncio-botones">
+                    <button id="registrar-conteo" class="btn orange"><i class='bx bx-save'></i> Registrar</button>
+                    <button id="restaurar-conteo" class="btn especial"><i class='bx bx-reset'></i> Restaurar</button>
                 </div>
-            </div>
-            <div class="entrada">
-                <i class='bx bx-label'></i>  
-                <div class="input">
-                    <p class="detalle">Nombre del conteo</p>
-                    <input class="nombre-conteo" type="text" placeholder=" " required>
-                </div>
-            </div>
-        </div>
-        <div class="anuncio-botones">
-            <button id="registrar-conteo" class="btn orange"><i class='bx bx-save'></i> Registrar</button>
-            <button id="restaurar-conteo" class="btn especial"><i class='bx bx-reset'></i> Restaurar</button>
-        </div>
-    `;
+            `;
 
             contenido.innerHTML = registrationHTML;
             contenido.style.paddingBottom = '70px';
@@ -2221,7 +2180,7 @@ function eventosAlmacenGeneral() {
             // Modificar la función del botón registrar en vistaPreviaConteo
             document.getElementById('registrar-conteo').addEventListener('click', async () => {
                 try {
-                    const signal = await mostrarProgreso('.pro-registro');
+                    mostrarCarga('.carga-procesar')
                     const stockFisico = JSON.parse(localStorage.getItem('damabrava_stock_fisico') || '{}');
                     const observaciones = document.querySelector('.Observaciones').value;
                     const nombre = document.querySelector('.nombre-conteo').value;
@@ -2272,10 +2231,6 @@ function eventosAlmacenGeneral() {
                         throw new Error(data.error || 'Error al registrar el conteo');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al procesar la operación',
@@ -2283,7 +2238,7 @@ function eventosAlmacenGeneral() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-registro');
+                    ocultarCarga('.carga-procesar');
                 }
             });
             const restaurarConteo = document.getElementById('restaurar-conteo');
