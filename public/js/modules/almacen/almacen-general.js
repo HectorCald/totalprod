@@ -2770,7 +2770,7 @@ function eventosAlmacenGeneral() {
             registroSalida.total = registroSalida.subtotal - registroSalida.descuento + registroSalida.aumento;
 
             try {
-                const signal = await mostrarProgreso('.pro-salida')
+                mostrarCarga('.carga-procesar')
                 // Primero registramos el movimiento
                 const response = await fetch('/registrar-movimiento', {
                     method: 'POST',
@@ -2825,10 +2825,6 @@ function eventosAlmacenGeneral() {
                         usuarioInfo.nombre + ' registro una salida al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -2836,7 +2832,7 @@ function eventosAlmacenGeneral() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-salida')
+                ocultarCarga('.carga-procesar')
             }
         }
         window.registrarSalida = registrarSalida;
