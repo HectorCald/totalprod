@@ -780,7 +780,6 @@ function eventosRegistrosAlmacen() {
                     if (data.success) {
                         await obtenerRegistrosAlmacen();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -881,7 +880,6 @@ function eventosRegistrosAlmacen() {
                     if (data.success) {
                         await obtenerRegistrosAlmacen();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
@@ -984,8 +982,7 @@ function eventosRegistrosAlmacen() {
                             duration: 3000
                         });
                         await obtenerRegistrosAlmacen();
-                        cerrarAnuncioManual('anuncioTercer');
-                        updateHTMLWithData();
+                        cerrarAnuncioManual('anuncioTercer');   
                     } else {
                         throw new Error(data.error || 'Error al anexar el movimiento');
                     }

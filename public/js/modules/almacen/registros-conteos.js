@@ -420,7 +420,6 @@ function eventosRegistrosConteo() {
                     if (data.success) {
                         await obtenerRegistrosConteo();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -539,7 +538,6 @@ function eventosRegistrosConteo() {
                     if (data.success) {
                         await obtenerRegistrosConteo();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',

@@ -326,7 +326,6 @@ function eventosClientes() {
                     if (data.success) {
                         await obtenerClientes();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Cliente eliminado correctamente',
                             type: 'success',
@@ -443,7 +442,6 @@ function eventosClientes() {
                     if (data.success) {
                         await obtenerClientes();
                         info(clienteId)
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Cliente actualizado correctamente',
                             type: 'success',
@@ -548,7 +546,6 @@ function eventosClientes() {
 
                 if (data.success) {
                     await obtenerClientes();
-                    updateHTMLWithData();
                     info(data.id);
                     mostrarNotificacion({
                         message: 'Cliente creado correctamente',

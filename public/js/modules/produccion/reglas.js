@@ -526,7 +526,6 @@ function eventosReglas() {
                     if (data.success) {
                         await obtenerReglas();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Regla eliminado correctamente',
                             type: 'success',
@@ -966,7 +965,6 @@ function eventosReglas() {
 
                 if (data.success) {
                     await obtenerReglasBase();
-                    updateHTMLWithData();
                     verPreciosBase();
                     mostrarNotificacion({
                         message: 'Precios base actualizados correctamente',

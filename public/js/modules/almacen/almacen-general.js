@@ -1019,7 +1019,6 @@ function eventosAlmacenGeneral() {
 
                         if (data.success) {
                             await obtenerAlmacenGeneral();
-                            updateHTMLWithData();
                             cerrarAnuncioManual('anuncioSecond');
                             mostrarNotificacion({
                                 message: 'Producto eliminado correctamente',
@@ -1329,7 +1328,6 @@ function eventosAlmacenGeneral() {
                         if (data.success) {
                             await obtenerAlmacenGeneral();
                             info(registroId)
-                            updateHTMLWithData();
                             mostrarNotificacion({
                                 message: 'Producto actualizado correctamente',
                                 type: 'success',
@@ -1574,7 +1572,6 @@ function eventosAlmacenGeneral() {
 
                     if (data.success) {
                         await obtenerAlmacenGeneral();
-                        updateHTMLWithData();
                         info(data.id)
                         mostrarNotificacion({
                             message: 'Producto creado correctamente',
@@ -1659,7 +1656,6 @@ function eventosAlmacenGeneral() {
                         const data = await response.json();
                         if (data.success) {
                             await obtenerEtiquetas();
-                            updateHTMLWithData();
                             gestionarEtiquetas();
                             document.querySelector('.nueva-etiqueta').value = '';
                             mostrarNotificacion({
@@ -1733,7 +1729,6 @@ function eventosAlmacenGeneral() {
                             }
                             await obtenerEtiquetas();
                             await obtenerAlmacenGeneral();
-                            updateHTMLWithData();
                             gestionarEtiquetas();
                             mostrarNotificacion({
                                 message: 'Etiqueta eliminada correctamente' + (productosModificados ? ` y eliminada de ${productosModificados} productos` : ''),
@@ -1826,7 +1821,6 @@ function eventosAlmacenGeneral() {
 
                     if (data.success) {
                         await obtenerPrecios();
-                        updateHTMLWithData();
                         gestionarPrecios();
                         nuevoPrecioInput.value = '';
 
@@ -1982,7 +1976,6 @@ function eventosAlmacenGeneral() {
 
                         if (data.success) {
                             await obtenerPrecios();
-                            updateHTMLWithData();
                             gestionarPrecios();
                             precioItem.remove();
                             mostrarNotificacion({

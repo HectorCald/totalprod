@@ -1,9 +1,24 @@
 let productos = [];
 let etiquetasAcopio = [];
 
+const DB_NAME = 'damabrava_db';
+const PRODUCTOS_AC_DB = 'productos_acopio';
+const ETIQUETAS_AC_DB = 'etiquetas_acopio';
 
 async function obtenerEtiquetasAcopio() {
     try {
+
+        const etiquetasAcopioCache = await obtenerLocal(ETIQUETAS_AC_DB, DB_NAME);
+
+        if (etiquetasAcopioCache.length > 0) {
+            etiquetasAcopio = etiquetasAcopioCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+        }
+
+
         const response = await fetch('/obtener-etiquetas-acopio');
         const data = await response.json();
 
@@ -13,33 +28,61 @@ async function obtenerEtiquetasAcopio() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener etiquetas',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+
+            if (JSON.stringify(etiquetasAcopioCache) !== JSON.stringify(etiquetasAcopio)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(ETIQUETAS_AC_DB, DB_NAME);
+                        const tx = db.transaction(ETIQUETAS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(ETIQUETAS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of etiquetasAcopio) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
         }
+        else {
+            console.log('no son diferentes')
+        }
+        return true;
+
     } catch (error) {
         console.error('Error al obtener etiquetas:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener etiquetas',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerAlmacenAcopio() {
     try {
 
-        const response = await fetch('/obtener-productos-acopio');
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
+        const productosAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
 
+        if (productosAcopioCache.length > 0) {
+            productos = productosAcopioCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            renderInitialHTML();
+            updateHTMLWithData();
+        }
+        const response = await fetch('/obtener-productos-acopio');
         const data = await response.json();
 
         if (data.success) {
@@ -48,17 +91,47 @@ async function obtenerAlmacenAcopio() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+
+            if (JSON.stringify(productosAcopioCache) !== JSON.stringify(productos)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(PRODUCTOS_AC_DB, DB_NAME);
+                        const tx = db.transaction(PRODUCTOS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(PRODUCTOS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productos) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
             return true;
         } else {
-            throw new Error(data.error || 'Error al obtener los productos');
+            return false;
         }
+
+
     } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener los productos de acopio',
-            type: 'error',
-            duration: 3500
-        });
+        console.error('Error al obtener los pagos:', error);
         return false;
     }
 }
@@ -67,13 +140,10 @@ async function obtenerAlmacenAcopio() {
 export async function mostrarAlmacenAcopio() {
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
     // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
-        await obtenerAlmacenAcopio(),
+        obtenerAlmacenAcopio(),
         await obtenerEtiquetasAcopio(),
     ]);
 
@@ -87,13 +157,13 @@ function renderInitialHTML() {
             <h1 class="titulo">Almacén Acopio</h1>
             <button class="btn close" onclick="ocultarAnuncio();"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="busqueda">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-producto-acopio" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                 </div>
                 ${tienePermiso('creacion') ? `
@@ -149,6 +219,9 @@ function renderInitialHTML() {
     if (tienePermiso('creacion')) {
         contenido.style.paddingBottom = '70px';
     }
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 function updateHTMLWithData() {
     const etiquetasFilter = document.querySelector('.etiquetas-filter');
@@ -180,8 +253,8 @@ function updateHTMLWithData() {
                     <div class="header">
                         <i class='bx bx-package'></i>
                         <div class="info-header">
-                            <span class="id-flotante"><span>${producto.id}</span><span class="flotante-item orange">${totalBruto.toFixed(2)} Kg.</span></span>
-                            <span class="detalle"><strong>${producto.producto}</strong></span>
+                            <span class="id-flotante"><span>${producto.id}</span><span class="flotante-item orange stock">${totalBruto.toFixed(2)} Kg.</span></span>
+                            <span class="detalle">${producto.producto}</span>
                             <span class="pie">${producto.etiquetas ? producto.etiquetas.split(';').join(' • ') : ''}</span>
                         </div>
                     </div>
@@ -197,7 +270,7 @@ function updateHTMLWithData() {
 function eventosAlmacenAcopio() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
-    const inputBusqueda = document.querySelector('.buscar-producto-acopio');
+    const inputBusqueda = document.querySelector('.search');
 
     const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
     const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
@@ -276,7 +349,7 @@ function eventosAlmacenAcopio() {
                     ? producto.bruto.split(';').reduce((sum, lote) => sum + parseFloat(lote.split('-')[0]), 0)
                     : producto.prima.split(';').reduce((sum, lote) => sum + parseFloat(lote.split('-')[0]), 0);
 
-                const stockSpan = registro.querySelector('.valor.stock');
+                const stockSpan = registro.querySelector('.stock');
                 if (stockSpan) {
                     stockSpan.textContent = `${total.toFixed(2)} Kg.`;
                 }
@@ -355,10 +428,10 @@ function eventosAlmacenAcopio() {
                         productosFiltrados.sort((a, b) => parseFloat(a.querySelector('.stock').textContent) - parseFloat(b.querySelector('.stock').textContent));
                         break;
                     case 2: // A-Z
-                        productosFiltrados.sort((a, b) => a.querySelector('.nombre strong').textContent.localeCompare(b.querySelector('.nombre strong').textContent));
+                        productosFiltrados.sort((a, b) => a.querySelector('.detalle').textContent.localeCompare(b.querySelector('.detalle').textContent));
                         break;
                     case 3: // Z-A
-                        productosFiltrados.sort((a, b) => b.querySelector('.nombre strong').textContent.localeCompare(a.querySelector('.nombre strong').textContent));
+                        productosFiltrados.sort((a, b) => b.querySelector('.detalle').textContent.localeCompare(a.querySelector('.detalle').textContent));
                         break;
                 }
             }
@@ -423,7 +496,7 @@ function eventosAlmacenAcopio() {
                 <h1 class="titulo">${producto.producto}</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond');"><i class="fas fa-arrow-right"></i></button>
             </div>
-            <div class="relleno verificar-registro">
+            <div class="relleno">
                 <p class="normal">Información básica</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -517,7 +590,7 @@ function eventosAlmacenAcopio() {
                     <h1 class="titulo">Eliminar prodcuto</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <div class="relleno verificar-registro">
+                <div class="relleno">
                     <p class="normal">Información básica</p>
                     <div class="campo-vertical">
                         <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${producto.id}</span>
@@ -565,7 +638,7 @@ function eventosAlmacenAcopio() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete')
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-producto-acopio/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -582,7 +655,6 @@ function eventosAlmacenAcopio() {
 
                     if (data.success) {
                         await obtenerAlmacenAcopio();
-                        updateHTMLWithData();
                         cerrarAnuncioManual('anuncioSecond');
                         mostrarNotificacion({
                             message: 'Producto eliminado correctamente',
@@ -597,10 +669,6 @@ function eventosAlmacenAcopio() {
                         throw new Error(data.error || 'Error al eliminar el producto');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al eliminar el producto',
@@ -608,7 +676,7 @@ function eventosAlmacenAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete')
+                    ocultarCarga('.carga-procesar');
                 }
             }
         }
@@ -681,7 +749,7 @@ function eventosAlmacenAcopio() {
                 <h1 class="titulo">Editar producto</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer');"><i class="fas fa-arrow-right"></i></button>
             </div>
-            <div class="relleno editar-producto">
+            <div class="relleno">
                 <p class="normal">Información básica</p>
                 <div class="entrada">
                     <i class='bx bx-cube'></i>
@@ -782,20 +850,20 @@ function eventosAlmacenAcopio() {
 
             async function confirmarEdicionProducto() {
                 try {
-                    const productoNombre = document.querySelector('.editar-producto .producto').value.trim();
-                    const motivo = document.querySelector('.editar-producto .motivo').value.trim();
+                    const productoNombre = document.querySelector('.producto').value.trim();
+                    const motivo = document.querySelector('.motivo').value.trim();
 
                     // Get bruto lots
-                    const brutoLotes = Array.from(document.querySelectorAll('.editar-producto .peso-bruto'))
+                    const brutoLotes = Array.from(document.querySelectorAll('.peso-bruto'))
                         .map((input, index) => {
-                            const lote = document.querySelectorAll('.editar-producto .lote-bruto')[index].value;
+                            const lote = document.querySelectorAll('.lote-bruto')[index].value;
                             return `${input.value}-${lote}`;
                         }).join(';');
 
                     // Get prima lots
-                    const primaLotes = Array.from(document.querySelectorAll('.editar-producto .peso-prima'))
+                    const primaLotes = Array.from(document.querySelectorAll('.peso-prima'))
                         .map((input, index) => {
-                            const lote = document.querySelectorAll('.editar-producto .lote-prima')[index].value;
+                            const lote = document.querySelectorAll('.lote-prima')[index].value;
                             return `${input.value}-${lote}`;
                         }).join(';');
 
@@ -812,7 +880,7 @@ function eventosAlmacenAcopio() {
                         });
                         return;
                     }
-                    const signal = await mostrarProgreso('.pro-edit')
+                    mostrarCarga('.carga-procesar');
 
                     const response = await fetch(`/editar-producto-acopio/${registroId}`, {
                         method: 'PUT',
@@ -833,7 +901,6 @@ function eventosAlmacenAcopio() {
                     if (data.success) {
                         await obtenerAlmacenAcopio();
                         info(registroId)
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Producto actualizado correctamente',
                             type: 'success',
@@ -847,10 +914,6 @@ function eventosAlmacenAcopio() {
                         throw new Error(data.error || 'Error al actualizar el producto');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al procesar la operación',
@@ -858,7 +921,7 @@ function eventosAlmacenAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-edit')
+                    ocultarCarga('.carga-procesar');
                 }
             }
         }
@@ -870,7 +933,7 @@ function eventosAlmacenAcopio() {
             <h1 class="titulo">Nuevo producto</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno nuevo-producto">
+        <div class="relleno">
             <p class="normal">Información básica</p>
             <div class="entrada">
                 <i class='bx bx-cube'></i>
@@ -985,11 +1048,11 @@ function eventosAlmacenAcopio() {
         btnCrear.addEventListener('click', confirmarCreacion);
 
         async function confirmarCreacion() {
-            const producto = document.querySelector('.nuevo-producto .producto').value.trim();
-            const pesoBruto = document.querySelector('.nuevo-producto .peso-bruto').value.trim();
-            const loteBruto = document.querySelector('.nuevo-producto .lote-bruto').value.trim();
-            const pesoPrima = document.querySelector('.nuevo-producto .peso-prima').value.trim();
-            const lotePrima = document.querySelector('.nuevo-producto .lote-prima').value.trim();
+            const producto = document.querySelector('.producto').value.trim();
+            const pesoBruto = document.querySelector('.peso-bruto').value.trim();
+            const loteBruto = document.querySelector('.lote-bruto').value.trim();
+            const pesoPrima = document.querySelector('.peso-prima').value.trim();
+            const lotePrima = document.querySelector('.lote-prima').value.trim();
 
             // Get selected tags
             const etiquetasSeleccionadas = Array.from(document.querySelectorAll('.etiquetas-actuales .etiqueta-item'))
@@ -1006,7 +1069,7 @@ function eventosAlmacenAcopio() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-new');
+                mostrarCarga('.carga-procesar');
                 const response = await fetch('/crear-producto-acopio', {
                     method: 'POST',
                     headers: {
@@ -1028,7 +1091,6 @@ function eventosAlmacenAcopio() {
                     const newFila = data.id;
                     await obtenerAlmacenAcopio();
                     info(newFila)
-                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Producto creado correctamente',
                         type: 'success',
@@ -1038,10 +1100,6 @@ function eventosAlmacenAcopio() {
                     throw new Error(data.error || 'Error al crear el producto');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -1049,7 +1107,7 @@ function eventosAlmacenAcopio() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-new');
+                ocultarCarga('.carga-procesar');
             }
         }
     }
@@ -1068,7 +1126,7 @@ function eventosAlmacenAcopio() {
             <h1 class="titulo">Gestionar Etiquetas de Acopio</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno editar-produccion">
+        <div class="relleno">
             <p class="normal">Etiquetas existentes</p>
             <div class="etiquetas-container">
                 <div class="etiquetas-actuales">
@@ -1098,7 +1156,7 @@ function eventosAlmacenAcopio() {
             const nuevaEtiqueta = document.querySelector('.nueva-etiqueta').value.trim();
             if (nuevaEtiqueta) {
                 try {
-                    mostrarProgreso('.pro-tag');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch('/agregar-etiqueta-acopio', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1110,7 +1168,6 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetasAcopio();
-                        updateHTMLWithData();
                         gestionarEtiquetas();
                         document.querySelector('.nueva-etiqueta').value = '';
                         mostrarNotificacion({
@@ -1121,10 +1178,6 @@ function eventosAlmacenAcopio() {
 
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al procesar la operación',
@@ -1132,7 +1185,7 @@ function eventosAlmacenAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-tag');
+                    ocultarCarga('.carga-procesar');
                 }
             }
         });
@@ -1143,7 +1196,7 @@ function eventosAlmacenAcopio() {
                     const etiquetaItem = e.target.closest('.etiqueta-item');
                     const etiquetaId = etiquetaItem.dataset.id;
 
-                    mostrarProgreso('.pro-tag');
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-etiqueta-acopio/${etiquetaId}`, {
                         method: 'DELETE'
                     });
@@ -1153,7 +1206,6 @@ function eventosAlmacenAcopio() {
                     const data = await response.json();
                     if (data.success) {
                         await obtenerEtiquetasAcopio();
-                        updateHTMLWithData();
                         gestionarEtiquetas();
                         mostrarNotificacion({
                             message: 'Etiqueta eliminada correctamente',
@@ -1162,10 +1214,6 @@ function eventosAlmacenAcopio() {
                         });
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al procesar la operación',
@@ -1173,7 +1221,7 @@ function eventosAlmacenAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-tag');
+                    ocultarCarga('.carga-procesar');
                 }
             }
         });

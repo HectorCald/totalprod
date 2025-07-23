@@ -1,46 +1,72 @@
 let movimientosAcopio = [];
+const DB_NAME = 'damabrava_db';
+const REGISTROS_ACOPIO = 'registros_acopio';
 
 
 async function obtenerMovimientosAcopio() {
     try {
-        const response = await fetch('/obtener-movimientos-acopio');
-        const data = await response.json();
 
-        if (data.success) {
-            movimientosAcopio = data.movimientos.map(movimiento => {
-                return {
-                    id: movimiento.id,
-                    fecha: movimiento.fecha,
-                    tipo: movimiento.tipo,
-                    idProducto: movimiento.idProducto,
-                    producto: movimiento.producto,
-                    peso: movimiento.peso,
-                    operario: movimiento.operario,
-                    nombreMovimiento: movimiento.nombreMovimiento,
-                    caracteristicas: movimiento.caracteristicas,
-                    observaciones: movimiento.observaciones
-                };
-            }).sort((a, b) => {
+        const registrosAcopioCache = await obtenerLocal(REGISTROS_ACOPIO, DB_NAME);
+
+        if (registrosAcopioCache.length > 0) {
+            movimientosAcopio = registrosAcopioCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+            renderInitialHTML();
+            updateHTMLWithData();
+            console.log('actualizando desde el cache productos')
+        }
+
+        const response = await fetch('/obtener-movimientos-acopio');
+        const data = await response.json();
+
+        if (data.success) {
+            movimientosAcopio = data.movimientos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });;
+
+            if (JSON.stringify(registrosAcopioCache) !== JSON.stringify(movimientosAcopio)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(REGISTROS_ACOPIO, DB_NAME);
+                        const tx = db.transaction(REGISTROS_ACOPIO, 'readwrite');
+                        const store = tx.objectStore(REGISTROS_ACOPIO);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of movimientosAcopio) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener movimientos',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener movimientos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener movimientos',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
@@ -50,15 +76,11 @@ export async function mostrarRegistrosAcopio() {
 
     renderInitialHTML();
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
     const [obtnerRegistros] = await Promise.all([
         await obtenerMovimientosAcopio(),
     ]);
 
-    updateHTMLWithData();
 }
 function renderInitialHTML() {
 
@@ -68,13 +90,13 @@ function renderInitialHTML() {
             <h1 class="titulo">Registros almacen</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="busqueda">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro-almacen" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -117,6 +139,9 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
@@ -126,7 +151,7 @@ function updateHTMLWithData() {
                 <i class='bx bx-file'></i>
                 <div class="info-header">
                     <span class="id-flotante"><span>${registro.id}</span><span class="flotante-item ${registro.tipo.includes('Ingreso') ? 'green' : registro.tipo.includes('Salida') ? 'red' : 'orange'}">${registro.tipo}</span></span>
-                    <span class="detalle"><strong>${registro.nombreMovimiento}</strong></span>
+                    <span class="detalle">${registro.nombreMovimiento}</span>
                     <span class="pie">${registro.fecha}</span>
                 </div>
             </div>
@@ -145,7 +170,7 @@ function eventosRegistrosAcopio() {
 
     const items = document.querySelectorAll('.registro-item');
 
-    const inputBusqueda = document.querySelector('.buscar-registro-almacen');
+    const inputBusqueda = document.querySelector('.search');
     const botonCalendario = document.querySelector('.btn-calendario');
 
     const contenedor = document.querySelector('.anuncio .relleno');
@@ -387,7 +412,7 @@ function eventosRegistrosAcopio() {
                 <h1 class="titulo">Información del registro</h1>
                 <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
             </div>
-            <div class="relleno verificar-registro">
+            <div class="relleno">
                 <p class="normal">Información básica</p>
                 <div class="campo-vertical">
                     <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
@@ -507,7 +532,7 @@ function eventosRegistrosAcopio() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete')
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/eliminar-movimiento-acopio/${registro.id}`, {
                         method: 'DELETE',
                         headers: {
@@ -521,7 +546,6 @@ function eventosRegistrosAcopio() {
                     if (data.success) {
                         await obtenerMovimientosAcopio();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -535,10 +559,6 @@ function eventosRegistrosAcopio() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: 'Error al eliminar el registro',
@@ -546,7 +566,7 @@ function eventosRegistrosAcopio() {
                         duration: 3000
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete')
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }
@@ -612,7 +632,7 @@ function eventosRegistrosAcopio() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-anulado')
+                    mostrarCarga('.carga-procesar');
                     const response = await fetch(`/anular-movimiento-acopio/${registro.id}`, {
                         method: 'PUT',
                         headers: {
@@ -626,7 +646,6 @@ function eventosRegistrosAcopio() {
                     if (data.success) {
                         await obtenerMovimientosAcopio();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro anulado correctamente',
                             type: 'success',
@@ -640,10 +659,6 @@ function eventosRegistrosAcopio() {
                         throw new Error(data.error);
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular el registro',
@@ -651,7 +666,7 @@ function eventosRegistrosAcopio() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-anulado')
+                    ocultarCarga('.carga-procesar');
                 }
             });
         }

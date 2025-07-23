@@ -529,7 +529,6 @@ function eventosPersonal() {
                 if (response.ok) {
                     await obtenerPersonal();
                     info(userId);
-                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Usuario actualizado correctamente',
                         type: 'success',

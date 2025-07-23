@@ -1,10 +1,29 @@
 let productos = [];
 let etiquetasAcopio = [];
-let carritoPedidos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_pedidos') || '[]'));
 
+const DB_NAME = 'damabrava_db';
+const PRODUCTOS_AC_DB = 'productos_acopio';
+const ETIQUETAS_AC_DB = 'etiquetas_acopio';
+
+
+let carritoPedidos = new Map(JSON.parse(localStorage.getItem('damabrava_carrito_pedidos') || '[]'));
 
 async function obtenerEtiquetasAcopio() {
     try {
+
+        const etiquetasAcopioCache = await obtenerLocal(ETIQUETAS_AC_DB, DB_NAME);
+
+        if (etiquetasAcopioCache.length > 0) {
+            etiquetasAcopio = etiquetasAcopioCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            console.log('actualizando desde el cache etiquetas')
+            updateHTMLWithData();
+        }
+
+
         const response = await fetch('/obtener-etiquetas-acopio');
         const data = await response.json();
 
@@ -14,61 +33,109 @@ async function obtenerEtiquetasAcopio() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener etiquetas',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
+
+            if (JSON.stringify(etiquetasAcopioCache) !== JSON.stringify(etiquetasAcopio)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(ETIQUETAS_AC_DB, DB_NAME);
+                        const tx = db.transaction(ETIQUETAS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(ETIQUETAS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of etiquetasAcopio) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
         }
+        else {
+            console.log('no son diferentes')
+        }
+        return true;
+
     } catch (error) {
         console.error('Error al obtener etiquetas:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener etiquetas',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 async function obtenerAlmacenAcopio() {
     try {
-        await obtenerEtiquetasAcopio();
-        const response = await fetch('/obtener-productos-acopio');
-        const data = await response.json();
 
-        if (data.success) {
-            productos = data.productos.map(producto => {
-                return {
-                    id: producto.id,
-                    producto: producto.producto,
-                    bruto: producto.bruto || '0-1',
-                    prima: producto.prima || '0-1',
-                    etiquetas: producto.etiquetas || ''
-                };
-            }).sort((a, b) => {
+        const productosAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
+
+        if (productosAcopioCache.length > 0) {
+            productos = productosAcopioCache.sort((a, b) => {
                 const idA = parseInt(a.id.split('-')[1]);
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+            updateHTMLWithData();
+            console.log('actualizando desde el cache productos')
+        }
+        const response = await fetch('/obtener-productos-acopio');
+        const data = await response.json();
+
+        if (data.success) {
+            productos = data.productos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+            if (JSON.stringify(productosAcopioCache) !== JSON.stringify(productos)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(PRODUCTOS_AC_DB, DB_NAME);
+                        const tx = db.transaction(PRODUCTOS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(PRODUCTOS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productos) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            else {
+                console.log('no son diferentes')
+            }
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos del almacén',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
+
+
     } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos del almacén',
-            type: 'error',
-            duration: 3500
-        });
+        console.error('Error al obtener los pagos:', error);
         return false;
     }
 }
@@ -77,19 +144,11 @@ async function obtenerAlmacenAcopio() {
 export async function mostrarHacerPedido() {
     renderInitialHTML(); // Render initial HTML immediately
     mostrarAnuncio();
-    setTimeout(() => {
-        configuracionesEntrada();
-    }, 100);
 
-    // Load data in parallel
     const [almacenGeneral, etiquetasResult] = await Promise.all([
+        obtenerEtiquetasAcopio(),
         await obtenerAlmacenAcopio(),
-        await obtenerEtiquetasAcopio(),
     ]);
-
-    updateHTMLWithData(); // Update HTML once data is loaded
-    eventosPedidos();
-
 }
 function renderInitialHTML() {
 
@@ -100,13 +159,13 @@ function renderInitialHTML() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
             <button class="btn filtros" onclick="mostrarFormatoPedido()"><i class='bx bx-comment-detail'></i></button>
         </div>
-        <div class="relleno almacen-general">
+        <div class="relleno">
             <div class="buscador-filtros">
                 <div class="entrada">
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-producto-acopio" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                 </div>
                 <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
@@ -148,6 +207,9 @@ function renderInitialHTML() {
     `;
     contenido.style.paddingBottom = '10px';
     contenido.innerHTML = initialHTML;
+    setTimeout(() => {
+        configuracionesEntrada();
+    }, 100);
 }
 function updateHTMLWithData() {
     // Update etiquetas filter
@@ -178,8 +240,8 @@ function updateHTMLWithData() {
                 <div class="header">
                     <i class='bx bx-package'></i>
                     <div class="info-header">
-                        <span class="id-flotante"><span>${producto.id}</span><span class="flotante-item orange">${totalBruto.toFixed(2)} Kg.</span></span>
-                        <span class="detalle"><strong>${producto.producto}</strong></span>
+                        <span class="id-flotante"><span>${producto.id}</span><span class="flotante-item orange stock">${totalBruto.toFixed(2)} Kg.</span></span>
+                        <span class="detalle">${producto.producto}</span>
                         <span class="pie">${producto.etiquetas.split(';').join(' • ')}</span>
                     </div>
                 </div>
@@ -187,13 +249,14 @@ function updateHTMLWithData() {
         `;
     }).join('');
     productosContainer.innerHTML = productosHTML;
+    eventosPedidos();
 }
 
 
 function eventosPedidos() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
-    const inputBusqueda = document.querySelector('.buscar-producto-acopio');
+    const inputBusqueda = document.querySelector('.search');
     const botonFlotante = document.createElement('button');
     const contenedor = document.querySelector('.anuncio .relleno');
     contenedor.addEventListener('scroll', () => {
@@ -285,10 +348,10 @@ function eventosPedidos() {
                         productosFiltrados.sort((a, b) => parseFloat(a.querySelector('.stock').textContent) - parseFloat(b.querySelector('.stock').textContent));
                         break;
                     case 2: // A-Z
-                        productosFiltrados.sort((a, b) => a.querySelector('.nombre strong').textContent.localeCompare(b.querySelector('.nombre strong').textContent));
+                        productosFiltrados.sort((a, b) => a.querySelector('.detalle').textContent.localeCompare(b.querySelector('.detalle').textContent));
                         break;
                     case 3: // Z-A
-                        productosFiltrados.sort((a, b) => b.querySelector('.nombre strong').textContent.localeCompare(a.querySelector('.nombre strong').textContent));
+                        productosFiltrados.sort((a, b) => b.querySelector('.detalle').textContent.localeCompare(a.querySelector('.detalle').textContent));
                         break;
                 }
             }
@@ -340,7 +403,7 @@ function eventosPedidos() {
                     ? producto.bruto.split(';').reduce((sum, lote) => sum + parseFloat(lote.split('-')[0]), 0)
                     : producto.prima.split(';').reduce((sum, lote) => sum + parseFloat(lote.split('-')[0]), 0);
 
-                const stockSpan = registro.querySelector('.valor.stock');
+                const stockSpan = registro.querySelector('.stock');
                 if (stockSpan) {
                     stockSpan.textContent = `${total.toFixed(2)} Kg.`;
                 }
@@ -588,7 +651,7 @@ function eventosPedidos() {
                 return;
             }
 
-            const signal = await mostrarProgreso('.pro-pedido')
+            mostrarCarga('.carga-procesar');
 
             // Format products from cart
             const productosParaEnviar = Array.from(carritoPedidos.entries()).map(([id, item]) => {
@@ -631,7 +694,7 @@ function eventosPedidos() {
                 // Clear cart
                 carritoPedidos.clear();
                 localStorage.setItem('damabrava_carrito_pedidos', '[]');
-                ocultarProgreso('.pro-pedido');
+                ocultarCarga('.carga-procesar');
                 mostrarNotificacion({
                     message: 'Pedido registrado correctamente',
                     type: 'success',
@@ -642,15 +705,11 @@ function eventosPedidos() {
                     'Creación',
                     usuarioInfo.nombre + ' hizo un nuevo pedido de materia prima')
                 mostrarMensajePedido();
-                await mostrarHacerPedido();
+                await obtenerPedidos();
             } else {
                 throw new Error(data.error || 'Error al registrar el pedido');
             }
         } catch (error) {
-            if (error.message === 'cancelled') {
-                console.log('Operación cancelada por el usuario');
-                return;
-            }
             console.error('Error:', error);
             mostrarNotificacion({
                 message: error.message || 'Error al procesar la operación',
@@ -658,7 +717,7 @@ function eventosPedidos() {
                 duration: 3500
             });
         } finally {
-            ocultarProgreso('.pro-pedido');
+            ocultarCarga('.carga-procesar');
         }
     }
 

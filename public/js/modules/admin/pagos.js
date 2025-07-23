@@ -6,7 +6,7 @@ const PAGOS_DB = 'pagos';
 
 async function obtenerPagos() {
     try {
-
+        mostrarCarga('.carga-obtener');
         const pagosCache = await obtenerLocal(PAGOS_DB, DB_NAME);
 
         if (pagosCache.length > 0) {
@@ -72,6 +72,8 @@ async function obtenerPagos() {
     } catch (error) {
         console.error('Error al obtener los pagos:', error);
         return false;
+    } finally {
+        ocultarCarga('.carga-obtener');
     }
 }
 async function cargarPagosParciales(pagoId) {
@@ -620,7 +622,6 @@ function eventosPagos() {
                         await obtenerPagos();
                         ocultarCarga('.carga-procesar');
                         info(pagoId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Pago anulado correctamente',
                             type: 'success',
@@ -784,7 +785,6 @@ function eventosPagos() {
 
                             if (data.success) {
                                 await obtenerPagos();
-                                updateHTMLWithData();
                                 info(pagoId);
                                 cargarPagosParciales(pagoId);
                                 ocultarCarga('.carga-procesar');

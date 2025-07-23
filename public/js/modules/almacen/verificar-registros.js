@@ -1087,7 +1087,6 @@ function eventosVerificacion() {
                     if (data.success) {
                         await obtenerRegistrosProduccion();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -1301,7 +1300,6 @@ function eventosVerificacion() {
                     if (data.success) {
                         await obtenerRegistrosProduccion();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
@@ -1398,7 +1396,6 @@ function eventosVerificacion() {
                     if (data.success) {
                         await obtenerRegistrosProduccion();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Verificación anulada correctamente',
                             type: 'success',
@@ -1556,7 +1553,6 @@ function eventosVerificacion() {
                         }
                         await obtenerRegistrosProduccion();
                         info(registroId);
-                        updateHTMLWithData();
                     } else {
                         throw new Error(data.error || 'Error al verificar el registro');
                     }
@@ -1808,7 +1804,6 @@ function eventosVerificacion() {
                         await obtenerRegistrosAlmacen();
                         await obtenerRegistrosProduccion();
                         info(registro.id);
-                        updateHTMLWithData();
                         if (tirasRestantes === 0 && unidadesRestantes === 0) {
                             try {
                                 const respEstado = await fetch(`/cambiar-estado-registro/${registro.id}`, {

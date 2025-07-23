@@ -235,7 +235,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almAcopio-view',
-            icono: 'fa-dolly',
+            icono: 'fa-warehouse',
             texto: 'Almacen acopio',
             detalle: 'Gestiona el almacen de acopio.',
             onclick: 'onclick="mostrarAlmacenAcopio();"'
@@ -243,16 +243,16 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-arrow-down',
-            texto: 'Ingresos',
+            icono: 'fa-arrow-circle-down',
+            texto: 'Ingresos (Acopio)',
             detalle: 'Ingresos al almacen de acopio.',
             onclick: 'onclick="mostrarIngresosAcopio()"'
         },
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
-            icono: 'fa-arrow-up',
-            texto: 'Salidas',
+            icono: 'fa-arrow-circle-up',
+            texto: 'Salidas (Acopio)',
             detalle: 'Salidas del almacen acopio.',
             onclick: 'onclick="mostrarSalidasAcopio()"'
         },
@@ -267,7 +267,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'regAcopio-view',
-            icono: 'fa-history',
+            icono: 'fa-clipboard-list',
             texto: 'Pedidos',
             detalle: 'Gestiona todos los pedidos.',
             onclick: 'onclick="mostrarPedidos();"'
@@ -275,7 +275,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'regAlmacen-view',
-            icono: 'fa-history',
+            icono: 'fa-clipboard-list',
             texto: 'Registros acopio',
             detalle: 'Todos los registros de acopio.',
             onclick: 'onclick="mostrarRegistrosAcopio();"'
@@ -285,7 +285,7 @@ const atajosPorRol = {
         {
             clase: 'opcion-btn',
             vista: 'almacen-view',
-            icono: 'fa-dolly',
+            icono: 'fa-warehouse',
             texto: 'Almacen general',
             detalle: 'Gestiona el almacen general.',
             onclick: 'onclick="mostrarAlmacenGeneral()"'

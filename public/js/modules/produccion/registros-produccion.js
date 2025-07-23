@@ -559,7 +559,6 @@ function eventosMisRegistros() {
                     if (data.success) {
                         await obtenerMisRegistros();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro eliminado correctamente',
                             type: 'success',
@@ -773,7 +772,6 @@ function eventosMisRegistros() {
                     if (data.success) {
                         await obtenerMisRegistros();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Registro actualizado correctamente',
                             type: 'success',
@@ -870,7 +868,6 @@ function eventosMisRegistros() {
                     if (data.success) {
                         await obtenerMisRegistros();
                         info(registroId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Verificación anulada correctamente',
                             type: 'success',

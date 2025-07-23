@@ -331,7 +331,6 @@ function eventosProovedores() {
                     if (data.success) {
                         await obtenerProovedores();
                         cerrarAnuncioManual('anuncioSecond');
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Proveedor eliminado correctamente',
                             type: 'success',
@@ -448,7 +447,6 @@ function eventosProovedores() {
                     if (data.success) {
                         await obtenerProovedores();
                         info(proovedorId);
-                        updateHTMLWithData();
                         mostrarNotificacion({
                             message: 'Proveedor actualizado correctamente',
                             type: 'success',
@@ -553,7 +551,6 @@ function eventosProovedores() {
                 if (data.success) {
                     await obtenerProovedores();
                     info(data.id);
-                    updateHTMLWithData();
                     mostrarNotificacion({
                         message: 'Proveedor creado correctamente',
                         type: 'success',

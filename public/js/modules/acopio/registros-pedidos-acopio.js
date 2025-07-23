@@ -78,6 +78,7 @@ async function obtenerProovedoresAcopio() {
 }
 async function obtenerAlmacenAcopio() {
     try {
+        mostrarCarga('.carga-obtener');
         const productoAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
 
         if (productoAcopioCache.length > 0) {
@@ -142,6 +143,8 @@ async function obtenerAlmacenAcopio() {
     } catch (error) {
         console.error('Error al obtener productos:', error);
         return false;
+    } finally {
+        ocultarCarga('.carga-obtener');
     }
 }
 async function obtenerPedidos() {
