@@ -341,9 +341,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-id-card'></i>
                 <div class="info-header">
-                    <span class="id">${persona.id}<span class="${persona.rol === 'Sin rol' ? 'pendiente' : 'rol'} ">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
-                    <span class="nombre"><strong>${persona.nombre}</strong></span>
-                    <span class="fecha">${persona.email}<span class="punto-referencia">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>`}</span></span>
+                    <span class="id-flotante"><span class="id">${persona.id}</span><span class="flotante-item blue">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
+                    <span class="detalle"><strong>${persona.nombre}</strong></span>
+                    <span class="pie">${persona.email}<span style="margin-left:auto">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-end"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>`}</span></span>
                 </div>
             </div>
         </div>

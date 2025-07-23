@@ -529,7 +529,7 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '10px';
-    if (tienePermiso('creacion') || tipoEvento === 'conteo') {
+    if (tienePermiso('creacion') && tipoEvento !== 'salidas' && tipoEvento !== 'ingresos') {
         contenido.style.paddingBottom = '70px';
     }
     setTimeout(() => {
