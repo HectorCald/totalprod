@@ -557,15 +557,15 @@ function eventosAlmacenGeneral() {
                         break;
                     case 2:
                         productosFiltrados.sort((a, b) => {
-                            const nombreA = a.querySelector('.nombre strong')?.textContent || '';
-                            const nombreB = b.querySelector('.nombre strong')?.textContent || '';
+                            const nombreA = a.querySelector('.detalle')?.textContent || '';
+                            const nombreB = b.querySelector('.detalle')?.textContent || '';
                             return nombreA.localeCompare(nombreB);
                         });
                         break;
                     case 3:
                         productosFiltrados.sort((a, b) => {
-                            const nombreA = a.querySelector('.nombre strong')?.textContent || '';
-                            const nombreB = b.querySelector('.nombre strong')?.textContent || '';
+                            const nombreA = a.querySelector('.detalle')?.textContent || '';
+                            const nombreB = b.querySelector('.detalle')?.textContent || '';
                             return nombreB.localeCompare(nombreA);
                         });
                         break;

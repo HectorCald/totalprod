@@ -93,7 +93,7 @@ function renderInitialHTML() {
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="buscar-registro" placeholder="">
+                        <input type="text" class="search" placeholder="">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -133,7 +133,6 @@ function renderInitialHTML() {
     }, 100);
 }
 function updateHTMLWithData() {
-
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = registrosConteos.map(registro => `
         <div class="registro-item" data-id="${registro.id}">
@@ -156,7 +155,7 @@ function eventosRegistrosConteo() {
     const btnExcel = document.querySelectorAll('.exportar-excel');
     const registrosAExportar = registrosConteos;
     const items = document.querySelectorAll('.registro-item');
-    const inputBusqueda = document.querySelector('.buscar-registro');
+    const inputBusqueda = document.querySelector('.search');
     const botonCalendario = document.querySelector('.btn-calendario');
 
     const contenedor = document.querySelector('.anuncio .relleno');

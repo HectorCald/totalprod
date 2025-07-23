@@ -80,8 +80,6 @@ window.obtenerLocal=obtenerLocal
 window.normalizarTexto=normalizarTexto
 window.scrollToCenter=scrollToCenter
 
-
-
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarMisRegistros = mostrarMisRegistros
 window.mostrarReglas = mostrarReglas
