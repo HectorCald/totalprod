@@ -754,9 +754,9 @@ function eventosVerificacion() {
             // Lógica de filtrado existente
             if (filtroEstadoActual && filtroEstadoActual !== 'Todos') {
                 if (filtroEstadoActual === 'Pendientes') {
-                    mostrar = !registroData.fecha_verificacion || registroData.estado === 'Pendiente';
+                    mostrar = registroData.estado === 'Pendiente';
                 } else if (filtroEstadoActual === 'Verificados') {
-                    mostrar = !registroData.fecha_verificacion || registroData.estado === 'Verificado';
+                    mostrar = registroData.estado === 'Verificado';
                 } else if (filtroEstadoActual === 'Ingresados') {
                     mostrar = registroData.estado === 'Ingresado';
                 }
@@ -978,8 +978,7 @@ function eventosVerificacion() {
                 ${tienePermiso('eliminacion') && !registro.fecha_verificacion ? `<button class="btn-eliminar btn red" data-id="${registro.id}"><i class="bx bx-trash"></i>Eliminar</button>` : ''}
                 ${tienePermiso('anulacion') && registro.fecha_verificacion ? `<button class="btn-anular btn yellow" data-id="${registro.id}"><i class='bx bx-x-circle'></i>Anular</button>` : ''}
                 ${!registro.fecha_verificacion ? `<button class="btn-verificar btn green" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Verificar</button>` : ''}
-                ${registro.observaciones !== 'Sin observaciones' && registro.observaciones !== '' && registro.fecha_verificacion ? `<button class="btn-arreglado btn orange" data-id="${registro.id}"><i class='bx bx-check-circle'></i>Arreglado</button>` : ''}
-                ${registro.fecha_verificacion && registro.estado !== 'Ingresado' ? `<button class="btn-ingresar-almacen btn green" data-id="${registro.id}"><i class='bx bx-box'></i>Ingresar a almacen</button>` : `<button class="btn-ingresar-almacen btn blue" data-id="${registro.id}"><i class='bx bx-show'></i>Ver ingresos</button>`}
+                ${registro.fecha_verificacion && registro.estado !== 'Ingresado' ? `<button class="btn-ingresar-almacen btn green" data-id="${registro.id}"><i class='bx bx-box'></i>Ingresar</button>` : registro.estado === 'Ingresado' ? `<button class="btn-ingresar-almacen btn blue" data-id="${registro.id}"><i class='bx bx-show'></i>Ingresos</button>` : ''}
             </div>
             `;
 
