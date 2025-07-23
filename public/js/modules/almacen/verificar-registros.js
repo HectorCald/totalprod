@@ -446,7 +446,6 @@ async function obtenerRegistrosProduccion() {
 }
 
 
-
 export async function mostrarVerificacion() {
     renderInitialHTML();
     mostrarAnuncio();

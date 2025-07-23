@@ -139,7 +139,7 @@ export async function mostrarAnuncio() {
     const contenido = document.querySelector('.anuncio .contenido');
     contenido.style.maxWidth = '100%'
 
-    
+
     const botonCarrito = document.querySelector('.btn-flotante-salidas')
     const botonCarrito2 = document.querySelector('.btn-flotante-ingresos')
     const botonCarrito3 = document.querySelector('.btn-flotante-pedidos')
@@ -345,7 +345,7 @@ export function crearNotificacion(options = {}) {
     const { message, type = 'info', duration = 3000 } = options || {};
     // Si no hay mensaje real, no mostrar nada
     if (!message) return;
-    
+
     let container = document.querySelector('.notification-container');
 
     if (!container) {
@@ -838,20 +838,19 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
 
                 // Configurar fuente y tamaños
                 doc.setFont('helvetica');
-                doc.setFontSize(20);
+                doc.setFontSize(13);
 
                 // Título principal
-                doc.setFontSize(20);
+                doc.setFontSize(13);
                 doc.setFont('helvetica', 'bold');
-                doc.text(registro.nombre_movimiento, 105, 30, { align: 'center' });
+                doc.text(registro.nombre_movimiento, 105, 18, { align: 'center' });
 
                 // Información del registro
-                doc.setFontSize(12);
+                doc.setFontSize(8);
                 doc.setFont('helvetica', 'normal');
-                
+
                 const fechaHora = registro.fecha_hora.split(',');
                 const fecha = fechaHora[0]?.trim() || '';
-                const hora = fechaHora[1]?.trim() || '';
 
                 // Cargar logo y marca de agua
                 const logoUrl = '/img/img-png/damabrava-1x1.png';
@@ -890,10 +889,8 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 const infoBasica = [
                     ['ID', registro.id],
                     ['Fecha', fecha],
-                    ['Hora', hora],
-                    ['Tipo', registro.tipo],
                     ['Operario', registro.operario],
-                    ['Cliente/Proveedor', registro.cliente_proovedor.split('(')[0].trim()]
+                    ['Cliente', registro.cliente_proovedor.split('(')[0].trim()]
                 ];
                 const resumenFinanciero = [
                     ['Subtotal', `Bs. ${(parseFloat(registro.subtotal) || 0).toFixed(2)}`],
@@ -901,32 +898,47 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     ['Aumento', `Bs. ${(parseFloat(registro.aumento) || 0).toFixed(2)}`],
                     ['Total', `Bs. ${(parseFloat(registro.total) || 0).toFixed(2)}`]
                 ];
-                let yPosition = 38;
+                let yPosition = 25;
                 if (doc.autoTable) {
+                    const MAX_HEIGHT = 5; // en mm, ajusta a tu gusto
+                    // Cabecera infoBasica
                     doc.autoTable({
-                        head: [['Campo', 'Valor']],
+                        head: [['Concepto', 'Valor']],
                         body: infoBasica,
                         startY: yPosition,
                         theme: 'grid',
-                        headStyles: { fillColor:[80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
-                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'center' },
+                        styles: { font: 'helvetica', fontSize: 8, cellPadding: 1, minCellHeight: 0, lineColor: [0, 0, 0], lineWidth: 0.2, textColor: [0, 0, 0] },
                         margin: { left: 20, right: 120 },
-                        tableWidth: 80
+                        tableWidth: 80,
+                        cellPadding: 0,
+                        didParseCell: function (data) {
+                            if (data.cell.height > MAX_HEIGHT) {
+                                data.cell.height = MAX_HEIGHT;
+                            }
+                        }
                     });
+                    // Cabecera resumenFinanciero
                     doc.autoTable({
                         head: [['Concepto', 'Valor']],
                         body: resumenFinanciero,
                         startY: yPosition,
                         theme: 'grid',
-                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
-                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0, 0, 0], lineWidth: 0.1, halign: 'center' },
+                        styles: { font: 'helvetica', fontSize: 8, cellPadding: 1, minCellHeight: 0, lineColor: [0, 0, 0], lineWidth: 0.2, textColor: [0, 0, 0] },
                         margin: { left: 110, right: 20 },
-                        tableWidth: 70
+                        tableWidth: 70,
+                        cellPadding: 0,
+                        didParseCell: function (data) {
+                            if (data.cell.height > MAX_HEIGHT) {
+                                data.cell.height = MAX_HEIGHT;
+                            }
+                        }
                     });
-                    yPosition = Math.max(doc.lastAutoTable.finalY, doc.lastAutoTable.finalY) + 10;
+                    yPosition = 0;
                 } else {
                     // Manual: lado a lado
-                    doc.setFontSize(11);
+                    doc.setFontSize(8);
                     doc.setFont('helvetica', 'bold');
                     doc.text('Campo', 20, yPosition);
                     doc.text('Valor', 60, yPosition);
@@ -948,10 +960,10 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     yPosition = Math.max(yInfo, yFin) + 10;
                 }
 
-                yPosition += 5;
+                yPosition += 2;
 
                 // Encabezados de la tabla
-                const tableHeaders = ['ID', 'Producto', 'Cantidad', 'P. Unitario', 'Subtotal'];
+                const tableHeaders = ['ID', 'PRODUCTO', 'CANTIDAD', 'P. UNITARIO', 'SUBTOTAL'];
                 const productos = registro.productos.split(';');
                 const cantidades = registro.cantidades.split(';');
                 const preciosUnitarios = registro.precios_unitarios.split(';');
@@ -971,19 +983,47 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     ];
                 });
 
+                let drawWatermark = null;
+                if (watermarkDataUrl) {
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    let imgSize = Math.min(pageWidth, pageHeight) * 0.55;
+                    imgSize = imgSize * 2; // duplicar tamaño
+                    imgSize = imgSize * 0.8; // reducir 20%
+                    const x = (pageWidth - imgSize) / 2;
+                    const y = (pageHeight - imgSize) / 2;
+                    drawWatermark = function (data) {
+                        doc.saveGraphicsState && doc.saveGraphicsState();
+                        if (doc.setGState) {
+                            doc.setGState(new doc.GState({ opacity: 0.10 }));
+                        } else if (doc.setAlpha) {
+                            doc.setAlpha(0.10);
+                        }
+                        doc.addImage(watermarkDataUrl, 'PNG', x, y, imgSize, imgSize);
+                        if (doc.restoreGraphicsState) doc.restoreGraphicsState();
+                        if (doc.setAlpha) doc.setAlpha(1);
+                    };
+                }
+
                 if (doc.autoTable) {
                     doc.autoTable({
                         head: [tableHeaders],
                         body: tableData,
-                        startY: yPosition + 5,
                         theme: 'grid',
-                        headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold', lineColor: [0,0,0], lineWidth: 0.2 },
-                        styles: { font: 'helvetica', fontSize: 10, textColor: [0,0,0], lineColor: [0,0,0], lineWidth: 0.2 },
+                        headStyles: { font: 'helvetica', fontSize: 8, fillColor: [80, 80, 80], textColor: 255, lineColor: [0, 0, 0], lineWidth: 0.2, halign: 'center' },
+                        styles: { font: 'helvetica', fontSize: 8, cellPadding: 1, minCellHeight: 0, lineColor: [0, 0, 0], lineWidth: 0.2, textColor: [0, 0, 0] },
                         margin: { left: 20, right: 20 },
+                        columnStyles: {
+                            0: { cellWidth: 15 },
+                            2: { cellWidth: 18, halign: 'center' }, // CANTIDAD centrado
+                            3: { cellWidth: 22 },
+                            4: { cellWidth: 22 },
+                        },
+                        ...(drawWatermark ? { didDrawPage: drawWatermark } : {})
                     });
                     yPosition = doc.lastAutoTable.finalY || (yPosition + 40);
                 } else {
-                    doc.setFontSize(11);
+                    doc.setFontSize(8);
                     doc.setFont('helvetica', 'bold');
                     let x = 20;
                     tableHeaders.forEach((header, i) => {
@@ -1005,34 +1045,32 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
 
                 // Pie de página
                 const pageHeight = doc.internal.pageSize.height;
-                doc.setFontSize(10);
+                doc.setFontSize(8);
                 doc.setFont('helvetica', 'italic');
                 doc.text('TotalProd App', 105, pageHeight - 20, { align: 'center' });
 
-                // Marca de agua de fondo (por encima del contenido, pero después del logo)
-                if (watermarkDataUrl) {
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
-                    let imgSize = Math.min(pageWidth, pageHeight) * 0.55;
-                    imgSize = imgSize * 2; // duplicar tamaño
-                    imgSize = imgSize * 0.8; // reducir 20%
-                    const x = (pageWidth - imgSize) / 2;
-                    const y = (pageHeight - imgSize) / 2;
-                    doc.saveGraphicsState && doc.saveGraphicsState();
-                    if (doc.setGState) {
-                        doc.setGState(new doc.GState({ opacity: 0.18 }));
-                    } else if (doc.setAlpha) {
-                        doc.setAlpha(0.18);
-                    }
-                    doc.addImage(watermarkDataUrl, 'PNG', x, y, imgSize, imgSize);
-                    if (doc.restoreGraphicsState) doc.restoreGraphicsState();
-                    if (doc.setAlpha) doc.setAlpha(1);
-                }
-
                 // Generar nombre del archivo
                 const fechaPDF = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
-                const nombreArchivo = `Registro_${registro.id}_${fechaPDF}.pdf`;
-
+                let nombreArchivo = '';
+                if (registro.tipo === 'Salida') {
+                    // Buscar el número de entrega después de 'Nº'
+                    let numeroEntrega = '';
+                    const match = registro.nombre_movimiento.match(/Nº\s*(\d+)/i);
+                    if (match) {
+                        numeroEntrega = match[1];
+                    } else {
+                        numeroEntrega = '';
+                    }
+                    // Primer nombre del cliente
+                    let primerNombreCliente = registro.cliente_proovedor.split('(')[0].trim().split(' ')[0];
+                    nombreArchivo = `NT-${numeroEntrega}(${primerNombreCliente}).pdf`;
+                } else if (registro.tipo === 'Ingreso') {
+                    // Primer nombre del cliente
+                    let primerNombreCliente = registro.cliente_proovedor.split('(')[0].trim().split(' ')[0];
+                    nombreArchivo = `NI-${registro.id}(${primerNombreCliente}).pdf`;
+                } else {
+                    nombreArchivo = `NT-${registro.id}.pdf`;
+                }
                 // Descargar el PDF
                 doc.save(nombreArchivo);
 

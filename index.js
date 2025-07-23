@@ -94,6 +94,7 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 
+
 /* ==================== MIDDLEWARES Y CONFIGURACIÓN DE APP ==================== */
 app.use(cors());
 app.use(express.json());
@@ -6545,10 +6546,7 @@ app.get('/obtener-catalogo', requireAuth, async (req, res) => {
     }
 });
 
-
-
 /* ==================== INICIALIZACIÓN DEL SERVIDOR ==================== */
-
 if (process.env.NODE_ENV !== 'production') {
     app.listen(port, () => {
         console.log(`Server running in port: ${port}`);

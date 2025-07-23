@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v3'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v4'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -115,7 +115,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Manejar mensajes en background
+
 messaging.onBackgroundMessage((payload) => {
     console.log('Mensaje recibido en background:', payload);
     // Usar data si existe, ya que notification ya no se envía
@@ -140,8 +140,6 @@ self.addEventListener('notificationclick', (event) => {
         clients.openWindow('/')
     );
 });
-// --- FIN: Lógica de notificaciones push Firebase ---
-
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
