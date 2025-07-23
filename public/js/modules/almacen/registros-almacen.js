@@ -753,7 +753,7 @@ function eventosRegistrosAlmacen() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-delete')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch(`/eliminar-registro-almacen/${registroId}`, {
                         method: 'DELETE',
                         headers: {
@@ -785,10 +785,6 @@ function eventosRegistrosAlmacen() {
                         throw new Error(data.error || 'Error al eliminar el registro');
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al procesar la operación',
@@ -796,7 +792,7 @@ function eventosRegistrosAlmacen() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-delete')
+                    ocultarCarga('.carga-procesar')
                 }
             }
         }
@@ -856,7 +852,7 @@ function eventosRegistrosAlmacen() {
                 }
 
                 try {
-                    const signal = await mostrarProgreso('.pro-anulado')
+                    mostrarCarga('.carga-procesar')
                     const response = await fetch(`/anular-movimiento/${registro.id}`, {
                         method: 'PUT', // Cambiado a PUT ya que vamos a actualizar
                         headers: {
@@ -887,10 +883,6 @@ function eventosRegistrosAlmacen() {
                             usuarioInfo.nombre + ' anulo el registro con el nombre de: ' + registro.nombre_movimiento + ' con el id: ' + registro.id + 'tipo ' + registro.tipo + ' por el motivo de: ' + motivo)
                     }
                 } catch (error) {
-                    if (error.message === 'cancelled') {
-                        console.log('Operación cancelada por el usuario');
-                        return;
-                    }
                     console.error('Error:', error);
                     mostrarNotificacion({
                         message: error.message || 'Error al anular el registro',
@@ -898,7 +890,7 @@ function eventosRegistrosAlmacen() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-anulado')
+                    ocultarCarga('.carga-procesar')
                 }
             }
         }
@@ -978,7 +970,7 @@ function eventosRegistrosAlmacen() {
                     });
                     return;
                 }
-                const signal = await mostrarProgreso('.pro-obtner')
+                mostrarCarga('.carga-procesar')
                 try {
                     const response = await fetch(`/anexar-movimiento-produccion/${registro.id}`, {
                         method: 'PUT',
@@ -1005,7 +997,7 @@ function eventosRegistrosAlmacen() {
                         duration: 3500
                     });
                 } finally {
-                    ocultarProgreso('.pro-obtner')
+                    ocultarCarga('.carga-procesar')
                 }
             });
         }
