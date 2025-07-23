@@ -1780,7 +1780,7 @@ function eventosVerificacion() {
                             tiras: tiras,
                             sueltas: unidades,
                             operario: usuarioInfo ? `${usuarioInfo.nombre} ${usuarioInfo.apellido}` : '',
-                            clienteId: registro.user || '', // o el campo que corresponda
+                            clienteId: registro.nombre || '', // o el campo que corresponda
                             nombre_movimiento: `Producción (${registro.id})`,
                             subtotal: 0,
                             descuento: 0,
