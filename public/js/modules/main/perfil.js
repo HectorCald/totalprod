@@ -111,7 +111,6 @@ function mostrarPerfil(view) {
 
     btnCerrarSesion.addEventListener('click', async () => {
         try {
-            mostrarCarga('.carga-procesar');
             await borrarFCMToken(usuarioInfo.email);
             const response = await fetch('/cerrar-sesion', { method: 'POST' });
             if (response.ok) {
@@ -125,9 +124,7 @@ function mostrarPerfil(view) {
                 type: 'error',
                 duration: 3500
             });
-        } finally {
-            ocultarCarga('.carga-procesar');
-        }
+        } 
     });
 }
 

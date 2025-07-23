@@ -3324,7 +3324,7 @@ function eventosAlmacenGeneral() {
             registroIngreso.total = registroIngreso.subtotal - registroIngreso.descuento + registroIngreso.aumento;
 
             try {
-                const signal = await mostrarProgreso('.pro-ingreso')
+                mostrarCarga('.carga-procesar')
                 // Primero registramos el movimiento
                 const response = await fetch('/registrar-movimiento', {
                     method: 'POST',
@@ -3379,10 +3379,6 @@ function eventosAlmacenGeneral() {
                         usuarioInfo.nombre + ' registro un ingreso al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al procesar la operación',
@@ -3390,7 +3386,7 @@ function eventosAlmacenGeneral() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-ingreso')
+                ocultarCarga('.carga-procesar')
             }
         }
 
