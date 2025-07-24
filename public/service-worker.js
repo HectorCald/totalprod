@@ -80,6 +80,12 @@ const ASSETS_TO_CACHE = [
     '/img/cabecera-catalogo-trans.webp',
     '/img/logotipo-damabrava-1x1.png',
     '/img/fondo-catalogo-trans.webp',
+
+    // Fuentes e iconos externos
+    'https://fonts.googleapis.com/icon?family=Material+Icons',
+    'https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css',
+    'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
 ];
 const syncQueue = new Map();
 
@@ -173,13 +179,13 @@ self.addEventListener('fetch', event => {
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
-            // Lanza la actualización en segundo plano
             const fetchPromise = fetch(event.request)
                 .then(networkResponse => {
-                    // Si la respuesta es válida, actualiza el caché
                     if (networkResponse && networkResponse.status === 200) {
+                        // CLONAR INMEDIATAMENTE
+                        const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, networkResponse.clone());
+                            cache.put(event.request, responseToCache);
                         });
                     }
                     return networkResponse;
@@ -188,21 +194,18 @@ self.addEventListener('fetch', event => {
                     // Si la red falla, no hace nada aquí
                 });
 
-            // Devuelve el caché inmediatamente, y actualiza en segundo plano
             if (cachedResponse) {
                 return cachedResponse;
             } else {
-                // Si no hay en caché y falla la red, mostrar pantalla offline
-                return caches.match('/sin-red').then(offlineResponse => {
-                    // Si tienes una página /sin-red cacheada, la devuelve
-                    if (offlineResponse) {
-                        return offlineResponse;
-                    }
-                    // Si no está cacheada, devuelve una respuesta simple
-                    return new Response('<h1>Sin conexión</h1><p>No se pudo cargar la página y no hay versión offline disponible.</p>', {
-                        headers: { 'Content-Type': 'text/html' }
+                // Si es navegación (HTML), muestra /sin-red
+                if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+                    return caches.match('/sin-red').then(offlineResponse => {
+                        if (offlineResponse) return offlineResponse;
+                        return new Response('<h1>Sin conexión</h1>', { headers: { 'Content-Type': 'text/html' } });
                     });
-                });
+                }
+                // Para otros assets, simplemente falla (no responde con HTML)
+                return fetchPromise;
             }
         })
     );
