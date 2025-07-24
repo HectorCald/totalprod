@@ -665,7 +665,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     });
 
                     XLSX.utils.sheet_add_aoa(worksheet, [
-                        [`Obs: ${registro.observaciones || 'Ninguna'}`, ``, `Total: ${formatearTruncado(registro.total)}`, `Descuento: ${formatearTruncado(registro.descuento)}`, `Aumento: ${formatearTruncado(registro.aumento)}`]
+                        [`Obs: ${registro.observaciones || 'Ninguna'}`, ``, `Total: ${parseFloat(registro.total.toFixed(2))}`, `Descuento: ${parseFloat(registro.descuento).toFixed(2)}`, `Aumento: ${parseFloat(registro.aumento).toFixed(2)}`]
                     ], { origin: `A${productos.length + 4}` });
 
                     const workbook = XLSX.utils.book_new();
@@ -1193,21 +1193,7 @@ export function actualizarPermisos(recuperar) {
 export function tienePermiso(tipo) {
     return permisos[tipo] || false;
 }
-export function formatearTruncado(numStr) {
-    if (!numStr) return '0,00';
-    // Quitar puntos de miles y cambiar coma decimal por punto
-    let limpio = (numStr + '').replace(/\./g, '').replace(',', '.');
-    let num = parseFloat(limpio);
-    if (isNaN(num)) return '0,00';
-    // Truncar a dos decimales
-    num = Math.trunc(num * 100) / 100;
-    // Formatear con separador de miles y coma decimal
-    return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-export function parseLatinoNumero(str) {
-    if (!str) return 0;
-    return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
-}
+
 
 
 export async function registrarNotificacion(destino, suceso, detalle) {

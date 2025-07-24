@@ -1,5 +1,8 @@
-const CACHE_NAME = 'totalprod-v4'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v5'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
+    '/',
+    '/login',
+
     '/css/login.css',
     '/js/login.js',
     '/js/dashboard.js',
@@ -175,8 +178,6 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET' || new URL(event.request.url).pathname !== '/') return;
-
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             const fetchPromise = fetch(event.request)

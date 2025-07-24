@@ -8,7 +8,7 @@ import {
     scrollToTop, tienePermiso, actualizarPermisos,
     inicializarDashboard, limpiarProteccionNavegacion, usuarioInfo,
     registrarNotificacion, exportarArchivosPDF, initDB, obtenerLocal,
-    normalizarTexto, scrollToCenter, formatearTruncado, parseLatinoNumero
+    normalizarTexto, scrollToCenter
 } from './modules/componentes/componentes.js'
 
 import { crearNav } from './modules/main/nav.js'
@@ -79,8 +79,6 @@ window.initDB = initDB
 window.obtenerLocal = obtenerLocal
 window.normalizarTexto = normalizarTexto
 window.scrollToCenter = scrollToCenter
-window.formatearTruncado = formatearTruncado
-window.parseLatinoNumero = parseLatinoNumero
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarMisRegistros = mostrarMisRegistros
