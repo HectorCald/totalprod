@@ -1216,12 +1216,8 @@ function eventosAlmacenGeneral() {
             // Limpiar carrito y actualizar UI
             carritoSalidas.clear();
             localStorage.setItem('damabrava_carrito', JSON.stringify([]));
-            await obtenerClientes()
-            await obtenerAlmacenGeneral()
             document.querySelector('.btn-flotante-salidas').style.display = 'none';
             ocultarAnuncioSecond();
-           
-
             mostrarNotificacion({
                 message: 'Salida registrada exitosamente',
                 type: 'success',
