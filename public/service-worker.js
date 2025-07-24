@@ -169,45 +169,43 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    const url = new URL(event.request.url);
+    if (event.request.method !== 'GET') return;
 
-    // Solo cachear GET
-    if (event.request.method !== 'GET') {
-        return;
-    }
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            // Lanza la actualización en segundo plano
+            const fetchPromise = fetch(event.request)
+                .then(networkResponse => {
+                    // Si la respuesta es válida, actualiza el caché
+                    if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, networkResponse.clone());
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Si la red falla, no hace nada aquí
+                });
 
-    // Estrategia cache first para todo lo que está en ASSETS_TO_CACHE y para la raíz "/"
-    const isAssetToCache = ASSETS_TO_CACHE.some(asset =>
-        url.pathname.endsWith(asset) || (asset === '/' && url.pathname === '/')
-    );
-
-    if (isAssetToCache || url.pathname === '/') {
-        event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                if (cachedResponse) {
-                    // Si existe en caché, responde desde caché
-                    return cachedResponse;
-                }
-                // Si no existe, busca en la red y guarda en caché si es válido
-                return fetch(event.request)
-                    .then(networkResponse => {
-                        if (!networkResponse || networkResponse.status !== 200) {
-                            return networkResponse;
-                        }
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-                        return networkResponse;
-                    })
-                    .catch(() => {
-                        // Si falla la red y hay algo en caché, responde desde caché
-                        return caches.match(event.request);
+            // Devuelve el caché inmediatamente, y actualiza en segundo plano
+            if (cachedResponse) {
+                return cachedResponse;
+            } else {
+                // Si no hay en caché y falla la red, mostrar pantalla offline
+                return caches.match('/sin-red').then(offlineResponse => {
+                    // Si tienes una página /sin-red cacheada, la devuelve
+                    if (offlineResponse) {
+                        return offlineResponse;
+                    }
+                    // Si no está cacheada, devuelve una respuesta simple
+                    return new Response('<h1>Sin conexión</h1><p>No se pudo cargar la página y no hay versión offline disponible.</p>', {
+                        headers: { 'Content-Type': 'text/html' }
                     });
-            })
-        );
-    }
+                });
+            }
+        })
+    );
 });
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {
