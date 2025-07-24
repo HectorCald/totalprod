@@ -1,4 +1,4 @@
-const CACHE_NAME = 'TotalProd v2'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'TotalProd v3'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -152,10 +152,13 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
+
+
     const urlPath = new URL(event.request.url).pathname;
+
     if (
-        event.request.method !== 'GET' ||
-        !['/', '/obtener-mis-notificaciones', '/obtener-usuario-actual', '/login'].includes(urlPath)
+        event.request.method === 'GET' &&
+        urlPath.startsWith('/obtener-')
     ) return;
 
 
