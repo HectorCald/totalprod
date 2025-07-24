@@ -16,7 +16,11 @@ function obtenerAtajosGuardados() {
 }
 async function obtenerUsuario() {
     try {
-        mostrarCarga('.carga-obtener');
+        if(localStorage.getItem('damabrava_usuario')){
+            usuarioInfo = JSON.parse(localStorage.getItem('damabrava_usuario'));
+            return true;
+        }
+
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
 
@@ -53,7 +57,6 @@ async function obtenerUsuario() {
 
             // Guardar en localStorage después de obtener del servidor
             localStorage.setItem('damabrava_usuario', JSON.stringify(usuarioInfo));
-            ocultarCarga('.carga-obtener');
             return true;
         } else {
             // Si falla el servidor, intentar recuperar del localStorage

@@ -1,21 +1,65 @@
-const CACHE_NAME = 'totalprod-v7'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v9'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
-    '/',
-    '/login',
+    '/css/login.css',
     '/js/login.js',
     '/js/dashboard.js',
-
-    '/css/login.css',
+    //Archivos CSS
     '/css/dashboard_db.css',
-
+    '/css/styles/componentes/botones.css',
+    '/css/styles/componentes/otros.css',
+    '/css/styles/componentes/anuncio.css',
+    '/css/styles/componentes/carrito.css',
+    '/css/styles/componentes/calendario.css',
+    '/css/styles/componentes/barra-progreso.css',
+    '/css/styles/componentes/filtro-opciones.css',
+    '/css/styles/componentes/registro-item.css',
+    '/css/styles/componentes/pull-to-refresh.css',
+    '/css/styles/componentes/btn-flotante.css',
+    '/css/styles/componentes/ajustes.css',
+    '/css/styles/componentes/actualizacion.css',
+    '/css/styles/componentes/screen-progreso.css',
+    '/css/styles/componentes/tablas.css',
+    '/css/styles/componentes/skeletos.css',
+    '/css/styles/componentes/panel-lateral.css',
+    '/css/styles/componentes/fuente.css',
+    '/css/styles/componentes/carga.css',
+    '/css/styles/componentes/notificacion.css',
     //Archivos JS
     '/js/modules/main/home.js',
     '/js/modules/main/nav.js',
     '/js/modules/main/perfil.js',
     '/js/modules/main/flotante.js',
     '/js/modules/main/notificaciones.js',
-
+    '/js/modules/acopio/almacen-acopio.js',
+    '/js/modules/acopio/hacer-pedido.js',
+    '/js/modules/acopio/ingresos-acopio.js',
+    '/js/modules/acopio/registros-acopio.js',
+    '/js/modules/acopio/registros-pedidos-acopio.js',
+    '/js/modules/acopio/salidas-acopio.js',
+    '/js/modules/admin/clientes.js',
+    '/js/modules/admin/configuraciones-sistema.js',
+    '/js/modules/admin/descargas.js',
+    '/js/modules/admin/pagos.js',
+    '/js/modules/admin/personal.js',
+    '/js/modules/admin/proovedores.js',
+    '/js/modules/admin/reportes.js',
+    '/js/modules/almacen/almacen-general.js',
+    '/js/modules/almacen/ingresos-almacen.js',
+    '/js/modules/almacen/salidas-almacen.js',
+    '/js/modules/almacen/registros-almacen.js',
+    '/js/modules/almacen/registros-conteos.js',
+    '/js/modules/almacen/verificar-registros.js',
     '/js/modules/componentes/componentes.js',
+    '/js/modules/main/flotante.js',
+    '/js/modules/main/home.js',
+    '/js/modules/main/nav.js',
+    '/js/modules/main/notificaciones.js',
+    '/js/modules/main/perfil.js',
+    '/js/modules/plugins/calculadora-mp.js',
+    '/js/modules/plugins/tareas-acopio.js',
+    '/js/modules/produccion/formulario-produccion.js',
+    '/js/modules/produccion/registros-produccion.js',
+    '/js/modules/produccion/reglas.js',
     '/css/styles/home.css',
     '/css/styles/nav.css',
     '/css/styles/perfil.css',
@@ -90,8 +134,26 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(ASSETS_TO_CACHE))
-            .then(() => self.skipWaiting())
+            .then(cache => {
+                return Promise.all(
+                    ASSETS_TO_CACHE.map(url => {
+                        return fetch(url)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`Failed to cache: ${url}`);
+                                }
+                                return cache.put(url, response);
+                            })
+                            .catch(error => {
+                                console.error('Error caching:', error);
+                            });
+                    })
+                );
+            })
+            .then(() => {
+                console.log('Caché completado correctamente');
+                return self.skipWaiting();
+            })
     );
 });
 self.addEventListener('activate', event => {
@@ -113,47 +175,33 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
+    if (event.request.method !== 'GET' || new URL(event.request.url).pathname !== '/') return;
 
-    const url = new URL(event.request.url);
-
-    // Lista de rutas/archivos a cachear con cache first
-    const cacheFirstPaths = [
-        '/',
-        '/login',
-        '/js/modules/main/home.js',
-        '/js/modules/main/nav.js',
-        '/js/modules/main/notificaciones.js',
-        '/js/modules/main/flotante.js',
-        '/js/modules/main/perfil.js'
-    ];
-
-    // Solo interceptar si la ruta está en la lista exacta
-    if (cacheFirstPaths.includes(url.pathname)) {
-        event.respondWith(
-            caches.match(event.request).then(cachedResponse => {
-                const fetchPromise = fetch(event.request)
-                    .then(networkResponse => {
-                        if (networkResponse && networkResponse.status === 200) {
-                            caches.open(CACHE_NAME).then(cache => {
-                                cache.put(event.request, networkResponse.clone());
-                            });
-                        }
-                        return networkResponse;
-                    })
-                    .catch(() => {
-                        // Si la red falla, responde con caché si existe, si no, muestra /sin-red
-                        return caches.match(event.request).then(resp => {
-                            if (resp) return resp;
-                            return caches.match('/sin-red');
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            const fetchPromise = fetch(event.request)
+                .then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        // CLONAR INMEDIATAMENTE
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseToCache);
                         });
-                    });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Si la red falla, no hace nada aquí
+                });
 
-                return cachedResponse || fetchPromise;
-            })
-        );
-    }
-    // Para cualquier otra ruta, NO interceptar (deja que el navegador maneje la petición)
+            if (cachedResponse) {
+                return cachedResponse;
+            } else {
+                // Para otros assets, simplemente falla (no responde con HTML)
+                return fetchPromise;
+            }
+        })
+    );
 });
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {

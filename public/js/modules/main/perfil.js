@@ -116,7 +116,7 @@ function mostrarPerfil(view) {
             if (response.ok) {
                 limpiarProteccionNavegacion();
                 localStorage.removeItem('token');
-                window.location.href = '/';
+                window.location.href = '/login';
             }
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
