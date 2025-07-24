@@ -399,7 +399,7 @@ async function updateHTMLWithData() {
     const productosContainer = document.querySelector('.productos-container');
     const productosHTML = await Promise.all(productos.map(async producto => {
         let imagenMostrar = '<i class=\'bx bx-package\'></i>';
-        
+
         return `
                 <div class="registro-item" data-id="${producto.id}">
                     <div class="header">
@@ -427,7 +427,7 @@ function eventosAlmacenGeneral() {
     if (productosACopiar.length > 0) {
         carritoSalidas.clear();
         localStorage.setItem('damabrava_carrito', JSON.stringify([]));
-        productosACopiar.forEach(({id, cantidad}) => {
+        productosACopiar.forEach(({ id, cantidad }) => {
             for (let i = 0; i < cantidad; i++) {
                 agregarAlCarrito(id);
             }
@@ -1163,7 +1163,7 @@ function eventosAlmacenGeneral() {
             operario: `${usuarioInfo.nombre} ${usuarioInfo.apellido}`,
             clienteId: clienteSelect.value,
             nombre_movimiento: nombreMovimiento.value,
-            subtotal: subtotalSalida,
+            subtotal: subtotalSalida.toFixed(2),
             descuento: parseFloat(document.querySelector('.descuento').value) || 0,
             aumento: parseFloat(document.querySelector('.aumento').value) || 0,
             total: 0,
@@ -1172,8 +1172,10 @@ function eventosAlmacenGeneral() {
             estado: estadoSelect.value,
             tipoMovimiento // Nuevo campo para backend
         };
-        registroSalida.total = registroSalida.subtotal - registroSalida.descuento + registroSalida.aumento;
-
+        registroSalida.descuento = Number(document.querySelector('.descuento').value) || 0;
+        registroSalida.aumento = Number(document.querySelector('.aumento').value) || 0;
+        registroSalida.total = (parseFloat(registroSalida.subtotal) - registroSalida.descuento + registroSalida.aumento).toFixed(2); // <-- número
+        console.log(registroSalida)
         try {
             mostrarCarga('.carga-procesar')
             // Primero registramos el movimiento

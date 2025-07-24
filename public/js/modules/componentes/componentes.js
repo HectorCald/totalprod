@@ -610,7 +610,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     const subtitulos = [
                         { 'Productos': 'Producto', 'Cantidad': 'Cantidad', 'Precio Unitario': 'Precio Unitario', 'Subtotal': 'Subtotal' }
                     ];
-
+                    
                     const datosExportar = productos.map((producto, index) => ({
                         'Productos': producto.trim(),
                         'Cantidad': cantidades[index] ? cantidades[index].trim() : 'N/A',
@@ -665,7 +665,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     });
 
                     XLSX.utils.sheet_add_aoa(worksheet, [
-                        [`Obs: ${registro.observaciones || 'Ninguna'}`, ``, `Total: ${registro.total}`, `Descuento: ${registro.descuento}`, `Aumento: ${registro.aumento}`]
+                        [`Obs: ${registro.observaciones || 'Ninguna'}`, ``, `Total: ${formatearTruncado(registro.total)}`, `Descuento: ${formatearTruncado(registro.descuento)}`, `Aumento: ${formatearTruncado(registro.aumento)}`]
                     ], { origin: `A${productos.length + 4}` });
 
                     const workbook = XLSX.utils.book_new();
@@ -964,10 +964,10 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                     ['Cliente', nombreEntidad]
                 ];
                 const resumenFinanciero = [
-                    ['Subtotal', `Bs. ${(parseFloat(registro.subtotal) || 0).toFixed(2)}`],
-                    ['Descuento', `Bs. ${(parseFloat(registro.descuento) || 0).toFixed(2)}`],
-                    ['Aumento', `Bs. ${(parseFloat(registro.aumento) || 0).toFixed(2)}`],
-                    ['Total', `Bs. ${(parseFloat(registro.total) || 0).toFixed(2)}`]
+                    ['Subtotal', `Bs. ${registro.subtotal}`],
+                    ['Descuento', `Bs. ${registro.descuento}`],
+                    ['Aumento', `Bs. ${registro.aumento}`],
+                    ['Total', `Bs. ${registro.total}`]
                 ];
                 let yPosition = 25;
                 if (doc.autoTable) {
@@ -1039,18 +1039,18 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 const cantidades = registro.cantidades.split(';');
                 const preciosUnitarios = registro.precios_unitarios.split(';');
                 const ids = registro.idProductos ? registro.idProductos.split(';') : productos.map((_, i) => (i + 1).toString());
-
+                
                 // Preparar datos de la tabla
                 const tableData = productos.map((producto, index) => {
                     const cantidad = cantidades[index]?.trim() || 'N/A';
                     const precioUnitario = preciosUnitarios[index]?.trim() || '0';
-                    const subtotal = parseFloat(cantidad) * parseFloat(precioUnitario);
+                    const subtotal = cantidad * precioUnitario;
                     return [
                         ids[index] || '',
                         producto.trim(),
                         cantidad,
-                        `Bs. ${(parseFloat(precioUnitario) || 0).toFixed(2)}`,
-                        `Bs. ${subtotal.toFixed(2)}`
+                        `Bs. ${precioUnitario}`,
+                        `Bs. ${subtotal}`
                     ];
                 });
 
@@ -1193,7 +1193,21 @@ export function actualizarPermisos(recuperar) {
 export function tienePermiso(tipo) {
     return permisos[tipo] || false;
 }
-
+export function formatearTruncado(numStr) {
+    if (!numStr) return '0,00';
+    // Quitar puntos de miles y cambiar coma decimal por punto
+    let limpio = (numStr + '').replace(/\./g, '').replace(',', '.');
+    let num = parseFloat(limpio);
+    if (isNaN(num)) return '0,00';
+    // Truncar a dos decimales
+    num = Math.trunc(num * 100) / 100;
+    // Formatear con separador de miles y coma decimal
+    return num.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+export function parseLatinoNumero(str) {
+    if (!str) return 0;
+    return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+}
 
 
 export async function registrarNotificacion(destino, suceso, detalle) {
