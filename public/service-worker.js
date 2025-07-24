@@ -175,7 +175,7 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
+    if (event.request.method !== 'GET' || new URL(event.request.url).pathname !== '/') return;
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
