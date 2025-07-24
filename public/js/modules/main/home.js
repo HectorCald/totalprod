@@ -746,6 +746,52 @@ function showUpdateModal() {
     requestAnimationFrame(() => modal.classList.add('active'));
 }
 
+// Modal de sin conexión
+function showOfflineModal() {
+    // Si ya existe el modal, no lo agregues de nuevo
+    if (document.querySelector('.offline-modal')) return;
+    const modalHTML = `
+        <div class="offline-modal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+            <div class="offline-content" style="background:var(--fondo);padding:30px 20px;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,0.2);max-width:90vw;text-align:center;">
+                <h2 style="color:#e74c3c;margin-bottom:10px"><i class='bx bx-wifi-off' style="font-size:2.5rem;"></i> Sin conexión</h2>
+                <ul style="text-align:left;margin-bottom:10px;font-size:1.1rem;color:var(--text);padding-left:1.2em;">
+                    <p style="font-size:15px; color:var(--success)"><b>Sin internet puedes:</b></p>
+                    <ul style="margin-bottom:10px;">
+                        <li style="font-size:13px"> Ver registros previamente cargados</li>
+                        <li style="font-size:13px"> Descargar registros en Excel o PDF</li>
+                    </ul>
+                    <p style="font-size:15px; color:var(--error)"><b>Sin internet no puedes:</b></p>
+                    <ul style="margin-bottom:10px;">
+                        <li style="font-size:13px"> Ver registros que no hayan sido cargados antes</li>
+                        <li style="font-size:13px"> Editar, eliminar o registrar nuevos datos</li>
+                        <li style="font-size:13px"> Sincronizar cambios con el servidor</li>
+                    </ul>
+                </ul>
+                <button class="btn-aceptar-offline" style="background:#e74c3c;color:white;padding:10px 30px;border:none;border-radius:8px;font-size:1rem;cursor:pointer;">Aceptar</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.querySelector('.btn-aceptar-offline').addEventListener('click', () => {
+        const modal = document.querySelector('.offline-modal');
+        if (modal) modal.remove();
+    });
+}
+
+function hideOfflineModal() {
+    const modal = document.querySelector('.offline-modal');
+    if (modal) modal.remove();
+}
+
+// Detectar cambios de conexión
+window.addEventListener('offline', showOfflineModal);
+window.addEventListener('online', hideOfflineModal);
+
+// Mostrar el modal si al iniciar no hay internet
+if (!navigator.onLine) {
+    showOfflineModal();
+}
+
 export async function crearHome() {
     const view = document.querySelector('.home-view');
     view.style.opacity = '0';

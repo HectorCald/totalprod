@@ -289,3 +289,11 @@
         }
     }
 }
+
+.btn.btn-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed !important;
+    filter: grayscale(0.7);
+    background-color: var(--cero-color);
+}

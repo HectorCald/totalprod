@@ -157,6 +157,14 @@ export async function mostrarAnuncio() {
         contenido.style.maxWidth = '100%';
         actualizarEstadoInterno();
 
+        // Agregar/quitar clase btn-disabled a los botones hijos de .contenido según conexión
+        const botones = contenido.querySelectorAll('.btn:not(.close):not(.filtros):not(.lateral)');
+        if (!navigator.onLine) {
+            botones.forEach(btn => btn.classList.add('btn-disabled'));
+        } else {
+            botones.forEach(btn => btn.classList.remove('btn-disabled'));
+        }
+
         // Agregar al historial
         if (paginaProtegida) {
             history.pushState({
@@ -178,11 +186,20 @@ export async function mostrarAnuncio() {
 export async function mostrarAnuncioSecond() {
     const anuncio = document.querySelector('.anuncio-second');
     const anuncioTercer = document.querySelector('.anuncio-tercer');
+    const contenido = document.querySelector('.anuncio-second .contenido');
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
         pantallagrande('mostrar');
         actualizarEstadoInterno();
+
+        // Agregar/quitar clase btn-disabled a los botones hijos de .contenido según conexión
+        const botones = contenido.querySelectorAll('.btn:not(.close):not(.filtros):not(.lateral)');
+        if (!navigator.onLine) {
+            botones.forEach(btn => btn.classList.add('btn-disabled'));
+        } else {
+            botones.forEach(btn => btn.classList.remove('btn-disabled'));
+        }
 
         if (paginaProtegida) {
             history.pushState({
@@ -208,10 +225,19 @@ export async function mostrarAnuncioSecond() {
 }
 export async function mostrarAnuncioTercer() {
     const anuncio = document.querySelector('.anuncio-tercer');
+    const contenido = document.querySelector('.anuncio-tercer .contenido');
 
     if (anuncio && !anuncio.classList.contains('mostrar')) {
         anuncio.classList.add('mostrar');
         actualizarEstadoInterno();
+
+        // Agregar/quitar clase btn-disabled a los botones hijos de .contenido según conexión
+        const botones = contenido.querySelectorAll('.btn:not(.close):not(.filtros):not(.lateral)');
+        if (!navigator.onLine) {
+            botones.forEach(btn => btn.classList.add('btn-disabled'));
+        } else {
+            botones.forEach(btn => btn.classList.remove('btn-disabled'));
+        }
 
         if (paginaProtegida) {
             history.pushState({
@@ -392,6 +418,10 @@ function closeNotification(notification) {
     }, { once: true });
 }
 export function mostrarNotificacion(options) {
+    const tipo = (options?.type || '').toLowerCase();
+    if (!navigator.onLine && tipo === 'error') {
+        return;
+    }
     return crearNotificacion(options);
 }
 
@@ -1342,3 +1372,17 @@ export function scrollToCenter(boton, contenedorPadre) {
         behavior: 'smooth'
     });
 }
+
+// Quitar la clase disabled de todos los .contenido cuando vuelva la conexión
+document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('online', () => {
+        document.querySelectorAll('.contenido.disabled').forEach(el => el.classList.remove('disabled'));
+    });
+});
+
+// Quitar la clase btn-disabled de todos los .btn dentro de .contenido cuando vuelva la conexión
+document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('online', () => {
+        document.querySelectorAll('.contenido .btn.btn-disabled').forEach(btn => btn.classList.remove('btn-disabled'));
+    });
+});
