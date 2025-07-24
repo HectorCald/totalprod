@@ -91,10 +91,19 @@
         color: gray;
         font-size: var(--text-subtitulo);
     }
+    
 }
 @media screen and (min-width: 768px) {
     .apartado, 
     .perfil-view .info{
         max-width: 450px;
     }
+}
+.version-cache {
+    color: var(--cero-color) !important;
+    font-size: var(--text-subtitulo);
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
 }
