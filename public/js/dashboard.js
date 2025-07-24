@@ -6,7 +6,7 @@ import {
     exportarArchivos, cerrarAnuncioManual,
     mostrarAnuncioTercer, ocultarAnuncioTercer,
     scrollToTop, tienePermiso, actualizarPermisos,
-    inicializarDashboard, limpiarProteccionNavegacion,usuarioInfo,
+    inicializarDashboard, limpiarProteccionNavegacion, usuarioInfo,
     registrarNotificacion, exportarArchivosPDF, initDB, obtenerLocal,
     normalizarTexto, scrollToCenter
 } from './modules/componentes/componentes.js'
@@ -75,10 +75,10 @@ window.exportarArchivosPDF = exportarArchivosPDF
 window.registrarNotificacion = registrarNotificacion
 window.inicializarDashboard = inicializarDashboard
 window.limpiarProteccionNavegacion = limpiarProteccionNavegacion
-window.initDB=initDB
-window.obtenerLocal=obtenerLocal
-window.normalizarTexto=normalizarTexto
-window.scrollToCenter=scrollToCenter
+window.initDB = initDB
+window.obtenerLocal = obtenerLocal
+window.normalizarTexto = normalizarTexto
+window.scrollToCenter = scrollToCenter
 
 window.mostrarFormularioProduccion = mostrarFormularioProduccion
 window.mostrarMisRegistros = mostrarMisRegistros
@@ -112,6 +112,10 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login';
+    }
     document.querySelector('.carga-obtener').style.display = 'flex';
     await inicializarDashboard();
     flotante();

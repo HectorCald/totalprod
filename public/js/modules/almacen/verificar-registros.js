@@ -2243,7 +2243,7 @@ function eventosVerificacion() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-pago')
+                mostrarCarga('.carga-procesar')
                 const response = await fetch('/registrar-pago', {
                     method: 'POST',
                     headers: {
@@ -2269,10 +2269,6 @@ function eventosVerificacion() {
                     throw new Error(data.error || 'Error al registrar el pago');
                 }
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al registrar el pago',
@@ -2280,7 +2276,7 @@ function eventosVerificacion() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-pago')
+                ocultarCarga('.carga-procesar')
             }
         }
     }

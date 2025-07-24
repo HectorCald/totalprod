@@ -752,6 +752,7 @@ export async function crearHome() {
     checkForUpdates();
 
     await obtenerUsuario();
+    
     crearNav(usuarioInfo);
     crearPerfil(usuarioInfo);
     actualizarPermisos(usuarioInfo);

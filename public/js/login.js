@@ -38,8 +38,7 @@ function iniciarSesion() {
             const cleanEmail = email.trim();
 
             try {
-                mostrarCarga('.carga-procesar');
-                const response = await fetch('/login', {
+                const response = await fetch('/iniciar-sesion', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -57,7 +56,6 @@ function iniciarSesion() {
                 const data = await response.json();
 
                 if (data.success) {
-                    ocultarCarga('.carga-procesar');
                     
                     if (rememberMe) {
                         localStorage.setItem('credentials', JSON.stringify({
@@ -66,6 +64,9 @@ function iniciarSesion() {
                         }));
                     } else {
                         localStorage.removeItem('credentials');
+                    }
+                    if (data.token) {
+                        localStorage.setItem('token', data.token); // <--- guarda el token
                     }
 
                     mostrarNotificacion({
@@ -86,7 +87,6 @@ function iniciarSesion() {
                             type: 'info',  // Cambiamos el tipo a info
                             duration: 5000  // Aumentamos la duración para este tipo de mensaje
                         });
-                        ocultarCarga('.carga-procesar');
                     } else {
 
                         mostrarNotificacion({
@@ -94,7 +94,6 @@ function iniciarSesion() {
                             type: 'error',
                             duration: 4000
                         });
-                        ocultarCarga('.carga-procesar');
                     }
                 }
             } catch (error) {
@@ -104,7 +103,6 @@ function iniciarSesion() {
                     type: 'error',
                     duration: 4000
                 });
-                ocultarCarga('.carga-procesar');
             }
         });
 
@@ -410,7 +408,7 @@ async function setupPaso2() {
 
             // Check if the company ID exists
             try {
-                mostrarCarga();
+
                 const response = await fetch('/check-company-id', {
                     method: 'POST',
                     headers: {
@@ -426,7 +424,6 @@ async function setupPaso2() {
                         type: 'warning',
                         duration: 3500
                     });
-                    ocultarCarga();
                     return;
                 }
             } catch (error) {
@@ -436,10 +433,8 @@ async function setupPaso2() {
                     type: 'error',
                     duration: 4000
                 });
-                ocultarCarga();
                 return;
             } finally {
-                ocultarCarga();
             }
         }
 
@@ -584,7 +579,6 @@ function setupPaso3() {
         }
 
         try {
-            mostrarCarga();
 
             // Check if email is unique
             const checkEmailResponse = await fetch('/check-email', {
@@ -602,7 +596,6 @@ function setupPaso3() {
                     type: 'warning',
                     duration: 3500
                 });
-                ocultarCarga();
                 return;
             }
 
@@ -618,7 +611,7 @@ function setupPaso3() {
                     email: email,
                     password: password,
                     tipoApp: sessionStorage.getItem('registro_tipo_app'),
-                    empresa: sessionStorage.getItem('registro_empresa') || null
+                    empresaId: sessionStorage.getItem('registro_empresa') || null // <--- CAMBIA 'empresa' POR 'empresaId'
                 })
             });
 
@@ -651,7 +644,6 @@ function setupPaso3() {
                 duration: 4000
             });
         } finally {
-            ocultarCarga();
         }
     });
 }
@@ -723,7 +715,6 @@ function eventosFormularioContraseña() {
         const email = document.querySelector('.email-recuperacion').value;
 
         try {
-            mostrarCarga();
             const response = await fetch('/forgot-password', {
                 method: 'POST',
                 headers: {
@@ -742,7 +733,6 @@ function eventosFormularioContraseña() {
             console.error('Error:', error);
             alert('Error al enviar el código');
         } finally {
-            ocultarCarga();
         }
     });
 }
@@ -799,7 +789,6 @@ function setupVerificationCodeListeners(email) {
         const code = document.querySelector('.codigo-verificacion').value;
 
         try {
-            mostrarCarga();
             const response = await fetch('/verify-code', {
                 method: 'POST',
                 headers: {
@@ -820,13 +809,11 @@ function setupVerificationCodeListeners(email) {
             console.error('Error:', error);
             alert('Error al verificar el código');
         } finally {
-            ocultarCarga();
         }
     });
 
     resendButton.addEventListener('click', async () => {
         try {
-            mostrarCarga();
             const response = await fetch('/forgot-password', {
                 method: 'POST',
                 headers: {
@@ -845,7 +832,6 @@ function setupVerificationCodeListeners(email) {
             console.error('Error:', error);
             alert('Error al reenviar el código');
         } finally {
-            ocultarCarga();
         }
     });
 
@@ -891,14 +877,6 @@ function setTheme(theme) {
     }
 }
 document.addEventListener('DOMContentLoaded', async () => {
-    // Precarga el dashboard
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-            // El método prefetch no existe en Service Worker API
-            // Se puede usar fetch para precargar si es necesario
-            fetch('/dashboard', { method: 'HEAD' }).catch(() => {});
-        });
-    }
     await verificarTemaInicial();
     inicializarApp();
 });

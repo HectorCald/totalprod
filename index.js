@@ -126,7 +126,7 @@ app.set('views', join(__dirname, 'views'));
 function requireAuth(req, res, next) {
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
     if (!token) {
-        return res.redirect('/');
+        return res.redirect('/login');
     }
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -162,30 +162,13 @@ async function enviarNotificacion(token, titulo, mensaje) {
 }
 
 /* ==================== RUTAS DE VISTAS ==================== */
-app.get('/', (req, res) => {
-    const token = req.cookies.token;
-
-    if (token) {
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            // Determine dashboard URL based on spreadsheet ID from token
-            const dashboardUrl = decoded.spreadsheetId === process.env.SPREADSHEET_ID_1
-                ? '/dashboard'
-                : '/dashboard_otro';
-            return res.redirect(dashboardUrl);
-        } catch (error) {
-            // Token inválido, continuar al login
-        }
-    }
-
-    res.render('login');
-});
-app.get('/dashboard', requireAuth, (req, res) => {
+app.get('/', requireAuth, (req, res) => {
     res.render('dashboard')
 });
-app.get('/dashboard_otro', requireAuth, (req, res) => {
-    res.render('dashboard_otro')
+app.get('/login', (req, res) => {
+    res.render('login');
 });
+
 
 /* ==================== RUTAS DE API - NOTIFICACIONES ==================== */
 app.post('/register-fcm-token', requireAuth, async (req, res) => {
@@ -324,74 +307,72 @@ app.post('/eliminar-fcm-token', requireAuth, async (req, res) => {
 });
 
 /* ==================== RUTAS DE AUTENTICACION ==================== */
-app.post('/login', async (req, res) => {
+app.post('/iniciar-sesion', async (req, res) => {
     const { email, password } = req.body;
 
-    const spreadsheetIds = [
-        process.env.SPREADSHEET_ID_1,
-        process.env.SPREADSHEET_ID_2
-    ];
     try {
         const sheets = google.sheets({ version: 'v4', auth });
+        const superSheetId = process.env.SPREADSHEET_SUPER;
 
-        for (const spreadsheetId of spreadsheetIds) {
+        // 1. Obtener todas las empresas y sus spreadsheets desde la hoja maestra
+        const superSheetResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: superSheetId,
+            range: 'Usuarios!A2:G' // A:ID ... G:SPREADSHEET
+        });
+        const empresas = superSheetResponse.data.values || [];
+
+        // 2. Buscar el usuario en cada hoja de usuarios de cada empresa
+        for (const row of empresas) {
+            const spreadsheetIdEmpresa = row[6]; // O el índice correcto de tu spreadsheetId
+            if (!spreadsheetIdEmpresa) continue;
             try {
                 const response = await sheets.spreadsheets.values.get({
-                    spreadsheetId: spreadsheetId,
+                    spreadsheetId: spreadsheetIdEmpresa,
                     range: 'Usuarios!A2:I'
                 });
 
                 const rows = response.data.values || [];
-
-                const usuario = rows.find(row => {
-                    if (row && row.length >= 8) {
-                        return row[8] === password && row[7] === email;
-                    }
-                    return false;
-                });
+                const usuario = rows.find(row =>
+                    row && row.length >= 9 &&
+                    row[7] === email &&
+                    row[8] === password &&
+                    row[3] && row[3].toLowerCase() === 'activo' // Columna D debe ser 'Activo'
+                );
 
                 if (usuario) {
-                    if (usuario[3] === 'Activo') {
-                        const token = jwt.sign(
-                            {
-                                email: usuario[7], // Ensure correct email index
-                                nombre: usuario[1],
-                                spreadsheetId
-                            },
-                            JWT_SECRET,
-                            { expiresIn: '89280h' }
-                        );
+                    const token = jwt.sign(
+                        {
+                            email: usuario[7],
+                            nombre: usuario[1],
+                            spreadsheetId: spreadsheetIdEmpresa
+                        },
+                        JWT_SECRET,
+                        { expiresIn: '89280h' }
+                    );
 
-                        res.cookie('token', token, {
-                            httpOnly: true,
-                            secure: true,
-                            maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // 10 años en milisegundos
-                        });
+                    res.cookie('token', token, {
+                        httpOnly: true,
+                        secure: true,
+                        maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // 10 años
+                    });
 
-                        // Determine dashboard URL based on spreadsheet ID
-                        const dashboardUrl = spreadsheetId === process.env.SPREADSHEET_ID_1 ? '/dashboard' : '/dashboard_otro';
-
-                        return res.json({
-                            success: true,
-                            redirect: dashboardUrl,
-                            user: {
-                                nombre: usuario[1],
-                                email: usuario[7] // Ensure correct email index
-                            }
-                        });
-                    } else {
-                        return res.json({
-                            success: false,
-                            error: 'Su cuenta está siendo procesada.',
-                            status: 'pending'
-                        });
-                    }
+                    // Puedes personalizar la redirección según la empresa si quieres
+                    return res.json({
+                        success: true,
+                        redirect: '/',
+                        token, // <--- agrega el token aquí
+                        user: {
+                            nombre: usuario[1],
+                            email: usuario[7]
+                        }
+                    });
                 }
             } catch (sheetError) {
-                console.error(`Error accessing spreadsheet ${spreadsheetId}:`, sheetError);
+                console.error(`Error accediendo a spreadsheet ${spreadsheetIdEmpresa}:`, sheetError);
             }
         }
 
+        // Si no encontró el usuario en ninguna empresa
         return res.json({
             success: false,
             error: 'Contraseña o usuario incorrectos'
@@ -401,7 +382,7 @@ app.post('/login', async (req, res) => {
         console.error('Error en el login:', error);
         return res.status(500).json({
             success: false,
-            error: 'Error en el servidor'
+            error: 'Error en el login'
         });
     }
 });
@@ -447,78 +428,87 @@ app.post('/check-email', async (req, res) => {
 });
 app.post('/register', async (req, res) => {
     try {
-        const { nombre, telefono, email, password, tipoApp, empresa } = req.body;
+        const { nombre, telefono, email, password, empresaId } = req.body;
 
-        // Validate required fields
-        if (!nombre || !telefono || !email || !password) {
+        if (!nombre || !telefono || !email || !password || !empresaId) {
             return res.status(400).json({
                 success: false,
                 error: 'Todos los campos son requeridos'
             });
         }
 
-        // Determine spreadsheetId based on empresa
-        let spreadsheetId;
-        if (tipoApp === 'personalizado' && empresa) {
-            // For custom company ID
-            const companies = {
-                'A3$w9@zK!dPq&7Lx#1Tf': process.env.SPREADSHEET_ID_1,
-                '6789': process.env.SPREADSHEET_ID_2
-            };
-            spreadsheetId = companies[empresa];
-        } else {
-            // Default to first spreadsheet for regular users
-            spreadsheetId = process.env.SPREADSHEET_ID_1;
+        const sheets = google.sheets({ version: 'v4', auth });
+        const superSheetId = process.env.SPREADSHEET_SUPER;
+
+        // 1. Obtener todas las empresas y sus spreadsheets desde la hoja maestra
+        const superSheetResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: superSheetId,
+            range: 'Usuarios!A2:G' // A:ID ... G:SPREADSHEET
+        });
+        const empresas = superSheetResponse.data.values || [];
+
+        // 2. Buscar el email en todas las hojas de usuarios de cada empresa
+        for (const row of empresas) {
+            const spreadsheetIdEmpresa = row[7];
+            if (!spreadsheetIdEmpresa) continue;
+            try {
+                const emailCheck = await sheets.spreadsheets.values.get({
+                    spreadsheetId: spreadsheetIdEmpresa,
+                    range: 'Usuarios!G2:G'
+                });
+                const existingEmails = emailCheck.data.values || [];
+                if (existingEmails.some(r => r[0]?.toLowerCase() === email.toLowerCase())) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'El email ya está registrado en otra empresa'
+                    });
+                }
+            } catch (e) {
+                // Si una hoja no existe, solo loguea y sigue
+                console.error(`Error accediendo a spreadsheet ${spreadsheetIdEmpresa}:`, e.message);
+            }
         }
 
+        // 3. Buscar la empresa seleccionada
+        const empresaRow = empresas.find(row => String(row[0]) === String(empresaId));
+        if (!empresaRow) {
+            return res.status(400).json({
+                success: false,
+                error: 'ID de empresa no encontrado'
+            });
+        }
+        const spreadsheetId = empresaRow[6];
         if (!spreadsheetId) {
             return res.status(400).json({
                 success: false,
-                error: 'ID de empresa inválido'
+                error: 'La empresa no tiene spreadsheet asignado'
             });
         }
 
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Check if email already exists
-        const emailCheck = await sheets.spreadsheets.values.get({
-            spreadsheetId,
-            range: 'Usuarios!H2:H' // Email column
-        });
-
-        const existingEmails = emailCheck.data.values || [];
-        if (existingEmails.some(row => row[0]?.toLowerCase() === email.toLowerCase())) {
-            return res.status(400).json({
-                success: false,
-                error: 'El email ya está registrado'
-            });
-        }
-
-        // Get last user ID
+        // 4. Obtener el último ID de usuario
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId,
             range: 'Usuarios!A2:A'
         });
-
         const rows = response.data.values || [];
         const lastId = rows.length > 0 ?
-            Math.max(...rows.map(row => parseInt(row[0].split('-')[1]) || 0)) : 0;
+            Math.max(...rows.map(row => parseInt(row[0]?.split('-')[1]) || 0)) : 0;
         const newId = `USERTP-${(lastId + 1).toString().padStart(3, '0')}`;
 
-        // Create new user row
+        // 5. Crear el nuevo usuario
         const nuevoUsuario = [
             newId,              // ID
-            nombre,            // Nombre
-            telefono,          // Teléfono
-            'Pendiente',       // Estado
-            'Sin rol',         // Rol
+            nombre,             // Nombre
+            telefono,           // Teléfono
+            'Pendiente',        // Estado
+            'Sin rol',          // Rol
             './icons/default-user.png', // Foto
-            '',               // Plugins
-            email,            // Email
-            password          // Contraseña
+            '',                 // Plugins
+            email,              // Email
+            password            // Contraseña
         ];
 
-        // Add user to spreadsheet
+        // 6. Agregar el usuario a la hoja de la empresa seleccionada
         await sheets.spreadsheets.values.append({
             spreadsheetId,
             range: 'Usuarios!A2:I',
@@ -550,16 +540,22 @@ app.post('/cerrar-sesion', (req, res) => {
 app.post('/check-company-id', async (req, res) => {
     const { empresaId } = req.body;
 
-    // Predefined list of companies and their spreadsheet IDs
-    const companies = {
-        'A3$w9@zK!dPq&7Lx#1Tf': process.env.SPREADSHEET_ID_1,
-        '6789': process.env.SPREADSHEET_ID_2
-    };
-
-    // Check if the company ID exists in the predefined list
-    const exists = Object.keys(companies).includes(empresaId);
-
-    return res.json({ exists });
+    try {
+        const sheets = google.sheets({ version: 'v4', auth });
+        const superSheetId = process.env.SPREADSHEET_SUPER;
+        // Leer la hoja maestra de empresas
+        const superSheetResponse = await sheets.spreadsheets.values.get({
+            spreadsheetId: superSheetId,
+            range: 'Usuarios!A2:G' // A:ID ... G:SPREADSHEET
+        });
+        const empresas = superSheetResponse.data.values || [];
+        // Buscar si existe el empresaId en la columna A
+        const exists = empresas.some(row => String(row[0]) === String(empresaId));
+        return res.json({ exists });
+    } catch (error) {
+        console.error('Error al verificar empresaId en superSheet:', error);
+        return res.status(500).json({ exists: false, error: 'Error al verificar empresaId' });
+    }
 });
 
 /* ==================== RUTAS DE HISTORIAL ==================== */

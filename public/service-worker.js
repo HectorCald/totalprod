@@ -170,51 +170,44 @@ self.addEventListener('activate', event => {
 });
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    
-    if (!event.request.url.startsWith(self.location.origin)) {
-        return;
-    }
 
     // Solo cachear GET
     if (event.request.method !== 'GET') {
         return;
     }
 
-    const isAssetToCache = ASSETS_TO_CACHE.some(asset => 
+    // Estrategia cache first para todo lo que está en ASSETS_TO_CACHE y para la raíz "/"
+    const isAssetToCache = ASSETS_TO_CACHE.some(asset =>
         url.pathname.endsWith(asset) || (asset === '/' && url.pathname === '/')
     );
 
-    event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                if (cachedResponse && isAssetToCache) {
+    if (isAssetToCache || url.pathname === '/') {
+        event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+                if (cachedResponse) {
+                    // Si existe en caché, responde desde caché
                     return cachedResponse;
                 }
-
+                // Si no existe, busca en la red y guarda en caché si es válido
                 return fetch(event.request)
-                    .then(response => {
-                        if (!response || response.status !== 200) {
-                            return response;
+                    .then(networkResponse => {
+                        if (!networkResponse || networkResponse.status !== 200) {
+                            return networkResponse;
                         }
-
-                        const responseToCache = response.clone();
+                        const responseToCache = networkResponse.clone();
                         caches.open(CACHE_NAME)
                             .then(cache => {
                                 cache.put(event.request, responseToCache);
-                            })
-                            .catch(error => {
-                                console.error('Error caching response:', error);
                             });
-
-                        return response;
+                        return networkResponse;
                     })
                     .catch(() => {
-                        if (cachedResponse) {
-                            return cachedResponse;
-                        }
+                        // Si falla la red y hay algo en caché, responde desde caché
+                        return caches.match(event.request);
                     });
             })
-    );
+        );
+    }
 });
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {

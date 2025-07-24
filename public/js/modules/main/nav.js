@@ -726,7 +726,7 @@ export async function crearNav(usuario) {
 
     usuarioInfo = usuario;
     // Solo ejecutar si estamos en el dashboard
-    if (window.location.pathname === '/dashboard') {
+    if (window.location.pathname === '/') {
         const view = document.querySelector('.nav');
         mostrarNav(view);
     }
