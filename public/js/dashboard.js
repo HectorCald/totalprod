@@ -112,11 +112,11 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    mostrarCarga('.carga-obtener');
     const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = '/login';
     }
-    document.querySelector('.carga-obtener').style.display = 'flex';
     await inicializarDashboard();
     flotante();
     await crearHome();
