@@ -1,4 +1,4 @@
-const APP_VERSION = '2.0.1';
+const APP_VERSION = '2.0.3';
 const UPDATE_DETAILS = {
     version: APP_VERSION,
     title: 'Nueva Actualización Disponible',
@@ -768,7 +768,6 @@ export async function crearHome() {
 }
 export function mostrarHome(view) {
     const funcionesUsuario = obtenerFunciones();
-    const diasAMostrar = getDiasGrafico();
     const funcionesHTML = `
         <div class="funciones-rol">
             ${funcionesUsuario.map(funcion => `
@@ -794,7 +793,6 @@ export function mostrarHome(view) {
     `;
 
     view.innerHTML = home;
-    ocultarCarga('.carga-obtener');
     const funciones = document.querySelectorAll('.funcion');
     const opciones = document.querySelectorAll('.opcion');
 
@@ -823,11 +821,4 @@ export function mostrarHome(view) {
             });
         });
     });
-}
-function getDiasGrafico() {
-    const width = window.innerWidth;
-    if (width >= 1920) return 30;      // Pantalla muy grande: 30 días
-    if (width >= 1440) return 21;      // Pantalla grande: 21 días  
-    if (width >= 1024) return 14;      // Pantalla mediana: 14 días
-    return 7;                          // Pantalla pequeña: 7 días
 }
