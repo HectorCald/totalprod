@@ -115,6 +115,7 @@ function mostrarPerfil(view) {
             const response = await fetch('/cerrar-sesion', { method: 'POST' });
             if (response.ok) {
                 limpiarProteccionNavegacion();
+                localStorage.removeItem('token');
                 window.location.href = '/';
             }
         } catch (error) {
