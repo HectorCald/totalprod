@@ -1884,7 +1884,9 @@ app.post('/actualizar-stock', requireAuth, async (req, res) => {
             console.log('[INFO] No hay actualizaciones de stock/sueltas para procesar.');
         }
 
-        res.json({ success: true });
+        res.json({ 
+            success: true,
+        });
     } catch (error) {
         console.error('Error al actualizar stock:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -2550,7 +2552,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
     try {
         const { spreadsheetId } = req.user;
         const { id } = req.params;
-        const { motivo } = req.body;
+        const { motivo, clienteId } = req.body;
         const sheets = google.sheets({ version: 'v4', auth });
 
         // Obtener el registro a anular (incluyendo tipoMovimiento, tiras y sueltas)
@@ -2666,7 +2668,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
         });
 
 
-        if (movimiento.tipo === 'Salida' && movimiento.clienteId) {
+        if (tipo === 'Salida' && clienteId) {
             try {
                 // 1. Obtén todos los clientes
                 const clientesResp = await sheets.spreadsheets.values.get({
@@ -2675,7 +2677,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
                 });
                 const clientesRows = clientesResp.data.values || [];
                 // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
-                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(clienteId));
                 if (rowIndex !== -1) {
                     // 3. Obtén el valor actual de la columna F (índice 5)
                     const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);
@@ -2693,7 +2695,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
                 // No detiene el flujo principal, solo loguea el error
             }
         }
-        if (movimiento.tipo === 'Ingreso' && movimiento.clienteId) {
+        if (tipo === 'Ingreso' && clienteId) {
             try {
                 // 1. Obtén todos los clientes
                 const clientesResp = await sheets.spreadsheets.values.get({
@@ -2702,7 +2704,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
                 });
                 const clientesRows = clientesResp.data.values || [];
                 // 2. Busca la fila del cliente por ID (asume que la columna A es el id)
-                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(movimiento.clienteId));
+                const rowIndex = clientesRows.findIndex(row => String(row[0]) === String(clienteId));
                 if (rowIndex !== -1) {
                     // 3. Obtén el valor actual de la columna F (índice 5)
                     const currentVal = parseInt(clientesRows[rowIndex][5] || '0', 10);

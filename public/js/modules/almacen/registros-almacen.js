@@ -8,6 +8,8 @@ const REGISTROS_ALM_DB = 'registros_almacen';
 const PROVEEDOR_DB = 'proveedores';
 const CLIENTE_DB = 'clientes';
 
+let salidaId = '';
+
 
 async function obtenerProovedores() {
     try {
@@ -217,7 +219,8 @@ async function obtenerRegistrosAlmacen() {
 }
 
 
-export async function mostrarMovimientosAlmacen() {
+export async function mostrarMovimientosAlmacen(id = '') {
+    salidaId = id;
     renderInitialHTML();
     mostrarAnuncio();
     const [obtnerRegistros, clientes, proovedores] = await Promise.all([
@@ -240,7 +243,7 @@ function renderInitialHTML() {
                     <i class='bx bx-search'></i>
                     <div class="input">
                         <p class="detalle">Buscar</p>
-                        <input type="text" class="search" placeholder="">
+                        <input type="text" class="search" placeholder="" value="${salidaId}">
                     </div>
                     <button class="btn-calendario"><i class='bx bx-calendar'></i></button>
                 </div>
@@ -589,6 +592,7 @@ function eventosRegistrosAlmacen() {
         aplicarFiltros();
     });
     inputBusqueda.addEventListener('focus', function () {
+        salidaId = '';
         this.select();
     });
 
@@ -627,6 +631,7 @@ function eventosRegistrosAlmacen() {
     }
 
     window.info = function (registroId) {
+        salidaId = '';
         const registro = registrosAlmacen.find(r => r.id === registroId);
         if (!registro) return; // Changed from registrosProduccion
 
@@ -869,7 +874,8 @@ function eventosRegistrosAlmacen() {
                         },
                         body: JSON.stringify({
                             motivo,
-                            estado: 'Anulado'
+                            estado: 'Anulado',
+                            clienteId: registro.cliente_proovedor
                         })
                     });
 
@@ -999,9 +1005,11 @@ function eventosRegistrosAlmacen() {
         }
     }
     btnExcel.forEach(btn => {
+        salidaId = '';
         btn.addEventListener('click', () => exportarArchivos('almacen', registrosAExportar));
     });
     btnPDF.forEach(btn => {
+        salidaId = '';
         btn.addEventListener('click', () => exportarArchivosPDF('almacen', registrosAExportar));
     });
     aplicarFiltros();

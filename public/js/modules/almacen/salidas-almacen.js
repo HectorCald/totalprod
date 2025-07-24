@@ -1193,7 +1193,7 @@ function eventosAlmacenGeneral() {
             if (!response.ok || !data.success) {
                 throw new Error(data.error || 'Error en la respuesta del servidor');
             }
-
+            
             // --- NUEVO: Actualizar el stock en Almacen general considerando sueltas ---
             const responseStock = await fetch('/actualizar-stock', {
                 method: 'POST',
@@ -1215,10 +1215,12 @@ function eventosAlmacenGeneral() {
 
             // Limpiar carrito y actualizar UI
             carritoSalidas.clear();
+            localStorage.setItem('damabrava_carrito', JSON.stringify([]));
             await obtenerClientes()
             await obtenerAlmacenGeneral()
             document.querySelector('.btn-flotante-salidas').style.display = 'none';
             ocultarAnuncioSecond();
+           
 
             mostrarNotificacion({
                 message: 'Salida registrada exitosamente',
@@ -1231,6 +1233,7 @@ function eventosAlmacenGeneral() {
                     'Creación',
                     usuarioInfo.nombre + ' registro una salida al almacen de: ' + clienteSelect.value + ' Observaciones: ' + observacionesValor)
             }
+            mostrarMovimientosAlmacen(data.id);
         } catch (error) {
             console.error('Error:', error);
             mostrarNotificacion({

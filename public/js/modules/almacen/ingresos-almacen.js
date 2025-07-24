@@ -1200,6 +1200,7 @@ function eventosAlmacenGeneral() {
 
             // Limpiar carrito y actualizar UI
             carritoIngresos.clear();
+            localStorage.setItem('damabrava_carrito_ingresos', JSON.stringify([]));
             await obtenerClientes();
             await obtenerAlmacenGeneral()
             document.querySelector('.btn-flotante-ingresos').style.display = 'none';
