@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v5'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v6'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/',
     '/login',
@@ -178,38 +178,36 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            const fetchPromise = fetch(event.request)
-                .then(networkResponse => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        // CLONAR INMEDIATAMENTE
-                        const responseToCache = networkResponse.clone();
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, responseToCache);
-                        });
-                    }
-                    return networkResponse;
-                })
-                .catch(() => {
-                    // Si la red falla, no hace nada aquí
-                });
+    if (event.request.method !== 'GET') return;
 
-            if (cachedResponse) {
-                return cachedResponse;
-            } else {
-                // Si es navegación (HTML), muestra /sin-red
-                if (event.request.mode === 'navigate' || event.request.destination === 'document') {
-                    return caches.match('/sin-red').then(offlineResponse => {
-                        if (offlineResponse) return offlineResponse;
-                        return new Response('<h1>Sin conexión</h1>', { headers: { 'Content-Type': 'text/html' } });
+    const url = new URL(event.request.url);
+
+    // Solo interceptar "/" y "/login"
+    if (url.pathname === '/' || url.pathname === '/login') {
+        event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request)
+                    .then(networkResponse => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            caches.open(CACHE_NAME).then(cache => {
+                                cache.put(event.request, networkResponse.clone());
+                            });
+                        }
+                        return networkResponse;
+                    })
+                    .catch(() => {
+                        // Si la red falla, responde con caché si existe, si no, muestra /sin-red
+                        return caches.match(event.request).then(resp => {
+                            if (resp) return resp;
+                            return caches.match('/sin-red');
+                        });
                     });
-                }
-                // Para otros assets, simplemente falla (no responde con HTML)
-                return fetchPromise;
-            }
-        })
-    );
+
+                return cachedResponse || fetchPromise;
+            })
+        );
+    }
+    // Para cualquier otra ruta, NO interceptar (deja que el navegador maneje la petición)
 });
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {
