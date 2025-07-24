@@ -169,29 +169,45 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') return;
+    const url = new URL(event.request.url);
 
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            // Lanza la actualización en segundo plano
-            const fetchPromise = fetch(event.request)
-                .then(networkResponse => {
-                    // Si la respuesta es válida, actualiza el caché
-                    if (networkResponse && networkResponse.status === 200) {
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, networkResponse.clone());
-                        });
-                    }
-                    return networkResponse;
-                })
-                .catch(() => {
-                    // Si la red falla, no hace nada (ya devolvimos el caché)
-                });
+    // Solo cachear GET
+    if (event.request.method !== 'GET') {
+        return;
+    }
 
-            // Devuelve el caché inmediatamente, y actualiza en segundo plano
-            return cachedResponse || fetchPromise;
-        })
+    // Estrategia cache first para todo lo que está en ASSETS_TO_CACHE y para la raíz "/"
+    const isAssetToCache = ASSETS_TO_CACHE.some(asset =>
+        url.pathname.endsWith(asset) || (asset === '/' && url.pathname === '/')
     );
+
+    if (isAssetToCache || url.pathname === '/') {
+        event.respondWith(
+            caches.match(event.request).then(cachedResponse => {
+                if (cachedResponse) {
+                    // Si existe en caché, responde desde caché
+                    return cachedResponse;
+                }
+                // Si no existe, busca en la red y guarda en caché si es válido
+                return fetch(event.request)
+                    .then(networkResponse => {
+                        if (!networkResponse || networkResponse.status !== 200) {
+                            return networkResponse;
+                        }
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        return networkResponse;
+                    })
+                    .catch(() => {
+                        // Si falla la red y hay algo en caché, responde desde caché
+                        return caches.match(event.request);
+                    });
+            })
+        );
+    }
 });
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-data') {

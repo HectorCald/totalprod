@@ -112,7 +112,6 @@ window.mostrarTareas = mostrarTareas
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    mostrarCarga('.carga-obtener');
     const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = '/login';
