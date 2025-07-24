@@ -660,6 +660,7 @@ window.addEventListener('resize', () => {
     }
 });
 
+
 function checkForUpdates() {
     const currentVersion = localStorage.getItem('app_version');
     
@@ -667,7 +668,6 @@ function checkForUpdates() {
         showUpdateModal();
     }
 }
-
 function showUpdateModal() {
     const modalHTML = `
         <div class="update-modal">
@@ -717,11 +717,11 @@ function showUpdateModal() {
                 request.onsuccess = () => resolve();
             });
 
-            await new Promise((resolve, reject) => {
-                const request = indexedDB.deleteDatabase('damabrava_db_img');
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve();
-            });
+            // Eliminar todos los caches de Cache Storage
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
 
             // Simular proceso de actualización
             await new Promise(resolve => setTimeout(resolve, 2000));

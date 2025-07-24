@@ -315,7 +315,7 @@ function updateHTMLWithData() {
                 <div class="info-header">
                     <span class="id-flotante"><span class="id">${persona.id}</span><span class="flotante-item blue">${persona.rol ? persona.rol : 'Sin rol'}</span></span>
                     <span class="detalle">${persona.nombre}</span>
-                    <span class="pie">${persona.email}<span style="margin-left:auto">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-end"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-start"></i>`}</span></span>
+                    <span class="pie">${persona.email}<span style="width:10px; display:flex; justify-content:flex-end">${persona.estado === 'Activo' ? `<i class="ri-checkbox-blank-circle-fill" style="color:var(--success) !important; font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-end"></i>` : `<i class="ri-checkbox-blank-circle-fill" style="color:red !important;font-size:10px; max-width:10px; height:10px; background: none; justify-content:flex-end"></i>`}</span></span>
                 </div>
             </div>
         </div>
