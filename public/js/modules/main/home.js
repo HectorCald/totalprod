@@ -18,9 +18,7 @@ async function obtenerUsuario() {
     try {
         if(localStorage.getItem('damabrava_usuario')){
             usuarioInfo = JSON.parse(localStorage.getItem('damabrava_usuario'));
-            return true;
         }
-
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
 
@@ -37,6 +35,7 @@ async function obtenerUsuario() {
                 plugins: data.usuario.plugins,
                 permisos: data.usuario.permisos,
             };
+            console.log(usuarioInfo)
 
             // Procesar la foto
             if (!data.usuario.foto || data.usuario.foto === './icons/icon.png') {
@@ -754,7 +753,7 @@ export async function crearHome() {
     // Verificar actualizaciones
     checkForUpdates();
 
-    await obtenerUsuario();
+    obtenerUsuario();
     
     crearNav(usuarioInfo);
     crearPerfil(usuarioInfo);

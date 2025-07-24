@@ -1,4 +1,4 @@
-const CACHE_NAME = 'totalprod-v9'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'totalprod-v1'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -50,11 +50,6 @@ const ASSETS_TO_CACHE = [
     '/js/modules/almacen/registros-conteos.js',
     '/js/modules/almacen/verificar-registros.js',
     '/js/modules/componentes/componentes.js',
-    '/js/modules/main/flotante.js',
-    '/js/modules/main/home.js',
-    '/js/modules/main/nav.js',
-    '/js/modules/main/notificaciones.js',
-    '/js/modules/main/perfil.js',
     '/js/modules/plugins/calculadora-mp.js',
     '/js/modules/plugins/tareas-acopio.js',
     '/js/modules/produccion/formulario-produccion.js',
@@ -134,26 +129,8 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                return Promise.all(
-                    ASSETS_TO_CACHE.map(url => {
-                        return fetch(url)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`Failed to cache: ${url}`);
-                                }
-                                return cache.put(url, response);
-                            })
-                            .catch(error => {
-                                console.error('Error caching:', error);
-                            });
-                    })
-                );
-            })
-            .then(() => {
-                console.log('Caché completado correctamente');
-                return self.skipWaiting();
-            })
+            .then(cache => cache.addAll(ASSETS_TO_CACHE))
+            .then(() => self.skipWaiting())
     );
 });
 self.addEventListener('activate', event => {
@@ -175,7 +152,7 @@ self.addEventListener('activate', event => {
     );
 });
 self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET' || new URL(event.request.url).pathname !== '/') return;
+    if (new URL(event.request.url).pathname !== '/') return;
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
