@@ -1,4 +1,4 @@
-const CACHE_NAME = 'TotalProd v1.0.7'; // Incrementamos la versión para incluir archivos EJS
+export const CACHE_NAME = 'TotalProd v1.0.7'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',

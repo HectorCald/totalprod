@@ -1,4 +1,5 @@
-const APP_VERSION = '2.0.3';
+import { CACHE_NAME } from '../../service-worker';
+const APP_VERSION = CACHE_NAME;
 const UPDATE_DETAILS = {
     version: APP_VERSION,
     title: 'Nueva Actualización Disponible',
