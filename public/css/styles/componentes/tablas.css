@@ -1,16 +1,14 @@
 .tabla-responsive {
-    width: 100%;
+    width: auto;
     overflow-x: auto;
     overflow-y: hidden;
-    margin-bottom: 10px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     min-height: fit-content;
 }
 
 .tabla-responsive table {
-    width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    width: auto;
     min-height: auto !important;
     color: var(--text);
     table-layout: auto;
@@ -24,9 +22,12 @@
     border: 1px solid var(--cero-color);
     white-space: nowrap;
     min-height: 30px !important;
+    font-size: 12px;
+    width: auto !important;
 }
 
 .tabla-responsive thead {
     background-color: var(--primary-color);
     font-weight: bold;
+    color: var(--cuarto-color);
 }

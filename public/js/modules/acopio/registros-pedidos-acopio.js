@@ -78,7 +78,6 @@ async function obtenerProovedoresAcopio() {
 }
 async function obtenerAlmacenAcopio() {
     try {
-        mostrarCarga('.carga-obtener');
         const productoAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
 
         if (productoAcopioCache.length > 0) {
@@ -143,8 +142,6 @@ async function obtenerAlmacenAcopio() {
     } catch (error) {
         console.error('Error al obtener productos:', error);
         return false;
-    } finally {
-        ocultarCarga('.carga-obtener');
     }
 }
 async function obtenerPedidos() {
@@ -518,38 +515,88 @@ function eventosPedidos() {
         const registro = pedidosGlobal.find(r => r.id === registroId);
         if (!registro) return;
 
+        // --- HISTORIAL DE COMPRAS ---
+        // Filtrar los pedidos del mismo producto y estado 'Recibido'
+        const historialCompras = pedidosGlobal
+            .filter(p => p.idProducto === registro.idProducto && p.estado === 'Recibido')
+            .sort((a, b) => {
+                // Ordenar por fechaEntrega descendente (más reciente primero)
+                // Formato fecha: dd/mm/yyyy
+                const [da, ma, ya] = (a.fechaEntrega || '').split('/');
+                const [db, mb, yb] = (b.fechaEntrega || '').split('/');
+                const fechaA = new Date(`${ya}-${ma}-${da}`);
+                const fechaB = new Date(`${yb}-${mb}-${db}`);
+                return fechaB - fechaA;
+            })
+            .slice(0, 3);
+
+        let historialHTML = '';
+        if (historialCompras.length > 0) {
+            historialHTML = `
+            <div class="tabla-responsive">
+                <table class="tabla-historial-compras" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Proveedor</th>
+                            <th>Kg</th>
+                            <th>Precio total</th>
+                            <th>Precio/Kg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historialCompras.map(compra => {
+                            const proveedor = proovedoresAcopioGlobal.find(p => p.id === compra.proovedor);
+                            const nombreProveedor = proveedor ? proveedor.nombre : compra.proovedor || 'No registrado';
+                            const cantidadKg = parseFloat(compra.cantidadEntregadaKg) || 0;
+                            const precio = parseFloat(compra.precio) || 0;
+                            const precioPorKg = cantidadKg > 0 ? (precio / cantidadKg) : 0;
+                            return `<tr>
+                                <td style="text-align:left">${nombreProveedor}</td>
+                                <td>${cantidadKg || 'No registrado'}</td>
+                                <td>Bs. ${precio.toFixed(2)}</td>
+                                <td>Bs. ${precioPorKg.toFixed(2)}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+            `;
+        } else {
+            historialHTML = '<p style="color:#888;text-align:center; font-size:12px; width:100%">No hay compras recientes de este producto.</p>';
+        }
+        // --- FIN HISTORIAL DE COMPRAS ---
+
         const contenido = document.querySelector('.anuncio-second .contenido');
         const registrationHTML = `
         <div class="encabezado">
-            <h1 class="titulo">${registro.producto}</h1>
+            <h1 class="titulo">Información</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
-        <div class="relleno verificar-registro">
-            <p class="normal">Información</p>
-            <div class="campo-horizontal">
-                <div class="campo-vertical">
-                    <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
-                    <span class="valor"><strong><i class='bx bx-package'></i> Cantidad pedida: </strong>${registro.cantidadPedida}</span>
-                    <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
-                    <span class="estado ${registro.estado.toLowerCase()}"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${registro.estado}</span>
-                </div>
+        <div class="relleno">
+            ${registro.estado === 'Pendiente' ? `
+            <p class="normal">Historial (Últimas 3 compras)</p>
+            <div class="campo-vertical" style="padding-left:10px">
+                ${historialHTML}
             </div>
-
-            <p class="normal">Detalles del producto</p>
+            ` : ''}
+            <p class="normal">Información básica</p>
             <div class="campo-vertical">
                 <span class="nombre"><strong><i class='bx bx-cube'></i> Producto: </strong>${registro.producto}</span>
-                <span class="nombre"><strong><i class='bx bx-barcode'></i> ID Producto: </strong>${registro.idProducto}</span>
+                <span class="valor"><strong><i class='bx bx-package'></i> Cantidad pedida: </strong>${registro.cantidadPedida}</span>
+                <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
+                <span class="estado ${registro.estado.toLowerCase()}"><strong><i class='bx bx-check-circle'></i> Estado: </strong>${registro.estado}</span>
                 <span class="observaciones"><strong><i class='bx bx-comment-detail'></i> Observaciones: </strong>${registro.observacionesPedido || 'Sin observaciones'}</span>
             </div>
 
-            ${registro.estado !== 'Pendiente' ? `
+
+            ${registro.estado === 'Recibido' ? `
             <p class="normal">Información de recepción</p>
             <div class="campo-vertical">
-                <span class="valor"><strong><i class='bx bx-package'></i> Fecha de compra: </strong>${registro.fechaEntrega || 'No registrado'}</span>
+                <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha de compra: </strong>${registro.fechaEntrega || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (KG): </strong>${registro.cantidadEntregadaKg || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-package'></i> Cantidad entregada (UND): </strong>${registro.cantidadEntregadaUnd || 'No registrado'}</span>
-                <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${registro.proovedor || 'No registrado'}</span>
+                <span class="valor"><strong><i class='bx bx-user'></i> Proveedor: </strong>${proovedoresAcopioGlobal.find(p => p.id === registro.proovedor)?.nombre || 'No registrado'}</span>
                 ${usuarioInfo.rol === 'Administración' ? `
                 <span class="valor"><strong><i class='bx bx-money'></i> Precio: </strong>${'Bs. ' + (parseFloat(registro.precio) || 0).toFixed(2) || 'No registrado'}</span>` : ''}
                 <span class="valor"><strong><i class='bx bx-money'></i> Estado: </strong>${registro.estadoCompra || 'No registrado'}</span>
@@ -722,14 +769,13 @@ function eventosPedidos() {
             }
         }
         async function editar(registro) {
-            await obtenerAlmacenAcopio();
             const contenido = document.querySelector('.anuncio-tercer .contenido');
             const registrationHTML = `
                 <div class="encabezado">
                     <h1 class="titulo">Editar pedido</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <div class="relleno editar-pedido">
+                <div class="relleno">
                     <p class="normal">Información básica</p>
                     <div class="entrada">
                         <i class='bx bx-package'></i>
@@ -903,20 +949,20 @@ function eventosPedidos() {
                 try {
                     const datosActualizados = {
                         idProducto: window.idPro,
-                        productoPedido: document.querySelector('.editar-pedido .producto-pedido').value,
-                        cantidadPedida: document.querySelector('.editar-pedido .cantidad-pedida').value,
-                        observacionesPedido: document.querySelector('.editar-pedido .obs-pedido').value,
-                        estado: document.querySelector('.editar-pedido .estado').value,
-                        cantidadEntregadaKg: document.querySelector('.editar-pedido .cant-entr-kg').value,
-                        proovedor: document.querySelector('.editar-pedido .proovedor').value,
-                        precio: document.querySelector('.editar-pedido .precio').value,
-                        observacionesCompras: document.querySelector('.editar-pedido .obs-compras').value,
-                        cantidadEntregadaUnd: document.querySelector('.editar-pedido .cant-entrg-und').value,
-                        transporteOtros: document.querySelector('.editar-pedido .trasp-otros').value,
-                        estadoCompra: document.querySelector('.editar-pedido .estado-compra').value,
-                        cantidadIngresada: document.querySelector('.editar-pedido .cant-ingre').value,
-                        observacionesIngresado: document.querySelector('.editar-pedido .obs-ingre').value,
-                        motivo: document.querySelector('.editar-pedido .motivo').value
+                        productoPedido: document.querySelector('.entrada .producto-pedido').value,
+                        cantidadPedida: document.querySelector('.entrada .cantidad-pedida').value,
+                        observacionesPedido: document.querySelector('.entrada .obs-pedido').value,
+                        estado: document.querySelector('.entrada .estado').value,
+                        cantidadEntregadaKg: document.querySelector('.entrada .cant-entr-kg').value,
+                        proovedor: document.querySelector('.entrada .proovedor').value,
+                        precio: document.querySelector('.entrada .precio').value,
+                        observacionesCompras: document.querySelector('.entrada .obs-compras').value,
+                        cantidadEntregadaUnd: document.querySelector('.entrada .cant-entrg-und').value,
+                        transporteOtros: document.querySelector('.entrada .trasp-otros').value,
+                        estadoCompra: document.querySelector('.entrada .estado-compra').value,
+                        cantidadIngresada: document.querySelector('.entrada .cant-ingre').value,
+                        observacionesIngresado: document.querySelector('.entrada .obs-ingre').value,
+                        motivo: document.querySelector('.entrada .motivo').value
                     };
 
                     if (!datosActualizados.motivo) {
@@ -975,14 +1021,12 @@ function eventosPedidos() {
                     <h1 class="titulo">Entregar Pedido</h1>
                     <button class="btn close" onclick="cerrarAnuncioManual('anuncioTercer')"><i class="fas fa-arrow-right"></i></button>
                 </div>
-                <div class="relleno verificar-registro">
+                <div class="relleno">
                     <p class="normal">Información del pedido</p>
                     <div class="campo-horizontal">
                         <div class="campo-vertical">
-                            <span class="nombre"><strong><i class='bx bx-id-card'></i> Id: </strong>${registro.id}</span>
                             <span class="nombre"><strong><i class='bx bx-box'></i> Producto: </strong>${registro.producto}</span>
                             <span class="valor"><strong><i class='bx bx-package'></i> Cantidad pedida: </strong>${registro.cantidadPedida}</span>
-                            <span class="valor"><strong><i class='bx bx-calendar'></i> Fecha: </strong>${registro.fecha}</span>
                         </div>
                     </div>
 
@@ -1022,7 +1066,7 @@ function eventosPedidos() {
                             <select class="proovedor" required>
                                 <option value=""></option>
                                 ${proovedoresAcopioGlobal.map(p => `
-                                    <option value="${p.nombre}">${p.nombre}</option>
+                                    <option value="${p.id}">${p.nombre}</option>
                                 `).join('')}
                             </select>
                         </div>
@@ -1087,14 +1131,14 @@ function eventosPedidos() {
 
             async function confirmarEntrega() {
                 try {
-                    const cantidadKg = document.querySelector('.verificar-registro .cantidad-kg').value;
-                    const cantidadUnd = document.querySelector('.verificar-registro .cantidad-und').value;
-                    const unidadMedida = document.querySelector('.verificar-registro .unidad-medida').value;
-                    const proovedor = document.querySelector('.verificar-registro .proovedor').value;
-                    const precio = parseFloat(document.querySelector('.verificar-registro .precio').value);
-                    const transporteOtros = parseFloat(document.querySelector('.verificar-registro .transporte').value) || 0;
-                    const estadoCompra = document.querySelector('.verificar-registro .estado-compra').value;
-                    const observaciones = document.querySelector('.verificar-registro .observaciones').value;
+                    const cantidadKg = document.querySelector('.entrada .cantidad-kg').value;
+                    const cantidadUnd = document.querySelector('.entrada .cantidad-und').value;
+                    const unidadMedida = document.querySelector('.entrada .unidad-medida').value;
+                    const proovedor = document.querySelector('.entrada .proovedor').value;
+                    const precio = parseFloat(document.querySelector('.entrada .precio').value);
+                    const transporteOtros = parseFloat(document.querySelector('.entrada .transporte').value) || 0;
+                    const estadoCompra = document.querySelector('.entrada .estado-compra').value;
+                    const observaciones = document.querySelector('.entrada .observaciones').value;
 
                     // Validaciones básicas
                     if (!cantidadKg || !cantidadUnd || !proovedor || !precio) {
@@ -1228,7 +1272,7 @@ function eventosPedidos() {
             }
         }
         async function ingresar(registro) {
-            mostrarCarga();
+            mostrarCarga('.carga-procesar');
             mostrarIngresosAcopio(registro.idProducto, registro.id);
         }
         async function rechazar(registro) {

@@ -277,7 +277,7 @@ function eventosPedidos(producto, pedido) {
     if (producto) {
         agregarAlCarrito(producto);
         mostrarCarritoIngresosAcopio();
-        ocultarCarga();
+        ocultarCarga('.carga-procesar');
     }
 
     let pesoMostrado = 'bruto';
