@@ -1,4 +1,4 @@
-export const CACHE_NAME = 'TotalProd v1.0.7'; // Incrementamos la versión para incluir archivos EJS
+const CACHE_NAME = 'TotalProd v1.0.8'; // Incrementamos la versión para incluir archivos EJS
 const ASSETS_TO_CACHE = [
     '/css/login.css',
     '/js/login.js',
@@ -61,13 +61,7 @@ const ASSETS_TO_CACHE = [
     '/css/styles/flotante.css',
     '/css/styles/componentes.css',
     '/css/styles/estilos-base.css',
-    // Archivos EJS
-    '/views/componentes.ejs',
-    '/views/dashboard.ejs',
-    '/views/login.ejs',
-    '/views/dashboard_otro.ejs',
-    '/views/partials/footer.ejs',
-    '/views/partials/header.ejs',
+
     // Imágenes
     '/img/Procesando.gif',
     '/img/logo-trans.webp',
