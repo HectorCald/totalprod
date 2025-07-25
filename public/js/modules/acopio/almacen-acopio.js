@@ -142,12 +142,10 @@ export async function mostrarAlmacenAcopio() {
     mostrarAnuncio();
 
     // Load data in parallel
-    const [almacenGeneral, etiquetasResult] = await Promise.all([
-        obtenerAlmacenAcopio(),
-        await obtenerEtiquetasAcopio(),
+    const [etiquetasResult, almacenGeneral] = await Promise.all([
+        obtenerEtiquetasAcopio(),
+        await obtenerAlmacenAcopio(),
     ]);
-
-    updateHTMLWithData(); // Update HTML once data is loaded
 }
 function renderInitialHTML() {
 
@@ -170,6 +168,7 @@ function renderInitialHTML() {
                 <div class="acciones-grande">
                     <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> <span>Crear</span></button>
                     <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i> <span>Etiquetas</span></button>
+                    <button class="exportar-pdf btn red"><i class='bx bxs-file-pdf'></i> <span>PDF</span></button>
                 </div>
                 ` : ''}
             </div>
@@ -211,6 +210,7 @@ function renderInitialHTML() {
         <div class="anuncio-botones">
             <button class="btn-crear-producto btn orange"> <i class='bx bx-plus'></i> Crear</button>
             <button class="btn-etiquetas btn especial"><i class='bx bx-purchase-tag'></i>  Etiquetas</button>
+            <button class="exportar-pdf btn red"><i class='bx bxs-file-pdf'></i> <span>PDF</span></button>
         </div>
         ` : ''}
     `;
@@ -271,6 +271,8 @@ function eventosAlmacenAcopio() {
     const botonesEtiquetas = document.querySelectorAll('.filtros-opciones.etiquetas-filter .btn-filtro');
     const botonesCantidad = document.querySelectorAll('.filtros-opciones.cantidad-filter .btn-filtro');
     const inputBusqueda = document.querySelector('.search');
+    const btnPDF = document.querySelectorAll('.exportar-pdf');
+    const registrosAExportar = productos;
 
     const btnCrearProducto = document.querySelectorAll('.btn-crear-producto');
     const btnEtiquetas = document.querySelectorAll('.btn-etiquetas');
@@ -1226,5 +1228,8 @@ function eventosAlmacenAcopio() {
             }
         });
     }
+    btnPDF.forEach(btn => {
+        btn.addEventListener('click', () => exportarArchivosPDF('acopio-almacen', registrosAExportar));
+    });
     aplicarFiltros();
 }

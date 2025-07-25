@@ -60,10 +60,8 @@
     .filtros-opciones.cantidad-filter {
         display: flex;
         width: 100%;
-        max-width: 450px;
         min-height: 55px;
         gap: 5px;
-        justify-content: flex-end;
     }
 
 }

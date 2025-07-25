@@ -640,7 +640,7 @@ export function exportarArchivos(rExp, registrosAExportar) {
                     const subtitulos = [
                         { 'Productos': 'Producto', 'Cantidad': 'Cantidad', 'Precio Unitario': 'Precio Unitario', 'Subtotal': 'Subtotal' }
                     ];
-                    
+
                     const datosExportar = productos.map((producto, index) => ({
                         'Productos': producto.trim(),
                         'Cantidad': cantidades[index] ? cantidades[index].trim() : 'N/A',
@@ -1069,7 +1069,7 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
                 const cantidades = registro.cantidades.split(';');
                 const preciosUnitarios = registro.precios_unitarios.split(';');
                 const ids = registro.idProductos ? registro.idProductos.split(';') : productos.map((_, i) => (i + 1).toString());
-                
+
                 // Preparar datos de la tabla
                 const tableData = productos.map((producto, index) => {
                     const cantidad = cantidades[index]?.trim() || 'N/A';
@@ -1186,12 +1186,163 @@ export function exportarArchivosPDF(rExp, registrosAExportar) {
             type: 'success',
             duration: 3000
         });
-    } else {
-        mostrarNotificacion({
-            message: 'Exportación PDF solo disponible para registros de almacén',
-            type: 'warning',
-            duration: 3500
+    }else if (rExp === 'acopio-almacen') {
+        // Exportar PDF simple de productos de almacén acopio
+        // Columnas: id, producto, peso prima, peso bruto, cantidad, peso, verificado por, otros
+        const headers = ['ID', 'Producto', 'P. Prima', 'P. Bruto', 'Cantidad', 'Peso', 'Encargado', 'Otros'];
+        // Ordenar productos alfabéticamente por nombre
+        const dataSorted = [...registrosAExportar].sort((a, b) => (a.producto || '').localeCompare(b.producto || '', 'es', { sensitivity: 'base' }));
+        const data = dataSorted.map(p => {
+            // Calcular totales
+            const totalPrima = p.prima.split(';').reduce((total, lote) => total + parseFloat(lote.split('-')[0] || 0), 0);
+            const totalBruto = p.bruto.split(';').reduce((total, lote) => total + parseFloat(lote.split('-')[0] || 0), 0);
+            return [
+                p.id,
+                p.producto,
+                totalPrima.toFixed(2),
+                totalBruto.toFixed(2),
+                '', '', '', ''
+            ];
         });
+        // --- LOGO Y MARCA DE AGUA ---
+        function generarPDFConLogoYMarcaAgua() {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ format: 'letter', unit: 'mm' });
+                    doc.setFont('helvetica');
+                    doc.setFontSize(12);
+                    const logoUrl = '/img/img-png/damabrava-1x1.png';
+                    const watermarkUrl = '/img/logotipo-damabrava-1x1.png';
+                    let logoDataUrl = null;
+                    let watermarkDataUrl = null;
+                    try {
+                        const logoResp = await fetch(logoUrl);
+                        const logoBlob = await logoResp.blob();
+                        logoDataUrl = await new Promise((resolve2, reject2) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve2(reader.result);
+                            reader.onerror = reject2;
+                            reader.readAsDataURL(logoBlob);
+                        });
+                        // Marca de agua
+                        const watermarkResp = await fetch(watermarkUrl);
+                        const watermarkBlob = await watermarkResp.blob();
+                        watermarkDataUrl = await new Promise((resolve2, reject2) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve2(reader.result);
+                            reader.onerror = reject2;
+                            reader.readAsDataURL(watermarkBlob);
+                        });
+                    } catch (e) {
+                        logoDataUrl = null;
+                        watermarkDataUrl = null;
+                    }
+                    // Cabecera con logo
+                    if (logoDataUrl) {
+                        doc.addImage(logoDataUrl, 'PNG', 25, 5, 15, 15);
+                    }
+                    // Marca de agua
+                    let drawWatermark = null;
+                    if (watermarkDataUrl) {
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const pageHeight = doc.internal.pageSize.getHeight();
+                        let imgSize = Math.min(pageWidth, pageHeight) * 0.55;
+                        imgSize = imgSize * 2; // duplicar tamaño
+                        imgSize = imgSize * 0.8; // reducir 20%
+                        const x = (pageWidth - imgSize) / 2;
+                        const y = (pageHeight - imgSize) / 2;
+                        drawWatermark = function (data) {
+                            doc.saveGraphicsState && doc.saveGraphicsState();
+                            if (doc.setGState) {
+                                doc.setGState(new doc.GState({ opacity: 0.10 }));
+                            } else if (doc.setAlpha) {
+                                doc.setAlpha(0.10);
+                            }
+                            doc.addImage(watermarkDataUrl, 'PNG', x, y, imgSize, imgSize);
+                            if (doc.restoreGraphicsState) doc.restoreGraphicsState();
+                            if (doc.setAlpha) doc.setAlpha(1);
+                        };
+                    }
+                    doc.text('Lista de Productos - Almacén Acopio', 105, 13, { align: 'center' });
+                    let yPosition = 20;
+                    if (doc.autoTable) {
+                        // Calcular el ancho total de la tabla
+                        const colWidths = [15, 50, 17, 17, 20, 15, 20, 15];
+                        const totalTableWidth = colWidths.reduce((a, b) => a + b, 0);
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        const marginLeft = (pageWidth - totalTableWidth) / 2;
+                        doc.autoTable({
+                            head: [headers],
+                            body: data,
+                            startY: yPosition,
+                            theme: 'grid',
+                            headStyles: { font: 'helvetica', fontSize: 8, fillColor: [80, 80, 80], textColor: 255, lineColor: [0, 0, 0], lineWidth: 0.2, halign: 'center' },
+                            styles: { font: 'helvetica', fontSize: 8, cellPadding: 1, minCellHeight: 0, lineColor: [0, 0, 0], lineWidth: 0.2, textColor: [0, 0, 0] },
+                            margin: { left: marginLeft, right: marginLeft },
+                            columnStyles: {
+                                0: { cellWidth: 15 }, // ID pequeño
+                                1: { cellWidth: 50 }, // Producto más grande
+                                2: { cellWidth: 17 },
+                                3: { cellWidth: 17 },
+                                4: { cellWidth: 20 },
+                                5: { cellWidth: 15 },
+                                6: { cellWidth: 20 },
+                                7: { cellWidth: 15 },
+                            },
+                            ...(drawWatermark ? { didDrawPage: drawWatermark } : {})
+                        });
+                    } else {
+                        // Fallback manual
+                        let x = 10;
+                        const colWidths = [15, 50, 17, 17, 20, 15, 20, 15];
+                        const totalTableWidth = colWidths.reduce((a, b) => a + b, 0);
+                        const pageWidth = doc.internal.pageSize.getWidth();
+                        x = (pageWidth - totalTableWidth) / 2;
+                        doc.setFontSize(8);
+                        doc.setFont('helvetica', 'bold');
+                        headers.forEach((header, i) => {
+                            doc.text(header, x, yPosition);
+                            x += colWidths[i];
+                        });
+                        yPosition += 8;
+                        doc.setFont('helvetica', 'normal');
+                        data.forEach(row => {
+                            let x = (pageWidth - totalTableWidth) / 2;
+                            row.forEach((cell, i) => {
+                                doc.text(cell.toString(), x, yPosition);
+                                x += colWidths[i];
+                            });
+                            yPosition += 8;
+                        });
+                    }
+                    // Pie de página
+                    const pageHeight = doc.internal.pageSize.height;
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'italic');
+                    doc.text('TotalProd App', 105, pageHeight - 20, { align: 'center' });
+                    const fecha = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+                    const nombreArchivo = `Lista_Productos_Almacen_Acopio_${fecha}.pdf`;
+                    doc.save(nombreArchivo);
+                    mostrarNotificacion({
+                        message: 'PDF de lista simple exportado correctamente',
+                        type: 'success',
+                        duration: 3000
+                    });
+                    resolve();
+                } catch (error) {
+                    console.error('Error generando PDF:', error);
+                    mostrarNotificacion({
+                        message: 'Error al generar el PDF',
+                        type: 'error',
+                        duration: 3500
+                    });
+                    reject(error);
+                }
+            });
+        }
+        generarPDFConLogoYMarcaAgua();
+        // --- FIN LOGO Y MARCA DE AGUA ---
     }
 }
 export function scrollToTop(view) {

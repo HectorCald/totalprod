@@ -166,14 +166,7 @@ function renderInitialHTML() {
                         <input type="text" class="search" placeholder="">
                     </div>
                 </div>
-                <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
-                    <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
-                    <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
-                    <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
-                    <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
-                    <button class="btn-filtro" title="Bruto">Bruto</button>
-                    <button class="btn-filtro" title="Prima">Prima</button>
-                </div>
+                
             </div>
             
             <div class="filtros-opciones etiquetas-filter">
@@ -181,6 +174,14 @@ function renderInitialHTML() {
                 ${Array(5).fill().map(() => `
                     <div class="skeleton skeleton-etiqueta"></div>
                 `).join('')}
+            </div>
+            <div class="filtros-opciones cantidad-filter" style="overflow:hidden">
+                <button class="btn-filtro" title="Mayor a menor"><i class='bx bx-sort-down'></i></button>
+                <button class="btn-filtro" title="Menor a mayor"><i class='bx bx-sort-up'></i></button>
+                <button class="btn-filtro"><i class='bx bx-sort-a-z'></i></button>
+                <button class="btn-filtro"><i class='bx bx-sort-z-a'></i></button>
+                <button class="btn-filtro" title="Bruto">Bruto</button>
+                <button class="btn-filtro" title="Prima">Prima</button>
             </div>
             
             <div class="productos-container">
