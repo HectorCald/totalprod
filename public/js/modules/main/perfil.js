@@ -100,6 +100,7 @@ function mostrarPerfil(view) {
     const btnConfiguraciones = document.querySelector('.apartado.configuraciones');
     const btnCerrarSesion = document.querySelector('.cerrar-sesion');
     const versionCacheElement = document.querySelector('.version');
+    
     if ('caches' in window) {
         caches.keys().then(keys => {
             // Busca el que empiece por 'totalprod-v'
