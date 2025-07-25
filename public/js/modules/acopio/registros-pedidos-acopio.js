@@ -518,7 +518,7 @@ function eventosPedidos() {
         // --- HISTORIAL DE COMPRAS ---
         // Filtrar los pedidos del mismo producto y estado 'Recibido'
         const historialCompras = pedidosGlobal
-            .filter(p => p.idProducto === registro.idProducto && p.estado === 'Recibido')
+            .filter(p => p.idProducto === registro.idProducto && (p.estado === 'Recibido' || p.estado === 'Ingresado'))
             .sort((a, b) => {
                 // Ordenar por fechaEntrega descendente (más reciente primero)
                 // Formato fecha: dd/mm/yyyy
