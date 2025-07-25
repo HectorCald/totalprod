@@ -74,7 +74,6 @@ export async function crearPerfil(usuario) {
     mostrarPerfil(view);
 }
 function mostrarPerfil(view) {
-    const version = localStorage.getItem('app_version') || 'No disponible';
     const perfil = `
         <h1 class="titulo"><i class='bx bx-user'></i> Perfil</h1>
         <div class="info">
@@ -92,7 +91,7 @@ function mostrarPerfil(view) {
         <button class="apartado configuraciones"><i class='bx bx-cog'></i> Configuraciones</button>
         <button class="cerrar-sesion"><i class='bx bx-log-out'></i> Cerrar Sesión</button>
         <button class="soporte-tecnico">Soporte técnico</button>
-        <p class="version">Versión ${version}</p>
+        <p class="version"></p>
     `;
     view.innerHTML = perfil;
 
@@ -100,6 +99,18 @@ function mostrarPerfil(view) {
     const btnCuenta = document.querySelector('.apartado.cuenta');
     const btnConfiguraciones = document.querySelector('.apartado.configuraciones');
     const btnCerrarSesion = document.querySelector('.cerrar-sesion');
+    const versionCacheElement = document.querySelector('.version');
+    if ('caches' in window) {
+        caches.keys().then(keys => {
+            // Busca el que empiece por 'totalprod-v'
+            const cacheName = keys.find(key => key.startsWith('TotalProd v'));
+            if (cacheName) {
+                versionCacheElement.textContent = `${cacheName}`;
+            } else {
+                versionCacheElement.textContent = 'Sin versión';
+            }
+        });
+    }
 
     btnCuenta.addEventListener('click', () => {
         mostrarCuenta(usuarioInfo.nombre, usuarioInfo.apellido, usuarioInfo.email, usuarioInfo.foto, usuarioInfo.telefono);
@@ -449,7 +460,7 @@ async function mostrarConfiguraciones() {
                     <i class='bx bx-desktop'></i> Sistema
                 </button>
             </div>
-            <p class="version-cache"></p>
+            
         </div>
     `;
 
@@ -461,18 +472,7 @@ async function mostrarConfiguraciones() {
 
 async function eventosConfiguraciones() {
     const btnsTheme = document.querySelectorAll('.btn-tema');
-    const versionCacheElement = document.querySelector('.version-cache');
-    if ('caches' in window) {
-        caches.keys().then(keys => {
-            // Busca el que empiece por 'totalprod-v'
-            const cacheName = keys.find(key => key.startsWith('TotalProd v'));
-            if (cacheName) {
-                versionCacheElement.textContent = `${cacheName}`;
-            } else {
-                versionCacheElement.textContent = 'Sin versión';
-            }
-        });
-    }
+    
 
     // Detector de cambios en el tema del sistema
     const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
