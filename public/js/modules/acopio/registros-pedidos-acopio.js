@@ -573,7 +573,7 @@ function eventosPedidos() {
             <button class="btn close" onclick="cerrarAnuncioManual('anuncioSecond')"><i class="fas fa-arrow-right"></i></button>
         </div>
         <div class="relleno">
-            ${registro.estado === 'Pendiente' ? `
+            ${registro.estado === 'Pendiente' && usuarioInfo.rol === 'Administración' ? `
             <p class="normal">Historial (Últimas 3 compras)</p>
             <div class="campo-vertical" style="padding-left:10px">
                 ${historialHTML}
