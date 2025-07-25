@@ -2,7 +2,7 @@ import { borrarFCMToken } from './notificaciones.js';
 
 async function obtenerUsuario() {
     try {
-        mostrarCarga();
+        mostrarCarga('.carga-obtener');
         // Primero intentamos obtener del servidor
         const response = await fetch('/obtener-usuario-actual');
         const data = await response.json();
@@ -64,7 +64,7 @@ async function obtenerUsuario() {
         });
         return false;
     } finally {
-        ocultarCarga();
+        ocultarCarga('.carga-obtener');
     }
 }
 
@@ -125,6 +125,7 @@ function mostrarPerfil(view) {
             await borrarFCMToken(usuarioInfo.email);
             const response = await fetch('/cerrar-sesion', { method: 'POST' });
             if (response.ok) {
+                mostrarCarga('.carga-procesar');
                 limpiarProteccionNavegacion();
                 localStorage.removeItem('token');
                 window.location.href = '/login';
@@ -136,6 +137,8 @@ function mostrarPerfil(view) {
                 type: 'error',
                 duration: 3500
             });
+        } finally {
+            ocultarCarga('.carga-procesar');
         }
     });
 }
@@ -388,7 +391,7 @@ function evetosCuenta() {
             }
 
             try {
-                const signal = await mostrarProgreso('.pro-save')
+                mostrarCarga('.carga-procesar');
                 const response = await fetch('/actualizar-usuario', {
                     method: 'POST',
                     headers: {
@@ -420,10 +423,6 @@ function evetosCuenta() {
                 });
 
             } catch (error) {
-                if (error.message === 'cancelled') {
-                    console.log('Operación cancelada por el usuario');
-                    return;
-                }
                 console.error('Error:', error);
                 mostrarNotificacion({
                     message: error.message || 'Error al actualizar el perfil',
@@ -431,7 +430,7 @@ function evetosCuenta() {
                     duration: 3500
                 });
             } finally {
-                ocultarProgreso('.pro-save')
+                ocultarCarga('.carga-procesar');
             }
         });
     })
