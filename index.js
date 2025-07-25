@@ -2575,6 +2575,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
         const tirasArr = (movimiento[9] || '').split(';').map(x => parseInt(x) || 0); // Columna J (índice 9)
         const sueltasArr = (movimiento[10] || '').split(';').map(x => parseInt(x) || 0); // Columna K (índice 10)
         const tipoMovimiento = (movimiento[16] || 'Tiras').trim(); // Columna Q (índice 16)
+        const estadoMovimiento = (movimiento[15] || '').toLowerCase(); // Columna P (índice 15) - estado
 
         // Obtener stock y sueltas actuales, y cantidadxgrupo
         const responseStock = await sheets.spreadsheets.values.get({
@@ -2585,42 +2586,69 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
 
         for (let i = 0; i < idProductos.length; i++) {
             const idProducto = idProductos[i];
-            const cantidad = parseInt(cantidades[i]);
-            const tiras = tirasArr[i] || 0;
-            const sueltas = sueltasArr[i] || 0;
+            const cantidad = cantidades[i];
             const productoIndex = productos.findIndex(row => row[0] === idProducto);
             if (productoIndex === -1) {
                 console.log(`[ANULAR] Producto con ID ${idProducto} no encontrado en Almacen general.`);
                 continue;
             }
             const row = productos[productoIndex];
-            const stockActual = parseInt(row[3]) || 0;
-            const sueltasActual = parseInt(row[12]) || 0;
+            let stockActual = parseInt(row[3]) || 0;
+            let sueltasActual = parseInt(row[12]) || 0;
             const cantidadxgrupo = parseInt(row[4]) || 1;
             let nuevoStock = stockActual;
             let nuevasSueltas = sueltasActual;
+
+            // --- LÓGICA ESPECIAL PARA INGRESO DIRECTO ---
+            if (tipo.toLowerCase() === 'ingreso' && estadoMovimiento === 'directo') {
+                // cantidad: "Tiras(114) Unidades(4)" o similar
+                let tiras = 0, sueltas = 0;
+                const matchTiras = /Tiras\((\d+)\)/.exec(cantidad);
+                const matchSueltas = /Unidades\((\d+)\)/.exec(cantidad);
+                if (matchTiras) tiras = parseInt(matchTiras[1]);
+                if (matchSueltas) sueltas = parseInt(matchSueltas[1]);
+                nuevoStock = stockActual - tiras;
+                nuevasSueltas = sueltasActual - sueltas;
+                if (nuevasSueltas < 0) nuevasSueltas = 0;
+                console.log(`[ANULAR][DIRECTO][INGRESO] Producto: ${idProducto} | Stock actual: ${stockActual} - ${tiras} = ${nuevoStock} | Sueltas: ${sueltasActual} - ${sueltas} = ${nuevasSueltas}`);
+                // Actualizar stock
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `Almacen general!D${productoIndex + 2}`,
+                    valueInputOption: 'RAW',
+                    resource: { values: [[nuevoStock.toString()]] }
+                });
+                // Actualizar sueltas
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `Almacen general!M${productoIndex + 2}`,
+                    valueInputOption: 'RAW',
+                    resource: { values: [[nuevasSueltas.toString()]] }
+                });
+                continue; // Saltar a siguiente producto
+            }
+            // --- FIN LÓGICA ESPECIAL ---
+
+            // --- LÓGICA NORMAL ---
             if (tipoMovimiento === 'Tiras') {
-                // Revertir tiras completas
                 if (tipo.toLowerCase() === 'ingreso') {
-                    nuevoStock = stockActual - cantidad;
+                    nuevoStock = stockActual - parseInt(cantidad);
                     console.log(`[ANULAR][TIRAS][INGRESO] Producto: ${idProducto} | Stock actual: ${stockActual} - ${cantidad} = ${nuevoStock}`);
                 } else {
-                    nuevoStock = stockActual + cantidad;
+                    nuevoStock = stockActual + parseInt(cantidad);
                     console.log(`[ANULAR][TIRAS][SALIDA] Producto: ${idProducto} | Stock actual: ${stockActual} + ${cantidad} = ${nuevoStock}`);
                 }
             } else if (tipoMovimiento === 'Unidades') {
                 if (tipo.toLowerCase() === 'ingreso') {
-                    // Se ingresaron unidades: tiras = Math.floor(cantidad / cantidadxgrupo), sueltas = cantidad % cantidadxgrupo
-                    const tiras = Math.floor(cantidad / cantidadxgrupo);
-                    const sueltas = cantidad % cantidadxgrupo;
+                    const tiras = Math.floor(parseInt(cantidad) / cantidadxgrupo);
+                    const sueltas = parseInt(cantidad) % cantidadxgrupo;
                     nuevoStock = stockActual - tiras;
                     nuevasSueltas = sueltasActual - sueltas;
                     if (nuevasSueltas < 0) nuevasSueltas = 0;
                     console.log(`[ANULAR][UNIDADES][INGRESO] Producto: ${idProducto} | Stock actual: ${stockActual} - ${tiras} = ${nuevoStock} | Sueltas: ${sueltasActual} - ${sueltas} = ${nuevasSueltas}`);
                 } else {
-                    // Se sacaron unidades: tiras = Math.ceil(cantidad / cantidadxgrupo), sueltasNecesarias = tiras * cantidadxgrupo - cantidad
-                    const tiras = Math.ceil(cantidad / cantidadxgrupo);
-                    const sueltasNecesarias = tiras * cantidadxgrupo - cantidad;
+                    const tiras = Math.ceil(parseInt(cantidad) / cantidadxgrupo);
+                    const sueltasNecesarias = tiras * cantidadxgrupo - parseInt(cantidad);
                     nuevoStock = stockActual + tiras;
                     nuevasSueltas = sueltasActual - sueltasNecesarias;
                     if (nuevasSueltas < 0) nuevasSueltas = 0;
@@ -2667,6 +2695,7 @@ app.put('/anular-movimiento/:id', requireAuth, async (req, res) => {
             }
         });
 
+        // ... existing code ...
 
         if (tipo === 'Salida' && clienteId) {
             try {

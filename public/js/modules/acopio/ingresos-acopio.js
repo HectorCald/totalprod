@@ -156,7 +156,7 @@ function renderInitialHTML() {
     const contenido = document.querySelector('.anuncio .contenido');
     const initialHTML = `  
         <div class="encabezado">
-            <h1 class="titulo">Ingresos acopio</h1>
+            <h1 class="titulo">Ingresos</h1>
             <button class="btn close" onclick="cerrarAnuncioManual('anuncio')"><i class="fas fa-arrow-right"></i></button>
             <button class="btn filtros" onclick="mostrarFormatoIngresos()"><i class='bx bx-comment-detail'></i></button>
         </div>

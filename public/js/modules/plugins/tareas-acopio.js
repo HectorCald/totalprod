@@ -2,34 +2,151 @@ let productosGlobal = [];
 let tareasGlobal = [];
 let listaTareasGlobal = [];
 
+
+const DB_NAME = 'damabrava_db';
+const TAREAS_DB = 'tareas_acopio';
+const REGISTROS_TAREAS_DB = 'registros_tareas_acopio';
+const PRODUCTOS_AC_DB = 'productos_acopio';
+
+
 async function obtenerListaTareas() {
     try {
+
+        const tareasCache = await obtenerLocal(TAREAS_DB, DB_NAME);
+
+        if (tareasCache.length > 0) {
+            listaTareasGlobal = tareasCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+        }
+
+
         const response = await fetch('/obtener-lista-tareas');
         const data = await response.json();
 
         if (data.success) {
-            listaTareasGlobal = data.tareas;
+            listaTareasGlobal = data.tareas.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+            if (JSON.stringify(listaTareasGlobal) !== JSON.stringify(tareasCache)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(TAREAS_DB, DB_NAME);
+                        const tx = db.transaction(TAREAS_DB, 'readwrite');
+                        const store = tx.objectStore(TAREAS_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of listaTareasGlobal) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener lista de tareas',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener lista de tareas:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener lista de tareas',
-            type: 'error',
-            duration: 3500
-        });
+        return false;
+    }
+}
+async function obtenerProductos() {
+    try {
+        const productosAcopioCache = await obtenerLocal(PRODUCTOS_AC_DB, DB_NAME);
+
+        if (productosAcopioCache.length > 0) {
+            productosGlobal = productosAcopioCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+        }
+        const response = await fetch('/obtener-productos-acopio');
+        const data = await response.json();
+
+        if (data.success) {
+            productosGlobal = data.productos.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+
+            if (JSON.stringify(productosAcopioCache) !== JSON.stringify(productosGlobal)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(PRODUCTOS_AC_DB, DB_NAME);
+                        const tx = db.transaction(PRODUCTOS_AC_DB, 'readwrite');
+                        const store = tx.objectStore(PRODUCTOS_AC_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of productosGlobal) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+            return true;
+        } else {
+            return false;
+        }
+
+
+    } catch (error) {
+        console.error('Error al obtener los pagos:', error);
         return false;
     }
 }
 async function obtenerTareas() {
     try {
+        const registrosTareasCache = await obtenerLocal(REGISTROS_TAREAS_DB, DB_NAME);
+
+        if (registrosTareasCache.length > 0) {
+            tareasGlobal = registrosTareasCache.sort((a, b) => {
+                const idA = parseInt(a.id.split('-')[1]);
+                const idB = parseInt(b.id.split('-')[1]);
+                return idB - idA;
+            });
+            renderInitialHTML();
+            updateHTMLWithData();
+        }
+
         const response = await fetch('/obtener-tareas');
         const data = await response.json();
 
@@ -40,53 +157,57 @@ async function obtenerTareas() {
                 const idB = parseInt(b.id.split('-')[1]);
                 return idB - idA;
             });
+
+            if (JSON.stringify(registrosTareasCache) !== JSON.stringify(tareasGlobal)) {
+                console.log('Diferencias encontradas, actualizando UI');
+                renderInitialHTML();
+                updateHTMLWithData();
+
+                (async () => {
+                    try {
+                        const db = await initDB(REGISTROS_TAREAS_DB, DB_NAME);
+                        const tx = db.transaction(REGISTROS_TAREAS_DB, 'readwrite');
+                        const store = tx.objectStore(REGISTROS_TAREAS_DB);
+
+                        // Limpiar todos los registros existentes
+                        await store.clear();
+
+                        // Guardar los nuevos registros
+                        for (const item of tareasGlobal) {
+                            await store.put({
+                                id: item.id,
+                                data: item,
+                                timestamp: Date.now()
+                            });
+                        }
+
+                        console.log('Caché actualizado correctamente');
+                    } catch (error) {
+                        console.error('Error actualizando el caché:', error);
+                    }
+                })();
+            }
+
             return true;
         } else {
-            mostrarNotificacion({
-                message: 'Error al obtener tareas',
-                type: 'error',
-                duration: 3500
-            });
             return false;
         }
     } catch (error) {
         console.error('Error al obtener tareas:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener tareas',
-            type: 'error',
-            duration: 3500
-        });
-        return false;
-    }
-}
-async function obtenerProductos() {
-    try {
-        const response = await fetch('/obtener-productos-acopio');
-        const data = await response.json();
-
-        if (data.success) {
-            productosGlobal = data.productos;
-            return true;
-        } else {
-            mostrarNotificacion({
-                message: 'Error al obtener productos',
-                type: 'error',
-                duration: 3500
-            });
-            return false;
-        }
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-        mostrarNotificacion({
-            message: 'Error al obtener productos',
-            type: 'error',
-            duration: 3500
-        });
         return false;
     }
 }
 
+export async function mostrarTareas() {
+    renderInitialHTML();
+    mostrarAnuncio();
 
+    const [lista, productos, tareas] = await Promise.all([
+        obtenerListaTareas(),
+        obtenerProductos(),
+        await obtenerTareas(),
+    ]);
+}
 function renderInitialHTML() {
 
     const contenido = document.querySelector('.anuncio .contenido');
@@ -145,21 +266,9 @@ function renderInitialHTML() {
     `;
     contenido.innerHTML = initialHTML;
     contenido.style.paddingBottom = '70px';
-}
-export async function mostrarTareas() {
-    renderInitialHTML();
-    mostrarAnuncio();
     setTimeout(() => {
         configuracionesEntrada();
     }, 100);
-
-    const [productos, tareas, registros] = await Promise.all([
-        await obtenerProductos(),
-        await obtenerListaTareas(),
-        await obtenerTareas(),
-    ]);
-
-    updateHTMLWithData();
 }
 function updateHTMLWithData() {
     function convertirHoraAMinutos(hora) {
@@ -185,9 +294,9 @@ function updateHTMLWithData() {
             <div class="header">
                 <i class='bx bx-task'></i>
                 <div class="info-header">
-                    <span class="id">${registro.id}<span class="valor ${registro.hora_fin ? 'finalizado' : 'pendiente'}">${registro.hora_fin ? restarHoras(registro.hora_inicio, registro.hora_fin) : 'Pendiente'}</span></span>
-                    <span class="nombre"><strong>${registro.producto}</strong></span>
-                    <span class="fecha">${registro.operador}</span>
+                    <span class="id-flotante"><span class="id">${registro.id}</span><span class="flotante-item ${registro.hora_fin ? 'green' : 'red'}">${registro.hora_fin ? restarHoras(registro.hora_inicio, registro.hora_fin) : 'Pendiente'}</span></span>
+                    <span class="detalle">${registro.producto}</span>
+                    <span class="pie">${registro.operador}</span>
                 </div>
             </div>
         </div>
